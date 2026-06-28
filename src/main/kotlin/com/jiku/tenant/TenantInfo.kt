@@ -12,4 +12,7 @@ data class TenantInfo(
     val contactEmail: String,
     val status: String,
     val createdAt: Instant,
+    val displayName: String,
+    val logoUrl: String?,
+    val primaryColor: String,
 )
