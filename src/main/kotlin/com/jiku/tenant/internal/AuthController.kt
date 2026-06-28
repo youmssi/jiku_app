@@ -1,4 +1,4 @@
-package com.jiku.tenant
+package com.jiku.tenant.internal
 
 import com.jiku.shared.TenantContext
 import jakarta.servlet.http.HttpServletRequest

@@ -1,4 +1,4 @@
-package com.jiku.tenant
+package com.jiku.tenant.internal
 
 /**
  * Organizer roles. Only [ORGANIZER_ADMIN] exists at MVP stage; the model is shaped

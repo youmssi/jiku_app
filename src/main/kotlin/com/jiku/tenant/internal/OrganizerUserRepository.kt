@@ -1,4 +1,4 @@
-package com.jiku.tenant
+package com.jiku.tenant.internal
 
 import org.springframework.data.jpa.repository.JpaRepository
 import java.util.UUID

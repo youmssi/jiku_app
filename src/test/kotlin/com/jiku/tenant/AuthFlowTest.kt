@@ -28,7 +28,7 @@ class AuthFlowTest {
 
     @Test
     fun `register then login then access protected endpoint then refresh`() {
-        val credentials = """{"email":"organizer@example.com","password":"supersecret"}"""
+        val credentials = """{"name":"Test Org","email":"organizer@example.com","password":"supersecret"}"""
 
         mockMvc
             .perform(

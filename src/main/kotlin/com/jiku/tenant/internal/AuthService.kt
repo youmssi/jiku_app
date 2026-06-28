@@ -1,6 +1,7 @@
-package com.jiku.tenant
+package com.jiku.tenant.internal
 
 import com.jiku.shared.JwtService
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -10,23 +11,32 @@ import java.util.UUID
 
 @Service
 class AuthService(
+    private val tenants: TenantRepository,
     private val users: OrganizerUserRepository,
     private val passwordEncoder: PasswordEncoder,
     private val jwtService: JwtService,
 ) {
+    /**
+     * Creates a tenant and its first organizer in one transaction. If either insert
+     * violates a uniqueness constraint the whole transaction rolls back, so a failed
+     * registration never leaves an orphaned tenant behind.
+     */
     @Transactional
     fun register(request: RegisterRequest): AuthResponse {
-        if (users.existsByEmail(request.email)) {
-            throw ResponseStatusException(HttpStatus.CONFLICT, "An account with this email already exists")
+        try {
+            val tenant = tenants.saveAndFlush(Tenant(name = request.name, contactEmail = request.email))
+            val user =
+                users.saveAndFlush(
+                    OrganizerUser(
+                        tenantId = requireNotNull(tenant.id).toString(),
+                        email = request.email,
+                        passwordHash = requireNotNull(passwordEncoder.encode(request.password)),
+                    ),
+                )
+            return tokensFor(user)
+        } catch (ex: DataIntegrityViolationException) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "An account with this email already exists", ex)
         }
-        val user =
-            OrganizerUser(
-                tenantId = UUID.randomUUID().toString(),
-                email = request.email,
-                passwordHash = requireNotNull(passwordEncoder.encode(request.password)),
-            )
-        users.save(user)
-        return tokensFor(user)
     }
 
     @Transactional(readOnly = true)
