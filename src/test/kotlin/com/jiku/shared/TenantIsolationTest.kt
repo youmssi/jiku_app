@@ -26,9 +26,16 @@ import kotlin.test.assertTrue
  */
 @SpringBootTest
 @Import(TestcontainersConfiguration::class)
-@EntityScan(basePackageClasses = [TenantScopedTestEntity::class])
-@EnableJpaRepositories(basePackageClasses = [TenantScopedTestRepository::class])
-@TestPropertySource(properties = ["spring.jpa.hibernate.ddl-auto=create-drop"])
+@EntityScan(basePackages = ["com.jiku", "jiku.tenantfixture"])
+@EnableJpaRepositories(basePackages = ["com.jiku", "jiku.tenantfixture"])
+@TestPropertySource(
+    properties = [
+        // Hibernate owns the schema for this slice (it includes a test-only
+        // entity), so Flyway is disabled to avoid managing the same tables twice.
+        "spring.jpa.hibernate.ddl-auto=create-drop",
+        "spring.flyway.enabled=false",
+    ],
+)
 class TenantIsolationTest {
     @Autowired
     lateinit var repository: TenantScopedTestRepository

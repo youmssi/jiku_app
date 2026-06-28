@@ -1,25 +1,39 @@
 spring:
   application:
     name: app
-  profiles:
-    # Used only when no profile is active (i.e. local development). Deploy
-    # targets set SPRING_PROFILES_ACTIVE explicitly (staging / production).
-    default: local
   modulith:
     runtime:
       verification-enabled: true
   jpa:
     open-in-view: false
     hibernate:
-      # Schema is owned by Flyway migrations, not Hibernate. Validate the
-      # mapped entities against the migrated schema; never auto-generate it.
+      # Schema is owned by Flyway migrations, not Hibernate. Validate the mapped
+      # entities against the migrated schema; never auto-generate it.
       ddl-auto: validate
   flyway:
     enabled: true
   datasource:
+    # The POSTGRES_* variables are the SAME ones docker-compose.yml uses, so the
+    # database the container creates and the database the app connects to cannot
+    # drift. Defaults make a fresh clone run with zero configuration; override the
+    # variables (e.g. POSTGRES_HOST, credentials) for any other environment.
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:jiku}
+    username: ${POSTGRES_USER:jiku}
+    password: ${POSTGRES_PASSWORD:jiku}
     hikari:
-      # 10 connections comfortably covers the MVP's expected concurrency (the
-      # dashboard-polling and check-in QPS analysis showed a trivial load) while
+      # 10 connections comfortably covers the MVP's expected concurrency while
       # staying well under managed-Postgres connection limits. Override per
       # environment with DB_POOL_MAX_SIZE rather than editing this file.
       maximum-pool-size: ${DB_POOL_MAX_SIZE:10}
+
+jwt:
+  # HMAC signing secret (minimum 32 bytes). The default is for local use only;
+  # every real environment MUST set JWT_SECRET to a long random value.
+  secret: ${JWT_SECRET:local-development-signing-secret-not-for-production-0123456789abcd}
+  access-token-expiration: ${JWT_ACCESS_EXPIRATION:PT1H}
+  refresh-token-expiration: ${JWT_REFRESH_EXPIRATION:P7D}
+
+auth:
+  login-rate-limit:
+    max-attempts: ${AUTH_LOGIN_MAX_ATTEMPTS:5}
+    window: ${AUTH_LOGIN_RATE_WINDOW:PT1M}
