@@ -17,7 +17,8 @@ context from `AGENTS.md`.
 
 ### Code Style
 
-- Tabs for indentation (match the generated Spring/Kotlin sources)
+- 4-space indentation, ktlint `ktlint_official` style — enforced by `ktlintCheck`
+  in CI. Run `./gradlew ktlintFormat` to auto-fix before committing.
 - Kotlin idioms: `val` over `var`, expression bodies where they read cleanly, data
   classes for DTOs, sealed types for closed hierarchies
 - One module per package under `com.jiku`; keep internals `internal` and expose only
@@ -29,8 +30,10 @@ context from `AGENTS.md`.
 
 - Never import another module's internal package, repository, or entity
 - Cross-module needs go through that module's `*ModuleApi` or an application event
-- Run `./gradlew test --tests "com.jiku.ModularityTests"` before opening a PR — it
-  must pass
+- Before opening a PR run `./gradlew ktlintCheck` and
+  `./gradlew test --tests "com.jiku.ModularityTests"` — both must pass. CI also runs
+  the full `./gradlew build` (Testcontainers integration tests need Docker) and
+  `./gradlew koverVerify` (70% coverage on business logic)
 
 ### Multi-Tenancy
 

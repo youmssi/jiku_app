@@ -9,5 +9,5 @@ import org.springframework.modulith.Modulithic
 class JikuApplication
 
 fun main(args: Array<String>) {
-	runApplication<JikuApplication>(*args)
+    runApplication<JikuApplication>(*args)
 }

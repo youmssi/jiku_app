@@ -11,11 +11,10 @@ import org.springframework.modulith.core.ApplicationModules
  * rules; it runs as part of the standard test suite and needs no database.
  */
 class ModularityTests {
+    private val modules = ApplicationModules.of(JikuApplication::class.java)
 
-	private val modules = ApplicationModules.of(JikuApplication::class.java)
-
-	@Test
-	fun verifiesModuleStructure() {
-		modules.verify()
-	}
+    @Test
+    fun verifiesModuleStructure() {
+        modules.verify()
+    }
 }
