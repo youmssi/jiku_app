@@ -45,26 +45,41 @@ needs no database or Docker.
 
 ## Local development
 
-The application code runs **natively** (`./gradlew bootRun`). Infrastructure
-dependencies it talks to — PostgreSQL today, any further services later — run in
-**Docker** and are started with `docker compose`. The Docker Compose setup and the
-environment-variable wiring are introduced in JIKU-5; until then this skeleton is
-purely structural.
+The application code runs **natively** (`./gradlew bootRun`). Infrastructure it
+depends on — PostgreSQL today, any further services later — runs in **Docker** via
+`docker compose`. A fresh clone needs no `.env`: the Compose defaults and the `local`
+Spring profile agree, so the two steps below just work.
 
 ```bash
-# Build (compiles both services and runs the architecture + unit tests)
-./gradlew build
+# 1. Start backing services (PostgreSQL) in Docker
+docker compose up -d
 
-# Run only the module-boundary architecture verification (no Docker needed)
-./gradlew test --tests "com.jiku.ModularityTests"
-
-# Run the service locally (requires a reachable PostgreSQL — see JIKU-5)
+# 2. Run the service natively against them (uses the `local` profile by default)
 ./gradlew bootRun
 ```
 
-> Integration tests and `bootRun` require a running PostgreSQL. The integration test
-> suite provisions one automatically through Testcontainers, so Docker must be
-> available when running the full `./gradlew build`.
+Other useful commands:
+
+```bash
+# Full build: compile, ktlint, unit + architecture tests, integration tests
+./gradlew build
+
+# Module-boundary architecture verification only (no Docker needed)
+./gradlew test --tests "com.jiku.ModularityTests"
+
+# Coverage gate (70% on business logic)
+./gradlew koverVerify
+```
+
+Configuration is environment-driven (see `.env.example`). The `local` profile ships
+sensible defaults; `staging` and `production` read everything from the environment
+with no fallbacks, so a missing value fails fast rather than connecting to the wrong
+database. Schema is owned by Flyway migrations under
+`src/main/resources/db/migration`.
+
+> Integration tests and `bootRun` require PostgreSQL. The integration test suite
+> provisions one automatically through Testcontainers, so Docker must be available
+> when running the full `./gradlew build`.
 
 ## Engineering rules
 
