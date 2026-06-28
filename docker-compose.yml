@@ -1,13 +1,12 @@
-# Local development infrastructure.
-#
-# The application itself runs natively (./gradlew bootRun); only the backing
-# services it depends on live here. Any further infrastructure service is added
-# to this file rather than run by hand. Start everything with:
+# Backing services (PostgreSQL today, more later). The same file serves any
+# environment: every value comes from the shared POSTGRES_* variables, which the
+# application reads too (see application.yaml), so the database this container
+# creates and the database the app connects to stay in sync. Start with:
 #
 #   docker compose up -d
 #
-# Defaults below match the `local` Spring profile, so a fresh clone needs no
-# .env file to come up. Override via a local .env (see .env.example) if needed.
+# Defaults make a fresh clone come up with no .env; override the variables (see
+# .env.example) for any other environment.
 
 services:
   postgres:

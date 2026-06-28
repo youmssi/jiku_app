@@ -47,14 +47,15 @@ needs no database or Docker.
 
 The application code runs **natively** (`./gradlew bootRun`). Infrastructure it
 depends on — PostgreSQL today, any further services later — runs in **Docker** via
-`docker compose`. A fresh clone needs no `.env`: the Compose defaults and the `local`
-Spring profile agree, so the two steps below just work.
+`docker compose`. A fresh clone needs no `.env`: `docker-compose.yml` and
+`application.yaml` share the same `POSTGRES_*` variables and defaults, so the two
+steps below just work.
 
 ```bash
 # 1. Start backing services (PostgreSQL) in Docker
 docker compose up -d
 
-# 2. Run the service natively against them (uses the `local` profile by default)
+# 2. Run the service natively against them
 ./gradlew bootRun
 ```
 
@@ -71,11 +72,11 @@ Other useful commands:
 ./gradlew koverVerify
 ```
 
-Configuration is environment-driven (see `.env.example`). The `local` profile ships
-sensible defaults; `staging` and `production` read everything from the environment
-with no fallbacks, so a missing value fails fast rather than connecting to the wrong
-database. Schema is owned by Flyway migrations under
-`src/main/resources/db/migration`.
+Configuration lives in a single `application.yaml` (see `.env.example`). Every
+environment-specific value is a `${ENV_VAR:default}` placeholder: defaults keep local
+zero-config, and any other environment overrides the variables. Secrets such as
+`JWT_SECRET` ship only a development default and must be set explicitly outside local.
+Schema is owned by Flyway migrations under `src/main/resources/db/migration`.
 
 > Integration tests and `bootRun` require PostgreSQL. The integration test suite
 > provisions one automatically through Testcontainers, so Docker must be available

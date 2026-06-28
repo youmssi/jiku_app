@@ -86,21 +86,25 @@ service.
 - Application code runs **natively** (`./gradlew bootRun`).
 - Infrastructure services it depends on (PostgreSQL today, others later) run in
   **Docker** via `docker compose`, wired to the app through environment variables.
+  The same `docker-compose.yml` serves any environment.
 - Integration tests provision PostgreSQL through Testcontainers, so Docker must be
   available for the full `./gradlew build` and in CI.
-- The Docker Compose setup and Spring profile/env wiring land in JIKU-5.
 
 ## Environment Variables
 
-- Every value that differs between local/staging/production (URLs, credentials,
-  provider names, numeric thresholds, feature flags) is read via `@Value` or
-  `@ConfigurationProperties` from `application-{profile}.yml`, which references
-  `${ENV_VAR}` placeholders — never a literal committed to YAML or source.
+- There is a **single** `application.yaml` (no per-profile files). Every value that
+  can differ between environments (credentials, provider names, numeric thresholds,
+  feature flags) is read via `@Value` or `@ConfigurationProperties` from a
+  `${ENV_VAR:default}` placeholder — never a literal committed to YAML or source.
+- The PostgreSQL connection uses the **same `POSTGRES_*` variable names as
+  `docker-compose.yml`**, so the container's database and the app's datasource stay
+  in sync from one `.env`.
+- Defaults exist for local convenience so a fresh clone runs with no `.env`. Real
+  environments override the variables; secrets (e.g. `JWT_SECRET`) ship only a
+  development default and **must** be set explicitly outside local.
 - A committed `app/.env.example` (placeholders only, never real secrets) lists every
   variable the backend needs, kept in sync as variables are introduced. The real
   `.env` is git-ignored.
-- Never assume a default for a missing required variable in production code — fail
-  fast and loudly at startup.
 
 ## Engineering Rules (Hard Requirements)
 
