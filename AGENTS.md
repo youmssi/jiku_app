@@ -44,9 +44,13 @@ com.jiku
 └── shared               # genuinely cross-cutting code only
 ```
 
-A new `billing` module is introduced later (JIKU-32). Each module is currently a
-`package-info.java` marker annotated `@ApplicationModule`; business types are added
-per story.
+A new `billing` module is introduced later (JIKU-32). Modules are **auto-detected**
+from the Kotlin types they contain — a package becomes a module the moment a story
+adds code to it; empty modules are not pre-declared. Add a `package-info.java` with
+`@ApplicationModule` for a module only when it needs explicit configuration (a custom
+display name, an `OPEN` designation, or restricted allowed dependencies). That single
+Java file is the *only* reason `src/main/java` would ever exist in this Kotlin
+service.
 
 **Module boundary rules (hard requirements):**
 - A module exposes only its `*ModuleApi` interface (a `@NamedInterface`) to other
