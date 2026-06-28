@@ -1,4 +1,4 @@
-package com.jiku.tenant
+package com.jiku.tenant.internal
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import java.time.Duration

@@ -1,4 +1,4 @@
-package com.jiku.tenant
+package com.jiku.tenant.internal
 
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component

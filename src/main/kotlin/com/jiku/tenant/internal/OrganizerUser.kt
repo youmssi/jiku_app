@@ -1,4 +1,4 @@
-package com.jiku.tenant
+package com.jiku.tenant.internal
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
