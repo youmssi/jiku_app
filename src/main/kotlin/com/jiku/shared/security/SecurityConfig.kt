@@ -1,5 +1,6 @@
 package com.jiku.shared.security
 
+import com.jiku.shared.ApiProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
@@ -17,7 +18,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  */
 @Configuration
 @EnableMethodSecurity
-class SecurityConfig {
+class SecurityConfig(
+    private val apiProperties: ApiProperties,
+) {
     @Bean
     fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 
@@ -26,15 +29,16 @@ class SecurityConfig {
         http: HttpSecurity,
         jwtAuthenticationFilter: JwtAuthenticationFilter,
     ): SecurityFilterChain {
+        val auth = "${apiProperties.basePath}/auth"
         http
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
                 it
                     .requestMatchers(
-                        "/api/v1/auth/register",
-                        "/api/v1/auth/login",
-                        "/api/v1/auth/refresh",
+                        "$auth/register",
+                        "$auth/login",
+                        "$auth/refresh",
                     ).permitAll()
                 it.requestMatchers("/actuator/health/**").permitAll()
                 it.anyRequest().authenticated()

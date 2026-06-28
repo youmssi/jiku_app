@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
 @RestController
-@RequestMapping("/api/v1/events")
+@RequestMapping("/events")
 @PreAuthorize("hasRole('ORGANIZER_ADMIN')")
 class EventController(
     private val eventService: EventService,

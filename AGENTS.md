@@ -75,7 +75,11 @@ service.
 
 ## API Conventions
 
-- All REST endpoints are versioned under `/api/v1/...`, from the very first endpoint.
+- All REST endpoints are versioned under a single configurable prefix
+  (`api.base-path`, default `/api/v1`) applied centrally by `WebConfig` to every
+  `@RestController`. Controllers declare only their resource path (e.g. `/events`);
+  never hardcode the version in a controller or security matcher — read it from
+  `ApiProperties`. A future version is a one-line config change.
 - Breaking changes to an existing `/api/v1` endpoint are not allowed — introduce
   `/api/v2` and keep `/v1` until the frontend migrates. Additive changes are safe.
 - Timestamps are stored in UTC. Every `Event` carries an explicit IANA timezone;

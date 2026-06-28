@@ -13,7 +13,7 @@ import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
 @RestController
-@RequestMapping("/api/v1/branding")
+@RequestMapping("/branding")
 @PreAuthorize("hasRole('ORGANIZER_ADMIN')")
 class BrandingController(
     private val brandingService: BrandingService,
