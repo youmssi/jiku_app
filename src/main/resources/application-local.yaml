@@ -1,0 +1,7 @@
+spring:
+  datasource:
+    # Falls back to the docker-compose Postgres defaults so a fresh clone runs
+    # with zero manual configuration: `docker compose up -d` then `./gradlew bootRun`.
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:jiku}
+    username: ${DB_USERNAME:jiku}
+    password: ${DB_PASSWORD:jiku}

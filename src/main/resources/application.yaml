@@ -1,6 +1,25 @@
 spring:
   application:
     name: app
+  profiles:
+    # Used only when no profile is active (i.e. local development). Deploy
+    # targets set SPRING_PROFILES_ACTIVE explicitly (staging / production).
+    default: local
   modulith:
     runtime:
       verification-enabled: true
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Schema is owned by Flyway migrations, not Hibernate. Validate the
+      # mapped entities against the migrated schema; never auto-generate it.
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  datasource:
+    hikari:
+      # 10 connections comfortably covers the MVP's expected concurrency (the
+      # dashboard-polling and check-in QPS analysis showed a trivial load) while
+      # staying well under managed-Postgres connection limits. Override per
+      # environment with DB_POOL_MAX_SIZE rather than editing this file.
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:10}

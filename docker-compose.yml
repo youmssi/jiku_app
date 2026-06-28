@@ -1,0 +1,31 @@
+# Local development infrastructure.
+#
+# The application itself runs natively (./gradlew bootRun); only the backing
+# services it depends on live here. Any further infrastructure service is added
+# to this file rather than run by hand. Start everything with:
+#
+#   docker compose up -d
+#
+# Defaults below match the `local` Spring profile, so a fresh clone needs no
+# .env file to come up. Override via a local .env (see .env.example) if needed.
+
+services:
+  postgres:
+    image: postgres:18 # latest stable PostgreSQL major
+    container_name: jiku-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-jiku}
+      POSTGRES_USER: ${POSTGRES_USER:-jiku}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jiku}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - jiku-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jiku} -d ${POSTGRES_DB:-jiku}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  jiku-postgres-data:
