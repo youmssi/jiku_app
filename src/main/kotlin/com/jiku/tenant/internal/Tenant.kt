@@ -1,6 +1,7 @@
 package com.jiku.tenant.internal
 
 import jakarta.persistence.Column
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -32,4 +33,10 @@ class Tenant(
 
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now()
+
+    // Nullable because Hibernate maps an all-null embeddable to a null reference.
+    @Embedded
+    var branding: TenantBranding? = null
+
+    fun ensureBranding(): TenantBranding = branding ?: TenantBranding().also { branding = it }
 }
