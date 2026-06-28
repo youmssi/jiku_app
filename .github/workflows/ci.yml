@@ -1,0 +1,39 @@
+name: Backend CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build, lint, test, verify
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      # Compiles, runs ktlint, runs the unit tests, and runs the Spring Modulith
+      # architecture verification. Integration tests use Testcontainers; the
+      # GitHub-hosted runner provides a running Docker daemon for PostgreSQL.
+      - name: Build, lint, and test (includes module-boundary verification)
+        run: ./gradlew build --no-daemon
+
+      - name: Verify code coverage (70% minimum on business logic)
+        run: ./gradlew koverVerify --no-daemon
