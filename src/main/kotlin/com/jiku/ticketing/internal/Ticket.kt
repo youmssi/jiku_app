@@ -43,4 +43,10 @@ class Ticket(
 
     @Column(name = "issued_at", nullable = false, updatable = false)
     val issuedAt: Instant = Instant.now()
+
+    @Column(name = "checked_in_at")
+    var checkedInAt: Instant? = null
+
+    @Column(name = "checked_in_by")
+    var checkedInBy: String? = null
 }
