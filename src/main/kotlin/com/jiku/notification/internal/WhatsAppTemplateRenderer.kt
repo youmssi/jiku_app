@@ -1,6 +1,5 @@
 package com.jiku.notification.internal
 
-import com.jiku.notification.WhatsAppInvitation
 import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Component
 
