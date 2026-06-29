@@ -3,6 +3,8 @@ package com.jiku.invitation.internal
 import com.jiku.shared.BaseTenantEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
@@ -32,6 +34,10 @@ class Guest(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     var id: UUID? = null
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rsvp_status", nullable = false)
+    var rsvpStatus: RsvpStatus = RsvpStatus.PENDING
 
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now()

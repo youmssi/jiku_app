@@ -22,24 +22,32 @@ class InvitationSendingService(
     @Transactional
     fun queue(
         eventId: UUID,
+        channels: Set<InvitationChannel>,
         onlyUnsent: Boolean,
     ): SendInvitationsResult {
         events.findEvent(eventId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found")
         var queued = 0
         for (guest in guests.findByEventId(eventId)) {
-            if (guest.email == null) {
-                continue
-            }
             val guestId = requireNotNull(guest.id)
-            val existing = invitations.findByGuestIdAndChannel(guestId, InvitationChannel.EMAIL)
-            if (onlyUnsent && existing?.status == InvitationStatus.SENT) {
-                continue
+            for (channel in channels) {
+                val eligible =
+                    when (channel) {
+                        InvitationChannel.EMAIL -> guest.email != null
+                        InvitationChannel.WHATSAPP -> guest.phoneNumber != null
+                    }
+                if (!eligible) {
+                    continue
+                }
+                val existing = invitations.findByGuestIdAndChannel(guestId, channel)
+                if (onlyUnsent && existing?.status == InvitationStatus.SENT) {
+                    continue
+                }
+                val invitation = existing ?: Invitation(eventId, guestId, channel)
+                invitation.status = InvitationStatus.PENDING
+                invitation.lastError = null
+                invitations.save(invitation)
+                queued++
             }
-            val invitation = existing ?: Invitation(eventId, guestId, InvitationChannel.EMAIL)
-            invitation.status = InvitationStatus.PENDING
-            invitation.lastError = null
-            invitations.save(invitation)
-            queued++
         }
         return SendInvitationsResult(queued)
     }

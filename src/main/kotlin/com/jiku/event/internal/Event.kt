@@ -50,6 +50,12 @@ class Event(
     @Embedded
     var settings: EventSettings = EventSettings()
 
+    @Column(name = "max_capacity")
+    var maxCapacity: Int? = null
+
+    @Column(name = "confirmed_count", nullable = false)
+    var confirmedCount: Int = 0
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "event_invitation_channel", joinColumns = [JoinColumn(name = "event_id")])
     @Enumerated(EnumType.STRING)

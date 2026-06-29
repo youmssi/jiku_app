@@ -11,6 +11,7 @@ fun Event.toResponse(): EventResponse =
         endDateTime = endDateTime,
         timezone = timezone,
         location = location,
+        maxCapacity = maxCapacity,
         status = status.name,
         settings =
             EventSettingsDto(

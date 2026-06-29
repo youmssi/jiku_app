@@ -24,6 +24,7 @@ class EventService(
                 location = request.location,
             )
         event.settings = request.settings.toEmbeddable()
+        event.maxCapacity = request.maxCapacity
         event.invitationChannels = request.invitationChannels.toMutableSet()
         events.save(event)
         return event.toResponse()
@@ -50,6 +51,7 @@ class EventService(
         event.timezone = request.timezone
         event.location = request.location
         event.settings = request.settings.toEmbeddable()
+        event.maxCapacity = request.maxCapacity
         event.invitationChannels = request.invitationChannels.toMutableSet()
         events.save(event)
         return event.toResponse()
