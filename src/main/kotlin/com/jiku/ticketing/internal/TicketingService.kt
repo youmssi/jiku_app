@@ -59,12 +59,49 @@ class TicketingService(
         checkedInBy: String,
     ): CheckInResult = checkIn(tickets.findByGuestId(guestId), checkedInBy)
 
+    @Transactional
+    override fun syncCheckInByCode(
+        ticketCode: String,
+        checkedInBy: String,
+        scannedAt: Instant,
+    ): CheckInResult {
+        val ticket = tickets.findByTicketCode(ticketCode) ?: return CheckInResult(CheckInOutcome.NOT_FOUND)
+        val ticketId = requireNotNull(ticket.id)
+        // Claim the check-in with the device's scan time as the recorded moment.
+        if (tickets.checkIn(ticketId, scannedAt, checkedInBy) == 1) {
+            return CheckInResult(
+                outcome = CheckInOutcome.CHECKED_IN,
+                ticket = tickets.findById(ticketId).get().toInfo(),
+                checkedInAt = scannedAt,
+                checkedInBy = checkedInBy,
+            )
+        }
+        val current = tickets.findById(ticketId).get()
+        if (current.status == TicketStatus.CANCELLED) {
+            return CheckInResult(CheckInOutcome.CANCELLED, current.toInfo())
+        }
+        // Already checked in: the earliest scan owns the record (first-timestamp-wins).
+        if (tickets.reassignEarlierCheckIn(ticketId, scannedAt, checkedInBy) == 1) {
+            val owned = tickets.findById(ticketId).get()
+            return CheckInResult(CheckInOutcome.CHECKED_IN, owned.toInfo(), owned.checkedInAt, owned.checkedInBy)
+        }
+        return CheckInResult(
+            CheckInOutcome.ALREADY_CHECKED_IN,
+            current.toInfo(),
+            current.checkedInAt,
+            current.checkedInBy,
+        )
+    }
+
     @Transactional(readOnly = true)
     override fun attendanceStats(eventId: UUID): AttendanceStats =
         AttendanceStats(
             checkedIn = tickets.countByEventIdAndStatus(eventId, TicketStatus.CHECKED_IN),
             confirmed = tickets.countByEventIdAndStatusIn(eventId, ACTIVE_STATUSES),
         )
+
+    @Transactional(readOnly = true)
+    override fun findTicketsByEvent(eventId: UUID): List<TicketInfo> = tickets.findByEventId(eventId).map { it.toInfo() }
 
     private fun checkIn(
         ticket: Ticket?,

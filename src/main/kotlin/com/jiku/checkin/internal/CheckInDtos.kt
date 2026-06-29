@@ -1,5 +1,6 @@
 package com.jiku.checkin.internal
 
+import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import java.time.Instant
 import java.util.UUID
@@ -46,4 +47,42 @@ data class GuestMatch(
 data class AttendanceResponse(
     val checkedIn: Long,
     val confirmed: Long,
+)
+
+/**
+ * One guest in the offline roster a validator pre-syncs before the event. Carries
+ * everything needed to scan/search and decide check-in eligibility offline; guests
+ * without a ticket (not yet confirmed) appear with null ticket fields.
+ */
+data class RosterEntry(
+    val guestId: UUID,
+    val name: String,
+    val email: String?,
+    val phoneNumber: String?,
+    val rsvpStatus: String,
+    val ticketCode: String?,
+    val ticketStatus: String?,
+    val checkedInAt: Instant?,
+    val checkedInBy: String?,
+)
+
+/** A batch of check-ins captured offline, each stamped with its on-device scan time. */
+data class SyncRequest(
+    @field:Valid
+    val items: List<SyncItem>,
+)
+
+data class SyncItem(
+    @field:NotBlank
+    val ticketCode: String,
+    val scannedAt: Instant,
+)
+
+/** Per-item reconciliation result returned to the device after a sync. */
+data class SyncResultEntry(
+    val ticketCode: String,
+    val outcome: String,
+    val guestName: String?,
+    val checkedInAt: Instant?,
+    val checkedInBy: String?,
 )

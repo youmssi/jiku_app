@@ -98,6 +98,53 @@ class CheckInService(
         return AttendanceResponse(checkedIn = stats.checkedIn, confirmed = stats.confirmed)
     }
 
+    /** Full guest/ticket roster for an event, for a validator to cache offline. */
+    fun roster(eventId: UUID): List<RosterEntry> {
+        val ticketsByGuest = ticketing.findTicketsByEvent(eventId).associateBy { it.guestId }
+        return invitation.listGuests(eventId).map { guest ->
+            val ticket = ticketsByGuest[guest.id]
+            RosterEntry(
+                guestId = guest.id,
+                name = guest.fullName(),
+                email = guest.email,
+                phoneNumber = guest.phoneNumber,
+                rsvpStatus = guest.rsvpStatus,
+                ticketCode = ticket?.ticketCode,
+                ticketStatus = ticket?.status,
+                checkedInAt = ticket?.checkedInAt,
+                checkedInBy = ticket?.checkedInBy,
+            )
+        }
+    }
+
+    /**
+     * Applies a batch of check-ins captured offline, scoped to the event and
+     * attributed to the validator. Conflicts between devices are resolved
+     * first-timestamp-wins by the ticketing module; each item's result lets the
+     * device reconcile its local state.
+     */
+    fun sync(
+        eventId: UUID,
+        validatorLabel: String,
+        items: List<SyncItem>,
+    ): List<SyncResultEntry> =
+        items.map { item ->
+            val ticket = ticketing.findByCode(item.ticketCode)
+            if (ticket == null || ticket.eventId != eventId) {
+                SyncResultEntry(item.ticketCode, CheckInOutcome.NOT_FOUND.name, null, null, null)
+            } else {
+                val result = ticketing.syncCheckInByCode(item.ticketCode, validatorLabel, item.scannedAt)
+                val guestName = result.ticket?.let { invitation.findGuest(it.guestId)?.fullName() }
+                SyncResultEntry(
+                    ticketCode = item.ticketCode,
+                    outcome = result.outcome.name,
+                    guestName = guestName,
+                    checkedInAt = result.checkedInAt,
+                    checkedInBy = result.checkedInBy,
+                )
+            }
+        }
+
     private fun respond(result: CheckInResult): CheckInResponse {
         val guestName = result.ticket?.let { invitation.findGuest(it.guestId)?.fullName() }
         return CheckInResponse(

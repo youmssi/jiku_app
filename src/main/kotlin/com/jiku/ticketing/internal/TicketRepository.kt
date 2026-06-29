@@ -22,6 +22,25 @@ interface TicketRepository : JpaRepository<Ticket, UUID> {
         statuses: Collection<TicketStatus>,
     ): Long
 
+    fun findByEventId(eventId: UUID): List<Ticket>
+
+    /**
+     * First-timestamp-wins reconciliation: rewrites an already-checked-in ticket to
+     * an earlier scan, only if the recorded check-in is strictly later. Returns the
+     * number of rows updated (1 if this scan now owns the record, 0 otherwise).
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(
+        "UPDATE Ticket t SET t.checkedInAt = :at, t.checkedInBy = :by " +
+            "WHERE t.id = :id AND t.status = com.jiku.ticketing.internal.TicketStatus.CHECKED_IN " +
+            "AND t.checkedInAt > :at",
+    )
+    fun reassignEarlierCheckIn(
+        @Param("id") id: UUID,
+        @Param("at") at: Instant,
+        @Param("by") by: String,
+    ): Int
+
     /**
      * Atomically transitions a ticket from ISSUED to CHECKED_IN, stamping the
      * moment and the validator. Returns the number of rows updated (1 on the first
