@@ -39,8 +39,25 @@ interface TicketingModuleApi {
         checkedInBy: String,
     ): CheckInResult
 
+    /**
+     * Offline-originated check-in carrying the moment it was scanned on the
+     * validator's device ([scannedAt]). Conflicts between two offline validators
+     * are resolved first-timestamp-wins: the earliest scan owns the authoritative
+     * record. Returns [CheckInOutcome.CHECKED_IN] when this scan owns the record
+     * (it was first, or it superseded a later one) and [CheckInOutcome.ALREADY_CHECKED_IN]
+     * when an earlier scan already stands.
+     */
+    fun syncCheckInByCode(
+        ticketCode: String,
+        checkedInBy: String,
+        scannedAt: Instant,
+    ): CheckInResult
+
     /** Real-time attendance figures for an event, scoped to the current tenant. */
     fun attendanceStats(eventId: UUID): AttendanceStats
+
+    /** All tickets for an event (for pre-syncing a validator's offline roster). */
+    fun findTicketsByEvent(eventId: UUID): List<TicketInfo>
 }
 
 data class TicketInfo(

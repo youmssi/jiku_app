@@ -14,6 +14,9 @@ class InvitationModuleApiService(
     override fun findGuest(guestId: UUID): GuestInfo? = guests.findById(guestId).map { it.toInfo() }.orElse(null)
 
     @Transactional(readOnly = true)
+    override fun listGuests(eventId: UUID): List<GuestInfo> = guests.findByEventId(eventId).map { it.toInfo() }
+
+    @Transactional(readOnly = true)
     override fun searchGuests(
         eventId: UUID,
         query: String,

@@ -61,6 +61,17 @@ class ValidatorCheckInController(
         @PathVariable token: String,
     ): AttendanceResponse = withValidator(token) { eventId, _ -> checkInService.stats(eventId) }
 
+    @GetMapping("/roster")
+    fun roster(
+        @PathVariable token: String,
+    ): List<RosterEntry> = withValidator(token) { eventId, _ -> checkInService.roster(eventId) }
+
+    @PostMapping("/sync")
+    fun sync(
+        @PathVariable token: String,
+        @Valid @RequestBody request: SyncRequest,
+    ): List<SyncResultEntry> = withValidator(token) { eventId, label -> checkInService.sync(eventId, label, request.items) }
+
     private fun <T> withValidator(
         token: String,
         block: (UUID, String) -> T,

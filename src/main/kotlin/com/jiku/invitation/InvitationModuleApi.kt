@@ -10,6 +10,9 @@ import java.util.UUID
 interface InvitationModuleApi {
     fun findGuest(guestId: UUID): GuestInfo?
 
+    /** All guests of an event (for an organizer dashboard, export, or offline roster). */
+    fun listGuests(eventId: UUID): List<GuestInfo>
+
     /**
      * Finds guests of [eventId] whose name, email or phone matches [query]
      * (case-insensitive substring). Supports the validator's manual, no-ticket
