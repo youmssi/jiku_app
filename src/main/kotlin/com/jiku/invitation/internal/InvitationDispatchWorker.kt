@@ -44,8 +44,9 @@ class InvitationDispatchWorker(
         }
 
         val event = events.findEvent(invitation.eventId)
-        val tenant = TenantContext.get()?.let { tenants.findTenant(UUID.fromString(it)) }
-        val token = tokenService.issue(invitation.guestId, invitation.eventId)
+        val tenantId = TenantContext.get()
+        val tenant = tenantId?.let { tenants.findTenant(UUID.fromString(it)) }
+        val token = tokenService.issue(invitation.guestId, invitation.eventId, tenantId.orEmpty())
         val email =
             InvitationEmail(
                 recipientEmail = recipient,

@@ -16,6 +16,8 @@ interface TicketingModuleApi {
 
     fun cancelByGuest(guestId: UUID)
 
+    fun findByGuest(guestId: UUID): TicketInfo?
+
     fun findByCode(ticketCode: String): TicketInfo?
 }
 

@@ -12,4 +12,13 @@ import java.util.UUID
  */
 interface EventModuleApi {
     fun findEvent(eventId: UUID): EventInfo?
+
+    /**
+     * Atomically reserves one attendance slot, honoring capacity and overbooking.
+     * Returns true if a slot was taken, false if the event is full.
+     */
+    fun reserveAttendanceSlot(eventId: UUID): Boolean
+
+    /** Releases a previously reserved attendance slot (e.g. a guest who declines). */
+    fun releaseAttendanceSlot(eventId: UUID)
 }

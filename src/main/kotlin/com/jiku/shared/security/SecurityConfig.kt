@@ -40,6 +40,7 @@ class SecurityConfig(
                         "$auth/login",
                         "$auth/refresh",
                     ).permitAll()
+                it.requestMatchers("${apiProperties.basePath}/rsvp/**").permitAll()
                 it.requestMatchers("/actuator/health/**").permitAll()
                 it.anyRequest().authenticated()
             }.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)

@@ -20,6 +20,7 @@ data class CreateEventRequest(
     val endDateTime: Instant? = null,
     @field:NotBlank val timezone: String,
     val location: String? = null,
+    val maxCapacity: Int? = null,
     val settings: EventSettingsDto = EventSettingsDto(),
     val invitationChannels: Set<InvitationChannel> = emptySet(),
 )
@@ -31,6 +32,7 @@ data class UpdateEventRequest(
     val endDateTime: Instant? = null,
     @field:NotBlank val timezone: String,
     val location: String? = null,
+    val maxCapacity: Int? = null,
     val settings: EventSettingsDto = EventSettingsDto(),
     val invitationChannels: Set<InvitationChannel> = emptySet(),
 )
@@ -43,6 +45,7 @@ data class EventResponse(
     val endDateTime: Instant?,
     val timezone: String,
     val location: String?,
+    val maxCapacity: Int?,
     val status: String,
     val settings: EventSettingsDto,
     val invitationChannels: Set<InvitationChannel>,

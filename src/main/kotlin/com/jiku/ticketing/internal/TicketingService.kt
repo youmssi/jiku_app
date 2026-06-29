@@ -38,6 +38,9 @@ class TicketingService(
     }
 
     @Transactional(readOnly = true)
+    override fun findByGuest(guestId: UUID): TicketInfo? = tickets.findByGuestId(guestId)?.toInfo()
+
+    @Transactional(readOnly = true)
     override fun findByCode(ticketCode: String): TicketInfo? = tickets.findByTicketCode(ticketCode)?.toInfo()
 }
 

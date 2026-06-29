@@ -22,11 +22,13 @@ class InvitationTokenService(
     fun issue(
         guestId: UUID,
         eventId: UUID,
+        tenantId: String,
     ): String =
         Jwts
             .builder()
             .subject(guestId.toString())
             .claim(CLAIM_EVENT_ID, eventId.toString())
+            .claim(CLAIM_TENANT_ID, tenantId)
             .claim(CLAIM_TYPE, TOKEN_TYPE)
             .signWith(key)
             .compact()
@@ -41,6 +43,7 @@ class InvitationTokenService(
 
     companion object {
         const val CLAIM_EVENT_ID = "eventId"
+        const val CLAIM_TENANT_ID = "tenantId"
         const val CLAIM_TYPE = "type"
         const val TOKEN_TYPE = "invitation"
     }
