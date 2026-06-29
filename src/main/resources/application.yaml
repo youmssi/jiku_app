@@ -1,6 +1,10 @@
 spring:
   application:
     name: app
+  servlet:
+    multipart:
+      max-file-size: ${GUEST_IMPORT_MAX_FILE_SIZE:10MB}
+      max-request-size: ${GUEST_IMPORT_MAX_FILE_SIZE:10MB}
   modulith:
     runtime:
       verification-enabled: true
@@ -42,3 +46,19 @@ api:
   # Prefix applied to every REST controller (and the security matchers). The API
   # version lives here only, so a future version is a one-line change.
   base-path: ${API_BASE_PATH:/api/v1}
+
+invitation:
+  import:
+    # Maximum number of guest rows accepted in one CSV upload.
+    max-rows: ${GUEST_IMPORT_MAX_ROWS:20000}
+  send:
+    # Frontend base URL used to build guest invitation links.
+    app-base-url: ${APP_BASE_URL:http://localhost:3000}
+    # Delivery attempts before an invitation is marked permanently FAILED.
+    max-attempts: ${INVITATION_MAX_ATTEMPTS:3}
+
+notification:
+  email:
+    # Sender address for outbound mail. Set per environment; the provider adapter
+    # is chosen later (until then a logging adapter records sends).
+    from: ${NOTIFICATION_EMAIL_FROM:no-reply@jiku.app}
