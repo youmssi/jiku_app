@@ -41,6 +41,7 @@ class SecurityConfig(
                         "$auth/refresh",
                     ).permitAll()
                 it.requestMatchers("${apiProperties.basePath}/rsvp/**").permitAll()
+                it.requestMatchers("${apiProperties.basePath}/checkin/**").permitAll()
                 it.requestMatchers("/actuator/health/**").permitAll()
                 it.anyRequest().authenticated()
             }.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
