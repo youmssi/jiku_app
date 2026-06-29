@@ -57,6 +57,14 @@ invitation:
     # Delivery attempts before an invitation is marked permanently FAILED.
     max-attempts: ${INVITATION_MAX_ATTEMPTS:3}
 
+checkin:
+  validator-link:
+    # Frontend base URL used to build shareable validator check-in links.
+    app-base-url: ${APP_BASE_URL:http://localhost:3000}
+    # How long a freshly issued validator link stays usable; revocation is
+    # immediate and independent of this window.
+    validity: ${CHECKIN_VALIDATOR_LINK_VALIDITY:P30D}
+
 notification:
   email:
     # Sender address for outbound mail. Set per environment; the provider adapter

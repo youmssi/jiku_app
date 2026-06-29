@@ -1,7 +1,10 @@
 package com.jiku.checkin.internal
 
+import com.jiku.event.EventModuleApi
 import com.jiku.invitation.GuestInfo
 import com.jiku.invitation.InvitationModuleApi
+import com.jiku.shared.TenantContext
+import com.jiku.tenant.TenantModuleApi
 import com.jiku.ticketing.CheckInOutcome
 import com.jiku.ticketing.CheckInResult
 import com.jiku.ticketing.TicketingModuleApi
@@ -19,7 +22,34 @@ import java.util.UUID
 class CheckInService(
     private val ticketing: TicketingModuleApi,
     private val invitation: InvitationModuleApi,
+    private val events: EventModuleApi,
+    private val tenants: TenantModuleApi,
 ) {
+    /**
+     * Branding and live attendance context for the validator opening [validatorLabel]'s
+     * link against [eventId]. The tenant is already bound by the caller.
+     */
+    fun context(
+        eventId: UUID,
+        validatorLabel: String,
+    ): ValidatorContextResponse {
+        val event = events.findEvent(eventId)
+        val tenant = TenantContext.get()?.let { tenants.findTenant(UUID.fromString(it)) }
+        val stats = ticketing.attendanceStats(eventId)
+        return ValidatorContextResponse(
+            eventName = event?.name ?: "Event",
+            startDateTime = event?.startDateTime,
+            timezone = event?.timezone ?: "UTC",
+            eventLocation = event?.location,
+            organizerName = tenant?.displayName ?: "Your organizer",
+            primaryColor = tenant?.primaryColor ?: "#1E293B",
+            logoUrl = tenant?.logoUrl,
+            validatorLabel = validatorLabel,
+            checkedIn = stats.checkedIn,
+            confirmed = stats.confirmed,
+        )
+    }
+
     fun checkInByCode(
         eventId: UUID,
         ticketCode: String,
