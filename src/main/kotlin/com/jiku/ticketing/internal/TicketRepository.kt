@@ -28,7 +28,7 @@ interface TicketRepository : JpaRepository<Ticket, UUID> {
      * check-in, 0 if it was already checked in or cancelled) — the DB-level status
      * guard makes this safe against two validators scanning the same ticket at once.
      */
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
         "UPDATE Ticket t SET t.status = com.jiku.ticketing.internal.TicketStatus.CHECKED_IN, " +
             "t.checkedInAt = :at, t.checkedInBy = :by " +
