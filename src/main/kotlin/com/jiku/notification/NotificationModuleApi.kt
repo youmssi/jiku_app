@@ -8,7 +8,19 @@ package com.jiku.notification
  */
 interface NotificationModuleApi {
     fun sendInvitationEmail(email: InvitationEmail)
+
+    fun sendInvitationWhatsApp(invitation: WhatsAppInvitation)
 }
+
+/** Everything the WhatsApp invitation template needs. */
+data class WhatsAppInvitation(
+    val recipientPhone: String,
+    val recipientName: String,
+    val eventName: String,
+    val eventWhen: String?,
+    val organizerName: String,
+    val invitationUrl: String,
+)
 
 /**
  * Everything the invitation email template needs. The caller resolves event and

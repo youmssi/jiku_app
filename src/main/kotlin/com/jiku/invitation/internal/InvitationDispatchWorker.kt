@@ -1,8 +1,10 @@
 package com.jiku.invitation.internal
 
 import com.jiku.event.EventModuleApi
+import com.jiku.event.InvitationChannel
 import com.jiku.notification.InvitationEmail
 import com.jiku.notification.NotificationModuleApi
+import com.jiku.notification.WhatsAppInvitation
 import com.jiku.shared.TenantContext
 import com.jiku.tenant.TenantModuleApi
 import org.springframework.stereotype.Component
@@ -13,9 +15,9 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 /**
- * Delivers a single invitation, resolving the guest, event and tenant branding,
- * building the signed invitation link, and sending the branded email with bounded
- * retry. Runs in its own transaction (called from the async dispatcher).
+ * Delivers a single invitation on its channel (email or WhatsApp), resolving the
+ * guest, event and tenant branding, building the signed invitation link, and
+ * sending with bounded retry. Runs in its own transaction.
  */
 @Component
 class InvitationDispatchWorker(
@@ -33,13 +35,9 @@ class InvitationDispatchWorker(
         if (invitation.status == InvitationStatus.SENT) {
             return
         }
-
         val guest = guests.findById(invitation.guestId).orElse(null)
-        val recipient = guest?.email
-        if (guest == null || recipient == null) {
-            invitation.status = InvitationStatus.FAILED
-            invitation.lastError = "Guest has no email address"
-            invitations.save(invitation)
+        if (guest == null) {
+            fail(invitation, "Guest not found")
             return
         }
 
@@ -47,24 +45,61 @@ class InvitationDispatchWorker(
         val tenantId = TenantContext.get()
         val tenant = tenantId?.let { tenants.findTenant(UUID.fromString(it)) }
         val token = tokenService.issue(invitation.guestId, invitation.eventId, tenantId.orEmpty())
-        val email =
-            InvitationEmail(
-                recipientEmail = recipient,
-                recipientName = "${guest.firstName} ${guest.lastName}",
-                eventName = event?.name ?: "your event",
-                eventWhen = event?.startDateTime?.let { formatWhen(it, event.timezone) },
-                eventLocation = event?.location,
-                organizerName = tenant?.displayName ?: "Your organizer",
-                primaryColor = tenant?.primaryColor ?: DEFAULT_COLOR,
-                logoUrl = tenant?.logoUrl,
-                invitationUrl = "${properties.appBaseUrl}/invitation/$token",
-            )
+        val link = "${properties.appBaseUrl}/invitation/$token"
+        val guestName = "${guest.firstName} ${guest.lastName}"
+        val eventName = event?.name ?: "your event"
+        val eventWhen = event?.startDateTime?.let { formatWhen(it, event.timezone) }
+        val organizerName = tenant?.displayName ?: "Your organizer"
+
+        val send: () -> Unit =
+            when (invitation.channel) {
+                InvitationChannel.EMAIL -> {
+                    val recipient = guest.email
+                    if (recipient == null) {
+                        fail(invitation, "Guest has no email address")
+                        return
+                    }
+                    val email =
+                        InvitationEmail(
+                            recipientEmail = recipient,
+                            recipientName = guestName,
+                            eventName = eventName,
+                            eventWhen = eventWhen,
+                            eventLocation = event?.location,
+                            organizerName = organizerName,
+                            primaryColor = tenant?.primaryColor ?: DEFAULT_COLOR,
+                            logoUrl = tenant?.logoUrl,
+                            invitationUrl = link,
+                        )
+                    val action: () -> Unit = { notifications.sendInvitationEmail(email) }
+                    action
+                }
+
+                InvitationChannel.WHATSAPP -> {
+                    val phone = guest.phoneNumber
+                    if (phone == null || !E164.matches(phone)) {
+                        fail(invitation, "Guest has no valid WhatsApp number")
+                        return
+                    }
+                    val whatsApp =
+                        WhatsAppInvitation(
+                            recipientPhone = phone,
+                            recipientName = guestName,
+                            eventName = eventName,
+                            eventWhen = eventWhen,
+                            organizerName = organizerName,
+                            invitationUrl = link,
+                        )
+                    val action: () -> Unit = { notifications.sendInvitationWhatsApp(whatsApp) }
+                    action
+                }
+            }
 
         var lastError: String? = null
         repeat(properties.maxAttempts) {
             invitation.attempts += 1
             try {
-                notifications.sendInvitationEmail(email)
+                send()
                 invitation.status = InvitationStatus.SENT
                 invitation.sentAt = Instant.now()
                 invitation.lastError = null
@@ -74,8 +109,15 @@ class InvitationDispatchWorker(
                 lastError = ex.message ?: ex.javaClass.simpleName
             }
         }
+        fail(invitation, lastError)
+    }
+
+    private fun fail(
+        invitation: Invitation,
+        error: String?,
+    ) {
         invitation.status = InvitationStatus.FAILED
-        invitation.lastError = lastError
+        invitation.lastError = error
         invitations.save(invitation)
     }
 
@@ -87,5 +129,6 @@ class InvitationDispatchWorker(
     private companion object {
         const val DEFAULT_COLOR = "#1E293B"
         val WHEN_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE, d MMM yyyy 'at' HH:mm")
+        val E164 = Regex("^\\+[1-9]\\d{6,14}$")
     }
 }
