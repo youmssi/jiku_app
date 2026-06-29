@@ -73,3 +73,13 @@ notification:
   send:
     # Delivery attempts before a notification is recorded as permanently failed.
     max-attempts: ${NOTIFICATION_MAX_ATTEMPTS:3}
+  reputation:
+    # Shared secret the email provider must present on the feedback webhook.
+    webhook-secret: ${NOTIFICATION_WEBHOOK_SECRET:local-development-webhook-secret}
+    # Rolling window and alert thresholds (industry guidance: well under 5% bounce,
+    # under 0.5% complaint). Optional ops address emailed when a threshold breaks.
+    window-hours: ${NOTIFICATION_REPUTATION_WINDOW_HOURS:24}
+    bounce-rate-threshold: ${NOTIFICATION_BOUNCE_RATE_THRESHOLD:0.05}
+    complaint-rate-threshold: ${NOTIFICATION_COMPLAINT_RATE_THRESHOLD:0.005}
+    undeliverable-hard-bounces: ${NOTIFICATION_UNDELIVERABLE_HARD_BOUNCES:2}
+    ops-alert-email: ${NOTIFICATION_OPS_ALERT_EMAIL:}

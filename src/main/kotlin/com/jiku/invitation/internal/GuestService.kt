@@ -1,6 +1,7 @@
 package com.jiku.invitation.internal
 
 import com.jiku.event.EventModuleApi
+import com.jiku.notification.NotificationModuleApi
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVRecord
 import org.springframework.http.HttpStatus
@@ -20,6 +21,7 @@ class GuestService(
     private val guests: GuestRepository,
     private val events: EventModuleApi,
     private val properties: GuestImportProperties,
+    private val notifications: NotificationModuleApi,
 ) {
     @Transactional(readOnly = true)
     fun list(eventId: UUID): List<GuestResponse> =
@@ -96,6 +98,9 @@ class GuestService(
                 email?.let { seenEmails += it }
                 phone?.let { seenPhones += it }
                 disposableWarning(email)?.let { warnings += RowIssue(rowNumber, it) }
+                if (email != null && notifications.isUndeliverable(email)) {
+                    warnings += RowIssue(rowNumber, "Email previously bounced and may be undeliverable")
+                }
 
                 guests.save(
                     Guest(
