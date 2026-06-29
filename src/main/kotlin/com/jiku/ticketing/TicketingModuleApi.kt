@@ -5,8 +5,9 @@ import java.util.UUID
 
 /**
  * The ticketing module's public API. The RSVP flow issues a ticket on
- * confirmation and cancels it on decline; check-in (later) resolves a ticket by
- * its code. Reads/writes are tenant-scoped by the persistence-layer filter.
+ * confirmation and cancels it on decline; check-in resolves a ticket by its code
+ * (or its guest) and atomically transitions it to checked-in. Reads/writes are
+ * tenant-scoped by the persistence-layer filter.
  */
 interface TicketingModuleApi {
     fun issueTicket(
@@ -19,6 +20,27 @@ interface TicketingModuleApi {
     fun findByGuest(guestId: UUID): TicketInfo?
 
     fun findByCode(ticketCode: String): TicketInfo?
+
+    /**
+     * Attempts to check in the ticket identified by [ticketCode], attributing the
+     * action to [checkedInBy]. The transition is atomic; see [CheckInResult].
+     */
+    fun checkInByCode(
+        ticketCode: String,
+        checkedInBy: String,
+    ): CheckInResult
+
+    /**
+     * Attempts to check in the ticket belonging to [guestId] (the manual,
+     * search-based path), attributing the action to [checkedInBy].
+     */
+    fun checkInByGuest(
+        guestId: UUID,
+        checkedInBy: String,
+    ): CheckInResult
+
+    /** Real-time attendance figures for an event, scoped to the current tenant. */
+    fun attendanceStats(eventId: UUID): AttendanceStats
 }
 
 data class TicketInfo(
@@ -28,4 +50,36 @@ data class TicketInfo(
     val ticketCode: String,
     val status: String,
     val issuedAt: Instant,
+    val checkedInAt: Instant? = null,
+    val checkedInBy: String? = null,
+)
+
+/**
+ * Outcome of a check-in attempt, carrying enough detail for the caller to render a
+ * clear validator-facing message without a second lookup.
+ *
+ * - [CheckInOutcome.CHECKED_IN] — first successful check-in; [checkedInAt]/[checkedInBy]
+ *   describe the action just performed.
+ * - [CheckInOutcome.ALREADY_CHECKED_IN] — the ticket was already checked in;
+ *   [checkedInAt]/[checkedInBy] describe the prior check-in.
+ * - [CheckInOutcome.CANCELLED] — the ticket belongs to a guest who declined.
+ * - [CheckInOutcome.NOT_FOUND] — no such ticket in the current tenant context.
+ */
+data class CheckInResult(
+    val outcome: CheckInOutcome,
+    val ticket: TicketInfo? = null,
+    val checkedInAt: Instant? = null,
+    val checkedInBy: String? = null,
+)
+
+enum class CheckInOutcome {
+    CHECKED_IN,
+    ALREADY_CHECKED_IN,
+    CANCELLED,
+    NOT_FOUND,
+}
+
+data class AttendanceStats(
+    val checkedIn: Long,
+    val confirmed: Long,
 )
