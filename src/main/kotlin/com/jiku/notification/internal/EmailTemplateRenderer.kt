@@ -1,6 +1,5 @@
 package com.jiku.notification.internal
 
-import com.jiku.notification.InvitationEmail
 import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Component
 

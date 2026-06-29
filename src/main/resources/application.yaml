@@ -70,3 +70,6 @@ notification:
     # Sender address for outbound mail. Set per environment; the provider adapter
     # is chosen later (until then a logging adapter records sends).
     from: ${NOTIFICATION_EMAIL_FROM:no-reply@jiku.app}
+  send:
+    # Delivery attempts before a notification is recorded as permanently failed.
+    max-attempts: ${NOTIFICATION_MAX_ATTEMPTS:3}
