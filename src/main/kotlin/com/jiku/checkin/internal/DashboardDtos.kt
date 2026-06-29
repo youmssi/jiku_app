@@ -16,6 +16,16 @@ data class DashboardResponse(
     val pending: Long,
     val checkedIn: Long,
     val entrances: List<EntranceCount>,
+    val deliverability: DeliverabilityFlag,
+)
+
+/**
+ * The tenant's recent email deliverability, surfaced so an organizer whose own
+ * list is bouncing sees a clear explanation rather than silent under-delivery.
+ */
+data class DeliverabilityFlag(
+    val bounceRatePercent: Int,
+    val warn: Boolean,
 )
 
 data class EntranceCount(

@@ -2,6 +2,7 @@ package com.jiku.checkin.internal
 
 import com.jiku.event.EventModuleApi
 import com.jiku.invitation.InvitationModuleApi
+import com.jiku.notification.NotificationModuleApi
 import com.jiku.ticketing.TicketingModuleApi
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -19,6 +20,7 @@ class DashboardService(
     private val events: EventModuleApi,
     private val invitation: InvitationModuleApi,
     private val ticketing: TicketingModuleApi,
+    private val notifications: NotificationModuleApi,
     private val validators: ValidatorRepository,
 ) {
     @Transactional(readOnly = true)
@@ -34,6 +36,7 @@ class DashboardService(
         validators.findByEventIdOrderByCreatedAtAsc(eventId).forEach { labels.add(it.label) }
         labels.addAll(countsByLabel.keys)
         val entrances = labels.map { EntranceCount(it, countsByLabel[it] ?: 0L) }
+        val deliverability = notifications.currentTenantDeliverability()
 
         return DashboardResponse(
             eventName = event.name,
@@ -45,6 +48,11 @@ class DashboardService(
             pending = guests.pending,
             checkedIn = attendance.checkedIn,
             entrances = entrances,
+            deliverability =
+                DeliverabilityFlag(
+                    bounceRatePercent = Math.round(deliverability.bounceRate * 100).toInt(),
+                    warn = deliverability.warn,
+                ),
         )
     }
 }
