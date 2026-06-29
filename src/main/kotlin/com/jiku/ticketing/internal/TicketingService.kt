@@ -103,6 +103,10 @@ class TicketingService(
     @Transactional(readOnly = true)
     override fun findTicketsByEvent(eventId: UUID): List<TicketInfo> = tickets.findByEventId(eventId).map { it.toInfo() }
 
+    @Transactional(readOnly = true)
+    override fun checkInCountsByLabel(eventId: UUID): Map<String, Long> =
+        tickets.checkInCountsByLabel(eventId).associate { row -> (row[0] as String) to (row[1] as Long) }
+
     private fun checkIn(
         ticket: Ticket?,
         checkedInBy: String,

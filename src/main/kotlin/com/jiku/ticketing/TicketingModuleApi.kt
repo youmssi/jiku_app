@@ -58,6 +58,9 @@ interface TicketingModuleApi {
 
     /** All tickets for an event (for pre-syncing a validator's offline roster). */
     fun findTicketsByEvent(eventId: UUID): List<TicketInfo>
+
+    /** Checked-in counts grouped by the label that performed each check-in. */
+    fun checkInCountsByLabel(eventId: UUID): Map<String, Long>
 }
 
 data class TicketInfo(

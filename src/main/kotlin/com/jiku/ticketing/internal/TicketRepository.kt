@@ -24,6 +24,16 @@ interface TicketRepository : JpaRepository<Ticket, UUID> {
 
     fun findByEventId(eventId: UUID): List<Ticket>
 
+    /** Rows of [checkedInBy label, count] for an event's checked-in tickets. */
+    @Query(
+        "SELECT t.checkedInBy, COUNT(t) FROM Ticket t " +
+            "WHERE t.eventId = :eventId AND t.status = com.jiku.ticketing.internal.TicketStatus.CHECKED_IN " +
+            "AND t.checkedInBy IS NOT NULL GROUP BY t.checkedInBy",
+    )
+    fun checkInCountsByLabel(
+        @Param("eventId") eventId: UUID,
+    ): List<Array<Any>>
+
     /**
      * First-timestamp-wins reconciliation: rewrites an already-checked-in ticket to
      * an earlier scan, only if the recorded check-in is strictly later. Returns the

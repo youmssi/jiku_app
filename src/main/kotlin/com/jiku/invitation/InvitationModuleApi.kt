@@ -13,6 +13,9 @@ interface InvitationModuleApi {
     /** All guests of an event (for an organizer dashboard, export, or offline roster). */
     fun listGuests(eventId: UUID): List<GuestInfo>
 
+    /** Aggregate guest counts for an event's dashboard. */
+    fun guestStats(eventId: UUID): GuestStats
+
     /**
      * Finds guests of [eventId] whose name, email or phone matches [query]
      * (case-insensitive substring). Supports the validator's manual, no-ticket
@@ -35,4 +38,17 @@ data class GuestInfo(
     val email: String?,
     val phoneNumber: String?,
     val rsvpStatus: String,
+)
+
+/**
+ * Aggregate guest figures for an event. [invited] is the number of distinct guests
+ * who have received at least one successfully sent invitation; [pending] is guests
+ * who have not yet responded.
+ */
+data class GuestStats(
+    val total: Long,
+    val invited: Long,
+    val confirmed: Long,
+    val declined: Long,
+    val pending: Long,
 )

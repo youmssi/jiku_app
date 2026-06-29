@@ -8,6 +8,13 @@ import java.util.UUID
 interface GuestRepository : JpaRepository<Guest, UUID> {
     fun findByEventId(eventId: UUID): List<Guest>
 
+    fun countByEventId(eventId: UUID): Long
+
+    fun countByEventIdAndRsvpStatus(
+        eventId: UUID,
+        rsvpStatus: RsvpStatus,
+    ): Long
+
     fun existsByEventIdAndEmailIgnoreCase(
         eventId: UUID,
         email: String,
