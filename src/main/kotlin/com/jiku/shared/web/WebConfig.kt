@@ -11,6 +11,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
  * Prefixes every `@RestController` mapping with the configured API base path
  * ([ApiProperties.basePath]). Controllers therefore declare only their resource
  * path (e.g. `/events`) and the version prefix is applied centrally.
+ *
+ * The prefix is scoped to this application's own controllers (`com.jiku`) so that
+ * library-provided endpoints — notably springdoc's `/v3/api-docs` and the Swagger
+ * UI — keep their conventional paths instead of being moved under the API version.
  */
 @Configuration
 class WebConfig(
@@ -19,7 +23,11 @@ class WebConfig(
     override fun configurePathMatch(configurer: PathMatchConfigurer) {
         configurer.addPathPrefix(
             apiProperties.basePath,
-            HandlerTypePredicate.forAnnotation(RestController::class.java),
+            HandlerTypePredicate
+                .builder()
+                .annotation(RestController::class.java)
+                .basePackage("com.jiku")
+                .build(),
         )
     }
 }
