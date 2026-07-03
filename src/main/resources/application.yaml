@@ -21,7 +21,7 @@ spring:
     # database the container creates and the database the app connects to cannot
     # drift. Defaults make a fresh clone run with zero configuration; override the
     # variables (e.g. POSTGRES_HOST, credentials) for any other environment.
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:jiku}
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/${POSTGRES_DB:jiku}
     username: ${POSTGRES_USER:jiku}
     password: ${POSTGRES_PASSWORD:jiku}
     hikari:
