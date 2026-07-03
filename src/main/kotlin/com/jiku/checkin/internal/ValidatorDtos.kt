@@ -30,6 +30,8 @@ data class ValidatorResponse(
  */
 data class ValidatorContextResponse(
     val eventName: String,
+    /** The event's lifecycle status; CANCELLED means check-in is closed for good. */
+    val eventStatus: String,
     val startDateTime: Instant?,
     val timezone: String,
     val eventLocation: String?,

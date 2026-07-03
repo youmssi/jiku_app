@@ -10,4 +10,6 @@ data class RsvpView(
     val guestName: String,
     val status: String,
     val ticketCode: String?,
+    /** The event's own lifecycle status; CANCELLED renders a cancellation notice. */
+    val eventStatus: String? = null,
 )

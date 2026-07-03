@@ -43,4 +43,9 @@ class EventController(
     fun publish(
         @PathVariable id: UUID,
     ): EventResponse = eventService.publish(id)
+
+    @PostMapping("/{id}/cancel")
+    fun cancel(
+        @PathVariable id: UUID,
+    ): EventResponse = eventService.cancel(id)
 }
