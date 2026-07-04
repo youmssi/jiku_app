@@ -43,6 +43,10 @@ class SecurityConfig(
                 it.requestMatchers("${apiProperties.basePath}/rsvp/**").permitAll()
                 it.requestMatchers("${apiProperties.basePath}/checkin/**").permitAll()
                 it.requestMatchers("${apiProperties.basePath}/notifications/email-feedback").permitAll()
+                // Mobile Money provider payment callback: the caller is the provider,
+                // authenticated by the signature the payment provider verifies, not a
+                // user session.
+                it.requestMatchers("${apiProperties.basePath}/billing/payments/callback").permitAll()
                 it.requestMatchers("/actuator/health/**").permitAll()
                 it.anyRequest().authenticated()
             }.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)

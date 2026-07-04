@@ -50,9 +50,17 @@ api:
 billing:
   # Pay-per-event pricing (JIKU-32). The free tier and paid tiers are configuration,
   # not literals in code, so pricing changes without a release. Amounts are in the
-  # currency's minor unit (e.g. centimes for XOF). Paid tiers are added in JIKU-33.
+  # currency's minor unit (e.g. centimes for XOF).
   free-tier-guests: ${BILLING_FREE_TIER_GUESTS:100}
   currency: ${BILLING_CURRENCY:XOF}
+  payment:
+    # Mobile Money integration (JIKU-33). The active provider is a wiring choice;
+    # "sandbox" makes the full flow work before a real provider is chosen. The
+    # webhook secret verifies the signature on provider callbacks and MUST be set
+    # to a strong value outside local.
+    provider: ${BILLING_PAYMENT_PROVIDER:sandbox}
+    webhook-secret: ${BILLING_PAYMENT_WEBHOOK_SECRET:local-development-payment-webhook-secret}
+    sandbox-return-url: ${BILLING_PAYMENT_SANDBOX_RETURN_URL:http://localhost:3000/billing/return}
 
 invitation:
   import:
