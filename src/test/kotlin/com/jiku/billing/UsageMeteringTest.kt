@@ -20,19 +20,20 @@ import java.util.concurrent.TimeUnit
 
 /**
  * JIKU-32: usage is metered per event and accumulates correctly across multiple
- * import/send batches, without resetting or double-counting, and the free-tier
- * boundary is reflected in the allowance.
+ * import/send batches, without resetting or double-counting. Guests are kept within
+ * the free-tier allowance so this exercises metering only — enforcement beyond the
+ * allowance is covered by the paywall test (JIKU-34).
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration::class)
-@TestPropertySource(properties = ["billing.free-tier-guests=3"])
+@TestPropertySource(properties = ["billing.free-tier-guests=10"])
 class UsageMeteringTest {
     @Autowired
     lateinit var mockMvc: MockMvc
 
     @Test
-    fun `usage accumulates across batches and reflects the free-tier allowance`() {
+    fun `usage accumulates across batches without resetting or double-counting`() {
         val token = register()
         val eventId = createPublishedEvent(token)
 
@@ -42,10 +43,9 @@ class UsageMeteringTest {
         awaitInvited(token, eventId, expected = 3)
 
         var usage = usage(token, eventId)
-        // Within the free tier of 3, nothing remaining, still within allowance.
         assert(JsonPath.read<Int>(usage, "$.invitedGuests") == 3)
-        assert(JsonPath.read<Int>(usage, "$.allowance") == 3)
-        assert(JsonPath.read<Int>(usage, "$.remaining") == 0)
+        assert(JsonPath.read<Int>(usage, "$.allowance") == 10)
+        assert(JsonPath.read<Int>(usage, "$.remaining") == 7)
         assert(JsonPath.read<Boolean>(usage, "$.withinAllowance"))
         assert(JsonPath.read<String>(usage, "$.tier") == "FREE")
 
@@ -58,10 +58,9 @@ class UsageMeteringTest {
         assert(JsonPath.read<Int>(usage, "$.invitedGuests") == 5)
         assert(JsonPath.read<Int>(usage, "$.guestsImported") == 5)
         assert(JsonPath.read<Int>(usage, "$.invitationsSentEmail") == 5)
-        // Over the free tier now: no remaining, no longer within allowance, paid tier.
-        assert(JsonPath.read<Int>(usage, "$.remaining") == 0)
-        assert(!JsonPath.read<Boolean>(usage, "$.withinAllowance"))
-        assert(JsonPath.read<String>(usage, "$.tier") != "FREE")
+        assert(JsonPath.read<Int>(usage, "$.remaining") == 5)
+        assert(JsonPath.read<Boolean>(usage, "$.withinAllowance"))
+        assert(JsonPath.read<String>(usage, "$.tier") == "FREE")
     }
 
     private fun awaitInvited(
