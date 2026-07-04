@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: optional:file:.env[.properties]
   application:
     name: app
   servlet:
@@ -21,9 +23,9 @@ spring:
     # database the container creates and the database the app connects to cannot
     # drift. Defaults make a fresh clone run with zero configuration; override the
     # variables (e.g. POSTGRES_HOST, credentials) for any other environment.
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:jiku}
-    username: ${POSTGRES_USER:jiku}
-    password: ${POSTGRES_PASSWORD:jiku}
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
     hikari:
       # 10 connections comfortably covers the MVP's expected concurrency while
       # staying well under managed-Postgres connection limits. Override per
@@ -46,6 +48,15 @@ api:
   # Prefix applied to every REST controller (and the security matchers). The API
   # version lives here only, so a future version is a one-line change.
   base-path: ${API_BASE_PATH:/api/v1}
+
+compliance:
+  retention:
+    # Data-retention policy (JIKU-37). Guest personal data is anonymized this many
+    # days after an event's date; the dashboard warns notice-days ahead of that
+    # cutoff. The job runs on the cron below.
+    days: ${RETENTION_DAYS:365}
+    notice-days: ${RETENTION_NOTICE_DAYS:30}
+    cron: ${RETENTION_CRON:0 30 3 * * *}
 
 invitation:
   import:
