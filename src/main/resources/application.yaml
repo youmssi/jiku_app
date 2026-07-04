@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: optional:file:.env[.properties]
   application:
     name: app
   servlet:
@@ -21,9 +23,9 @@ spring:
     # database the container creates and the database the app connects to cannot
     # drift. Defaults make a fresh clone run with zero configuration; override the
     # variables (e.g. POSTGRES_HOST, credentials) for any other environment.
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:jiku}
-    username: ${POSTGRES_USER:jiku}
-    password: ${POSTGRES_PASSWORD:jiku}
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
     hikari:
       # 10 connections comfortably covers the MVP's expected concurrency while
       # staying well under managed-Postgres connection limits. Override per
