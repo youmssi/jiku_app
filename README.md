@@ -72,6 +72,24 @@ Other useful commands:
 ./gradlew koverVerify
 ```
 
+### Demo data
+
+A single command populates a clearly identifiable demo tenant — "Demo Events Co",
+`[DEMO]`-prefixed events in every lifecycle state (a draft, a published event with
+RSVPs coming in, and a past event with a realistic check-in history) and a guest
+list to match:
+
+```bash
+docker compose up -d      # database must be running
+./gradlew seedDemoData
+```
+
+Log in afterwards as `demo-organizer@jiku.example` / `demo-password` (override the
+password with `JIKU_DEMOSEED_PASSWORD` or the `jiku.demo-seed.password` property).
+The command is safe to re-run at any time: it resets the demo tenant's data first,
+so no manual cleanup is ever needed. Pointing `POSTGRES_*` at another environment
+(e.g. staging) seeds that environment instead.
+
 Configuration lives in a single `application.yaml` (see `.env.example`). Every
 environment-specific value is a `${ENV_VAR:default}` placeholder: defaults keep local
 zero-config, and any other environment overrides the variables. Secrets such as
