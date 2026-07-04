@@ -47,6 +47,13 @@ api:
   # version lives here only, so a future version is a one-line change.
   base-path: ${API_BASE_PATH:/api/v1}
 
+billing:
+  # Pay-per-event pricing (JIKU-32). The free tier and paid tiers are configuration,
+  # not literals in code, so pricing changes without a release. Amounts are in the
+  # currency's minor unit (e.g. centimes for XOF). Paid tiers are added in JIKU-33.
+  free-tier-guests: ${BILLING_FREE_TIER_GUESTS:100}
+  currency: ${BILLING_CURRENCY:XOF}
+
 invitation:
   import:
     # Maximum number of guest rows accepted in one CSV upload.

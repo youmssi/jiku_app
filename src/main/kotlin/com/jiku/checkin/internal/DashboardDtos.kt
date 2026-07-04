@@ -17,6 +17,19 @@ data class DashboardResponse(
     val checkedIn: Long,
     val entrances: List<EntranceCount>,
     val deliverability: DeliverabilityFlag,
+    val usage: UsageSummary,
+)
+
+/**
+ * The event's billing usage against its unlocked allowance (JIKU-32), shown to the
+ * organizer before they hit a paywall so consumption is never a surprise.
+ */
+data class UsageSummary(
+    val invited: Long,
+    val allowance: Long,
+    val remaining: Long,
+    val tier: String,
+    val withinAllowance: Boolean,
 )
 
 /**

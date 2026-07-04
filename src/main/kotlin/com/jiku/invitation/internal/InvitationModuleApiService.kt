@@ -1,8 +1,10 @@
 package com.jiku.invitation.internal
 
+import com.jiku.event.InvitationChannel
 import com.jiku.invitation.GuestInfo
 import com.jiku.invitation.GuestStats
 import com.jiku.invitation.InvitationModuleApi
+import com.jiku.invitation.SentInvitationCounts
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -37,6 +39,18 @@ class InvitationModuleApiService(
         if (term.isEmpty()) return emptyList()
         return guests.search(eventId, "%${term.lowercase()}%").map { it.toInfo() }
     }
+
+    @Transactional(readOnly = true)
+    override fun sentInvitationCounts(eventId: UUID): SentInvitationCounts =
+        SentInvitationCounts(
+            email = invitations.countByEventIdAndChannelAndStatus(eventId, InvitationChannel.EMAIL, InvitationStatus.SENT),
+            whatsapp =
+                invitations.countByEventIdAndChannelAndStatus(
+                    eventId,
+                    InvitationChannel.WHATSAPP,
+                    InvitationStatus.SENT,
+                ),
+        )
 }
 
 private fun Guest.toInfo(): GuestInfo =
