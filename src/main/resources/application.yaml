@@ -47,6 +47,39 @@ api:
   # version lives here only, so a future version is a one-line change.
   base-path: ${API_BASE_PATH:/api/v1}
 
+management:
+  # Observability surface for uptime and performance monitoring (JIKU-30).
+  endpoints:
+    web:
+      exposure:
+        # health is the public liveness/readiness probe; prometheus and metrics
+        # feed a performance dashboard; info reports build metadata. Override to
+        # widen/narrow per environment.
+        include: ${MANAGEMENT_ENDPOINTS:health,info,metrics,prometheus}
+  endpoint:
+    health:
+      # Kubernetes-style liveness/readiness probes; readiness fails when the
+      # database is unreachable, so a monitor pinging /actuator/health/readiness
+      # (or /actuator/health) flips to DOWN on a DB outage.
+      probes:
+        enabled: true
+      # Only status (UP/DOWN) is shown to unauthenticated callers (the external
+      # uptime monitor), never the internal component details.
+      show-details: ${MANAGEMENT_HEALTH_SHOW_DETAILS:when-authorized}
+      show-components: ${MANAGEMENT_HEALTH_SHOW_COMPONENTS:when-authorized}
+  health:
+    db:
+      # Explicit: the readiness state must reflect database connectivity.
+      enabled: true
+  metrics:
+    distribution:
+      # Publish latency histograms so p95/p99 and error rate are queryable for
+      # the failure-sensitive paths (check-in validation, RSVP confirmation).
+      percentiles-histogram:
+        http.server.requests: true
+      slo:
+        http.server.requests: 100ms,250ms,500ms,1s,2s
+
 invitation:
   import:
     # Maximum number of guest rows accepted in one CSV upload.
