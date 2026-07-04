@@ -47,6 +47,15 @@ api:
   # version lives here only, so a future version is a one-line change.
   base-path: ${API_BASE_PATH:/api/v1}
 
+compliance:
+  retention:
+    # Data-retention policy (JIKU-37). Guest personal data is anonymized this many
+    # days after an event's date; the dashboard warns notice-days ahead of that
+    # cutoff. The job runs on the cron below.
+    days: ${RETENTION_DAYS:365}
+    notice-days: ${RETENTION_NOTICE_DAYS:30}
+    cron: ${RETENTION_CRON:0 30 3 * * *}
+
 invitation:
   import:
     # Maximum number of guest rows accepted in one CSV upload.

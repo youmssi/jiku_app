@@ -17,6 +17,16 @@ data class DashboardResponse(
     val checkedIn: Long,
     val entrances: List<EntranceCount>,
     val deliverability: DeliverabilityFlag,
+    /** Present only when the event's guest data is approaching its retention cutoff. */
+    val dataRetention: DataRetentionNotice?,
+)
+
+/**
+ * Advance notice that this event's guest personal data will be anonymized on
+ * [anonymizeOn] under the retention policy (JIKU-37).
+ */
+data class DataRetentionNotice(
+    val anonymizeOn: java.time.Instant,
 )
 
 /**

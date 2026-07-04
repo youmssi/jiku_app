@@ -1,5 +1,6 @@
 package com.jiku.event
 
+import java.time.Instant
 import java.util.UUID
 
 /**
@@ -12,6 +13,13 @@ import java.util.UUID
  */
 interface EventModuleApi {
     fun findEvent(eventId: UUID): EventInfo?
+
+    /**
+     * Events across all tenants whose date is before [cutoff] — the retention job's
+     * (JIKU-37) worklist. Intentionally cross-tenant: it is a platform maintenance
+     * task, and the caller binds each event's own tenant before touching its data.
+     */
+    fun eventsPastRetention(cutoff: Instant): List<RetentionCandidate>
 
     /**
      * Atomically reserves one attendance slot, honoring capacity and overbooking.
