@@ -13,13 +13,13 @@ services:
   postgres:
     image: postgres:18
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-jiku}
-      POSTGRES_USER: ${POSTGRES_USER:-jiku}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jiku}
+      DATABASE_NAME: ${DATABASE_NAME:-jiku}
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-jiku}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-jiku}
     ports: ["${POSTGRES_PORT:-5433}:5432"]
     volumes: ["pgdata:/var/lib/postgresql"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jiku} -d ${POSTGRES_DB:-jiku}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME:-jiku} -d ${DATABASE_NAME:-jiku}"]
       interval: 10s
       timeout: 5s
       retries: 5
