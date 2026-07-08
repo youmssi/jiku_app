@@ -1,0 +1,32 @@
+package com.jiku.shared
+
+import java.util.UUID
+
+/**
+ * Published by the invitation module when a guest's invitation is ready to send,
+ * and consumed by the notification module which owns delivery. It lives in
+ * `shared` (a shared kernel) so neither module depends on the other — the
+ * invitation flow is fully event-driven and the Modulith boundary stays acyclic.
+ *
+ * The invitation module resolves all presentation content (it owns the signed
+ * link); notification only renders, sends, retries and audits.
+ */
+data class GuestInvitedEvent(
+    val invitationId: UUID,
+    val tenantId: String,
+    val channel: String,
+    val recipient: String,
+    val recipientName: String,
+    val eventName: String,
+    val eventWhen: String?,
+    val eventLocation: String?,
+    val organizerName: String,
+    val primaryColor: String,
+    val logoUrl: String?,
+    val invitationUrl: String,
+) {
+    companion object {
+        const val CHANNEL_EMAIL = "EMAIL"
+        const val CHANNEL_WHATSAPP = "WHATSAPP"
+    }
+}
