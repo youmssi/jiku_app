@@ -1,5 +1,6 @@
 package com.jiku.invitation.internal
 
+import com.jiku.event.EventInfo
 import com.jiku.event.EventModuleApi
 import com.jiku.shared.TenantContext
 import com.jiku.tenant.TenantModuleApi
@@ -33,6 +34,7 @@ class RsvpService(
         guestId: UUID,
         eventId: UUID,
     ): RsvpView {
+        requireNotCancelled(eventId)
         val guest = loadGuest(guestId)
         if (guest.rsvpStatus != RsvpStatus.CONFIRMED) {
             if (!events.reserveAttendanceSlot(eventId)) {
@@ -50,6 +52,7 @@ class RsvpService(
         guestId: UUID,
         eventId: UUID,
     ): RsvpView {
+        requireNotCancelled(eventId)
         val guest = loadGuest(guestId)
         if (guest.rsvpStatus == RsvpStatus.CONFIRMED) {
             events.releaseAttendanceSlot(eventId)
@@ -64,6 +67,13 @@ class RsvpService(
         guests.findById(guestId).orElseThrow {
             ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation not found")
         }
+
+    /** A cancelled event accepts no further RSVP changes (JIKU-14B). */
+    private fun requireNotCancelled(eventId: UUID) {
+        if (events.findEvent(eventId)?.status == EventInfo.STATUS_CANCELLED) {
+            throw ResponseStatusException(HttpStatus.GONE, "This event has been cancelled")
+        }
+    }
 
     private fun buildView(guest: Guest): RsvpView {
         val event = events.findEvent(guest.eventId)
@@ -80,6 +90,7 @@ class RsvpService(
             guestName = "${guest.firstName} ${guest.lastName}",
             status = guest.rsvpStatus.name,
             ticketCode = ticket?.ticketCode,
+            eventStatus = event?.status,
             erased = guest.personalDataErased,
         )
     }

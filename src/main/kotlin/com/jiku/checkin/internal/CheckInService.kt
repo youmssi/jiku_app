@@ -1,5 +1,6 @@
 package com.jiku.checkin.internal
 
+import com.jiku.event.EventInfo
 import com.jiku.event.EventModuleApi
 import com.jiku.invitation.GuestInfo
 import com.jiku.invitation.InvitationModuleApi
@@ -8,7 +9,9 @@ import com.jiku.tenant.TenantModuleApi
 import com.jiku.ticketing.CheckInOutcome
 import com.jiku.ticketing.CheckInResult
 import com.jiku.ticketing.TicketingModuleApi
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
 /**
@@ -38,6 +41,7 @@ class CheckInService(
         val stats = ticketing.attendanceStats(eventId)
         return ValidatorContextResponse(
             eventName = event?.name ?: "Event",
+            eventStatus = event?.status ?: "PUBLISHED",
             startDateTime = event?.startDateTime,
             timezone = event?.timezone ?: "UTC",
             eventLocation = event?.location,
@@ -55,6 +59,9 @@ class CheckInService(
         ticketCode: String,
         validatorLabel: String,
     ): CheckInResponse {
+        if (eventCancelled(eventId)) {
+            return eventCancelledResponse()
+        }
         val ticket = ticketing.findByCode(ticketCode)
         if (ticket == null || ticket.eventId != eventId) {
             return notFound()
@@ -67,6 +74,9 @@ class CheckInService(
         guestId: UUID,
         validatorLabel: String,
     ): CheckInResponse {
+        if (eventCancelled(eventId)) {
+            return eventCancelledResponse()
+        }
         val guest = invitation.findGuest(guestId)
         if (guest == null || guest.eventId != eventId) {
             return notFound()
@@ -77,8 +87,11 @@ class CheckInService(
     fun search(
         eventId: UUID,
         query: String,
-    ): List<GuestMatch> =
-        invitation.searchGuests(eventId, query).map { guest ->
+    ): List<GuestMatch> {
+        if (eventCancelled(eventId)) {
+            throw ResponseStatusException(HttpStatus.GONE, "This event has been cancelled")
+        }
+        return invitation.searchGuests(eventId, query).map { guest ->
             val ticket = ticketing.findByGuest(guest.id)
             GuestMatch(
                 guestId = guest.id,
@@ -92,6 +105,7 @@ class CheckInService(
                 checkedInBy = ticket?.checkedInBy,
             )
         }
+    }
 
     fun stats(eventId: UUID): AttendanceResponse {
         val stats = ticketing.attendanceStats(eventId)
@@ -127,8 +141,11 @@ class CheckInService(
         eventId: UUID,
         validatorLabel: String,
         items: List<SyncItem>,
-    ): List<SyncResultEntry> =
-        items.map { item ->
+    ): List<SyncResultEntry> {
+        if (eventCancelled(eventId)) {
+            return items.map { SyncResultEntry(it.ticketCode, EVENT_CANCELLED, null, null, null) }
+        }
+        return items.map { item ->
             val ticket = ticketing.findByCode(item.ticketCode)
             if (ticket == null || ticket.eventId != eventId) {
                 SyncResultEntry(item.ticketCode, CheckInOutcome.NOT_FOUND.name, null, null, null)
@@ -144,6 +161,7 @@ class CheckInService(
                 )
             }
         }
+    }
 
     private fun respond(result: CheckInResult): CheckInResponse {
         val guestName = result.ticket?.let { invitation.findGuest(it.guestId)?.fullName() }
@@ -158,5 +176,22 @@ class CheckInService(
 
     private fun notFound() = CheckInResponse(CheckInOutcome.NOT_FOUND.name, null, null, null, null)
 
+    /**
+     * A cancelled event's tickets must never validate — and the validator must see
+     * why explicitly, not a generic failure (JIKU-14B).
+     */
+    private fun eventCancelled(eventId: UUID): Boolean = events.findEvent(eventId)?.status == EventInfo.STATUS_CANCELLED
+
+    private fun eventCancelledResponse() = CheckInResponse(EVENT_CANCELLED, null, null, null, null)
+
     private fun GuestInfo.fullName(): String = "$firstName $lastName"
+
+    companion object {
+        /**
+         * Check-in-level outcome (alongside the ticketing module's
+         * [CheckInOutcome] names): the event itself was cancelled, so no ticket
+         * of it can validate regardless of the ticket's own state.
+         */
+        const val EVENT_CANCELLED = "EVENT_CANCELLED"
+    }
 }

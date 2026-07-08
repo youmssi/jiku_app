@@ -16,6 +16,12 @@ data class EventInfo(
     val endDateTime: Instant?,
     val timezone: String,
     val location: String?,
+) {
+    companion object {
+        /** [status] value of a cancelled event, shared so consumers avoid magic strings. */
+        const val STATUS_CANCELLED = "CANCELLED"
+    }
+}
 )
 
 /** An event (with its owning tenant) whose data is due for retention anonymization. */
