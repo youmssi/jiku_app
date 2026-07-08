@@ -17,3 +17,9 @@ data class EventInfo(
     val timezone: String,
     val location: String?,
 )
+
+/** An event (with its owning tenant) whose data is due for retention anonymization. */
+data class RetentionCandidate(
+    val eventId: UUID,
+    val tenantId: String,
+)
