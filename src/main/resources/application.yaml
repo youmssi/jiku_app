@@ -2,7 +2,7 @@ server:
   # Per-IP rate limiting needs the real client address, not the hosting
   # platform's reverse proxy. NATIVE has the embedded server honour the
   # X-Forwarded-* headers set by the immediate (trusted) proxy.
-  forwarded-headers-strategy: ${FORWARDED_HEADERS_STRATEGY:native}
+  forwarded-headers-strategy: ${SERVER_FORWARDED_HEADERS:native}
 logging:
   # Prepend the request and tenant correlation ids to every console line so a
   # request can be traced locally. In deployed environments set
@@ -19,8 +19,8 @@ spring:
     name: app
   servlet:
     multipart:
-      max-file-size: ${GUEST_IMPORT_MAX_FILE_SIZE:10MB}
-      max-request-size: ${GUEST_IMPORT_MAX_FILE_SIZE:10MB}
+      max-file-size: ${INVITATION_MAX_FILE_SIZE:10MB}
+      max-request-size: ${INVITATION_MAX_FILE_SIZE:10MB}
   modulith:
     runtime:
       verification-enabled: true
@@ -37,26 +37,26 @@ spring:
     # database the container creates and the database the app connects to cannot
     # drift. Defaults make a fresh clone run with zero configuration; override the
     # variables (e.g. POSTGRES_HOST, credentials) for any other environment.
-    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
     hikari:
       # 10 connections comfortably covers the MVP's expected concurrency while
       # staying well under managed-Postgres connection limits. Override per
       # environment with DB_POOL_MAX_SIZE rather than editing this file.
-      maximum-pool-size: ${DB_POOL_MAX_SIZE:10}
+      maximum-pool-size: ${DATABASE_POOL_SIZE:10}
 
 jwt:
   # HMAC signing secret (minimum 32 bytes). The default is for local use only;
   # every real environment MUST set JWT_SECRET to a long random value.
-  secret: ${JWT_SECRET:local-development-signing-secret-not-for-production-0123456789abcd}
-  access-token-expiration: ${JWT_ACCESS_EXPIRATION:PT1H}
-  refresh-token-expiration: ${JWT_REFRESH_EXPIRATION:P7D}
+  secret: ${AUTH_JWT_SECRET:local-development-signing-secret-not-for-production-0123456789abcd}
+  access-token-expiration: ${AUTH_JWT_ACCESS_EXPIRATION:PT1H}
+  refresh-token-expiration: ${AUTH_JWT_REFRESH_EXPIRATION:P7D}
 
 api:
   # Prefix applied to every REST controller (and the security matchers). The API
   # version lives here only, so a future version is a one-line change.
-  base-path: ${API_BASE_PATH:/api/v1}
+  base-path: ${SERVER_API_PREFIX:/api/v1}
   rate-limit:
     # Abuse protection for every endpoint reachable without an organizer login.
     # Budgets are per client IP — plus the link token where one is in the path, so
@@ -110,7 +110,7 @@ management:
         # health is the public liveness/readiness probe; prometheus and metrics
         # feed a performance dashboard; info reports build metadata. Override to
         # widen/narrow per environment.
-        include: ${MANAGEMENT_ENDPOINTS:health,info,metrics,prometheus}
+        include: ${OBSERVABILITY_ENDPOINTS:health,info,metrics,prometheus}
   endpoint:
     health:
       # Kubernetes-style liveness/readiness probes; readiness fails when the
@@ -120,8 +120,8 @@ management:
         enabled: true
       # Only status (UP/DOWN) is shown to unauthenticated callers (the external
       # uptime monitor), never the internal component details.
-      show-details: ${MANAGEMENT_HEALTH_SHOW_DETAILS:when-authorized}
-      show-components: ${MANAGEMENT_HEALTH_SHOW_COMPONENTS:when-authorized}
+      show-details: ${OBSERVABILITY_HEALTH_DETAILS:when-authorized}
+      show-components: ${OBSERVABILITY_HEALTH_COMPONENTS:when-authorized}
   health:
     db:
       # Explicit: the readiness state must reflect database connectivity.
@@ -145,32 +145,32 @@ billing:
     # "sandbox" makes the full flow work before a real provider is chosen. The
     # webhook secret verifies the signature on provider callbacks and MUST be set
     # to a strong value outside local.
-    provider: ${BILLING_PAYMENT_PROVIDER:sandbox}
-    webhook-secret: ${BILLING_PAYMENT_WEBHOOK_SECRET:local-development-payment-webhook-secret}
-    sandbox-return-url: ${BILLING_PAYMENT_SANDBOX_RETURN_URL:http://localhost:3000/billing/return}
+    provider: ${PAYMENT_PROVIDER:sandbox}
+    webhook-secret: ${PAYMENT_WEBHOOK_SECRET:local-development-payment-webhook-secret}
+    sandbox-return-url: ${PAYMENT_SANDBOX_RETURN_URL:http://localhost:3000/billing/return}
 compliance:
   retention:
     # Data-retention policy (JIKU-37). Guest personal data is anonymized this many
     # days after an event's date; the dashboard warns notice-days ahead of that
     # cutoff. The job runs on the cron below.
-    days: ${RETENTION_DAYS:365}
-    notice-days: ${RETENTION_NOTICE_DAYS:30}
-    cron: ${RETENTION_CRON:0 30 3 * * *}
+    days: ${COMPLIANCE_RETENTION_DAYS:365}
+    notice-days: ${COMPLIANCE_RETENTION_NOTICE_DAYS:30}
+    cron: ${COMPLIANCE_RETENTION_CRON:0 30 3 * * *}
 
 invitation:
   import:
     # Maximum number of guest rows accepted in one CSV upload.
-    max-rows: ${GUEST_IMPORT_MAX_ROWS:20000}
+    max-rows: ${INVITATION_MAX_ROWS:20000}
   send:
     # Frontend base URL used to build guest invitation links.
-    app-base-url: ${APP_BASE_URL:http://localhost:3000}
+    app-base-url: ${SERVER_BASE_URL:http://localhost:3000}
     # Delivery attempts before an invitation is marked permanently FAILED.
     max-attempts: ${INVITATION_MAX_ATTEMPTS:3}
 
 checkin:
   validator-link:
     # Frontend base URL used to build shareable validator check-in links.
-    app-base-url: ${APP_BASE_URL:http://localhost:3000}
+    app-base-url: ${SERVER_BASE_URL:http://localhost:3000}
     # How long a freshly issued validator link stays usable; revocation is
     # immediate and independent of this window.
     validity: ${CHECKIN_VALIDATOR_LINK_VALIDITY:P30D}
@@ -179,7 +179,7 @@ notification:
   email:
     # Sender address for outbound mail. Set per environment; the provider adapter
     # is chosen later (until then a logging adapter records sends).
-    from: ${NOTIFICATION_EMAIL_FROM:no-reply@jiku.app}
+    from: ${MAIL_FROM:no-reply@jiku.app}
   send:
     # Delivery attempts before a notification is recorded as permanently failed.
     max-attempts: ${NOTIFICATION_MAX_ATTEMPTS:3}
