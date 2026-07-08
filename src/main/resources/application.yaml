@@ -8,6 +8,8 @@ logging:
     correlation: "[%X{requestId:-}] [%X{tenantId:-}] "
 
 spring:
+  config:
+    import: optional:file:.env[.properties]
   application:
     name: app
   servlet:
@@ -30,9 +32,9 @@ spring:
     # database the container creates and the database the app connects to cannot
     # drift. Defaults make a fresh clone run with zero configuration; override the
     # variables (e.g. POSTGRES_HOST, credentials) for any other environment.
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:jiku}
-    username: ${POSTGRES_USER:jiku}
-    password: ${POSTGRES_PASSWORD:jiku}
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
     hikari:
       # 10 connections comfortably covers the MVP's expected concurrency while
       # staying well under managed-Postgres connection limits. Override per
@@ -55,6 +57,61 @@ api:
   # Prefix applied to every REST controller (and the security matchers). The API
   # version lives here only, so a future version is a one-line change.
   base-path: ${API_BASE_PATH:/api/v1}
+
+management:
+  # Observability surface for uptime and performance monitoring (JIKU-30).
+  endpoints:
+    web:
+      exposure:
+        # health is the public liveness/readiness probe; prometheus and metrics
+        # feed a performance dashboard; info reports build metadata. Override to
+        # widen/narrow per environment.
+        include: ${MANAGEMENT_ENDPOINTS:health,info,metrics,prometheus}
+  endpoint:
+    health:
+      # Kubernetes-style liveness/readiness probes; readiness fails when the
+      # database is unreachable, so a monitor pinging /actuator/health/readiness
+      # (or /actuator/health) flips to DOWN on a DB outage.
+      probes:
+        enabled: true
+      # Only status (UP/DOWN) is shown to unauthenticated callers (the external
+      # uptime monitor), never the internal component details.
+      show-details: ${MANAGEMENT_HEALTH_SHOW_DETAILS:when-authorized}
+      show-components: ${MANAGEMENT_HEALTH_SHOW_COMPONENTS:when-authorized}
+  health:
+    db:
+      # Explicit: the readiness state must reflect database connectivity.
+      enabled: true
+  metrics:
+    distribution:
+      # Publish latency histograms so p95/p99 and error rate are queryable for
+      # the failure-sensitive paths (check-in validation, RSVP confirmation).
+      percentiles-histogram:
+        http.server.requests: true
+      slo:
+        http.server.requests: 100ms,250ms,500ms,1s,2s
+billing:
+  # Pay-per-event pricing (JIKU-32). The free tier and paid tiers are configuration,
+  # not literals in code, so pricing changes without a release. Amounts are in the
+  # currency's minor unit (e.g. centimes for XOF).
+  free-tier-guests: ${BILLING_FREE_TIER_GUESTS:100}
+  currency: ${BILLING_CURRENCY:XOF}
+  payment:
+    # Mobile Money integration (JIKU-33). The active provider is a wiring choice;
+    # "sandbox" makes the full flow work before a real provider is chosen. The
+    # webhook secret verifies the signature on provider callbacks and MUST be set
+    # to a strong value outside local.
+    provider: ${BILLING_PAYMENT_PROVIDER:sandbox}
+    webhook-secret: ${BILLING_PAYMENT_WEBHOOK_SECRET:local-development-payment-webhook-secret}
+    sandbox-return-url: ${BILLING_PAYMENT_SANDBOX_RETURN_URL:http://localhost:3000/billing/return}
+compliance:
+  retention:
+    # Data-retention policy (JIKU-37). Guest personal data is anonymized this many
+    # days after an event's date; the dashboard warns notice-days ahead of that
+    # cutoff. The job runs on the cron below.
+    days: ${RETENTION_DAYS:365}
+    notice-days: ${RETENTION_NOTICE_DAYS:30}
+    cron: ${RETENTION_CRON:0 30 3 * * *}
 
 invitation:
   import:

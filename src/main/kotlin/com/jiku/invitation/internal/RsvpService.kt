@@ -80,6 +80,7 @@ class RsvpService(
             guestName = "${guest.firstName} ${guest.lastName}",
             status = guest.rsvpStatus.name,
             ticketCode = ticket?.ticketCode,
+            erased = guest.personalDataErased,
         )
     }
 

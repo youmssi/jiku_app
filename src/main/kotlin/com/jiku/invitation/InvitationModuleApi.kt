@@ -25,7 +25,16 @@ interface InvitationModuleApi {
         eventId: UUID,
         query: String,
     ): List<GuestInfo>
+
+    /** Counts of successfully sent invitations for an event, broken down by channel. */
+    fun sentInvitationCounts(eventId: UUID): SentInvitationCounts
 }
+
+/** Successfully sent (status SENT) invitation counts for an event, per channel. */
+data class SentInvitationCounts(
+    val email: Long,
+    val whatsapp: Long,
+)
 
 /**
  * Read-only view of an invited guest, safe to share across module boundaries.
