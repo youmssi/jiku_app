@@ -1,5 +1,7 @@
 package com.jiku.event.internal
 
+import com.jiku.shared.EventCancelledEvent
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -10,6 +12,7 @@ import java.util.UUID
 @Service
 class EventService(
     private val events: EventRepository,
+    private val eventPublisher: ApplicationEventPublisher,
 ) {
     @Transactional
     fun create(request: CreateEventRequest): EventResponse {
@@ -75,6 +78,24 @@ class EventService(
         }
         event.status = EventStatus.PUBLISHED
         events.save(event)
+        return event.toResponse()
+    }
+
+    /**
+     * Cancels a published event. The [EventCancelledEvent] is consumed
+     * synchronously by the ticketing module inside this same transaction, so the
+     * status change and every ticket invalidation commit or roll back together;
+     * guest notifications fan out only after the commit.
+     */
+    @Transactional
+    fun cancel(id: UUID): EventResponse {
+        val event = load(id)
+        if (event.status != EventStatus.PUBLISHED) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Only published events can be cancelled")
+        }
+        event.status = EventStatus.CANCELLED
+        events.save(event)
+        eventPublisher.publishEvent(EventCancelledEvent(requireNotNull(event.id), requireNotNull(event.tenantId)))
         return event.toResponse()
     }
 

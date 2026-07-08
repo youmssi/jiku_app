@@ -7,21 +7,18 @@
 #
 # Defaults make a fresh clone come up with no .env; override the variables (see
 # .env.example) for any other environment.
-
+name: jiku
 services:
   postgres:
     image: postgres:18 # latest stable PostgreSQL major
-    container_name: jiku-postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-jiku}
-      POSTGRES_USER: ${POSTGRES_USER:-jiku}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jiku}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
-    volumes:
-      - jiku-postgres-data:/var/lib/postgresql/data
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports: ["${POSTGRES_PORT}:5432"]
+    volumes: ["pgdata:/var/lib/postgresql"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jiku} -d ${POSTGRES_DB:-jiku}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -29,9 +26,8 @@ services:
       - default
 
 volumes:
-  jiku-postgres-data:
+  pgdata:
 
 networks:
   default:
-    external: true
     name: jiku-network

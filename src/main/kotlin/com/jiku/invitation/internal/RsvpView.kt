@@ -10,4 +10,8 @@ data class RsvpView(
     val guestName: String,
     val status: String,
     val ticketCode: String?,
+    /** The event's own lifecycle status; CANCELLED renders a cancellation notice. */
+    val eventStatus: String? = null,
+    /** True once the guest has erased their personal data (JIKU-36). */
+    val erased: Boolean = false,
 )
