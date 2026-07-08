@@ -31,6 +31,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation("org.springframework.modulith:spring-modulith-starter-core")
+    implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
     implementation("org.flywaydb:flyway-database-postgresql")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -75,6 +76,20 @@ allOpen {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+// Seeds the demo tenant (see DemoDataSeeder) against whatever database the
+// POSTGRES_* variables point at, then exits. Safe to re-run: the demo tenant's
+// data is reset first. Locally: `docker compose up -d && ./gradlew seedDemoData`.
+tasks.register<JavaExec>("seedDemoData") {
+    group = "application"
+    description = "Seeds the demo tenant with sample events, guests and check-in history."
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("com.jiku.JikuApplicationKt")
+    // The seeder starts the full application (its security config needs the servlet
+    // web context), seeds, then shuts down. A random port avoids clashing with a
+    // bootRun instance that may already hold 8080.
+    args("--seed-demo", "--server.port=0")
 }
 
 // Code coverage gate. The 70% line-coverage minimum applies to business logic

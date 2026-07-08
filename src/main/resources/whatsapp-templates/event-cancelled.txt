@@ -1,0 +1,1 @@
+Hi {{guestName}}, {{organizerName}} is sorry to let you know that {{eventName}}{{eventWhen}} has been cancelled. Your ticket is no longer valid — there is nothing you need to do. If the event is rescheduled, you will receive a new invitation.

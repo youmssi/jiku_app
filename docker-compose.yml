@@ -1,29 +1,39 @@
-# Backing services (PostgreSQL today, more later). The same file serves any
-# environment: every value comes from the shared POSTGRES_* variables, which the
-# application reads too (see application.yaml), so the database this container
-# creates and the database the app connects to stay in sync. Start with:
+# Backing infrastructure for local development (PostgreSQL, Mailpit).
+# The application runs natively (`./gradlew bootRun`); only the services it
+# depends on run here. The app now uses the single DATABASE_URL variable (see
+# application.yaml); this compose file uses separate Docker-native POSTGRES_*
+# defaults that match the default DATABASE_URL in .env.example. Start with:
 #
 #   docker compose up -d
+#   ./gradlew bootRun
 #
-# Defaults make a fresh clone come up with no .env; override the variables (see
-# .env.example) for any other environment.
+# Override the defaults below in a .env if you need different credentials.
 name: jiku
 services:
   postgres:
-    image: postgres:18 # latest stable PostgreSQL major
+    image: postgres:18
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports: ["${POSTGRES_PORT}:5432"]
+      POSTGRES_DB: ${POSTGRES_DB:-jiku}
+      POSTGRES_USER: ${POSTGRES_USER:-jiku}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jiku}
+    ports: ["${POSTGRES_PORT:-5433}:5432"]
     volumes: ["pgdata:/var/lib/postgresql"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jiku} -d ${POSTGRES_DB:-jiku}"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - default
+
+  # Local mail catcher: accepts SMTP on 1025 and shows captured messages in a web
+  # UI on 8025. Point the email notification adapter at this SMTP endpoint for local
+  # flow testing so invitations are captured here instead of being sent for real.
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: jiku-mailpit
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025" # SMTP
+      - "${MAILPIT_UI_PORT:-8025}:8025" # web UI — http://localhost:8025
 
 volumes:
   pgdata:

@@ -21,11 +21,26 @@ import java.util.UUID
 class RsvpController(
     private val tokenService: InvitationTokenService,
     private val rsvpService: RsvpService,
+    private val erasureService: GuestErasureService,
 ) {
     @GetMapping("/{token}")
     fun view(
         @PathVariable token: String,
     ): RsvpView = withTokenContext(token) { guestId, _ -> rsvpService.view(guestId) }
+
+    /**
+     * Guest self-service right to erasure (JIKU-36). Anonymizes the guest's personal
+     * data and returns the (now anonymized) view. The confirmation/irreversibility
+     * warning is enforced in the UI; this endpoint performs the deletion.
+     */
+    @PostMapping("/{token}/erase")
+    fun erase(
+        @PathVariable token: String,
+    ): RsvpView =
+        withTokenContext(token) { guestId, _ ->
+            erasureService.eraseGuest(guestId, ErasureReason.GUEST_REQUEST)
+            rsvpService.view(guestId)
+        }
 
     @PostMapping("/{token}/confirm")
     fun confirm(

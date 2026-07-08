@@ -1,13 +1,17 @@
 package com.jiku.checkin.internal
 
+import com.jiku.billing.BillingModuleApi
 import com.jiku.event.EventModuleApi
 import com.jiku.invitation.InvitationModuleApi
 import com.jiku.notification.NotificationModuleApi
+import com.jiku.shared.RetentionProperties
 import com.jiku.ticketing.TicketingModuleApi
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
+import java.time.Duration
+import java.time.Instant
 import java.util.UUID
 
 /**
@@ -21,6 +25,8 @@ class DashboardService(
     private val invitation: InvitationModuleApi,
     private val ticketing: TicketingModuleApi,
     private val notifications: NotificationModuleApi,
+    private val billing: BillingModuleApi,
+    private val retentionProperties: RetentionProperties,
     private val validators: ValidatorRepository,
 ) {
     @Transactional(readOnly = true)
@@ -37,6 +43,7 @@ class DashboardService(
         labels.addAll(countsByLabel.keys)
         val entrances = labels.map { EntranceCount(it, countsByLabel[it] ?: 0L) }
         val deliverability = notifications.currentTenantDeliverability()
+        val allowance = billing.allowance(eventId)
 
         return DashboardResponse(
             eventName = event.name,
@@ -53,6 +60,26 @@ class DashboardService(
                     bounceRatePercent = Math.round(deliverability.bounceRate * 100).toInt(),
                     warn = deliverability.warn,
                 ),
+            usage =
+                UsageSummary(
+                    invited = allowance.invitedGuests,
+                    allowance = allowance.allowance,
+                    remaining = allowance.remaining,
+                    tier = allowance.tier,
+                    withinAllowance = allowance.withinAllowance,
+                    dataRetention = retentionNotice(event.endDateTime ?: event.startDateTime),
+                ),
         )
+    }
+
+    /**
+     * A notice for the organizer when an event's guest data is within the notice
+     * window of its retention cutoff (JIKU-37), so anonymization is never a surprise.
+     */
+    private fun retentionNotice(eventDate: Instant?): DataRetentionNotice? {
+        if (eventDate == null) return null
+        val anonymizeOn = eventDate.plus(Duration.ofDays(retentionProperties.days))
+        val noticeFrom = anonymizeOn.minus(Duration.ofDays(retentionProperties.noticeDays))
+        return if (Instant.now().isAfter(noticeFrom)) DataRetentionNotice(anonymizeOn) else null
     }
 }

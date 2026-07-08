@@ -18,9 +18,10 @@ data class ManualCheckInRequest(
 
 /**
  * The result of a check-in attempt. [outcome] is one of the ticketing module's
- * [com.jiku.ticketing.CheckInOutcome] names; the validator UI switches on it to
- * render a glanceable success or failure state. For ALREADY_CHECKED_IN,
- * [checkedInAt]/[checkedInBy] describe the prior check-in.
+ * [com.jiku.ticketing.CheckInOutcome] names, or the check-in-level
+ * [CheckInService.EVENT_CANCELLED] when the event itself was cancelled; the
+ * validator UI switches on it to render a glanceable success or failure state.
+ * For ALREADY_CHECKED_IN, [checkedInAt]/[checkedInBy] describe the prior check-in.
  */
 data class CheckInResponse(
     val outcome: String,
