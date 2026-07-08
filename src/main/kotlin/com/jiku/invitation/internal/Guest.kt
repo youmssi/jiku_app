@@ -39,6 +39,13 @@ class Guest(
     @Column(name = "rsvp_status", nullable = false)
     var rsvpStatus: RsvpStatus = RsvpStatus.PENDING
 
+    /** True once the guest's personal identifiers have been irreversibly anonymized. */
+    @Column(name = "personal_data_erased", nullable = false)
+    var personalDataErased: Boolean = false
+
+    @Column(name = "erased_at")
+    var erasedAt: Instant? = null
+
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now()
 }

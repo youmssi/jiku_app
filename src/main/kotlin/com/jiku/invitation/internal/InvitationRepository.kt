@@ -23,6 +23,13 @@ interface InvitationRepository : JpaRepository<Invitation, UUID> {
         status: InvitationStatus,
     ): List<Invitation>
 
+    /** Count of successfully sent invitations for an event on a given channel. */
+    fun countByEventIdAndChannelAndStatus(
+        eventId: UUID,
+        channel: InvitationChannel,
+        status: InvitationStatus,
+    ): Long
+
     fun findByGuestIdAndChannel(
         guestId: UUID,
         channel: InvitationChannel,

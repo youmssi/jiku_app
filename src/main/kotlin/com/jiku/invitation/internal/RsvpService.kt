@@ -91,6 +91,7 @@ class RsvpService(
             status = guest.rsvpStatus.name,
             ticketCode = ticket?.ticketCode,
             eventStatus = event?.status,
+            erased = guest.personalDataErased,
         )
     }
 

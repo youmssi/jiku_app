@@ -17,6 +17,29 @@ data class DashboardResponse(
     val checkedIn: Long,
     val entrances: List<EntranceCount>,
     val deliverability: DeliverabilityFlag,
+    val usage: UsageSummary,
+)
+
+/**
+ * The event's billing usage against its unlocked allowance (JIKU-32), shown to the
+ * organizer before they hit a paywall so consumption is never a surprise.
+ */
+data class UsageSummary(
+    val invited: Long,
+    val allowance: Long,
+    val remaining: Long,
+    val tier: String,
+    val withinAllowance: Boolean,
+    /** Present only when the event's guest data is approaching its retention cutoff. */
+    val dataRetention: DataRetentionNotice?,
+)
+
+/**
+ * Advance notice that this event's guest personal data will be anonymized on
+ * [anonymizeOn] under the retention policy (JIKU-37).
+ */
+data class DataRetentionNotice(
+    val anonymizeOn: java.time.Instant,
 )
 
 /**
