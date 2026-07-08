@@ -67,8 +67,8 @@ class DashboardService(
                     remaining = allowance.remaining,
                     tier = allowance.tier,
                     withinAllowance = allowance.withinAllowance,
+                    dataRetention = retentionNotice(event.endDateTime ?: event.startDateTime),
                 ),
-            dataRetention = retentionNotice(event.endDateTime ?: event.startDateTime),
         )
     }
 

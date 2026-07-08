@@ -22,7 +22,6 @@ data class EventInfo(
         const val STATUS_CANCELLED = "CANCELLED"
     }
 }
-)
 
 /** An event (with its owning tenant) whose data is due for retention anonymization. */
 data class RetentionCandidate(
