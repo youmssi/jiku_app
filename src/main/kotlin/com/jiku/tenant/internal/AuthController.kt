@@ -1,7 +1,6 @@
 package com.jiku.tenant.internal
 
 import com.jiku.shared.TenantContext
-import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/auth")
 class AuthController(
     private val authService: AuthService,
-    private val loginRateLimiter: LoginRateLimiter,
 ) {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
@@ -25,14 +23,12 @@ class AuthController(
         @Valid @RequestBody request: RegisterRequest,
     ): AuthResponse = authService.register(request)
 
+    // Brute-force protection lives in the shared rate-limiting filter (the
+    // `login` policy in application.yaml), not in this controller.
     @PostMapping("/login")
     fun login(
         @Valid @RequestBody request: LoginRequest,
-        httpRequest: HttpServletRequest,
-    ): AuthResponse {
-        loginRateLimiter.recordAttempt(httpRequest.remoteAddr)
-        return authService.login(request)
-    }
+    ): AuthResponse = authService.login(request)
 
     @PostMapping("/refresh")
     fun refresh(

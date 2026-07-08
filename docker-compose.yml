@@ -9,28 +9,18 @@
 #
 # Defaults make a fresh clone come up with no .env; override the variables (see
 # .env.example) for any other environment.
-
 name: jiku
-
 services:
   postgres:
     image: postgres:18 # latest stable PostgreSQL major
-    container_name: jiku-postgres
-    restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-jiku}
-      POSTGRES_USER: ${POSTGRES_USER:-jiku}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jiku}
-    ports:
-      # Host port is configurable; the container always listens on 5432. The same
-      # POSTGRES_PORT drives the app's datasource, so host mapping and app stay aligned.
-      - "${POSTGRES_PORT:-5433}:5432"
-    volumes:
-      # Named volume persists data across `docker compose down`/restarts. Remove it
-      # with `docker compose down -v` for a clean database.
-      - pg_data:/var/lib/postgresql/data
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports: ["${POSTGRES_PORT}:5432"]
+    volumes: ["pgdata:/var/lib/postgresql"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jiku} -d ${POSTGRES_DB:-jiku}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -47,7 +37,7 @@ services:
       - "${MAILPIT_UI_PORT:-8025}:8025" # web UI — http://localhost:8025
 
 volumes:
-  pg_data:
+  pgdata:
 
 networks:
   default:
