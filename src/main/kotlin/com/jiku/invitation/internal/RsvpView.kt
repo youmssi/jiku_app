@@ -10,4 +10,6 @@ data class RsvpView(
     val guestName: String,
     val status: String,
     val ticketCode: String?,
+    /** True once the guest has erased their personal data (JIKU-36). */
+    val erased: Boolean = false,
 )

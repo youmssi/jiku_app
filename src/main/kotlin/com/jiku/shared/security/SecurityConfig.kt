@@ -48,6 +48,17 @@ class SecurityConfig(
                 // user session.
                 it.requestMatchers("${apiProperties.basePath}/billing/payments/callback").permitAll()
                 it.requestMatchers("/actuator/health/**").permitAll()
+                // API documentation (springdoc): the spec and Swagger UI are public so
+                // the docs load without a token. The "Authorize" button still lets you
+                // attach a JWT to try secured endpoints.
+                it
+                    .requestMatchers(
+                        "/v3/api-docs",
+                        "/v3/api-docs/**",
+                        "/v3/api-docs.yaml",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                    ).permitAll()
                 it.anyRequest().authenticated()
             }.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
         return http.build()

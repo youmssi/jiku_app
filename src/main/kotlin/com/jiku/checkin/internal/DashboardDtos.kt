@@ -30,6 +30,16 @@ data class UsageSummary(
     val remaining: Long,
     val tier: String,
     val withinAllowance: Boolean,
+    /** Present only when the event's guest data is approaching its retention cutoff. */
+    val dataRetention: DataRetentionNotice?,
+)
+
+/**
+ * Advance notice that this event's guest personal data will be anonymized on
+ * [anonymizeOn] under the retention policy (JIKU-37).
+ */
+data class DataRetentionNotice(
+    val anonymizeOn: java.time.Instant,
 )
 
 /**
