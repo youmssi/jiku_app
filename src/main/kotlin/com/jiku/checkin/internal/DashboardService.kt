@@ -1,5 +1,6 @@
 package com.jiku.checkin.internal
 
+import com.jiku.billing.BillingModuleApi
 import com.jiku.event.EventModuleApi
 import com.jiku.invitation.InvitationModuleApi
 import com.jiku.notification.NotificationModuleApi
@@ -24,6 +25,7 @@ class DashboardService(
     private val invitation: InvitationModuleApi,
     private val ticketing: TicketingModuleApi,
     private val notifications: NotificationModuleApi,
+    private val billing: BillingModuleApi,
     private val retentionProperties: RetentionProperties,
     private val validators: ValidatorRepository,
 ) {
@@ -41,6 +43,7 @@ class DashboardService(
         labels.addAll(countsByLabel.keys)
         val entrances = labels.map { EntranceCount(it, countsByLabel[it] ?: 0L) }
         val deliverability = notifications.currentTenantDeliverability()
+        val allowance = billing.allowance(eventId)
 
         return DashboardResponse(
             eventName = event.name,
@@ -56,6 +59,14 @@ class DashboardService(
                 DeliverabilityFlag(
                     bounceRatePercent = Math.round(deliverability.bounceRate * 100).toInt(),
                     warn = deliverability.warn,
+                ),
+            usage =
+                UsageSummary(
+                    invited = allowance.invitedGuests,
+                    allowance = allowance.allowance,
+                    remaining = allowance.remaining,
+                    tier = allowance.tier,
+                    withinAllowance = allowance.withinAllowance,
                 ),
             dataRetention = retentionNotice(event.endDateTime ?: event.startDateTime),
         )
