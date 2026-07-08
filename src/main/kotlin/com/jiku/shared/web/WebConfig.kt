@@ -3,8 +3,6 @@ package com.jiku.shared.web
 import com.jiku.shared.ApiProperties
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Configuration
-import org.springframework.web.cors.CorsConfiguration
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.PathMatchConfigurer
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
@@ -26,7 +24,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 class WebConfig(
     private val apiProperties: ApiProperties,
 ) : WebMvcConfigurer {
-
     override fun configurePathMatch(configurer: PathMatchConfigurer) {
         configurer.addPathPrefix(apiProperties.basePath) { handlerType ->
             handlerType.packageName.startsWith("com.jiku")
@@ -34,8 +31,13 @@ class WebConfig(
     }
 
     override fun addCorsMappings(registry: CorsRegistry) {
-        val origins = allowedOrigins.split(",").map(String::trim).filter { it.isNotEmpty() }
-        registry.addMapping("/**")
+        val origins =
+            allowedOrigins
+                .split(",")
+                .map(String::trim)
+                .filter { it.isNotEmpty() }
+        registry
+            .addMapping("/**")
             .allowedOrigins(*origins.toTypedArray())
             .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
             .allowedHeaders("Authorization", "Content-Type", "X-Request-ID")
