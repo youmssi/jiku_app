@@ -13,9 +13,9 @@ services:
   postgres:
     image: postgres:18
     environment:
-      DATABASE_NAME: ${DATABASE_NAME:-jiku}
-      DATABASE_USERNAME: ${DATABASE_USERNAME:-jiku}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-jiku}
+      POSTGRES_DB: ${DATABASE_NAME:-jiku}
+      POSTGRES_USER: ${DATABASE_USERNAME:-jiku}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-jiku}
     ports: ["${POSTGRES_PORT:-5433}:5432"]
     volumes: ["pgdata:/var/lib/postgresql"]
     healthcheck:
