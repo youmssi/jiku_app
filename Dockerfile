@@ -20,8 +20,8 @@ FROM eclipse-temurin:25-jre-noble
 WORKDIR /app
 
 # Run as a non-root user
-RUN groupadd --system tum && useradd --system --gid tum --no-create-home tum
-USER tum
+RUN groupadd --system jiku && useradd --system --gid jiku --no-create-home jiku
+USER jiku
 
 COPY --from=builder /app/build/libs/*.jar app.jar
 

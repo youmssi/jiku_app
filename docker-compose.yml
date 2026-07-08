@@ -1,7 +1,9 @@
-# Backing services (PostgreSQL today, more later). The same file serves any
-# environment: every value comes from the shared POSTGRES_* variables, which the
-# application reads too (see application.yaml), so the database this container
-# creates and the database the app connects to stay in sync. Start with:
+# Backing infrastructure for local development (PostgreSQL today, more later).
+# The application itself runs natively (`./gradlew bootRun`); only the services it
+# depends on run here. The same file serves any environment: every value comes from
+# the shared POSTGRES_* variables, which the application reads too (see
+# application.yaml), so the database this container creates and the database the app
+# connects to stay in sync from one .env. Start with:
 #
 #   docker compose up -d
 #
@@ -22,8 +24,17 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - default
+
+  # Local mail catcher: accepts SMTP on 1025 and shows captured messages in a web
+  # UI on 8025. Point the email notification adapter at this SMTP endpoint for local
+  # flow testing so invitations are captured here instead of being sent for real.
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: jiku-mailpit
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025" # SMTP
+      - "${MAILPIT_UI_PORT:-8025}:8025" # web UI — http://localhost:8025
 
 volumes:
   pgdata:
