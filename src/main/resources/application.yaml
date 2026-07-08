@@ -1,3 +1,10 @@
+jiku:
+  cors:
+    # Comma-separated list of origins that may call this API. In development the
+    # frontend runs on localhost:3000; in production set CORS_ALLOWED_ORIGINS to
+    # the deployed frontend URL (e.g. https://jiku.app).
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+
 server:
   # Per-IP rate limiting needs the real client address, not the hosting
   # platform's reverse proxy. NATIVE has the embedded server honour the
@@ -32,6 +39,10 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+    # Skip pre-migration validation in development so new migration files (e.g.
+    # V14, V15) are automatically applied to the local database on bootRun.
+    # In production, validation should remain enabled to catch drift early.
+    validate-on-migrate: ${FLYWAY_VALIDATE_ON_MIGRATE:false}
   datasource:
     # The POSTGRES_* variables are the SAME ones docker-compose.yml uses, so the
     # database the container creates and the database the app connects to cannot
