@@ -1,3 +1,8 @@
+server:
+  # Per-IP rate limiting needs the real client address, not the hosting
+  # platform's reverse proxy. NATIVE has the embedded server honour the
+  # X-Forwarded-* headers set by the immediate (trusted) proxy.
+  forwarded-headers-strategy: ${FORWARDED_HEADERS_STRATEGY:native}
 logging:
   # Prepend the request and tenant correlation ids to every console line so a
   # request can be traced locally. In deployed environments set
@@ -48,15 +53,54 @@ jwt:
   access-token-expiration: ${JWT_ACCESS_EXPIRATION:PT1H}
   refresh-token-expiration: ${JWT_REFRESH_EXPIRATION:P7D}
 
-auth:
-  login-rate-limit:
-    max-attempts: ${AUTH_LOGIN_MAX_ATTEMPTS:5}
-    window: ${AUTH_LOGIN_RATE_WINDOW:PT1M}
-
 api:
   # Prefix applied to every REST controller (and the security matchers). The API
   # version lives here only, so a future version is a one-line change.
   base-path: ${API_BASE_PATH:/api/v1}
+  rate-limit:
+    # Abuse protection for every endpoint reachable without an organizer login.
+    # Budgets are per client IP — plus the link token where one is in the path, so
+    # a busy venue NAT does not lump every validator together and an attacker
+    # cannot rotate tokens for a fresh budget. Counters are in-memory and
+    # per-instance by design at MVP scale (one API replica); exceeding a budget
+    # returns 429 with a Retry-After header. Paths are relative to api.base-path
+    # and must not overlap across policies.
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    policies:
+      login:
+        # Blunt credential brute-force: a human retries a handful of times per
+        # minute, scripts do not.
+        paths: [/auth/login]
+        max-requests: ${AUTH_LOGIN_MAX_ATTEMPTS:5}
+        window: ${AUTH_LOGIN_RATE_WINDOW:PT1M}
+      auth-public:
+        # Registration and token refresh: legitimate use is rare per client, but
+        # registration writes rows, so keep scripted signup slow.
+        paths: [/auth/register, /auth/refresh]
+        max-requests: ${RATE_LIMIT_AUTH_PUBLIC_MAX_REQUESTS:10}
+        window: ${RATE_LIMIT_AUTH_PUBLIC_WINDOW:PT1M}
+      rsvp:
+        # A guest opens their invitation and answers once; 30/min absorbs page
+        # refreshes and flaky connections while making token scanning useless.
+        # Covers the RSVP view/confirm/decline and the ticket view (JIKU-21).
+        paths: [/rsvp/**]
+        token-segment: 1
+        max-requests: ${RATE_LIMIT_RSVP_MAX_REQUESTS:30}
+        window: ${RATE_LIMIT_RSVP_WINDOW:PT1M}
+      checkin:
+        # A busy validator scans a guest every few seconds and searches between
+        # scans; 120/min per validator link is comfortable for that pace and far
+        # below scripted abuse.
+        paths: [/checkin/**]
+        token-segment: 1
+        max-requests: ${RATE_LIMIT_CHECKIN_MAX_REQUESTS:120}
+        window: ${RATE_LIMIT_CHECKIN_WINDOW:PT1M}
+      email-feedback:
+        # Provider bounce/complaint webhook: bursty after a large send but
+        # bounded; the shared secret is the primary gate, this caps floods.
+        paths: [/notifications/email-feedback]
+        max-requests: ${RATE_LIMIT_EMAIL_FEEDBACK_MAX_REQUESTS:300}
+        window: ${RATE_LIMIT_EMAIL_FEEDBACK_WINDOW:PT1M}
 
 management:
   # Observability surface for uptime and performance monitoring (JIKU-30).
