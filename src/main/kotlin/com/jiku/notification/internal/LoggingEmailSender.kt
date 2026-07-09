@@ -1,14 +1,16 @@
 package com.jiku.notification.internal
 
 import org.slf4j.LoggerFactory
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
- * Default [EmailSender] used until a real provider is configured. It records the
- * send and succeeds, so the end-to-end invitation flow works without a provider.
- * Adding a real `EmailSender` bean replaces it automatically.
+ * No-delivery [EmailSender], selected with `jiku.mail.transport=log` (the
+ * default). It records the send and succeeds, so a fresh clone exercises the
+ * full invitation flow with zero configuration and no SMTP dependency. Real
+ * transports: [SmtpEmailSender] (`smtp`, Mailpit locally) and
+ * [ResendEmailSender] (`resend`, production).
  */
 class LoggingEmailSender : EmailSender {
     private val log = LoggerFactory.getLogger(LoggingEmailSender::class.java)
@@ -18,7 +20,7 @@ class LoggingEmailSender : EmailSender {
         message: EmailMessage,
     ) {
         log.info(
-            "Email queued (no provider configured): from={} to={} subject=\"{}\"",
+            "Email queued (transport=log, not delivered): from={} to={} subject=\"{}\"",
             from,
             message.to,
             message.subject,
@@ -29,6 +31,6 @@ class LoggingEmailSender : EmailSender {
 @Configuration
 class EmailSenderConfig {
     @Bean
-    @ConditionalOnMissingBean(EmailSender::class)
+    @ConditionalOnProperty(name = ["jiku.mail.transport"], havingValue = "log", matchIfMissing = true)
     fun loggingEmailSender(): EmailSender = LoggingEmailSender()
 }

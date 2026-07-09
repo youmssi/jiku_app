@@ -10,8 +10,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  */
 @ConfigurationProperties(prefix = "notification.reputation")
 data class EmailReputationProperties(
-    /** Shared secret required on the provider webhook (X-Webhook-Secret header). */
+    /** Shared secret required on the provider-agnostic webhook (X-Webhook-Secret header). */
     val webhookSecret: String = "local-development-webhook-secret",
+    /** Svix signing secret (whsec_…) for Resend's webhook; endpoint is inert until set. */
+    val resendWebhookSecret: String? = null,
     val windowHours: Long = 24,
     val bounceRateThreshold: Double = 0.05,
     val complaintRateThreshold: Double = 0.005,

@@ -9,9 +9,10 @@ data class EmailMessage(
 )
 
 /**
- * Provider adapter port. The concrete implementation (Resend / Brevo / SendGrid)
- * is chosen later (JIKU-16 interactive step); until then a logging adapter stands
- * in. A real adapter should throw on delivery failure so the caller can retry.
+ * Provider adapter port. The transport is selected with `jiku.mail.transport`:
+ * [LoggingEmailSender] (`log`, default), [SmtpEmailSender] (`smtp`, Mailpit
+ * locally), or [ResendEmailSender] (`resend`, production). Adapters throw
+ * [EmailDeliveryException] on failure so the orchestration retry engages.
  */
 interface EmailSender {
     fun send(

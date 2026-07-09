@@ -1,4 +1,13 @@
 jiku:
+  mail:
+    # Email delivery transport: log (default — records sends without delivering,
+    # so a fresh clone works with zero setup), smtp (Mailpit from docker-compose
+    # locally, or any SMTP relay), resend (production HTTPS API; Render blocks
+    # outbound SMTP).
+    transport: ${MAIL_TRANSPORT:log}
+    resend:
+      api-key: ${RESEND_API_KEY:}
+      base-url: ${RESEND_BASE_URL:https://api.resend.com}
   cors:
     # Comma-separated list of origins that may call this API. In development the
     # frontend runs on localhost:3000; in production set CORS_ALLOWED_ORIGINS to
@@ -24,6 +33,13 @@ spring:
     import: optional:file:.env[.properties]
   application:
     name: app
+  mail:
+    # SMTP endpoint used when jiku.mail.transport=smtp. Defaults target the
+    # Mailpit container from docker-compose (captures mail, UI on :8025).
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
   servlet:
     multipart:
       max-file-size: ${INVITATION_MAX_FILE_SIZE:10MB}
@@ -107,9 +123,10 @@ api:
         max-requests: ${RATE_LIMIT_CHECKIN_MAX_REQUESTS:120}
         window: ${RATE_LIMIT_CHECKIN_WINDOW:PT1M}
       email-feedback:
-        # Provider bounce/complaint webhook: bursty after a large send but
-        # bounded; the shared secret is the primary gate, this caps floods.
-        paths: [/notifications/email-feedback]
+        # Provider bounce/complaint webhooks (canonical + provider-specific
+        # sub-paths): bursty after a large send but bounded; the shared secret /
+        # signature is the primary gate, this caps floods.
+        paths: [/notifications/email-feedback/**]
         max-requests: ${RATE_LIMIT_EMAIL_FEEDBACK_MAX_REQUESTS:300}
         window: ${RATE_LIMIT_EMAIL_FEEDBACK_WINDOW:PT1M}
 
@@ -188,8 +205,8 @@ checkin:
 
 notification:
   email:
-    # Sender address for outbound mail. Set per environment; the provider adapter
-    # is chosen later (until then a logging adapter records sends).
+    # Sender address for outbound mail. Set per environment; in production the
+    # domain must be verified with the configured transport (jiku.mail.transport).
     from: ${MAIL_FROM:no-reply@jiku.app}
   send:
     # Delivery attempts before a notification is recorded as permanently failed.
@@ -197,6 +214,9 @@ notification:
   reputation:
     # Shared secret the email provider must present on the feedback webhook.
     webhook-secret: ${NOTIFICATION_WEBHOOK_SECRET:local-development-webhook-secret}
+    # Svix signing secret (whsec_…) from the Resend webhook configuration; the
+    # Resend-specific endpoint rejects everything until this is set.
+    resend-webhook-secret: ${RESEND_WEBHOOK_SECRET:}
     # Rolling window and alert thresholds (industry guidance: well under 5% bounce,
     # under 0.5% complaint). Optional ops address emailed when a threshold breaks.
     window-hours: ${NOTIFICATION_REPUTATION_WINDOW_HOURS:24}
