@@ -8,6 +8,25 @@ jiku:
     resend:
       api-key: ${RESEND_API_KEY:}
       base-url: ${RESEND_BASE_URL:https://api.resend.com}
+  whatsapp:
+    # WhatsApp delivery transport: log (default — records sends without
+    # delivering) or meta (WhatsApp Cloud API with the credentials below).
+    # Tenants can override the platform credentials with their own in the org
+    # settings; these values are the fallback for tenants who bring nothing.
+    transport: ${WHATSAPP_TRANSPORT:log}
+    meta:
+      access-token: ${WHATSAPP_META_ACCESS_TOKEN:}
+      phone-number-id: ${WHATSAPP_META_PHONE_NUMBER_ID:}
+      base-url: ${WHATSAPP_META_BASE_URL:https://graph.facebook.com/v21.0}
+      # Approved template for business-initiated sends; blank sends plain text
+      # (only reaches recipients inside the 24h customer-service window).
+      template-name: ${WHATSAPP_META_TEMPLATE_NAME:}
+      template-language: ${WHATSAPP_META_TEMPLATE_LANGUAGE:fr}
+  provider-credentials:
+    # Encrypts tenant-provided provider credentials at rest (AES-GCM). Minimum
+    # 32 characters; MUST be set to a strong random value outside local — and
+    # kept stable, since rotating it invalidates stored tenant credentials.
+    encryption-key: ${PROVIDER_CREDENTIALS_ENCRYPTION_KEY:local-development-provider-credentials-key-0123456789}
   cors:
     # Comma-separated list of origins that may call this API. In development the
     # frontend runs on localhost:3000; in production set CORS_ALLOWED_ORIGINS to

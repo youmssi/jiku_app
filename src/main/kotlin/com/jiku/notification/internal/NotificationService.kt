@@ -21,10 +21,8 @@ data class DeliveryOutcome(
 @Service
 class NotificationService(
     private val emailRenderer: EmailTemplateRenderer,
-    private val emailSender: EmailSender,
     private val whatsAppRenderer: WhatsAppTemplateRenderer,
-    private val whatsAppSender: WhatsAppSender,
-    private val emailProperties: NotificationEmailProperties,
+    private val providers: MessagingProviderResolver,
     private val sendProperties: NotificationSendProperties,
     private val logs: NotificationLogRepository,
 ) {
@@ -80,7 +78,12 @@ class NotificationService(
                         subject = "You're invited to ${event.eventName}",
                         htmlBody = html,
                     )
-                ({ emailSender.send(emailProperties.from, message) })
+                (
+                    {
+                        val resolved = providers.email()
+                        resolved.sender.send(resolved.from, message)
+                    }
+                )
             }
 
             GuestInvitedEvent.CHANNEL_WHATSAPP -> {
@@ -95,7 +98,7 @@ class NotificationService(
                             invitationUrl = event.invitationUrl,
                         ),
                     )
-                ({ whatsAppSender.send(WhatsAppMessage(to = event.recipient, body = text)) })
+                ({ providers.whatsApp().sender.send(WhatsAppMessage(to = event.recipient, body = text)) })
             }
 
             else -> throw IllegalArgumentException("Unsupported channel: ${event.channel}")
@@ -123,7 +126,12 @@ class NotificationService(
                         subject = "${notice.eventName} has been cancelled",
                         htmlBody = html,
                     )
-                ({ emailSender.send(emailProperties.from, message) })
+                (
+                    {
+                        val resolved = providers.email()
+                        resolved.sender.send(resolved.from, message)
+                    }
+                )
             }
 
             GuestInvitedEvent.CHANNEL_WHATSAPP -> {
@@ -137,7 +145,7 @@ class NotificationService(
                             organizerName = notice.organizerName,
                         ),
                     )
-                ({ whatsAppSender.send(WhatsAppMessage(to = notice.recipient, body = text)) })
+                ({ providers.whatsApp().sender.send(WhatsAppMessage(to = notice.recipient, body = text)) })
             }
 
             else -> throw IllegalArgumentException("Unsupported channel: ${notice.channel}")
