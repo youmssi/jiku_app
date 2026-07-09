@@ -7,9 +7,11 @@ data class WhatsAppMessage(
 )
 
 /**
- * Provider adapter port for WhatsApp. The concrete BSP (Twilio / 360dialog) is
- * chosen later (JIKU-17 interactive step); until then a logging adapter stands in.
- * A real adapter should throw on delivery failure so the caller can retry.
+ * Provider adapter port for WhatsApp. The transport is selected with
+ * `jiku.whatsapp.transport`: [LoggingWhatsAppSender] (`log`, default) or
+ * [MetaCloudWhatsAppSender] (`meta`, the WhatsApp Cloud API). Adapters throw
+ * [WhatsAppDeliveryException] on failure so the orchestration retry engages.
+ * Further providers (Twilio, 360dialog, …) plug in as additional adapters.
  */
 interface WhatsAppSender {
     fun send(message: WhatsAppMessage)
