@@ -78,6 +78,18 @@ allOpen {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    // application.yaml imports the developer's local .env (spring.config.import),
+    // even for test runs. That's convenient for bootRun but makes the test suite
+    // non-deterministic: e.g. setting MAIL_TRANSPORT=smtp locally to exercise
+    // Mailpit silently switches integration tests onto a real SMTP send instead
+    // of the safe no-delivery logging sender they're written against. JVM system
+    // properties outrank .env-imported config in Spring's resolution order, so
+    // pinning the transports here keeps the suite identical regardless of what's
+    // in the developer's environment. Dedicated adapter tests (SmtpEmailSenderTest,
+    // MetaCloudWhatsAppSenderTest, ...) construct their senders directly and are
+    // unaffected.
+    systemProperty("jiku.mail.transport", "log")
+    systemProperty("jiku.whatsapp.transport", "log")
 }
 
 // Seeds the demo tenant (see DemoDataSeeder) against whatever database the
