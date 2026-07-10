@@ -90,6 +90,15 @@ tasks.withType<Test> {
     // unaffected.
     systemProperty("jiku.mail.transport", "log")
     systemProperty("jiku.whatsapp.transport", "log")
+    // Gradle's default console reporter only prints "FAILED <location>" for a
+    // failing test, dropping the exception message and any stdout — next to
+    // useless when a failure only reproduces in CI. Surface both so a failure
+    // is diagnosable straight from the CI log, no artifact download needed.
+    testLogging {
+        events("failed")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        showStandardStreams = true
+    }
 }
 
 // Seeds the demo tenant (see DemoDataSeeder) against whatever database the
