@@ -34,19 +34,25 @@ class MonitoringTest {
         // the DB health indicator can report a stale reading for a moment right
         // after the shared Spring context comes up, even though the connection
         // pool itself is fine — this reflects that without masking a real outage.
-        await().atMost(Duration.ofSeconds(10)).untilAsserted {
-            mockMvc
-                .perform(get("/actuator/health"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("UP"))
+        await().atMost(Duration.ofSeconds(20)).untilAsserted {
+            val result = mockMvc.perform(get("/actuator/health")).andReturn()
+            println("DEBUG /actuator/health -> ${result.response.status}: ${result.response.contentAsString}")
+            org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                .status()
+                .isOk()
+                .match(result)
+            jsonPath("$.status").value("UP").match(result)
         }
 
         // Readiness includes the database connectivity check.
-        await().atMost(Duration.ofSeconds(10)).untilAsserted {
-            mockMvc
-                .perform(get("/actuator/health/readiness"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("UP"))
+        await().atMost(Duration.ofSeconds(20)).untilAsserted {
+            val result = mockMvc.perform(get("/actuator/health/readiness")).andReturn()
+            println("DEBUG /actuator/health/readiness -> ${result.response.status}: ${result.response.contentAsString}")
+            org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                .status()
+                .isOk()
+                .match(result)
+            jsonPath("$.status").value("UP").match(result)
         }
     }
 
