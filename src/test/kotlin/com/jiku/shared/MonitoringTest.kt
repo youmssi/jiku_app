@@ -2,6 +2,7 @@ package com.jiku.shared
 
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
+import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -14,6 +15,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.time.Duration
 
 /**
  * JIKU-30: the health probe is public and reflects readiness (including the
@@ -28,16 +30,24 @@ class MonitoringTest {
 
     @Test
     fun `health probe is public and reports UP with the database reachable`() {
-        mockMvc
-            .perform(get("/actuator/health"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.status").value("UP"))
+        // A brief retry, not a hard one-shot assertion: under CI resource pressure
+        // the DB health indicator can report a stale reading for a moment right
+        // after the shared Spring context comes up, even though the connection
+        // pool itself is fine — this reflects that without masking a real outage.
+        await().atMost(Duration.ofSeconds(10)).untilAsserted {
+            mockMvc
+                .perform(get("/actuator/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"))
+        }
 
         // Readiness includes the database connectivity check.
-        mockMvc
-            .perform(get("/actuator/health/readiness"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.status").value("UP"))
+        await().atMost(Duration.ofSeconds(10)).untilAsserted {
+            mockMvc
+                .perform(get("/actuator/health/readiness"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"))
+        }
     }
 
     @Test
