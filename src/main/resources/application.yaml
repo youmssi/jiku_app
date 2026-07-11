@@ -173,6 +173,17 @@ management:
     db:
       # Explicit: the readiness state must reflect database connectivity.
       enabled: true
+    mail:
+      # Auto-registered whenever spring.mail.host is set (always, since
+      # SmtpEmailSender needs it) and pings that host over raw SMTP as part of
+      # the aggregate health status — completely orthogonal to how mail
+      # actually gets sent (jiku.mail.transport selects log/smtp/resend; only
+      # smtp uses this host at all, and production uses resend's HTTPS API).
+      # Left enabled, this makes /actuator/health — and therefore the
+      # readiness probe — falsely depend on raw SMTP reachability regardless
+      # of the configured transport, which is both wrong and what broke CI
+      # (no Mailpit there).
+      enabled: false
   metrics:
     distribution:
       # Publish latency histograms so p95/p99 and error rate are queryable for
