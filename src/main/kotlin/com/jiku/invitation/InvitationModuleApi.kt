@@ -1,5 +1,6 @@
 package com.jiku.invitation
 
+import java.time.Instant
 import java.util.UUID
 
 /**
@@ -28,12 +29,23 @@ interface InvitationModuleApi {
 
     /** Counts of successfully sent invitations for an event, broken down by channel. */
     fun sentInvitationCounts(eventId: UUID): SentInvitationCounts
+
+    /** Delivery status breakdown per channel for an event's analytics view. */
+    fun channelBreakdown(eventId: UUID): List<ChannelBreakdown>
 }
 
 /** Successfully sent (status SENT) invitation counts for an event, per channel. */
 data class SentInvitationCounts(
     val email: Long,
     val whatsapp: Long,
+)
+
+/** Per-channel invitation delivery status counts, for the analytics dashboard. */
+data class ChannelBreakdown(
+    val channel: String,
+    val sent: Long,
+    val failed: Long,
+    val pending: Long,
 )
 
 /**
@@ -47,6 +59,7 @@ data class GuestInfo(
     val email: String?,
     val phoneNumber: String?,
     val rsvpStatus: String,
+    val createdAt: Instant,
 )
 
 /**

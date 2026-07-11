@@ -1,6 +1,7 @@
 package com.jiku.invitation.internal
 
 import com.jiku.event.InvitationChannel
+import com.jiku.invitation.ChannelBreakdown
 import com.jiku.invitation.GuestInfo
 import com.jiku.invitation.GuestStats
 import com.jiku.invitation.InvitationModuleApi
@@ -51,6 +52,17 @@ class InvitationModuleApiService(
                     InvitationStatus.SENT,
                 ),
         )
+
+    @Transactional(readOnly = true)
+    override fun channelBreakdown(eventId: UUID): List<ChannelBreakdown> =
+        InvitationChannel.entries.map { channel ->
+            ChannelBreakdown(
+                channel = channel.name,
+                sent = invitations.countByEventIdAndChannelAndStatus(eventId, channel, InvitationStatus.SENT),
+                failed = invitations.countByEventIdAndChannelAndStatus(eventId, channel, InvitationStatus.FAILED),
+                pending = invitations.countByEventIdAndChannelAndStatus(eventId, channel, InvitationStatus.PENDING),
+            )
+        }
 }
 
 private fun Guest.toInfo(): GuestInfo =
@@ -62,4 +74,5 @@ private fun Guest.toInfo(): GuestInfo =
         email = email,
         phoneNumber = phoneNumber,
         rsvpStatus = rsvpStatus.name,
+        createdAt = createdAt,
     )
