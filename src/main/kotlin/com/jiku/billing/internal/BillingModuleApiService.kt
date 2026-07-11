@@ -1,9 +1,11 @@
 package com.jiku.billing.internal
 
 import com.jiku.billing.AdminPaymentView
+import com.jiku.billing.AdminTrialView
 import com.jiku.billing.BillingAllowance
 import com.jiku.billing.BillingModuleApi
 import org.springframework.stereotype.Service
+import java.time.Instant
 import java.util.UUID
 
 /**
@@ -15,6 +17,7 @@ import java.util.UUID
 class BillingModuleApiService(
     private val usageService: UsageService,
     private val manualPaymentService: ManualPaymentService,
+    private val trialService: TrialService,
 ) : BillingModuleApi {
     override fun allowance(eventId: UUID): BillingAllowance = usageService.allowance(eventId)
 
@@ -37,4 +40,23 @@ class BillingModuleApiService(
         paymentId: UUID,
         reason: String,
     ): AdminPaymentView = manualPaymentService.reject(paymentId, reason)
+
+    override fun adminListTrials(
+        status: String?,
+        tenantId: UUID?,
+        page: Int,
+        size: Int,
+    ): List<AdminTrialView> = trialService.adminList(status, tenantId, page, size)
+
+    override fun adminGrantTrial(
+        tenantId: UUID,
+        eventId: UUID,
+        tier: String,
+        expiresAt: Instant,
+    ): AdminTrialView = trialService.grant(tenantId, eventId, tier, expiresAt)
+
+    override fun adminEndTrial(
+        trialId: UUID,
+        reason: String,
+    ): AdminTrialView = trialService.endEarly(trialId, reason)
 }

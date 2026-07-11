@@ -16,6 +16,7 @@ class EmailTemplateRenderer {
     private val manualRequestedTemplate: String by lazy { load("manual-payment-requested.html") }
     private val manualConfirmedTemplate: String by lazy { load("manual-payment-confirmed.html") }
     private val manualRejectedTemplate: String by lazy { load("manual-payment-rejected.html") }
+    private val trialNoticeTemplate: String by lazy { load("trial-notice.html") }
 
     fun renderInvitation(email: InvitationEmail): String {
         val logoBlock =
@@ -88,6 +89,16 @@ class EmailTemplateRenderer {
             .replace("{{reference}}", escape(notice.reference))
             .replace("{{reasonBlock}}", reasonBlock)
     }
+
+    fun renderTrialNotice(
+        organizerName: String,
+        heading: String,
+        body: String,
+    ): String =
+        trialNoticeTemplate
+            .replace("{{organizerName}}", escape(organizerName))
+            .replace("{{heading}}", escape(heading))
+            .replace("{{body}}", escape(body))
 
     /** Minor units to a display amount (e.g. 500000 XOF-minor → "5 000 XOF"). */
     private fun formatAmount(

@@ -22,6 +22,7 @@ class UsageService(
     private val usageRecords: UsageRecordRepository,
     private val invitation: InvitationModuleApi,
     private val properties: BillingProperties,
+    private val trialService: TrialService,
 ) {
     @Transactional
     fun allowance(eventId: UUID): BillingAllowance {
@@ -38,7 +39,7 @@ class UsageService(
         record.updatedAt = Instant.now()
         usageRecords.save(record)
 
-        return record.toAllowance()
+        return record.toAllowance(effectiveAllowance(eventId, record.unlockedAllowance))
     }
 
     @Transactional(readOnly = true)
@@ -48,18 +49,28 @@ class UsageService(
     ): Boolean {
         val invited = invitation.guestStats(eventId).invited
         val unlocked = usageRecords.findByEventId(eventId)?.unlockedAllowance ?: properties.freeTierGuests
-        return invited + additionalGuests.coerceAtLeast(0) <= unlocked
+        return invited + additionalGuests.coerceAtLeast(0) <= effectiveAllowance(eventId, unlocked)
     }
 
-    private fun UsageRecord.toAllowance(): BillingAllowance {
-        val remaining = (unlockedAllowance - invitedGuests).coerceAtLeast(0)
+    /**
+     * The ceiling actually in force: the paid entitlement, raised — never
+     * replaced — by a live trial (JIKU-42). Keeping the paid allowance stored and
+     * the trial contribution computed means trial expiry needs no write here.
+     */
+    private fun effectiveAllowance(
+        eventId: UUID,
+        paidAllowance: Long,
+    ): Long = maxOf(paidAllowance, trialService.liveTrialAllowance(eventId) ?: 0)
+
+    private fun UsageRecord.toAllowance(effectiveAllowance: Long): BillingAllowance {
+        val remaining = (effectiveAllowance - invitedGuests).coerceAtLeast(0)
         return BillingAllowance(
             invitedGuests = invitedGuests,
-            allowance = unlockedAllowance,
+            allowance = effectiveAllowance,
             remaining = remaining,
             // "Within" means usage has not exceeded the ceiling (exactly at it still
             // counts as within); whether more can be sent is a separate check.
-            withinAllowance = invitedGuests <= unlockedAllowance,
+            withinAllowance = invitedGuests <= effectiveAllowance,
             tier = properties.tierForUsage(invitedGuests),
             guestsImported = guestsImported,
             invitationsSentEmail = invitationsSentEmail,

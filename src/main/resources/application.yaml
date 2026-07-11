@@ -214,6 +214,11 @@ billing:
     provider: ${PAYMENT_PROVIDER:sandbox}
     webhook-secret: ${PAYMENT_WEBHOOK_SECRET:local-development-payment-webhook-secret}
     sandbox-return-url: ${PAYMENT_SANDBOX_RETURN_URL:http://localhost:3000/billing/return}
+  trial:
+    # Trial sweep (JIKU-42): cron for the expiry/notice job and how far before
+    # expiry the organizer's heads-up email goes out.
+    cron: ${BILLING_TRIAL_CRON:0 15 * * * *}
+    notice-lead: ${BILLING_TRIAL_NOTICE_LEAD:P3D}
   manual:
     # Payee details shown with manual (concierge) payment instructions (JIKU-41):
     # where a client sends their prepayment. Blank fields are hidden from the
