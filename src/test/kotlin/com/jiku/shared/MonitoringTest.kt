@@ -30,29 +30,22 @@ class MonitoringTest {
 
     @Test
     fun `health probe is public and reports UP with the database reachable`() {
-        // A brief retry, not a hard one-shot assertion: under CI resource pressure
-        // the DB health indicator can report a stale reading for a moment right
-        // after the shared Spring context comes up, even though the connection
-        // pool itself is fine — this reflects that without masking a real outage.
-        await().atMost(Duration.ofSeconds(20)).untilAsserted {
-            val result = mockMvc.perform(get("/actuator/health")).andReturn()
-            println("DEBUG /actuator/health -> ${result.response.status}: ${result.response.contentAsString}")
-            org.springframework.test.web.servlet.result.MockMvcResultMatchers
-                .status()
-                .isOk()
-                .match(result)
-            jsonPath("$.status").value("UP").match(result)
+        // A brief retry, not a hard one-shot assertion, as reasonable defensive
+        // hardening for any HTTP-based health check — a genuine app-level DOWN
+        // still fails after the retry window instead of being masked.
+        await().atMost(Duration.ofSeconds(5)).untilAsserted {
+            mockMvc
+                .perform(get("/actuator/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"))
         }
 
         // Readiness includes the database connectivity check.
-        await().atMost(Duration.ofSeconds(20)).untilAsserted {
-            val result = mockMvc.perform(get("/actuator/health/readiness")).andReturn()
-            println("DEBUG /actuator/health/readiness -> ${result.response.status}: ${result.response.contentAsString}")
-            org.springframework.test.web.servlet.result.MockMvcResultMatchers
-                .status()
-                .isOk()
-                .match(result)
-            jsonPath("$.status").value("UP").match(result)
+        await().atMost(Duration.ofSeconds(5)).untilAsserted {
+            mockMvc
+                .perform(get("/actuator/health/readiness"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"))
         }
     }
 
