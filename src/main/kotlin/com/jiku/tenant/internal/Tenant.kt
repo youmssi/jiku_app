@@ -25,7 +25,7 @@ class Tenant(
     val contactEmail: String,
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    val status: TenantStatus = TenantStatus.ACTIVE,
+    var status: TenantStatus = TenantStatus.ACTIVE,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

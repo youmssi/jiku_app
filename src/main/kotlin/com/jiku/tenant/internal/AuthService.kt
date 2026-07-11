@@ -45,6 +45,7 @@ class AuthService(
         if (user == null || !passwordEncoder.matches(request.password, user.passwordHash)) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password")
         }
+        rejectSuspendedTenant(user)
         return tokensFor(user)
     }
 
@@ -63,7 +64,16 @@ class AuthService(
             users.findById(UUID.fromString(claims.subject)).orElseThrow {
                 ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token")
             }
+        rejectSuspendedTenant(user)
         return tokensFor(user)
+    }
+
+    /** Suspension (JIKU-40) blocks token issuance entirely, with an explicit reason. */
+    private fun rejectSuspendedTenant(user: OrganizerUser) {
+        val tenant = tenants.findById(UUID.fromString(user.tenantId)).orElse(null)
+        if (tenant?.status == TenantStatus.SUSPENDED) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "This account has been suspended. Contact support.")
+        }
     }
 
     private fun tokensFor(user: OrganizerUser): AuthResponse {

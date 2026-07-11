@@ -192,6 +192,14 @@ management:
         http.server.requests: true
       slo:
         http.server.requests: 100ms,250ms,500ms,1s,2s
+admin:
+  bootstrap:
+    # First platform administrator (JIKU-40), created idempotently at startup so a
+    # fresh deployment has a working back-office. Leave both blank to skip (local
+    # default); an existing account is never overwritten from config.
+    email: ${ADMIN_BOOTSTRAP_EMAIL:}
+    password: ${ADMIN_BOOTSTRAP_PASSWORD:}
+
 billing:
   # Pay-per-event pricing (JIKU-32). The free tier and paid tiers are configuration,
   # not literals in code, so pricing changes without a release. Amounts are in the

@@ -1,5 +1,6 @@
 package com.jiku.checkin.internal
 
+import com.jiku.shared.TenantAccessGate
 import com.jiku.shared.TenantContext
 import io.jsonwebtoken.Claims
 import jakarta.validation.Valid
@@ -26,6 +27,7 @@ class ValidatorCheckInController(
     private val tokenService: ValidatorTokenService,
     private val validatorService: ValidatorService,
     private val checkInService: CheckInService,
+    private val tenantAccessGate: TenantAccessGate,
 ) {
     @GetMapping
     fun context(
@@ -80,6 +82,10 @@ class ValidatorCheckInController(
         val tenantId =
             claims[ValidatorTokenService.CLAIM_TENANT_ID] as? String
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "This check-in link is invalid")
+        if (tenantAccessGate.isSuspended(tenantId)) {
+            // Platform-level suspension (JIKU-40): validator links stop resolving.
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "This check-in link is no longer available")
+        }
         TenantContext.set(tenantId)
         try {
             val validatorId = UUID.fromString(claims.subject)
