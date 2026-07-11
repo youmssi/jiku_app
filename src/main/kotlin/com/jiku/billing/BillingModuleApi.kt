@@ -24,6 +24,28 @@ interface BillingModuleApi {
         eventId: UUID,
         additionalGuests: Long,
     ): Boolean
+
+    /**
+     * Platform back-office payments desk (JIKU-41). Deliberately cross-tenant:
+     * only the admin module may call these, and mutations rebind the payment's
+     * own tenant internally before touching tenant-scoped data.
+     */
+    fun adminListPayments(
+        status: String?,
+        provider: String?,
+        tenantId: UUID?,
+        page: Int,
+        size: Int,
+    ): List<AdminPaymentView>
+
+    /** Confirms a manual payment's transfer arrived and unlocks its tier. */
+    fun adminConfirmManualPayment(paymentId: UUID): AdminPaymentView
+
+    /** Rejects a pending manual payment with a reason. */
+    fun adminRejectManualPayment(
+        paymentId: UUID,
+        reason: String,
+    ): AdminPaymentView
 }
 
 /**

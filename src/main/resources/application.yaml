@@ -214,6 +214,15 @@ billing:
     provider: ${PAYMENT_PROVIDER:sandbox}
     webhook-secret: ${PAYMENT_WEBHOOK_SECRET:local-development-payment-webhook-secret}
     sandbox-return-url: ${PAYMENT_SANDBOX_RETURN_URL:http://localhost:3000/billing/return}
+  manual:
+    # Payee details shown with manual (concierge) payment instructions (JIKU-41):
+    # where a client sends their prepayment. Blank fields are hidden from the
+    # instructions; details flow one way (platform -> client) and no client
+    # payment credential is ever collected or stored.
+    payee-name: ${BILLING_MANUAL_PAYEE_NAME:}
+    mobile-money-number: ${BILLING_MANUAL_MOMO_NUMBER:}
+    mobile-money-operator: ${BILLING_MANUAL_MOMO_OPERATOR:}
+    bank-details: ${BILLING_MANUAL_BANK_DETAILS:}
 compliance:
   retention:
     # Data-retention policy (JIKU-37). Guest personal data is anonymized this many
@@ -242,6 +251,10 @@ checkin:
     validity: ${CHECKIN_VALIDATOR_LINK_VALIDITY:P30D}
 
 notification:
+  sales:
+    # Mailbox notified of new manual activation requests (JIKU-41); blank keeps
+    # requests visible only in the admin payments desk.
+    email: ${NOTIFICATION_SALES_EMAIL:}
   email:
     # Sender address for outbound mail. Set per environment; in production the
     # domain must be verified with the configured transport (jiku.mail.transport).
