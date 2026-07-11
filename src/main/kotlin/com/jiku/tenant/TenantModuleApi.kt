@@ -9,4 +9,24 @@ import java.util.UUID
  */
 interface TenantModuleApi {
     fun findTenant(tenantId: UUID): TenantInfo?
+
+    /**
+     * Pages through tenants for the platform-admin directory (JIKU-40), optionally
+     * filtered by a case-insensitive match on name or contact email.
+     */
+    fun searchTenants(
+        query: String?,
+        page: Int,
+        size: Int,
+    ): TenantDirectoryPage
+
+    /**
+     * Suspends or reactivates a tenant (JIKU-40). Returns the updated view, or
+     * `null` when the tenant does not exist. Suspension is enforced by the
+     * [com.jiku.shared.TenantAccessGate] implementation this module provides.
+     */
+    fun setTenantSuspended(
+        tenantId: UUID,
+        suspended: Boolean,
+    ): TenantInfo?
 }

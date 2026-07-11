@@ -40,6 +40,15 @@ class SecurityConfig(
                         "$auth/login",
                         "$auth/refresh",
                     ).permitAll()
+                // Platform administration: login/refresh are public, everything else
+                // under /admin requires the PLATFORM_ADMIN role (defense in depth on
+                // top of the controllers' @PreAuthorize).
+                it
+                    .requestMatchers(
+                        "${apiProperties.basePath}/admin/auth/login",
+                        "${apiProperties.basePath}/admin/auth/refresh",
+                    ).permitAll()
+                it.requestMatchers("${apiProperties.basePath}/admin/**").hasRole("PLATFORM_ADMIN")
                 it.requestMatchers("${apiProperties.basePath}/rsvp/**").permitAll()
                 it.requestMatchers("${apiProperties.basePath}/checkin/**").permitAll()
                 it.requestMatchers("${apiProperties.basePath}/notifications/email-feedback/**").permitAll()

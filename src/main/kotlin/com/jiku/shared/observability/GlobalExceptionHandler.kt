@@ -5,6 +5,8 @@ import jakarta.servlet.http.HttpServletRequest
 import org.slf4j.MDC
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.core.AuthenticationException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
@@ -25,6 +27,15 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 class GlobalExceptionHandler(
     private val errorTracker: ErrorTracker,
 ) : ResponseEntityExceptionHandler() {
+    /**
+     * Method-security denials (`@PreAuthorize`) surface as exceptions inside MVC,
+     * where the catch-all below would wrongly report them as 500s. Rethrowing
+     * hands them back to Spring Security's ExceptionTranslationFilter, which
+     * renders the proper 401/403.
+     */
+    @ExceptionHandler(AccessDeniedException::class, AuthenticationException::class)
+    fun rethrowSecurityException(ex: Exception): Nothing = throw ex
+
     @ExceptionHandler(Exception::class)
     fun handleUnhandled(
         ex: Exception,
