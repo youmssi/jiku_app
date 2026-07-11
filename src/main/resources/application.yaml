@@ -193,6 +193,9 @@ management:
       slo:
         http.server.requests: 100ms,250ms,500ms,1s,2s
 admin:
+  agreements:
+    # Daily sweep marking past-end enterprise agreements EXPIRED (JIKU-43).
+    cron: ${ADMIN_AGREEMENTS_CRON:0 0 4 * * *}
   bootstrap:
     # First platform administrator (JIKU-40), created idempotently at startup so a
     # fresh deployment has a working back-office. Leave both blank to skip (local
