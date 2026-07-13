@@ -12,4 +12,11 @@ interface OrganizerMembershipRepository : JpaRepository<OrganizerMembership, UUI
     ): OrganizerMembership?
 
     fun countByTenantId(tenantId: String): Long
+
+    fun findByTenantIdOrderByCreatedAtAsc(tenantId: String): List<OrganizerMembership>
+
+    fun countByTenantIdAndRole(
+        tenantId: String,
+        role: OrganizerRole,
+    ): Long
 }

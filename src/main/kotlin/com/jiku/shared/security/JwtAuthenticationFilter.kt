@@ -1,6 +1,7 @@
 package com.jiku.shared.security
 
 import com.jiku.shared.JwtService
+import com.jiku.shared.MembershipAccessGate
 import com.jiku.shared.TenantAccessGate
 import com.jiku.shared.TenantContext
 import io.jsonwebtoken.JwtException
@@ -28,6 +29,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 class JwtAuthenticationFilter(
     private val jwtService: JwtService,
     private val tenantAccessGate: TenantAccessGate,
+    private val membershipAccessGate: MembershipAccessGate,
 ) : OncePerRequestFilter() {
     override fun doFilterInternal(
         request: HttpServletRequest,
@@ -41,7 +43,11 @@ class JwtAuthenticationFilter(
                 if (claims[JwtService.CLAIM_TOKEN_TYPE] == JwtService.TOKEN_TYPE_ACCESS) {
                     val tenantId = claims[JwtService.CLAIM_TENANT_ID] as String
                     val role = claims[JwtService.CLAIM_ROLE] as String
-                    if (tenantId.isBlank() || !tenantAccessGate.isSuspended(tenantId)) {
+                    // A tenant-bound token also proves the membership still exists
+                    // (JIKU-50): a removed member is cut off on their next request.
+                    if (tenantId.isBlank() ||
+                        (!tenantAccessGate.isSuspended(tenantId) && membershipAccessGate.isMember(claims.subject, tenantId))
+                    ) {
                         if (tenantId.isNotBlank()) {
                             TenantContext.set(tenantId)
                         }

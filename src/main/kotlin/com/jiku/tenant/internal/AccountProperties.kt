@@ -12,5 +12,6 @@ import java.time.Duration
 data class AccountProperties(
     val passwordResetTtl: Duration = Duration.ofHours(1),
     val emailVerificationTtl: Duration = Duration.ofDays(2),
+    val memberInvitationTtl: Duration = Duration.ofDays(7),
     val appBaseUrl: String = "http://localhost:3000",
 )

@@ -98,6 +98,8 @@ auth:
     # valid, and the frontend origin the emailed links point at.
     password-reset-ttl: ${AUTH_PASSWORD_RESET_TTL:PT1H}
     email-verification-ttl: ${AUTH_EMAIL_VERIFICATION_TTL:P2D}
+    # How long an emailed member invitation stays acceptable (JIKU-50).
+    member-invitation-ttl: ${AUTH_MEMBER_INVITATION_TTL:P7D}
     app-base-url: ${SERVER_BASE_URL:http://localhost:3000}
 
 jwt:
@@ -131,7 +133,7 @@ api:
         # Registration, token refresh and account recovery: legitimate use is rare
         # per client, but registration writes rows and recovery sends mail, so keep
         # scripted abuse slow.
-        paths: [/auth/register, /auth/refresh, /auth/forgot-password, /auth/reset-password, /auth/verify-email]
+        paths: [/auth/register, /auth/refresh, /auth/forgot-password, /auth/reset-password, /auth/verify-email, /auth/invitations/**]
         max-requests: ${RATE_LIMIT_AUTH_PUBLIC_MAX_REQUESTS:10}
         window: ${RATE_LIMIT_AUTH_PUBLIC_WINDOW:PT1M}
       rsvp:

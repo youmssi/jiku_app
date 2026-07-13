@@ -7,11 +7,8 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
-import java.security.MessageDigest
-import java.security.SecureRandom
 import java.time.Duration
 import java.time.Instant
-import java.util.Base64
 import java.util.UUID
 
 /**
@@ -27,8 +24,6 @@ class AccountTokenService(
     private val properties: AccountProperties,
     private val events: ApplicationEventPublisher,
 ) {
-    private val random = SecureRandom()
-
     /**
      * Always succeeds from the caller's point of view — whether the address has
      * an account must not be observable (no account enumeration).
@@ -97,13 +92,12 @@ class AccountTokenService(
         ttl: Duration,
     ): String {
         tokens.deleteByUserIdAndPurposeAndUsedAtIsNull(requireNotNull(user.id), purpose)
-        val bytes = ByteArray(32).also(random::nextBytes)
-        val raw = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
+        val raw = Tokens.generate()
         tokens.saveAndFlush(
             AccountToken(
                 userId = requireNotNull(user.id),
                 purpose = purpose,
-                tokenHash = hash(raw),
+                tokenHash = Tokens.hash(raw),
                 expiresAt = Instant.now().plus(ttl),
             ),
         )
@@ -114,7 +108,7 @@ class AccountTokenService(
         raw: String,
         purpose: AccountTokenPurpose,
     ): AccountToken {
-        val token = tokens.findByTokenHash(hash(raw)) ?: throw invalidToken()
+        val token = tokens.findByTokenHash(Tokens.hash(raw)) ?: throw invalidToken()
         if (token.purpose != purpose || token.usedAt != null || token.expiresAt.isBefore(Instant.now())) {
             throw invalidToken()
         }
@@ -124,10 +118,4 @@ class AccountTokenService(
 
     // One message for every failure mode: which mode it was must not be observable.
     private fun invalidToken() = ResponseStatusException(HttpStatus.BAD_REQUEST, "This link is invalid or has expired")
-
-    private fun hash(raw: String): String =
-        MessageDigest
-            .getInstance("SHA-256")
-            .digest(raw.toByteArray())
-            .joinToString("") { "%02x".format(it) }
 }

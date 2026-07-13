@@ -3,6 +3,7 @@ package com.jiku.shared.security
 import com.jiku.shared.ApiProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
@@ -46,6 +47,10 @@ class SecurityConfig(
                         "$auth/reset-password",
                         "$auth/verify-email",
                     ).permitAll()
+                // Invitation preview (JIKU-50): the accept page shows what is being
+                // joined before the visitor registers. Accepting stays authenticated
+                // (method security on the controller).
+                it.requestMatchers(HttpMethod.GET, "$auth/invitations/*").permitAll()
                 // Platform administration: login/refresh are public, everything else
                 // under /admin requires the PLATFORM_ADMIN role (defense in depth on
                 // top of the controllers' @PreAuthorize).
