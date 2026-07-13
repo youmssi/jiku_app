@@ -14,7 +14,7 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/events/{eventId}/guests")
-@PreAuthorize("hasRole('ORGANIZER_ADMIN')")
+@PreAuthorize("hasRole('ORGANIZER')")
 class GuestController(
     private val guestService: GuestService,
     private val guestExportService: GuestExportService,

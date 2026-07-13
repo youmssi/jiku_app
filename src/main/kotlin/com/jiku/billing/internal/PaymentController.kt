@@ -18,7 +18,7 @@ import java.util.UUID
  */
 @RestController
 @RequestMapping("/events/{eventId}/payments")
-@PreAuthorize("hasRole('ORGANIZER_ADMIN')")
+@PreAuthorize("hasRole('ORGANIZER_MANAGER')")
 class PaymentController(
     private val paymentService: PaymentService,
 ) {

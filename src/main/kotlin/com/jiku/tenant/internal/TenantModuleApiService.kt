@@ -13,7 +13,7 @@ import java.util.UUID
 @Service
 class TenantModuleApiService(
     private val tenants: TenantRepository,
-    private val users: OrganizerUserRepository,
+    private val memberships: OrganizerMembershipRepository,
     private val accessGate: TenantAccessGateAdapter,
 ) : TenantModuleApi {
     @Transactional(readOnly = true)
@@ -42,7 +42,7 @@ class TenantModuleApiService(
                         contactEmail = tenant.contactEmail,
                         status = tenant.status.name,
                         createdAt = tenant.createdAt,
-                        organizerCount = users.countByTenantId(id.toString()),
+                        organizerCount = memberships.countByTenantId(id.toString()),
                     )
                 },
             total = result.totalElements,

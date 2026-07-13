@@ -14,7 +14,7 @@ import java.util.UUID
  */
 @RestController
 @RequestMapping("/events/{eventId}/dashboard")
-@PreAuthorize("hasRole('ORGANIZER_ADMIN')")
+@PreAuthorize("hasRole('ORGANIZER')")
 class DashboardController(
     private val dashboardService: DashboardService,
 ) {

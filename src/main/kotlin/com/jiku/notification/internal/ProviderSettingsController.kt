@@ -21,7 +21,7 @@ import org.springframework.web.server.ResponseStatusException
  */
 @RestController
 @RequestMapping("/settings/providers")
-@PreAuthorize("hasRole('ORGANIZER_ADMIN')")
+@PreAuthorize("hasRole('ORGANIZER_MANAGER')")
 class ProviderSettingsController(
     private val service: TenantProviderSettingsService,
 ) {

@@ -63,7 +63,7 @@ class AuthFlowTest {
             .perform(
                 get("/api/v1/auth/me").header("Authorization", "Bearer $accessToken"),
             ).andExpect(status().isOk())
-            .andExpect(jsonPath("$.role").value("ORGANIZER_ADMIN"))
+            .andExpect(jsonPath("$.role").value("ORGANIZER_OWNER"))
             .andExpect(jsonPath("$.tenantId").isNotEmpty())
 
         // Refresh issues a fresh access token.
