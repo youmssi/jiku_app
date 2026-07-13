@@ -1,6 +1,7 @@
 package com.jiku.notification.internal
 
 import com.jiku.shared.ManualPaymentNotice
+import com.jiku.shared.MemberInvitationNotice
 import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Component
 
@@ -19,6 +20,7 @@ class EmailTemplateRenderer {
     private val trialNoticeTemplate: String by lazy { load("trial-notice.html") }
     private val passwordResetTemplate: String by lazy { load("password-reset.html") }
     private val verifyEmailTemplate: String by lazy { load("verify-email.html") }
+    private val memberInvitationTemplate: String by lazy { load("member-invitation.html") }
 
     fun renderInvitation(email: InvitationEmail): String {
         val logoBlock =
@@ -105,6 +107,13 @@ class EmailTemplateRenderer {
     fun renderPasswordReset(actionUrl: String): String = passwordResetTemplate.replace("{{actionUrl}}", escape(actionUrl))
 
     fun renderVerifyEmail(actionUrl: String): String = verifyEmailTemplate.replace("{{actionUrl}}", escape(actionUrl))
+
+    fun renderMemberInvitation(notice: MemberInvitationNotice): String =
+        memberInvitationTemplate
+            .replace("{{organizationName}}", escape(notice.organizationName))
+            .replace("{{inviterEmail}}", escape(notice.inviterEmail))
+            .replace("{{role}}", escape(notice.role))
+            .replace("{{actionUrl}}", escape(notice.actionUrl))
 
     /** Minor units to a display amount (e.g. 500000 XOF-minor → "5 000 XOF"). */
     private fun formatAmount(
