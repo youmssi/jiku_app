@@ -92,6 +92,14 @@ spring:
       # environment with DB_POOL_MAX_SIZE rather than editing this file.
       maximum-pool-size: ${DATABASE_POOL_SIZE:10}
 
+auth:
+  account:
+    # Account recovery links (JIKU-49): how long a reset/verification link stays
+    # valid, and the frontend origin the emailed links point at.
+    password-reset-ttl: ${AUTH_PASSWORD_RESET_TTL:PT1H}
+    email-verification-ttl: ${AUTH_EMAIL_VERIFICATION_TTL:P2D}
+    app-base-url: ${SERVER_BASE_URL:http://localhost:3000}
+
 jwt:
   # HMAC signing secret (minimum 32 bytes). The default is for local use only;
   # every real environment MUST set JWT_SECRET to a long random value.
@@ -120,9 +128,10 @@ api:
         max-requests: ${AUTH_LOGIN_MAX_ATTEMPTS:5}
         window: ${AUTH_LOGIN_RATE_WINDOW:PT1M}
       auth-public:
-        # Registration and token refresh: legitimate use is rare per client, but
-        # registration writes rows, so keep scripted signup slow.
-        paths: [/auth/register, /auth/refresh]
+        # Registration, token refresh and account recovery: legitimate use is rare
+        # per client, but registration writes rows and recovery sends mail, so keep
+        # scripted abuse slow.
+        paths: [/auth/register, /auth/refresh, /auth/forgot-password, /auth/reset-password, /auth/verify-email]
         max-requests: ${RATE_LIMIT_AUTH_PUBLIC_MAX_REQUESTS:10}
         window: ${RATE_LIMIT_AUTH_PUBLIC_WINDOW:PT1M}
       rsvp:

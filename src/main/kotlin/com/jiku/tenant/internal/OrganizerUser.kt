@@ -27,6 +27,14 @@ class OrganizerUser(
     @GeneratedValue(strategy = GenerationType.UUID)
     var id: UUID? = null
 
+    /** Set by the JIKU-49 verification flow; gates organization creation. */
+    @Column(name = "email_verified", nullable = false)
+    var emailVerified: Boolean = false
+
+    /** Refresh tokens issued before this instant are rejected (password reset). */
+    @Column(name = "password_changed_at")
+    var passwordChangedAt: Instant? = null
+
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now()
 }
