@@ -35,17 +35,16 @@ class AuthController(
         @Valid @RequestBody request: RefreshRequest,
     ): AuthResponse = authService.refresh(request)
 
+    // Any signed-in account (bound to an organization or not) can rebind its
+    // session; membership in the target organization is checked in the service.
+    @PostMapping("/switch-org")
+    @PreAuthorize("hasRole('USER')")
+    fun switchOrg(
+        authentication: Authentication,
+        @Valid @RequestBody request: SwitchOrgRequest,
+    ): AuthResponse = authService.switchOrg(authentication.name, request)
+
     @GetMapping("/me")
-    @PreAuthorize("hasRole('ORGANIZER_ADMIN')")
-    fun me(authentication: Authentication): MeResponse =
-        MeResponse(
-            userId = authentication.name,
-            tenantId = TenantContext.get().orEmpty(),
-            role =
-                authentication.authorities
-                    .firstOrNull()
-                    ?.authority
-                    ?.removePrefix("ROLE_")
-                    .orEmpty(),
-        )
+    @PreAuthorize("hasRole('USER')")
+    fun me(authentication: Authentication): MeResponse = authService.me(authentication.name, TenantContext.get().orEmpty())
 }

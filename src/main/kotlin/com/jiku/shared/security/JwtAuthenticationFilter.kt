@@ -45,9 +45,9 @@ class JwtAuthenticationFilter(
                         if (tenantId.isNotBlank()) {
                             TenantContext.set(tenantId)
                         }
-                        val authority = SimpleGrantedAuthority("ROLE_$role")
+                        val authorities = TokenRoles.expand(role).map { SimpleGrantedAuthority("ROLE_$it") }
                         SecurityContextHolder.getContext().authentication =
-                            UsernamePasswordAuthenticationToken(claims.subject, null, listOf(authority))
+                            UsernamePasswordAuthenticationToken(claims.subject, null, authorities)
                     }
                 }
             } catch (ex: JwtException) {

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController
  */
 @RestController
 @RequestMapping("/billing/tiers")
-@PreAuthorize("hasRole('ORGANIZER_ADMIN')")
+@PreAuthorize("hasRole('ORGANIZER')")
 class BillingTiersController(
     private val properties: BillingProperties,
 ) {

@@ -22,7 +22,7 @@ import java.util.UUID
  */
 @RestController
 @RequestMapping("/events/{eventId}/payments/manual")
-@PreAuthorize("hasRole('ORGANIZER_ADMIN')")
+@PreAuthorize("hasRole('ORGANIZER_MANAGER')")
 class ManualPaymentController(
     private val manualPaymentService: ManualPaymentService,
 ) {

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component
 class TenantDemoSeedContributor(
     private val authService: AuthService,
     private val users: OrganizerUserRepository,
+    private val memberships: OrganizerMembershipRepository,
     @param:Value("\${jiku.demo-seed.password:demo-password}") private val demoPassword: String,
 ) : DemoSeedContributor {
     override val order = 0
@@ -23,12 +24,15 @@ class TenantDemoSeedContributor(
     override fun prepare(context: DemoSeedContext) {
         val existing = users.findByEmail(DemoSeedPlan.ORGANIZER_EMAIL)
         if (existing != null) {
-            context.tenantId = existing.tenantId
+            context.tenantId = tenantOf(existing)
             return
         }
         authService.register(
-            RegisterRequest(DemoSeedPlan.TENANT_NAME, DemoSeedPlan.ORGANIZER_EMAIL, demoPassword),
+            RegisterRequest(name = DemoSeedPlan.TENANT_NAME, email = DemoSeedPlan.ORGANIZER_EMAIL, password = demoPassword),
         )
-        context.tenantId = requireNotNull(users.findByEmail(DemoSeedPlan.ORGANIZER_EMAIL)).tenantId
+        context.tenantId = tenantOf(requireNotNull(users.findByEmail(DemoSeedPlan.ORGANIZER_EMAIL)))
     }
+
+    private fun tenantOf(user: OrganizerUser): String =
+        memberships.findByUserIdOrderByCreatedAtDesc(requireNotNull(user.id)).first().tenantId
 }

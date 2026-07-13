@@ -13,7 +13,7 @@ import java.util.UUID
  */
 @RestController
 @RequestMapping("/events/{eventId}/analytics")
-@PreAuthorize("hasRole('ORGANIZER_ADMIN')")
+@PreAuthorize("hasRole('ORGANIZER')")
 class AnalyticsController(
     private val analyticsService: AnalyticsService,
 ) {

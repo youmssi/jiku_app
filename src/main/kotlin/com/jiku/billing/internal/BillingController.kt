@@ -15,7 +15,7 @@ import java.util.UUID
  */
 @RestController
 @RequestMapping("/events/{eventId}/usage")
-@PreAuthorize("hasRole('ORGANIZER_ADMIN')")
+@PreAuthorize("hasRole('ORGANIZER')")
 class BillingController(
     private val usageService: UsageService,
 ) {
