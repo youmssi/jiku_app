@@ -39,6 +39,12 @@ class SecurityConfig(
                         "$auth/register",
                         "$auth/login",
                         "$auth/refresh",
+                        // Account recovery (JIKU-49): reachable by definition when
+                        // the caller cannot log in. The resend endpoint is NOT here —
+                        // it stays authenticated.
+                        "$auth/forgot-password",
+                        "$auth/reset-password",
+                        "$auth/verify-email",
                     ).permitAll()
                 // Platform administration: login/refresh are public, everything else
                 // under /admin requires the PLATFORM_ADMIN role (defense in depth on

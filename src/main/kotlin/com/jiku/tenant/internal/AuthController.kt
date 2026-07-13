@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/auth")
 class AuthController(
     private val authService: AuthService,
+    private val accountTokenService: AccountTokenService,
 ) {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
@@ -47,4 +48,24 @@ class AuthController(
     @GetMapping("/me")
     @PreAuthorize("hasRole('USER')")
     fun me(authentication: Authentication): MeResponse = authService.me(authentication.name, TenantContext.get().orEmpty())
+
+    // Public and deliberately mute about whether the address has an account.
+    @PostMapping("/forgot-password")
+    fun forgotPassword(
+        @Valid @RequestBody request: ForgotPasswordRequest,
+    ) = accountTokenService.requestPasswordReset(request.email)
+
+    @PostMapping("/reset-password")
+    fun resetPassword(
+        @Valid @RequestBody request: ResetPasswordRequest,
+    ) = accountTokenService.resetPassword(request.token, request.password)
+
+    @PostMapping("/verify-email")
+    fun verifyEmail(
+        @Valid @RequestBody request: VerifyEmailRequest,
+    ) = accountTokenService.verifyEmail(request.token)
+
+    @PostMapping("/verify-email/resend")
+    @PreAuthorize("hasRole('USER')")
+    fun resendVerification(authentication: Authentication) = accountTokenService.resendEmailVerification(authentication.name)
 }

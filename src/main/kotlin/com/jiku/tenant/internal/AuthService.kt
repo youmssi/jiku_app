@@ -17,6 +17,7 @@ class AuthService(
     private val memberships: OrganizerMembershipRepository,
     private val passwordEncoder: PasswordEncoder,
     private val jwtService: JwtService,
+    private val accountTokens: AccountTokenService,
 ) {
     /**
      * Creates a user account (JIKU-48). With an organization [RegisterRequest.name]
@@ -41,19 +42,27 @@ class AuthService(
                     ),
                 )
             val membership = orgName?.let { createOrganizationFor(user, it) }
+            accountTokens.sendEmailVerification(user)
             return tokensFor(user, membership)
         } catch (ex: DataIntegrityViolationException) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "An account with this email already exists", ex)
         }
     }
 
-    /** Creates an organization owned by the caller and rebinds the session to it. */
+    /**
+     * Creates an organization owned by the caller and rebinds the session to it.
+     * Requires a verified email (JIKU-49) so the platform never carries an
+     * organization whose owner address was never proven.
+     */
     @Transactional
     fun createOrganization(
         userId: String,
         request: CreateOrgRequest,
     ): AuthResponse {
         val user = requireUser(userId)
+        if (!user.emailVerified) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Verify your email address before creating an organization")
+        }
         return tokensFor(user, createOrganizationFor(user, request.name.trim()))
     }
 
@@ -81,6 +90,13 @@ class AuthService(
             users.findById(UUID.fromString(claims.subject)).orElseThrow {
                 ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token")
             }
+        // A password reset cuts off every refresh token issued before it (JIKU-49).
+        // The iat claim is second-truncated, so a token from the same second as the
+        // reset is also rejected — failing closed costs at most one extra login.
+        val changedAt = user.passwordChangedAt
+        if (changedAt != null && claims.issuedAt.toInstant().isBefore(changedAt)) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token")
+        }
         // Re-derive the binding rather than trusting the old claims: the membership
         // (or its role) may have changed since the refresh token was issued. A
         // vanished or suspended active organization falls back to the next one.

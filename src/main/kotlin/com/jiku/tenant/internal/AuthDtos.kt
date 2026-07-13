@@ -27,6 +27,19 @@ data class CreateOrgRequest(
     @field:NotBlank val name: String,
 )
 
+data class ForgotPasswordRequest(
+    @field:Email @field:NotBlank val email: String,
+)
+
+data class ResetPasswordRequest(
+    @field:NotBlank val token: String,
+    @field:NotBlank @field:Size(min = 8, message = "Password must be at least 8 characters") val password: String,
+)
+
+data class VerifyEmailRequest(
+    @field:NotBlank val token: String,
+)
+
 data class SwitchOrgRequest(
     @field:NotBlank val tenantId: String,
 )

@@ -54,6 +54,9 @@ class MembershipFlowTest {
             .perform(get("/api/v1/events").header("Authorization", "Bearer $unboundToken"))
             .andExpect(status().isForbidden())
 
+        // Organization creation is gated on a verified email (JIKU-49).
+        markVerified("multi-org@jiku.test")
+
         // Create the first organization; the returned tokens are bound to it.
         val orgAToken = createOrg(unboundToken, "First Org")
         mockMvc
@@ -173,6 +176,12 @@ class MembershipFlowTest {
         mockMvc
             .perform(get("/api/v1/settings/providers").header("Authorization", "Bearer $ownerToken"))
             .andExpect(status().isOk())
+    }
+
+    private fun markVerified(email: String) {
+        val user = requireNotNull(users.findByEmail(email))
+        user.emailVerified = true
+        users.saveAndFlush(user)
     }
 
     private fun register(
