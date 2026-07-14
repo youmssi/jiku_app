@@ -18,6 +18,7 @@ class AuthService(
     private val passwordEncoder: PasswordEncoder,
     private val jwtService: JwtService,
     private val accountTokens: AccountTokenService,
+    private val googleVerifier: GoogleIdentityVerifier,
 ) {
     /**
      * Creates a user account (JIKU-48). With an organization [RegisterRequest.name]
@@ -68,9 +69,42 @@ class AuthService(
 
     @Transactional(readOnly = true)
     fun login(request: LoginRequest): AuthResponse {
-        val user = users.findByEmail(request.email)
-        if (user == null || !passwordEncoder.matches(request.password, user.passwordHash)) {
+        val user =
+            users.findByEmail(request.email)
+                ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password")
+        val hash =
+            user.passwordHash
+                ?: throw ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "This account signs in with Google. Use the Google button, or set a password via \"Forgot password\".",
+                )
+        if (!passwordEncoder.matches(request.password, hash)) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password")
+        }
+        return tokensFor(user, bindableMembership(user))
+    }
+
+    /**
+     * Google sign-in (JIKU-51): the frontend's Google Identity Services button
+     * yields an ID token; a verified identity finds or creates the account by
+     * email. Google proving ownership of the address also counts as email
+     * verification, and binding/suspension behave exactly as password login.
+     */
+    @Transactional
+    fun googleSignIn(request: GoogleLoginRequest): AuthResponse {
+        if (!googleVerifier.isConfigured()) {
+            throw ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Google sign-in is not configured")
+        }
+        val identity = googleVerifier.verify(request.idToken)
+        if (!identity.emailVerified) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "This Google account's email address is not verified")
+        }
+        val user =
+            users.findByEmail(identity.email)
+                ?: users.saveAndFlush(OrganizerUser(email = identity.email, passwordHash = null))
+        if (!user.emailVerified) {
+            user.emailVerified = true
+            users.save(user)
         }
         return tokensFor(user, bindableMembership(user))
     }

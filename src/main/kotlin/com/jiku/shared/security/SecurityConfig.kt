@@ -40,6 +40,7 @@ class SecurityConfig(
                         "$auth/register",
                         "$auth/login",
                         "$auth/refresh",
+                        "$auth/google",
                         // Account recovery (JIKU-49): reachable by definition when
                         // the caller cannot log in. The resend endpoint is NOT here —
                         // it stays authenticated.

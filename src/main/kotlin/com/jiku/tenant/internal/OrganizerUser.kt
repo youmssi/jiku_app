@@ -20,8 +20,9 @@ import java.util.UUID
 class OrganizerUser(
     @Column(name = "email", nullable = false, unique = true)
     val email: String,
-    @Column(name = "password_hash", nullable = false)
-    var passwordHash: String,
+    /** Null for accounts created through Google sign-in (JIKU-51). */
+    @Column(name = "password_hash")
+    var passwordHash: String?,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

@@ -101,6 +101,11 @@ auth:
     # How long an emailed member invitation stays acceptable (JIKU-50).
     member-invitation-ttl: ${AUTH_MEMBER_INVITATION_TTL:P7D}
     app-base-url: ${SERVER_BASE_URL:http://localhost:3000}
+  google:
+    # OAuth client id of the Google Identity Services button (JIKU-51) — the
+    # required audience of incoming ID tokens. Blank disables Google sign-in.
+    client-id: ${GOOGLE_OAUTH_CLIENT_ID:}
+    jwks-uri: ${GOOGLE_OAUTH_JWKS_URI:https://www.googleapis.com/oauth2/v3/certs}
 
 jwt:
   # HMAC signing secret (minimum 32 bytes). The default is for local use only;
@@ -133,7 +138,7 @@ api:
         # Registration, token refresh and account recovery: legitimate use is rare
         # per client, but registration writes rows and recovery sends mail, so keep
         # scripted abuse slow.
-        paths: [/auth/register, /auth/refresh, /auth/forgot-password, /auth/reset-password, /auth/verify-email, /auth/invitations/**]
+        paths: [/auth/register, /auth/refresh, /auth/forgot-password, /auth/reset-password, /auth/verify-email, /auth/invitations/**, /auth/google]
         max-requests: ${RATE_LIMIT_AUTH_PUBLIC_MAX_REQUESTS:10}
         window: ${RATE_LIMIT_AUTH_PUBLIC_WINDOW:PT1M}
       rsvp:
