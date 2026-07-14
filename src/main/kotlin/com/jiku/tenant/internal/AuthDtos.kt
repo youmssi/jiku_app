@@ -23,6 +23,10 @@ data class RefreshRequest(
     @field:NotBlank val refreshToken: String,
 )
 
+data class GoogleLoginRequest(
+    @field:NotBlank val idToken: String,
+)
+
 data class CreateOrgRequest(
     @field:NotBlank val name: String,
 )

@@ -36,6 +36,11 @@ class AuthController(
         @Valid @RequestBody request: RefreshRequest,
     ): AuthResponse = authService.refresh(request)
 
+    @PostMapping("/google")
+    fun google(
+        @Valid @RequestBody request: GoogleLoginRequest,
+    ): AuthResponse = authService.googleSignIn(request)
+
     // Any signed-in account (bound to an organization or not) can rebind its
     // session; membership in the target organization is checked in the service.
     @PostMapping("/switch-org")
