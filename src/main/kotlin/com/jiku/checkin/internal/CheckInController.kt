@@ -20,7 +20,7 @@ import java.util.UUID
  */
 @RestController
 @RequestMapping("/events/{eventId}/checkin")
-@PreAuthorize("hasRole('ORGANIZER_ADMIN')")
+@PreAuthorize("hasRole('ORGANIZER')")
 class CheckInController(
     private val checkInService: CheckInService,
 ) {

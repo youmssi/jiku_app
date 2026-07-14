@@ -1,6 +1,8 @@
 package com.jiku.shared.security
 
 import com.jiku.shared.JwtService
+import com.jiku.shared.MembershipAccessGate
+import com.jiku.shared.TenantAccessGate
 import com.jiku.shared.TenantContext
 import io.jsonwebtoken.JwtException
 import jakarta.servlet.FilterChain
@@ -14,14 +16,20 @@ import org.springframework.web.filter.OncePerRequestFilter
 
 /**
  * Authenticates a request from a Bearer access token. On a valid access token it
- * populates the Spring Security context (for `@PreAuthorize`) and the
- * [TenantContext] (so tenant-scoped persistence is filtered to the caller's
- * tenant). Both are cleared after the request to avoid leaking across pooled
- * threads. An invalid or missing token simply leaves the request unauthenticated.
+ * populates the Spring Security context (for `@PreAuthorize`) and, for
+ * tenant-bound tokens, the [TenantContext] (so tenant-scoped persistence is
+ * filtered to the caller's tenant). Platform-administrator tokens carry no tenant
+ * and never populate a tenant context. A token belonging to a suspended tenant is
+ * rejected outright, so suspension takes effect on the next request rather than
+ * at token expiry. Both contexts are cleared after the request to avoid leaking
+ * across pooled threads. An invalid or missing token simply leaves the request
+ * unauthenticated.
  */
 @Component
 class JwtAuthenticationFilter(
     private val jwtService: JwtService,
+    private val tenantAccessGate: TenantAccessGate,
+    private val membershipAccessGate: MembershipAccessGate,
 ) : OncePerRequestFilter() {
     override fun doFilterInternal(
         request: HttpServletRequest,
@@ -35,10 +43,18 @@ class JwtAuthenticationFilter(
                 if (claims[JwtService.CLAIM_TOKEN_TYPE] == JwtService.TOKEN_TYPE_ACCESS) {
                     val tenantId = claims[JwtService.CLAIM_TENANT_ID] as String
                     val role = claims[JwtService.CLAIM_ROLE] as String
-                    TenantContext.set(tenantId)
-                    val authority = SimpleGrantedAuthority("ROLE_$role")
-                    SecurityContextHolder.getContext().authentication =
-                        UsernamePasswordAuthenticationToken(claims.subject, null, listOf(authority))
+                    // A tenant-bound token also proves the membership still exists
+                    // (JIKU-50): a removed member is cut off on their next request.
+                    if (tenantId.isBlank() ||
+                        (!tenantAccessGate.isSuspended(tenantId) && membershipAccessGate.isMember(claims.subject, tenantId))
+                    ) {
+                        if (tenantId.isNotBlank()) {
+                            TenantContext.set(tenantId)
+                        }
+                        val authorities = TokenRoles.expand(role).map { SimpleGrantedAuthority("ROLE_$it") }
+                        SecurityContextHolder.getContext().authentication =
+                            UsernamePasswordAuthenticationToken(claims.subject, null, authorities)
+                    }
                 }
             } catch (ex: JwtException) {
                 // Invalid token: leave the request unauthenticated.

@@ -15,7 +15,7 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/events")
-@PreAuthorize("hasRole('ORGANIZER_ADMIN')")
+@PreAuthorize("hasRole('ORGANIZER')")
 class EventController(
     private val eventService: EventService,
 ) {

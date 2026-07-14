@@ -18,7 +18,7 @@ import java.util.UUID
 @Service
 class PaymentService(
     private val payments: PaymentRepository,
-    private val usageRecords: UsageRecordRepository,
+    private val tierUnlockService: TierUnlockService,
     private val provider: PaymentProvider,
     private val billingProperties: BillingProperties,
     transactionManager: PlatformTransactionManager,
@@ -108,24 +108,10 @@ class PaymentService(
         payment.updatedAt = Instant.now()
         payments.save(payment)
         if (succeeded) {
-            unlockTier(payment.eventId, payment.tier)
+            tierUnlockService.unlock(payment.eventId, payment.tier)
             return CallbackOutcome.SUCCEEDED
         }
         return CallbackOutcome.FAILED
-    }
-
-    /** Raises the event's unlocked allowance to the paid tier (never lowers it). */
-    private fun unlockTier(
-        eventId: UUID,
-        tierName: String,
-    ) {
-        val tier = billingProperties.tiers.firstOrNull { it.name == tierName } ?: return
-        val record =
-            usageRecords.findByEventId(eventId)
-                ?: UsageRecord(eventId = eventId, unlockedAllowance = billingProperties.freeTierGuests)
-        record.unlockedAllowance = maxOf(record.unlockedAllowance, tier.maxGuests)
-        record.updatedAt = Instant.now()
-        usageRecords.save(record)
     }
 }
 

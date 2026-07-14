@@ -24,7 +24,7 @@ import java.util.UUID
  */
 @RestController
 @RequestMapping("/billing/payments")
-@PreAuthorize("hasRole('ORGANIZER_ADMIN')")
+@PreAuthorize("hasRole('ORGANIZER')")
 class BillingHistoryController(
     private val payments: PaymentRepository,
     private val events: EventModuleApi,

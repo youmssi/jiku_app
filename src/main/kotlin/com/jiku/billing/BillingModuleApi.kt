@@ -1,5 +1,6 @@
 package com.jiku.billing
 
+import java.time.Instant
 import java.util.UUID
 
 /**
@@ -24,6 +25,50 @@ interface BillingModuleApi {
         eventId: UUID,
         additionalGuests: Long,
     ): Boolean
+
+    /**
+     * Platform back-office payments desk (JIKU-41). Deliberately cross-tenant:
+     * only the admin module may call these, and mutations rebind the payment's
+     * own tenant internally before touching tenant-scoped data.
+     */
+    fun adminListPayments(
+        status: String?,
+        provider: String?,
+        tenantId: UUID?,
+        page: Int,
+        size: Int,
+    ): List<AdminPaymentView>
+
+    /** Confirms a manual payment's transfer arrived and unlocks its tier. */
+    fun adminConfirmManualPayment(paymentId: UUID): AdminPaymentView
+
+    /** Rejects a pending manual payment with a reason. */
+    fun adminRejectManualPayment(
+        paymentId: UUID,
+        reason: String,
+    ): AdminPaymentView
+
+    /** Back-office trial management (JIKU-42); cross-tenant like the payments desk. */
+    fun adminListTrials(
+        status: String?,
+        tenantId: UUID?,
+        page: Int,
+        size: Int,
+    ): List<AdminTrialView>
+
+    /** Grants a time-boxed trial of a paid tier to one event. */
+    fun adminGrantTrial(
+        tenantId: UUID,
+        eventId: UUID,
+        tier: String,
+        expiresAt: Instant,
+    ): AdminTrialView
+
+    /** Ends an active trial before its expiry, with a reason. */
+    fun adminEndTrial(
+        trialId: UUID,
+        reason: String,
+    ): AdminTrialView
 }
 
 /**

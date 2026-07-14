@@ -12,7 +12,7 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/events/{eventId}/invitations")
-@PreAuthorize("hasRole('ORGANIZER_ADMIN')")
+@PreAuthorize("hasRole('ORGANIZER')")
 class InvitationController(
     private val sendingService: InvitationSendingService,
     private val dispatcher: InvitationDispatcher,

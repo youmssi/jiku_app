@@ -18,7 +18,7 @@ import java.util.UUID
  */
 @RestController
 @RequestMapping("/events/{eventId}/validators")
-@PreAuthorize("hasRole('ORGANIZER_ADMIN')")
+@PreAuthorize("hasRole('ORGANIZER')")
 class ValidatorController(
     private val validatorService: ValidatorService,
 ) {

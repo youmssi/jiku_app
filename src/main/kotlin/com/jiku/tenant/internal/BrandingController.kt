@@ -14,7 +14,7 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/branding")
-@PreAuthorize("hasRole('ORGANIZER_ADMIN')")
+@PreAuthorize("hasRole('ORGANIZER_MANAGER')")
 class BrandingController(
     private val brandingService: BrandingService,
 ) {

@@ -92,6 +92,21 @@ spring:
       # environment with DB_POOL_MAX_SIZE rather than editing this file.
       maximum-pool-size: ${DATABASE_POOL_SIZE:10}
 
+auth:
+  account:
+    # Account recovery links (JIKU-49): how long a reset/verification link stays
+    # valid, and the frontend origin the emailed links point at.
+    password-reset-ttl: ${AUTH_PASSWORD_RESET_TTL:PT1H}
+    email-verification-ttl: ${AUTH_EMAIL_VERIFICATION_TTL:P2D}
+    # How long an emailed member invitation stays acceptable (JIKU-50).
+    member-invitation-ttl: ${AUTH_MEMBER_INVITATION_TTL:P7D}
+    app-base-url: ${SERVER_BASE_URL:http://localhost:3000}
+  google:
+    # OAuth client id of the Google Identity Services button (JIKU-51) — the
+    # required audience of incoming ID tokens. Blank disables Google sign-in.
+    client-id: ${GOOGLE_OAUTH_CLIENT_ID:}
+    jwks-uri: ${GOOGLE_OAUTH_JWKS_URI:https://www.googleapis.com/oauth2/v3/certs}
+
 jwt:
   # HMAC signing secret (minimum 32 bytes). The default is for local use only;
   # every real environment MUST set JWT_SECRET to a long random value.
@@ -120,9 +135,10 @@ api:
         max-requests: ${AUTH_LOGIN_MAX_ATTEMPTS:5}
         window: ${AUTH_LOGIN_RATE_WINDOW:PT1M}
       auth-public:
-        # Registration and token refresh: legitimate use is rare per client, but
-        # registration writes rows, so keep scripted signup slow.
-        paths: [/auth/register, /auth/refresh]
+        # Registration, token refresh and account recovery: legitimate use is rare
+        # per client, but registration writes rows and recovery sends mail, so keep
+        # scripted abuse slow.
+        paths: [/auth/register, /auth/refresh, /auth/forgot-password, /auth/reset-password, /auth/verify-email, /auth/invitations/**, /auth/google]
         max-requests: ${RATE_LIMIT_AUTH_PUBLIC_MAX_REQUESTS:10}
         window: ${RATE_LIMIT_AUTH_PUBLIC_WINDOW:PT1M}
       rsvp:
@@ -192,6 +208,17 @@ management:
         http.server.requests: true
       slo:
         http.server.requests: 100ms,250ms,500ms,1s,2s
+admin:
+  agreements:
+    # Daily sweep marking past-end enterprise agreements EXPIRED (JIKU-43).
+    cron: ${ADMIN_AGREEMENTS_CRON:0 0 4 * * *}
+  bootstrap:
+    # First platform administrator (JIKU-40), created idempotently at startup so a
+    # fresh deployment has a working back-office. Leave both blank to skip (local
+    # default); an existing account is never overwritten from config.
+    email: ${ADMIN_BOOTSTRAP_EMAIL:}
+    password: ${ADMIN_BOOTSTRAP_PASSWORD:}
+
 billing:
   # Pay-per-event pricing (JIKU-32). The free tier and paid tiers are configuration,
   # not literals in code, so pricing changes without a release. Amounts are in the
@@ -206,6 +233,20 @@ billing:
     provider: ${PAYMENT_PROVIDER:sandbox}
     webhook-secret: ${PAYMENT_WEBHOOK_SECRET:local-development-payment-webhook-secret}
     sandbox-return-url: ${PAYMENT_SANDBOX_RETURN_URL:http://localhost:3000/billing/return}
+  trial:
+    # Trial sweep (JIKU-42): cron for the expiry/notice job and how far before
+    # expiry the organizer's heads-up email goes out.
+    cron: ${BILLING_TRIAL_CRON:0 15 * * * *}
+    notice-lead: ${BILLING_TRIAL_NOTICE_LEAD:P3D}
+  manual:
+    # Payee details shown with manual (concierge) payment instructions (JIKU-41):
+    # where a client sends their prepayment. Blank fields are hidden from the
+    # instructions; details flow one way (platform -> client) and no client
+    # payment credential is ever collected or stored.
+    payee-name: ${BILLING_MANUAL_PAYEE_NAME:}
+    mobile-money-number: ${BILLING_MANUAL_MOMO_NUMBER:}
+    mobile-money-operator: ${BILLING_MANUAL_MOMO_OPERATOR:}
+    bank-details: ${BILLING_MANUAL_BANK_DETAILS:}
 compliance:
   retention:
     # Data-retention policy (JIKU-37). Guest personal data is anonymized this many
@@ -234,6 +275,10 @@ checkin:
     validity: ${CHECKIN_VALIDATOR_LINK_VALIDITY:P30D}
 
 notification:
+  sales:
+    # Mailbox notified of new manual activation requests (JIKU-41); blank keeps
+    # requests visible only in the admin payments desk.
+    email: ${NOTIFICATION_SALES_EMAIL:}
   email:
     # Sender address for outbound mail. Set per environment; in production the
     # domain must be verified with the configured transport (jiku.mail.transport).

@@ -1,18 +1,23 @@
 package com.jiku.billing.internal
 
+import com.jiku.billing.AdminPaymentView
+import com.jiku.billing.AdminTrialView
 import com.jiku.billing.BillingAllowance
 import com.jiku.billing.BillingModuleApi
 import org.springframework.stereotype.Service
+import java.time.Instant
 import java.util.UUID
 
 /**
  * Exposes the billing module's metering to other modules (the organizer dashboard
  * for display, the invitation module for the paywall) without any of them reaching
- * into billing's tables.
+ * into billing's tables, plus the payments desk consumed by the admin module.
  */
 @Service
 class BillingModuleApiService(
     private val usageService: UsageService,
+    private val manualPaymentService: ManualPaymentService,
+    private val trialService: TrialService,
 ) : BillingModuleApi {
     override fun allowance(eventId: UUID): BillingAllowance = usageService.allowance(eventId)
 
@@ -20,4 +25,38 @@ class BillingModuleApiService(
         eventId: UUID,
         additionalGuests: Long,
     ): Boolean = usageService.canInvite(eventId, additionalGuests)
+
+    override fun adminListPayments(
+        status: String?,
+        provider: String?,
+        tenantId: UUID?,
+        page: Int,
+        size: Int,
+    ): List<AdminPaymentView> = manualPaymentService.adminList(status, provider, tenantId, page, size)
+
+    override fun adminConfirmManualPayment(paymentId: UUID): AdminPaymentView = manualPaymentService.confirm(paymentId)
+
+    override fun adminRejectManualPayment(
+        paymentId: UUID,
+        reason: String,
+    ): AdminPaymentView = manualPaymentService.reject(paymentId, reason)
+
+    override fun adminListTrials(
+        status: String?,
+        tenantId: UUID?,
+        page: Int,
+        size: Int,
+    ): List<AdminTrialView> = trialService.adminList(status, tenantId, page, size)
+
+    override fun adminGrantTrial(
+        tenantId: UUID,
+        eventId: UUID,
+        tier: String,
+        expiresAt: Instant,
+    ): AdminTrialView = trialService.grant(tenantId, eventId, tier, expiresAt)
+
+    override fun adminEndTrial(
+        trialId: UUID,
+        reason: String,
+    ): AdminTrialView = trialService.endEarly(trialId, reason)
 }

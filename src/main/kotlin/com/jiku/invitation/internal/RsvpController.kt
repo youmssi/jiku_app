@@ -1,5 +1,6 @@
 package com.jiku.invitation.internal
 
+import com.jiku.shared.TenantAccessGate
 import com.jiku.shared.TenantContext
 import io.jsonwebtoken.Claims
 import org.springframework.http.HttpStatus
@@ -22,6 +23,7 @@ class RsvpController(
     private val tokenService: InvitationTokenService,
     private val rsvpService: RsvpService,
     private val erasureService: GuestErasureService,
+    private val tenantAccessGate: TenantAccessGate,
 ) {
     @GetMapping("/{token}")
     fun view(
@@ -60,6 +62,11 @@ class RsvpController(
         val tenantId =
             claims[InvitationTokenService.CLAIM_TENANT_ID] as? String
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "This invitation link is invalid")
+        if (tenantAccessGate.isSuspended(tenantId)) {
+            // Platform-level suspension (JIKU-40): the organizer's links stop
+            // resolving; a plain not-found leaks nothing about the reason.
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "This invitation link is no longer available")
+        }
         TenantContext.set(tenantId)
         try {
             val guestId = UUID.fromString(claims.subject)
