@@ -30,6 +30,8 @@ com.jiku
 ├── ticketing              # tickets, QR codes
 ├── checkin                # validation, presence tracking
 ├── notification           # email / WhatsApp orchestration
+├── billing                # usage metering, tiers, concierge payments
+├── admin                  # platform administration desk (tenants, payments, audit)
 └── shared                 # genuinely cross-cutting code only
 ```
 
@@ -48,7 +50,7 @@ needs no database or Docker.
 The application code runs **natively** (`./gradlew bootRun`). Infrastructure it
 depends on — PostgreSQL today, any further services later — runs in **Docker** via
 `docker compose`. A fresh clone needs no `.env`: `docker-compose.yml` and
-`application.yaml` share the same `POSTGRES_*` variables and defaults, so the two
+`application.yaml` share the same `DATABASE_*` variables and defaults, so the two
 steps below just work.
 
 ```bash
@@ -87,13 +89,15 @@ docker compose up -d      # database must be running
 Log in afterwards as `demo-organizer@jiku.example` / `demo-password` (override the
 password with `JIKU_DEMOSEED_PASSWORD` or the `jiku.demo-seed.password` property).
 The command is safe to re-run at any time: it resets the demo tenant's data first,
-so no manual cleanup is ever needed. Pointing `POSTGRES_*` at another environment
+so no manual cleanup is ever needed. Pointing `DATABASE_*` at another environment
 (e.g. staging) seeds that environment instead.
 
-Configuration lives in a single `application.yaml` (see `.env.example`). Every
-environment-specific value is a `${ENV_VAR:default}` placeholder: defaults keep local
-zero-config, and any other environment overrides the variables. Secrets such as
-`JWT_SECRET` ship only a development default and must be set explicitly outside local.
+Configuration lives in a single `application.yaml` (see `.env.example`, organized
+into a REQUIRED section — what every real deployment must set — and an OPTIONAL
+tuning section). Every environment-specific value is a `${ENV_VAR:default}`
+placeholder: defaults keep local zero-config, and any other environment overrides
+the variables. Secrets such as `AUTH_JWT_SECRET` ship only a development default
+and must be set explicitly outside local.
 Schema is owned by Flyway migrations under `src/main/resources/db/migration`.
 
 > Integration tests and `bootRun` require PostgreSQL. The integration test suite
