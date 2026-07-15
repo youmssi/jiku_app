@@ -40,6 +40,7 @@ class AuthService(
                     OrganizerUser(
                         email = request.email,
                         passwordHash = requireNotNull(passwordEncoder.encode(request.password)),
+                        fullName = request.fullName?.trim()?.takeIf { it.isNotEmpty() },
                     ),
                 )
             val membership = orgName?.let { createOrganizationFor(user, it) }
@@ -101,9 +102,21 @@ class AuthService(
         }
         val user =
             users.findByEmail(identity.email)
-                ?: users.saveAndFlush(OrganizerUser(email = identity.email, passwordHash = null))
+                ?: users.saveAndFlush(
+                    OrganizerUser(email = identity.email, passwordHash = null, fullName = identity.name),
+                )
+        var changed = false
         if (!user.emailVerified) {
             user.emailVerified = true
+            changed = true
+        }
+        // Backfill the display name for accounts that never provided one
+        // (created before JIKU-54, or registered by email without a name).
+        if (user.fullName.isNullOrBlank() && !identity.name.isNullOrBlank()) {
+            user.fullName = identity.name
+            changed = true
+        }
+        if (changed) {
             users.save(user)
         }
         return tokensFor(user, bindableMembership(user))
@@ -174,6 +187,7 @@ class AuthService(
         return MeResponse(
             userId = userId,
             email = user.email,
+            fullName = user.fullName,
             tenantId = activeTenantId,
             role = activeRole,
             memberships =

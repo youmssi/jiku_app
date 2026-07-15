@@ -45,6 +45,7 @@ class NimbusGoogleIdentityVerifier(
         return GoogleIdentity(
             email = email,
             emailVerified = jwt.getClaimAsBoolean("email_verified") == true,
+            name = jwt.getClaimAsString("name")?.takeIf { it.isNotBlank() },
         )
     }
 

@@ -23,6 +23,9 @@ class OrganizerUser(
     /** Null for accounts created through Google sign-in (JIKU-51). */
     @Column(name = "password_hash")
     var passwordHash: String?,
+    /** The person's display name (JIKU-54); null falls back to the email in the UI. */
+    @Column(name = "full_name")
+    var fullName: String? = null,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
