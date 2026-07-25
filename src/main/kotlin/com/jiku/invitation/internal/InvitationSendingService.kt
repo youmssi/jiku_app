@@ -38,6 +38,9 @@ class InvitationSendingService(
         // without persisting, so the paywall can veto the whole batch.
         val toQueue = mutableListOf<Invitation>()
         for (guest in guests.findByEventId(eventId)) {
+            if (guest.excludedFromInvitations) {
+                continue
+            }
             val guestId = requireNotNull(guest.id)
             for (channel in channels) {
                 val eligible =
