@@ -81,6 +81,13 @@ allOpen {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    // The suite now spins up 40+ distinct @SpringBootTest contexts (each with its
+    // own Testcontainers Postgres + Hibernate metamodel) in a single test JVM.
+    // Without an explicit heap the JVM falls back to a container-percentage
+    // default that's comfortably exceeded by the accumulated context cache,
+    // producing an OutOfMemoryError partway through the run on the standard
+    // GitHub-hosted runner (7GB RAM) — reproducible locally with a small -Xmx.
+    maxHeapSize = "4g"
     // application.yaml imports the developer's local .env (spring.config.import),
     // even for test runs. That's convenient for bootRun but makes the test suite
     // non-deterministic: e.g. setting MAIL_TRANSPORT=smtp locally to exercise
