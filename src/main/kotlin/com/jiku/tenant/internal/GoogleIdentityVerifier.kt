@@ -9,6 +9,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 data class GoogleIdentity(
     val email: String,
     val emailVerified: Boolean,
+    /** The person's display name from the token's `name` claim, when present. */
+    val name: String? = null,
 )
 
 interface GoogleIdentityVerifier {

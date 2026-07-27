@@ -34,4 +34,8 @@ interface InvitationRepository : JpaRepository<Invitation, UUID> {
         guestId: UUID,
         channel: InvitationChannel,
     ): Invitation?
+
+    fun findByGuestId(guestId: UUID): List<Invitation>
+
+    fun deleteByGuestId(guestId: UUID)
 }

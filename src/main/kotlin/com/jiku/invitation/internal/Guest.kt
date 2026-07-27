@@ -46,6 +46,10 @@ class Guest(
     @Column(name = "erased_at")
     var erasedAt: Instant? = null
 
+    /** True when the organizer has opted this guest out of future invitation sends. */
+    @Column(name = "excluded_from_invitations", nullable = false)
+    var excludedFromInvitations: Boolean = false
+
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now()
 }
