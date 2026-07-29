@@ -57,6 +57,7 @@ class EventCancellationNoticeDispatcher(
                     EventCancellationNotice(
                         invitationId = requireNotNull(invitation.id),
                         tenantId = cancelled.tenantId,
+                        eventId = cancelled.eventId,
                         channel = channelName,
                         recipient = recipient,
                         recipientName = "${guest.firstName} ${guest.lastName}",

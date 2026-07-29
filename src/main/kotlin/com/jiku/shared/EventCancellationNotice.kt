@@ -13,6 +13,8 @@ data class EventCancellationNotice(
     /** The originating invitation; the notification audit log references it. */
     val invitationId: UUID,
     val tenantId: String,
+    /** Carried so notification can attribute delivery cost (e.g. WhatsApp) back to the event. */
+    val eventId: UUID,
     /** One of [GuestInvitedEvent.CHANNEL_EMAIL] / [GuestInvitedEvent.CHANNEL_WHATSAPP]. */
     val channel: String,
     val recipient: String,

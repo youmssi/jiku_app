@@ -56,14 +56,14 @@ class PaywallTest {
         // Nothing was sent — the whole batch was refused, not partially delivered.
         assert(JsonPath.read<Int>(usage(token, eventId), "$.invitedGuests") == 0)
 
-        // Pay for the STANDARD tier and confirm it via the signed callback.
+        // Pay for the BRONZE tier and confirm it via the signed callback.
         val payment =
             mockMvc
                 .perform(
                     post("/api/v1/events/$eventId/payments")
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"tier":"STANDARD"}"""),
+                        .content("""{"tier":"BRONZE"}"""),
                 ).andExpect(status().isOk())
                 .andReturn()
                 .response.contentAsString

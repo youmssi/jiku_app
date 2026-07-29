@@ -3,11 +3,22 @@ jiku:
     # Email delivery transport: log (default — records sends without delivering,
     # so a fresh clone works with zero setup), smtp (Mailpit from docker-compose
     # locally, or any SMTP relay), resend (production HTTPS API; Render blocks
-    # outbound SMTP).
+    # outbound SMTP), brevo (standalone Brevo transactional API), or routing
+    # (Resend first, Brevo fallback once Resend's daily cap is hit — JIKU-62).
     transport: ${MAIL_TRANSPORT:log}
     resend:
       api-key: ${RESEND_API_KEY:}
       base-url: ${RESEND_BASE_URL:https://api.resend.com}
+    brevo:
+      api-key: ${BREVO_API_KEY:}
+      base-url: ${BREVO_BASE_URL:https://api.brevo.com/v3}
+    routing:
+      # Kept comfortably under each provider's actual free-tier ceiling and
+      # under their naive sum — the two free tiers are not reliably additive in
+      # practice once a safety margin is applied (JIKU-62).
+      resend-daily-cap: ${EMAIL_RESEND_DAILY_CAP:100}
+      brevo-daily-cap: ${EMAIL_BREVO_DAILY_CAP:300}
+      global-daily-cap: ${EMAIL_GLOBAL_DAILY_CAP:350}
   whatsapp:
     # WhatsApp delivery transport: log (default — records sends without
     # delivering) or meta (WhatsApp Cloud API with the credentials below).
@@ -22,6 +33,10 @@ jiku:
       # (only reaches recipients inside the 24h customer-service window).
       template-name: ${WHATSAPP_META_TEMPLATE_NAME:}
       template-language: ${WHATSAPP_META_TEMPLATE_LANGUAGE:fr}
+    # Cost/quota/category guardrails (JIKU-61).
+    conversation-safety-threshold: ${WHATSAPP_CONVERSATION_SAFETY_THRESHOLD:220}
+    usd-to-gnf-rate: ${WHATSAPP_USD_TO_GNF_RATE:8760}
+    marketing-markers: ${WHATSAPP_MARKETING_MARKERS:promo,réduction,solde,gratuit,offre spéciale,cadeau,bon plan,code promo,achetez maintenant}
   provider-credentials:
     # Encrypts tenant-provided provider credentials at rest (AES-GCM). Minimum
     # 32 characters; MUST be set to a strong random value outside local — and
@@ -164,6 +179,14 @@ api:
         paths: [/notifications/email-feedback/**]
         max-requests: ${RATE_LIMIT_EMAIL_FEEDBACK_MAX_REQUESTS:300}
         window: ${RATE_LIMIT_EMAIL_FEEDBACK_WINDOW:PT1M}
+      booking:
+        # Public deposit-reservation flow (JIKU-55): a legitimate prospect quotes
+        # and submits once, then declares one payment; keep scripted abuse slow.
+        # The access token lives in the query string, not the path, so this is
+        # IP-only (no token-segment) unlike rsvp/checkin.
+        paths: [/bookings/**]
+        max-requests: ${RATE_LIMIT_BOOKING_MAX_REQUESTS:20}
+        window: ${RATE_LIMIT_BOOKING_WINDOW:PT1M}
 
 management:
   # Observability surface for uptime and performance monitoring (JIKU-30).
@@ -220,11 +243,25 @@ admin:
     password: ${ADMIN_BOOTSTRAP_PASSWORD:}
 
 billing:
-  # Pay-per-event pricing (JIKU-32). The free tier and paid tiers are configuration,
-  # not literals in code, so pricing changes without a release. Amounts are in the
-  # currency's minor unit (e.g. centimes for XOF).
+  # Pay-per-event pricing (JIKU-32, regraded to the Guinea market grid in
+  # JIKU-53: FREE/BRONZE/ARGENT/OR/CUSTOM). The free tier and paid tiers are
+  # configuration, not literals in code, so pricing changes without a release.
+  # Amounts are in the currency's minor unit — GNF has none, so they are the
+  # full amount.
   free-tier-guests: ${BILLING_FREE_TIER_GUESTS:100}
-  currency: ${BILLING_CURRENCY:XOF}
+  # Rolling window (ISO-8601 duration) over which free-tier-guests accumulates
+  # per tenant account, not per event (JIKU-54) — closes the bypass of
+  # fragmenting guests across many small free events.
+  free-tier-window: ${BILLING_FREE_TIER_WINDOW:P365D}
+  currency: ${BILLING_CURRENCY:GNF}
+  custom:
+    # CUSTOM tier pricing (beyond the OR tier's 1,000 guests): quoted in USD
+    # cents and converted through this rate, since both move independently of a
+    # release. Defaults match the GTM plan's $0.05/guest + $15 setup at
+    # ~8,760 GNF/USD — revisit the rate periodically, it is not pegged.
+    per-guest-usd-cents: ${BILLING_CUSTOM_PER_GUEST_USD_CENTS:5}
+    setup-fee-usd-cents: ${BILLING_CUSTOM_SETUP_FEE_USD_CENTS:1500}
+    usd-to-gnf-rate: ${BILLING_CUSTOM_USD_TO_GNF_RATE:8760}
   payment:
     # Mobile Money integration (JIKU-33). The active provider is a wiring choice;
     # "sandbox" makes the full flow work before a real provider is chosen. The
@@ -247,6 +284,17 @@ billing:
     mobile-money-number: ${BILLING_MANUAL_MOMO_NUMBER:}
     mobile-money-operator: ${BILLING_MANUAL_MOMO_OPERATOR:}
     bank-details: ${BILLING_MANUAL_BANK_DETAILS:}
+booking:
+  # Deposit-reservation flow (JIKU-55): the deposit percentage, when the balance
+  # falls due, and the payee details shown on the payment instructions page —
+  # a distinct product surface from billing.manual above, even though the
+  # underlying Mobile Money accounts may be the same.
+  deposit-rate: ${BOOKING_DEPOSIT_RATE:0.30}
+  balance-due-days-before-event: ${BOOKING_BALANCE_DUE_DAYS:7}
+  event-timezone: ${BOOKING_EVENT_TIMEZONE:Africa/Conakry}
+  payee-name: ${BOOKING_PAYEE_NAME:}
+  orange-money-number: ${BOOKING_ORANGE_MONEY_NUMBER:}
+  mtn-momo-number: ${BOOKING_MTN_MOMO_NUMBER:}
 compliance:
   retention:
     # Data-retention policy (JIKU-37). Guest personal data is anonymized this many
@@ -265,6 +313,10 @@ invitation:
     app-base-url: ${SERVER_BASE_URL:http://localhost:3000}
     # Delivery attempts before an invitation is marked permanently FAILED.
     max-attempts: ${INVITATION_MAX_ATTEMPTS:3}
+  # How often QUEUED invitations (withheld by a delivery-capacity guardrail —
+  # the WhatsApp conversation window, JIKU-61, or the email routing quota,
+  # JIKU-62) are retried.
+  queue-sweep-cron: ${INVITATION_QUEUE_SWEEP_CRON:0 */15 * * * *}
 
 checkin:
   validator-link:

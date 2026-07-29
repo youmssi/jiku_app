@@ -78,6 +78,9 @@ class BillingHistoryController(
         minor: Long,
         currency: String,
     ): String {
+        if (currency.uppercase() in ZERO_DECIMAL_CURRENCIES) {
+            return "%,d %s".format(minor, currency)
+        }
         val major = minor / 100
         val cents = minor % 100
         return "%,d.%02d %s".format(major, cents, currency)
@@ -86,6 +89,12 @@ class BillingHistoryController(
     private companion object {
         val RECEIPT_DATE: DateTimeFormatter =
             DateTimeFormatter.ofPattern("d MMM yyyy 'at' HH:mm 'UTC'").withZone(ZoneOffset.UTC)
+
+        // ISO 4217 currencies with no minor unit (ISO exponent 0) — GNF (Guinea's
+        // currency, JIKU-53) and XOF (this platform's prior default) both fall
+        // here, so amountMinor is the full amount for either, not centimes.
+        val ZERO_DECIMAL_CURRENCIES =
+            setOf("BIF", "CLP", "DJF", "GNF", "JPY", "KMF", "KRW", "MGA", "PYG", "RWF", "UGX", "VND", "VUV", "XAF", "XOF", "XPF")
     }
 }
 

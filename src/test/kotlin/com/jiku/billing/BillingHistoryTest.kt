@@ -48,7 +48,7 @@ class BillingHistoryTest {
             .andExpect(jsonPath("$[0].paymentId").value(paymentId))
             .andExpect(jsonPath("$[0].status").value("SUCCEEDED"))
             .andExpect(jsonPath("$[0].eventName").value("Paid Event"))
-            .andExpect(jsonPath("$[0].tier").value("STANDARD"))
+            .andExpect(jsonPath("$[0].tier").value("BRONZE"))
 
         // A plain-text receipt is available for the successful payment.
         mockMvc
@@ -56,7 +56,7 @@ class BillingHistoryTest {
             .andExpect(status().isOk())
             .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
             .andExpect(content().string(containsString("Payment receipt")))
-            .andExpect(content().string(containsString("STANDARD")))
+            .andExpect(content().string(containsString("BRONZE")))
 
         // Another tenant sees none of it.
         val otherToken = register("other")
@@ -80,7 +80,7 @@ class BillingHistoryTest {
                     post("/api/v1/events/$eventId/payments")
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"tier":"STANDARD"}"""),
+                        .content("""{"tier":"BRONZE"}"""),
                 ).andExpect(status().isOk())
                 .andReturn()
                 .response.contentAsString

@@ -2,6 +2,7 @@ package com.jiku.event.internal
 
 import com.jiku.event.EventInfo
 import com.jiku.event.EventModuleApi
+import com.jiku.event.InvitationChannel
 import com.jiku.event.RetentionCandidate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -11,6 +12,7 @@ import java.util.UUID
 @Service
 class EventModuleApiService(
     private val events: EventRepository,
+    private val eventService: EventService,
 ) : EventModuleApi {
     @Transactional(readOnly = true)
     override fun findEvent(eventId: UUID): EventInfo? = events.findById(eventId).map { it.toEventInfo() }.orElse(null)
@@ -35,4 +37,21 @@ class EventModuleApiService(
     override fun releaseAttendanceSlot(eventId: UUID) {
         events.releaseSlot(eventId)
     }
+
+    @Transactional
+    override fun createDraftEvent(
+        name: String,
+        timezone: String,
+        startDateTime: Instant?,
+        invitationChannels: Set<InvitationChannel>,
+    ): UUID =
+        eventService
+            .create(
+                CreateEventRequest(
+                    name = name,
+                    timezone = timezone,
+                    startDateTime = startDateTime,
+                    invitationChannels = invitationChannels,
+                ),
+            ).id
 }
