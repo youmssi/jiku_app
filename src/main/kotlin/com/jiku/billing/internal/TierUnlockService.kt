@@ -15,7 +15,11 @@ class TierUnlockService(
     private val usageRecords: UsageRecordRepository,
     private val billingProperties: BillingProperties,
 ) {
-    /** Raises the event's unlocked allowance to the paid tier (never lowers it). */
+    /**
+     * Raises the event's unlocked allowance to the paid tier (never lowers it).
+     * Any guests it already sent for free stay counted for good against the
+     * tenant's cumulative budget (JIKU-54) — unlocking does not reverse them.
+     */
     fun unlock(
         eventId: UUID,
         tierName: String,

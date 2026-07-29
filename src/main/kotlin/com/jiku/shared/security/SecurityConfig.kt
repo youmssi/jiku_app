@@ -63,12 +63,18 @@ class SecurityConfig(
                 it.requestMatchers("${apiProperties.basePath}/admin/**").hasRole("PLATFORM_ADMIN")
                 it.requestMatchers("${apiProperties.basePath}/rsvp/**").permitAll()
                 it.requestMatchers("${apiProperties.basePath}/checkin/**").permitAll()
+                // Deposit-reservation flow (JIKU-55): a prospect has no account yet, so
+                // every booking endpoint is either fully open or gated by the booking's
+                // own access token (query param) rather than a JWT.
+                it.requestMatchers("${apiProperties.basePath}/bookings/**").permitAll()
                 it.requestMatchers("${apiProperties.basePath}/notifications/email-feedback/**").permitAll()
                 // Mobile Money provider payment callback: the caller is the provider,
                 // authenticated by the signature the payment provider verifies, not a
                 // user session.
                 it.requestMatchers("${apiProperties.basePath}/billing/payments/callback").permitAll()
                 it.requestMatchers("/actuator/health/**").permitAll()
+                // Versioned liveness endpoint for external uptime monitors (JIKU-60).
+                it.requestMatchers("${apiProperties.basePath}/health").permitAll()
                 // API documentation (springdoc): the spec and Swagger UI are public so
                 // the docs load without a token. The "Authorize" button still lets you
                 // attach a JWT to try secured endpoints.

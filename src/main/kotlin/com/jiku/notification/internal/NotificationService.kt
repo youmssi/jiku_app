@@ -10,6 +10,8 @@ data class DeliveryOutcome(
     val delivered: Boolean,
     val attempts: Int,
     val error: String?,
+    /** See [com.jiku.shared.InvitationDeliveryResult.queued]. */
+    val queued: Boolean = false,
 )
 
 /**
@@ -25,6 +27,9 @@ class NotificationService(
     private val providers: MessagingProviderResolver,
     private val sendProperties: NotificationSendProperties,
     private val logs: NotificationLogRepository,
+    private val contentGuard: WhatsAppContentGuard,
+    private val conversationCounter: WhatsAppConversationCounter,
+    private val costTracker: WhatsAppCostTracker,
 ) {
     fun deliverInvitation(event: GuestInvitedEvent): DeliveryOutcome =
         deliverWithRetry(sendAction(event)) { status, attempt, error ->
@@ -46,6 +51,23 @@ class NotificationService(
                 send()
                 record(NotificationLog.STATUS_SENT, attempt, null)
                 return DeliveryOutcome(delivered = true, attempts = attempt, error = null)
+            } catch (ex: WhatsAppQuotaExceededException) {
+                // Not a delivery failure — capacity will free up within the 24h
+                // window, so this is queued for the sweep to retry, never looped
+                // in a tight retry that cannot possibly help within milliseconds.
+                record(NotificationLog.STATUS_QUEUED, attempt, ex.message)
+                return DeliveryOutcome(delivered = false, attempts = attempt, error = null, queued = true)
+            } catch (ex: EmailQuotaExceededException) {
+                // Same reasoning as the WhatsApp quota case above, for the email
+                // routing daily caps (JIKU-62) — queued until tomorrow's reset.
+                record(NotificationLog.STATUS_QUEUED, attempt, ex.message)
+                return DeliveryOutcome(delivered = false, attempts = attempt, error = null, queued = true)
+            } catch (ex: WhatsAppContentPolicyException) {
+                // A human decision is required (fix the content or enable the
+                // override) — retrying automatically would just repeat the block.
+                lastError = ex.message
+                record(NotificationLog.STATUS_FAILED, attempt, lastError)
+                return DeliveryOutcome(delivered = false, attempts = attempt, error = lastError)
             } catch (ex: Exception) {
                 lastError = ex.message ?: ex.javaClass.simpleName
                 record(NotificationLog.STATUS_FAILED, attempt, lastError)
@@ -98,7 +120,16 @@ class NotificationService(
                             invitationUrl = event.invitationUrl,
                         ),
                     )
-                ({ providers.whatsApp().sender.send(WhatsAppMessage(to = event.recipient, body = text)) })
+                (
+                    {
+                        val resolved = providers.whatsApp()
+                        val category = contentGuard.classify(text)
+                        contentGuard.assertAllowed(category)
+                        conversationCounter.assertWithinBudget(resolved.tenantOverride)
+                        resolved.sender.send(WhatsAppMessage(to = event.recipient, body = text))
+                        costTracker.record(event.invitationId, event.eventId, resolved.tenantOverride, category)
+                    }
+                )
             }
 
             else -> throw IllegalArgumentException("Unsupported channel: ${event.channel}")
@@ -145,7 +176,16 @@ class NotificationService(
                             organizerName = notice.organizerName,
                         ),
                     )
-                ({ providers.whatsApp().sender.send(WhatsAppMessage(to = notice.recipient, body = text)) })
+                (
+                    {
+                        val resolved = providers.whatsApp()
+                        val category = contentGuard.classify(text)
+                        contentGuard.assertAllowed(category)
+                        conversationCounter.assertWithinBudget(resolved.tenantOverride)
+                        resolved.sender.send(WhatsAppMessage(to = notice.recipient, body = text))
+                        costTracker.record(notice.invitationId, notice.eventId, resolved.tenantOverride, category)
+                    }
+                )
             }
 
             else -> throw IllegalArgumentException("Unsupported channel: ${notice.channel}")

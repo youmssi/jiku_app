@@ -73,6 +73,13 @@ kotlin {
     }
 }
 
+// Generates META-INF/build-info.properties so the BuildProperties bean is
+// populated at runtime — used by /api/v1/health (JIKU-60) to report the
+// running version without hardcoding it anywhere.
+springBoot {
+    buildInfo()
+}
+
 allOpen {
     annotation("jakarta.persistence.Entity")
     annotation("jakarta.persistence.MappedSuperclass")

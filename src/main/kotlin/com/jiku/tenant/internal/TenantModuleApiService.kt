@@ -14,6 +14,8 @@ import java.util.UUID
 class TenantModuleApiService(
     private val tenants: TenantRepository,
     private val memberships: OrganizerMembershipRepository,
+    private val users: OrganizerUserRepository,
+    private val accountTokens: AccountTokenService,
     private val accessGate: TenantAccessGateAdapter,
 ) : TenantModuleApi {
     @Transactional(readOnly = true)
@@ -63,6 +65,31 @@ class TenantModuleApiService(
         // very next request, not after the cache entry ages out.
         accessGate.invalidate(tenantId.toString())
         return saved.toTenantInfo()
+    }
+
+    @Transactional
+    override fun provisionTenant(
+        organizationName: String,
+        ownerEmail: String,
+        ownerFullName: String?,
+    ): UUID {
+        val user =
+            users.findByEmail(ownerEmail)
+                ?: users.saveAndFlush(
+                    OrganizerUser(email = ownerEmail, passwordHash = null, fullName = ownerFullName).also {
+                        it.emailVerified = true
+                    },
+                )
+        val tenant = tenants.saveAndFlush(Tenant(name = organizationName, contactEmail = ownerEmail))
+        memberships.saveAndFlush(
+            OrganizerMembership(
+                userId = requireNotNull(user.id),
+                tenantId = requireNotNull(tenant.id).toString(),
+                role = OrganizerRole.OWNER,
+            ),
+        )
+        accountTokens.requestPasswordReset(ownerEmail)
+        return requireNotNull(tenant.id)
     }
 
     private companion object {

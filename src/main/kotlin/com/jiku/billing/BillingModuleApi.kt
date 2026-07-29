@@ -69,6 +69,43 @@ interface BillingModuleApi {
         trialId: UUID,
         reason: String,
     ): AdminTrialView
+
+    /** The tier name (JIKU-53 grid) that [guestCount] invited guests falls into. */
+    fun tierForGuestCount(guestCount: Long): String
+
+    /**
+     * The full price for [tierName] given [guestCount] guests: the fixed tier
+     * price, or the CUSTOM formula for usage beyond the last fixed tier. Used by
+     * the booking flow (JIKU-55) to quote a reservation before any tenant exists.
+     */
+    fun priceForTier(
+        tierName: String,
+        guestCount: Long,
+    ): Long
+
+    /** The platform's pricing currency (JIKU-53: GNF). */
+    fun currency(): String
+
+    /**
+     * Unlocks [tierName] for [eventId] — the same effect a payment confirmation
+     * has (never lowers an existing allowance). Used when a booking's (JIKU-55)
+     * verified deposit already paid for a tier on a freshly provisioned event.
+     */
+    fun unlockTier(
+        eventId: UUID,
+        tierName: String,
+    )
+
+    /**
+     * Records [amountMinor] already paid toward [eventId] outside the normal
+     * payment flow (JIKU-57) — a booking deposit or balance — so it is netted
+     * off the price the next tier upgrade actually charges, instead of the
+     * organizer paying for the same guests twice.
+     */
+    fun recordPrepayment(
+        eventId: UUID,
+        amountMinor: Long,
+    )
 }
 
 /**

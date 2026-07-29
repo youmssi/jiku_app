@@ -40,5 +40,6 @@ class NotificationLog(
     companion object {
         const val STATUS_SENT = "SENT"
         const val STATUS_FAILED = "FAILED"
+        const val STATUS_QUEUED = "QUEUED"
     }
 }

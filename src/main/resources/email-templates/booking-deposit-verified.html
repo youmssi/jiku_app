@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center" style="padding:24px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                 style="max-width:480px;background:#ffffff;border-radius:12px;">
+            <tr>
+              <td style="padding:32px;">
+                <h1 style="margin:0 0 8px;font-size:20px;color:#111111;">Your date is confirmed ✅</h1>
+                <p style="margin:0 0 16px;color:#444444;">Hi {{customerName}},</p>
+                <p style="margin:0 0 16px;color:#444444;">
+                  We received and verified your deposit of <strong>{{amount}}</strong>
+                  (reference <strong>{{reference}}</strong>). Your date is locked in — no one
+                  else can take it.
+                </p>
+                <p style="margin:0 0 16px;color:#444444;">
+                  Balance due: <strong>{{balanceAmount}}</strong>, by <strong>{{balanceDueDate}}</strong>.
+                </p>
+                <p style="margin:0;color:#444444;">
+                  A separate email is on its way with access to your organizer workspace —
+                  it's already set up with your reservation's details.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

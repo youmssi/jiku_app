@@ -75,6 +75,7 @@ class InvitationDispatchWorker(
             GuestInvitedEvent(
                 invitationId = invitationId,
                 tenantId = tenantId,
+                eventId = invitation.eventId,
                 channel = channelName,
                 recipient = recipient,
                 recipientName = "${guest.firstName} ${guest.lastName}",
