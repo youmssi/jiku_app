@@ -73,6 +73,13 @@ kotlin {
     }
 }
 
+// Generates META-INF/build-info.properties so the BuildProperties bean is
+// populated at runtime — used by /api/v1/health (JIKU-60) to report the
+// running version without hardcoding it anywhere.
+springBoot {
+    buildInfo()
+}
+
 allOpen {
     annotation("jakarta.persistence.Entity")
     annotation("jakarta.persistence.MappedSuperclass")
@@ -81,6 +88,13 @@ allOpen {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    // The suite now spins up 40+ distinct @SpringBootTest contexts (each with its
+    // own Testcontainers Postgres + Hibernate metamodel) in a single test JVM.
+    // Without an explicit heap the JVM falls back to a container-percentage
+    // default that's comfortably exceeded by the accumulated context cache,
+    // producing an OutOfMemoryError partway through the run on the standard
+    // GitHub-hosted runner (7GB RAM) — reproducible locally with a small -Xmx.
+    maxHeapSize = "4g"
     // application.yaml imports the developer's local .env (spring.config.import),
     // even for test runs. That's convenient for bootRun but makes the test suite
     // non-deterministic: e.g. setting MAIL_TRANSPORT=smtp locally to exercise

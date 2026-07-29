@@ -33,6 +33,7 @@ class InvitationNotificationListener(
                     delivered = outcome.delivered,
                     attempts = outcome.attempts,
                     error = outcome.error,
+                    queued = outcome.queued,
                 ),
             )
         } finally {

@@ -24,13 +24,20 @@ class InvitationResultListener(
         try {
             val invitation = invitations.findById(result.invitationId).orElse(null) ?: return
             invitation.attempts = result.attempts
-            if (result.delivered) {
-                invitation.status = InvitationStatus.SENT
-                invitation.sentAt = Instant.now()
-                invitation.lastError = null
-            } else {
-                invitation.status = InvitationStatus.FAILED
-                invitation.lastError = result.error
+            when {
+                result.delivered -> {
+                    invitation.status = InvitationStatus.SENT
+                    invitation.sentAt = Instant.now()
+                    invitation.lastError = null
+                }
+                result.queued -> {
+                    invitation.status = InvitationStatus.QUEUED
+                    invitation.lastError = null
+                }
+                else -> {
+                    invitation.status = InvitationStatus.FAILED
+                    invitation.lastError = result.error
+                }
             }
             invitations.save(invitation)
         } finally {

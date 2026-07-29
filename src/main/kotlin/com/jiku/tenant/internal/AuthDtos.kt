@@ -10,6 +10,9 @@ data class RegisterRequest(
     // registration. Omitted, the account starts with no organization and the
     // frontend routes to onboarding.
     val name: String? = null,
+    // The person's display name (JIKU-54). Optional so existing API clients
+    // keep working; blank is treated as absent.
+    @field:Size(max = 255) val fullName: String? = null,
     @field:Email @field:NotBlank val email: String,
     @field:NotBlank @field:Size(min = 8, message = "Password must be at least 8 characters") val password: String,
 )
@@ -63,6 +66,8 @@ data class MembershipView(
 data class MeResponse(
     val userId: String,
     val email: String,
+    /** Null when the account never provided a name; the UI shows the email. */
+    val fullName: String?,
     val tenantId: String,
     val role: String,
     val memberships: List<MembershipView>,

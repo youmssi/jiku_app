@@ -1,5 +1,6 @@
 package com.jiku.notification.internal
 
+import com.jiku.shared.BookingNotice
 import com.jiku.shared.ManualPaymentNotice
 import com.jiku.shared.MemberInvitationNotice
 import org.springframework.core.io.ClassPathResource
@@ -21,6 +22,11 @@ class EmailTemplateRenderer {
     private val passwordResetTemplate: String by lazy { load("password-reset.html") }
     private val verifyEmailTemplate: String by lazy { load("verify-email.html") }
     private val memberInvitationTemplate: String by lazy { load("member-invitation.html") }
+    private val bookingPaymentDeclaredTemplate: String by lazy { load("booking-payment-declared.html") }
+    private val bookingDuplicateReferenceTemplate: String by lazy { load("booking-duplicate-reference.html") }
+    private val bookingDepositVerifiedTemplate: String by lazy { load("booking-deposit-verified.html") }
+    private val bookingBalanceVerifiedTemplate: String by lazy { load("booking-balance-verified.html") }
+    private val bookingPaymentRejectedTemplate: String by lazy { load("booking-payment-rejected.html") }
 
     fun renderInvitation(email: InvitationEmail): String {
         val logoBlock =
@@ -115,14 +121,66 @@ class EmailTemplateRenderer {
             .replace("{{role}}", escape(notice.role))
             .replace("{{actionUrl}}", escape(notice.actionUrl))
 
-    /** Minor units to a display amount (e.g. 500000 XOF-minor → "5 000 XOF"). */
+    fun renderBookingPaymentDeclared(notice: BookingNotice): String =
+        bookingPaymentDeclaredTemplate
+            .replace("{{customerName}}", escape(notice.customerName))
+            .replace("{{customerEmail}}", escape(notice.customerEmail))
+            .replace("{{customerPhone}}", escape(notice.customerPhone))
+            .replace("{{kind}}", escape(notice.declarationKind.orEmpty()))
+            .replace("{{reference}}", escape(notice.reference.orEmpty()))
+            .replace("{{amount}}", formatAmount(notice.amountMinor ?: 0, notice.currency))
+            .replace("{{bookingId}}", notice.bookingId.toString())
+
+    fun renderBookingDuplicateReference(notice: BookingNotice): String =
+        bookingDuplicateReferenceTemplate
+            .replace("{{customerName}}", escape(notice.customerName))
+            .replace("{{customerEmail}}", escape(notice.customerEmail))
+            .replace("{{customerPhone}}", escape(notice.customerPhone))
+            .replace("{{reference}}", escape(notice.reference.orEmpty()))
+            .replace("{{amount}}", formatAmount(notice.amountMinor ?: 0, notice.currency))
+
+    fun renderBookingDepositVerified(notice: BookingNotice): String =
+        bookingDepositVerifiedTemplate
+            .replace("{{customerName}}", escape(notice.customerName))
+            .replace("{{amount}}", formatAmount(notice.amountMinor ?: 0, notice.currency))
+            .replace("{{reference}}", escape(notice.reference.orEmpty()))
+            .replace("{{balanceAmount}}", formatAmount(notice.balanceAmountMinor ?: 0, notice.currency))
+            .replace("{{balanceDueDate}}", escape(notice.balanceDueDate.orEmpty()))
+
+    fun renderBookingBalanceVerified(notice: BookingNotice): String =
+        bookingBalanceVerifiedTemplate
+            .replace("{{customerName}}", escape(notice.customerName))
+            .replace("{{amount}}", formatAmount(notice.amountMinor ?: 0, notice.currency))
+            .replace("{{reference}}", escape(notice.reference.orEmpty()))
+
+    fun renderBookingPaymentRejected(notice: BookingNotice): String {
+        val reasonBlock =
+            notice.note?.takeIf { it.isNotBlank() }?.let {
+                """<p style="margin:0 0 4px;color:#555555;">Reason: ${escape(it)}</p>"""
+            } ?: ""
+        return bookingPaymentRejectedTemplate
+            .replace("{{customerName}}", escape(notice.customerName))
+            .replace("{{reference}}", escape(notice.reference.orEmpty()))
+            .replace("{{reasonBlock}}", reasonBlock)
+    }
+
+    /**
+     * Minor units to a display amount (e.g. 150000 GNF-minor → "150 000 GNF").
+     * GNF has no minor unit (mirrors BillingHistoryController/lib/currency.ts),
+     * so this is the full amount, not centimes.
+     */
     private fun formatAmount(
         amountMinor: Long,
         currency: String,
     ): String {
-        val major = amountMinor / 100
+        val major = if (currency.uppercase() in ZERO_DECIMAL_CURRENCIES) amountMinor else amountMinor / 100
         val grouped = "%,d".format(major).replace(',', ' ')
         return "$grouped $currency"
+    }
+
+    private companion object {
+        val ZERO_DECIMAL_CURRENCIES =
+            setOf("BIF", "CLP", "DJF", "GNF", "JPY", "KMF", "KRW", "MGA", "PYG", "RWF", "UGX", "VND", "VUV", "XAF", "XOF", "XPF")
     }
 
     private fun load(name: String): String = ClassPathResource("email-templates/$name").inputStream.bufferedReader().use { it.readText() }

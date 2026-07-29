@@ -46,14 +46,14 @@ class PaymentTest {
         // Baseline: free tier allowance.
         assert(JsonPath.read<Int>(usage(token, eventId), "$.allowance") == 100)
 
-        // Initiate a STANDARD payment: recorded PENDING with a client instruction.
+        // Initiate a BRONZE payment: recorded PENDING with a client instruction.
         val initiation =
             mockMvc
                 .perform(
                     post("/api/v1/events/$eventId/payments")
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"tier":"STANDARD"}"""),
+                        .content("""{"tier":"BRONZE"}"""),
                 ).andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PENDING"))
                 .andExpect(jsonPath("$.instruction.type").value("REDIRECT"))
@@ -71,7 +71,7 @@ class PaymentTest {
             ).andExpect(status().isUnauthorized())
         assert(JsonPath.read<Int>(usage(token, eventId), "$.allowance") == 100)
 
-        // A properly signed success callback unlocks the STANDARD allowance (2000).
+        // A properly signed success callback unlocks the BRONZE allowance (300).
         val body = callbackBody(reference, "SUCCEEDED")
         mockMvc
             .perform(
@@ -80,7 +80,7 @@ class PaymentTest {
                     .header("X-Signature", sign(body))
                     .content(body),
             ).andExpect(status().isOk())
-        assert(JsonPath.read<Int>(usage(token, eventId), "$.allowance") == 2000)
+        assert(JsonPath.read<Int>(usage(token, eventId), "$.allowance") == 300)
 
         // A second event's failed payment leaves that event on the free tier.
         val otherEvent = createPublishedEvent(token)
@@ -90,7 +90,7 @@ class PaymentTest {
                     post("/api/v1/events/$otherEvent/payments")
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"tier":"STANDARD"}"""),
+                        .content("""{"tier":"BRONZE"}"""),
                 ).andReturn()
                 .response.contentAsString
         val otherRef = "$tenantId:${JsonPath.read<String>(other, "$.paymentId")}"

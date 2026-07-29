@@ -54,14 +54,14 @@ class ManualPaymentFlowTest {
 
         assert(JsonPath.read<Int>(usage(token, eventId), "$.allowance") == 100)
 
-        // Request the STANDARD tier: pending payment with reference and payee details.
+        // Request the BRONZE tier: pending payment with reference and payee details.
         val instructions =
             mockMvc
                 .perform(
                     post("/api/v1/events/$eventId/payments/manual")
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"tier":"STANDARD"}"""),
+                        .content("""{"tier":"BRONZE"}"""),
                 ).andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PENDING"))
                 .andExpect(jsonPath("$.payee.payeeName").value("Jiku Operations"))
@@ -78,7 +78,7 @@ class ManualPaymentFlowTest {
                 post("/api/v1/events/$eventId/payments/manual")
                     .header("Authorization", "Bearer $token")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content("""{"tier":"STANDARD"}"""),
+                    .content("""{"tier":"BRONZE"}"""),
             ).andExpect(status().isOk())
             .andExpect(jsonPath("$.paymentId").value(paymentId))
             .andExpect(jsonPath("$.reference").value(reference))
@@ -121,7 +121,7 @@ class ManualPaymentFlowTest {
             ).andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("SUCCEEDED"))
 
-        assert(JsonPath.read<Int>(usage(token, eventId), "$.allowance") == 2000)
+        assert(JsonPath.read<Int>(usage(token, eventId), "$.allowance") == 300)
 
         // Confirming twice is refused.
         mockMvc
@@ -153,7 +153,7 @@ class ManualPaymentFlowTest {
                     post("/api/v1/events/$eventId/payments/manual")
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"tier":"PREMIUM"}"""),
+                        .content("""{"tier":"ARGENT"}"""),
                 ).andExpect(status().isOk())
                 .andReturn()
                 .response.contentAsString
@@ -176,7 +176,7 @@ class ManualPaymentFlowTest {
                 post("/api/v1/events/$eventId/payments/manual")
                     .header("Authorization", "Bearer $token")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content("""{"tier":"PREMIUM"}"""),
+                    .content("""{"tier":"ARGENT"}"""),
             ).andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("PENDING"))
     }

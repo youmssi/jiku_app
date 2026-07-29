@@ -29,4 +29,17 @@ interface EventModuleApi {
 
     /** Releases a previously reserved attendance slot (e.g. a guest who declines). */
     fun releaseAttendanceSlot(eventId: UUID)
+
+    /**
+     * Creates a draft event pre-filled from a verified booking (JIKU-55), under
+     * the tenant bound in the current [com.jiku.shared.TenantContext]. Returns
+     * the new event's id. The organizer completes and publishes it themselves —
+     * this only spares them a blank starting point.
+     */
+    fun createDraftEvent(
+        name: String,
+        timezone: String,
+        startDateTime: Instant?,
+        invitationChannels: Set<InvitationChannel>,
+    ): UUID
 }

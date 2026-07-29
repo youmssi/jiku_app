@@ -36,6 +36,7 @@ class NotificationOrchestrationTest {
             GuestInvitedEvent(
                 invitationId = invitationId,
                 tenantId = "tenant-notify",
+                eventId = UUID.randomUUID(),
                 channel = GuestInvitedEvent.CHANNEL_EMAIL,
                 recipient = "guest@example.com",
                 recipientName = "Ada Lovelace",

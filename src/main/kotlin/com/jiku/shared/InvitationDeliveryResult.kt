@@ -14,4 +14,11 @@ data class InvitationDeliveryResult(
     val delivered: Boolean,
     val attempts: Int,
     val error: String?,
+    /**
+     * True when delivery was deliberately withheld by a capacity guardrail (JIKU-61,
+     * e.g. the WhatsApp 24h conversation-window safety threshold) rather than having
+     * failed — the invitation should be retried automatically once capacity frees up,
+     * not treated as a terminal failure.
+     */
+    val queued: Boolean = false,
 )

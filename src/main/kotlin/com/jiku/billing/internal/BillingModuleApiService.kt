@@ -18,7 +18,14 @@ class BillingModuleApiService(
     private val usageService: UsageService,
     private val manualPaymentService: ManualPaymentService,
     private val trialService: TrialService,
+    private val tierUnlockService: TierUnlockService,
+    private val properties: BillingProperties,
 ) : BillingModuleApi {
+    override fun recordPrepayment(
+        eventId: UUID,
+        amountMinor: Long,
+    ) = usageService.recordPrepayment(eventId, amountMinor)
+
     override fun allowance(eventId: UUID): BillingAllowance = usageService.allowance(eventId)
 
     override fun canInvite(
@@ -59,4 +66,24 @@ class BillingModuleApiService(
         trialId: UUID,
         reason: String,
     ): AdminTrialView = trialService.endEarly(trialId, reason)
+
+    override fun tierForGuestCount(guestCount: Long): String = properties.tierForUsage(guestCount)
+
+    override fun priceForTier(
+        tierName: String,
+        guestCount: Long,
+    ): Long =
+        if (tierName == BillingProperties.FREE_TIER) {
+            0
+        } else {
+            properties.tiers.firstOrNull { it.name == tierName }?.priceMinor
+                ?: properties.custom.priceGnf(guestCount)
+        }
+
+    override fun currency(): String = properties.currency
+
+    override fun unlockTier(
+        eventId: UUID,
+        tierName: String,
+    ) = tierUnlockService.unlock(eventId, tierName)
 }

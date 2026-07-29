@@ -14,6 +14,8 @@ import java.util.UUID
 data class GuestInvitedEvent(
     val invitationId: UUID,
     val tenantId: String,
+    /** Carried so notification can attribute delivery cost (e.g. WhatsApp) back to the event. */
+    val eventId: UUID,
     val channel: String,
     val recipient: String,
     val recipientName: String,

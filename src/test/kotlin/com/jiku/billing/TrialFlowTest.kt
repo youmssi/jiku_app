@@ -64,7 +64,7 @@ class TrialFlowTest {
                 .perform(
                     post("/api/v1/admin/trials")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(grantBody(tenantId, eventId, "STANDARD", Instant.now().plus(1, ChronoUnit.HOURS)))
+                        .content(grantBody(tenantId, eventId, "BRONZE", Instant.now().plus(1, ChronoUnit.HOURS)))
                         .header("Authorization", "Bearer $adminToken"),
                 ).andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ACTIVE"))
@@ -72,14 +72,14 @@ class TrialFlowTest {
                 .response.contentAsString
         val trialId = JsonPath.read<String>(trial, "$.id")
 
-        assert(allowance(token, eventId) == 2000)
+        assert(allowance(token, eventId) == 300)
 
         // A second active trial for the same event is refused.
         mockMvc
             .perform(
                 post("/api/v1/admin/trials")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(grantBody(tenantId, eventId, "PREMIUM", Instant.now().plus(1, ChronoUnit.HOURS)))
+                    .content(grantBody(tenantId, eventId, "ARGENT", Instant.now().plus(1, ChronoUnit.HOURS)))
                     .header("Authorization", "Bearer $adminToken"),
             ).andExpect(status().isConflict())
 
@@ -112,8 +112,8 @@ class TrialFlowTest {
 
         // Unpaid: expiry reverts the allowance.
         val unpaidEvent = createPublishedEvent(token)
-        val unpaidTrialId = grantTrial(adminToken, tenantId, unpaidEvent, "STANDARD")
-        assert(allowance(token, unpaidEvent) == 2000)
+        val unpaidTrialId = grantTrial(adminToken, tenantId, unpaidEvent, "BRONZE")
+        assert(allowance(token, unpaidEvent) == 300)
         forceExpiry(tenantId, unpaidTrialId)
         trialService.expireDue()
         assert(allowance(token, unpaidEvent) == 100)
@@ -123,14 +123,14 @@ class TrialFlowTest {
 
         // Paid during the trial: expiry converts, allowance stays (paid unlock).
         val paidEvent = createPublishedEvent(token)
-        val paidTrialId = grantTrial(adminToken, tenantId, paidEvent, "STANDARD")
+        val paidTrialId = grantTrial(adminToken, tenantId, paidEvent, "BRONZE")
         val instructions =
             mockMvc
                 .perform(
                     post("/api/v1/events/$paidEvent/payments/manual")
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"tier":"STANDARD"}"""),
+                        .content("""{"tier":"BRONZE"}"""),
                 ).andExpect(status().isOk())
                 .andReturn()
                 .response.contentAsString
@@ -145,7 +145,7 @@ class TrialFlowTest {
 
         forceExpiry(tenantId, paidTrialId)
         trialService.expireDue()
-        assert(allowance(token, paidEvent) == 2000)
+        assert(allowance(token, paidEvent) == 300)
         withTenant(tenantId) {
             assertThat(trials.findById(UUID.fromString(paidTrialId)).orElseThrow().status).isEqualTo(TrialStatus.CONVERTED)
         }

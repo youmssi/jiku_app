@@ -34,4 +34,21 @@ interface InvitationRepository : JpaRepository<Invitation, UUID> {
         guestId: UUID,
         channel: InvitationChannel,
     ): Invitation?
+
+    fun findByGuestId(guestId: UUID): List<Invitation>
+
+    fun deleteByGuestId(guestId: UUID)
+
+    /**
+     * Every QUEUED invitation across every tenant (JIKU-61/62) — native SQL so
+     * the tenant filter does not apply, since [NotificationQueueSweepJob] must
+     * sweep the whole platform, not just whatever tenant happens to be bound.
+     */
+    @Query(value = "SELECT id, tenant_id AS tenantId FROM invitation WHERE status = 'QUEUED'", nativeQuery = true)
+    fun findGlobalQueued(): List<QueuedInvitationRef>
+}
+
+interface QueuedInvitationRef {
+    val id: UUID
+    val tenantId: String
 }

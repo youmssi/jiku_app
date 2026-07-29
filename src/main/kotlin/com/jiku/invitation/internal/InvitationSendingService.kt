@@ -38,6 +38,9 @@ class InvitationSendingService(
         // without persisting, so the paywall can veto the whole batch.
         val toQueue = mutableListOf<Invitation>()
         for (guest in guests.findByEventId(eventId)) {
+            if (guest.excludedFromInvitations) {
+                continue
+            }
             val guestId = requireNotNull(guest.id)
             for (channel in channels) {
                 val eligible =
@@ -56,12 +59,26 @@ class InvitationSendingService(
             }
         }
 
-        enforceAllowance(eventId, toQueue.map { it.guestId }.toSet())
+        val batchGuestIds = toQueue.map { it.guestId }.toSet()
+        val committed =
+            invitations
+                .findByEventId(eventId)
+                .filter { it.status != InvitationStatus.FAILED }
+                .map { it.guestId }
+                .toSet()
+        enforceAllowance(eventId, committed, batchGuestIds)
 
         for (invitation in toQueue) {
             invitation.status = InvitationStatus.PENDING
             invitation.lastError = null
             invitations.save(invitation)
+        }
+
+        // Lock in only the guests genuinely new to this event — re-sending to
+        // already-committed guests never re-charges the tenant's free budget.
+        val newGuestCount = (batchGuestIds - committed).size.toLong()
+        if (newGuestCount > 0) {
+            allowanceGate.recordCommitment(eventId, newGuestCount)
         }
         return SendInvitationsResult(toQueue.size)
     }
@@ -75,15 +92,10 @@ class InvitationSendingService(
      */
     private fun enforceAllowance(
         eventId: UUID,
+        committed: Set<UUID>,
         batchGuestIds: Set<UUID>,
     ) {
-        val ceiling = allowanceGate.allowanceCeiling(eventId)
-        val committed =
-            invitations
-                .findByEventId(eventId)
-                .filter { it.status != InvitationStatus.FAILED }
-                .map { it.guestId }
-                .toSet()
+        val ceiling = allowanceGate.allowanceCeiling(eventId, committed.size.toLong())
         val projected = committed + batchGuestIds
         val addsNewGuests = projected.size > committed.size
         if (addsNewGuests && projected.size > ceiling) {

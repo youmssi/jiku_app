@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center" style="padding:24px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                 style="max-width:480px;background:#ffffff;border-radius:12px;">
+            <tr>
+              <td style="padding:32px;">
+                <h1 style="margin:0 0 8px;font-size:20px;color:#111111;">New booking payment declared</h1>
+                <p style="margin:0 0 16px;color:#444444;">
+                  {{customerName}} declared a {{kind}} payment for their booking.
+                </p>
+                <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:#f9fafb;border-radius:8px;">
+                  <tr><td style="padding:16px;">
+                    <p style="margin:0 0 4px;color:#555555;">Reference: <strong>{{reference}}</strong></p>
+                    <p style="margin:0 0 4px;color:#555555;">Amount: <strong>{{amount}}</strong></p>
+                    <p style="margin:0 0 4px;color:#555555;">Customer: {{customerName}} ({{customerEmail}}, {{customerPhone}})</p>
+                    <p style="margin:0;color:#555555;">Booking id: {{bookingId}}</p>
+                  </td></tr>
+                </table>
+                <p style="margin:16px 0 0;color:#444444;">
+                  Verify the transfer against the reference from the admin booking payments
+                  desk — the client is expecting a response within the hour.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -1,0 +1,12 @@
+# Production reverse proxy (JIKU-60). Caddy obtains and renews a Let's Encrypt
+# certificate for API_DOMAIN automatically (HTTP-01 challenge on port 80, served
+# on 443) and forwards everything to the app container. Both values come from
+# .env (see .env.example) — nothing here is a literal for a specific domain.
+{
+	email {$CADDY_EMAIL}
+}
+
+{$API_DOMAIN} {
+	encode gzip
+	reverse_proxy app:8080
+}

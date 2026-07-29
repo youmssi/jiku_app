@@ -19,15 +19,54 @@ import java.util.UUID
 @Service
 class GuestService(
     private val guests: GuestRepository,
+    private val invitations: InvitationRepository,
     private val events: EventModuleApi,
     private val properties: GuestImportProperties,
     private val notifications: NotificationModuleApi,
 ) {
     @Transactional(readOnly = true)
-    fun list(eventId: UUID): List<GuestResponse> =
-        guests.findByEventId(eventId).map {
-            GuestResponse(requireNotNull(it.id), it.firstName, it.lastName, it.email, it.phoneNumber)
+    fun list(eventId: UUID): List<GuestResponse> = guests.findByEventId(eventId).map { it.toResponse() }
+
+    /**
+     * Removes a guest who has never been invited (added by mistake, duplicate entry,
+     * etc.). Once any invitation has been queued or sent, the guest may carry a
+     * ticket or check-in record in other modules, so removal is refused in favor of
+     * [setExcluded] — the roster entry stays, but no further invitation is sent.
+     */
+    @Transactional
+    fun remove(
+        eventId: UUID,
+        guestId: UUID,
+    ) {
+        val guest =
+            guests.findByIdAndEventId(guestId, eventId)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Guest not found")
+        val everInvited = invitations.findByGuestId(guestId).any { it.status != InvitationStatus.FAILED }
+        if (everInvited) {
+            throw ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "This guest has already been invited and can no longer be removed. " +
+                    "Exclude them instead to stop future invitations.",
+            )
         }
+        invitations.deleteByGuestId(guestId)
+        guests.delete(guest)
+    }
+
+    @Transactional
+    fun setExcluded(
+        eventId: UUID,
+        guestId: UUID,
+        excluded: Boolean,
+    ): GuestResponse {
+        val guest =
+            guests.findByIdAndEventId(guestId, eventId)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Guest not found")
+        guest.excludedFromInvitations = excluded
+        return guests.save(guest).toResponse()
+    }
+
+    private fun Guest.toResponse() = GuestResponse(requireNotNull(id), firstName, lastName, email, phoneNumber, excludedFromInvitations)
 
     @Transactional
     fun import(
