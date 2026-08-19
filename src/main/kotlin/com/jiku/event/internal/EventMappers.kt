@@ -34,6 +34,8 @@ fun Event.toEventInfo(): EventInfo =
         endDateTime = endDateTime,
         timezone = timezone,
         location = location,
+        transferAllowed = settings.transferAllowed,
+        transferDeadline = settings.transferDeadline,
     )
 
 fun EventSettingsDto.toEmbeddable(): EventSettings =

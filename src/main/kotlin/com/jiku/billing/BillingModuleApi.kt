@@ -87,6 +87,14 @@ interface BillingModuleApi {
     fun currency(): String
 
     /**
+     * The configured fixed-price tiers, ascending by allowance. Exposed so
+     * operator-facing surfaces (the admin back-office's trial and agreement
+     * forms) offer exactly the tiers the platform is configured with, instead of
+     * a hardcoded copy that silently drifts the next time pricing changes.
+     */
+    fun tierOptions(): List<BillingTierOption>
+
+    /**
      * Unlocks [tierName] for [eventId] — the same effect a payment confirmation
      * has (never lowers an existing allowance). Used when a booking's (JIKU-55)
      * verified deposit already paid for a tier on a freshly provisioned event.
@@ -107,6 +115,13 @@ interface BillingModuleApi {
         amountMinor: Long,
     )
 }
+
+/** One configured fixed-price tier: what it costs and how many guests it unlocks. */
+data class BillingTierOption(
+    val name: String,
+    val maxGuests: Long,
+    val priceMinor: Long,
+)
 
 /**
  * A snapshot of one event's billing position. [invitedGuests] is the billable
