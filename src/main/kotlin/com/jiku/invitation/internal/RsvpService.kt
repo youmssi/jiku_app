@@ -2,8 +2,10 @@ package com.jiku.invitation.internal
 
 import com.jiku.event.EventInfo
 import com.jiku.event.EventModuleApi
+import com.jiku.event.InvitationChannel
 import com.jiku.shared.TenantContext
 import com.jiku.tenant.TenantModuleApi
+import com.jiku.ticketing.TicketInfo
 import com.jiku.ticketing.TicketingModuleApi
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -22,6 +24,7 @@ import java.util.UUID
 @Service
 class RsvpService(
     private val guests: GuestRepository,
+    private val invitations: InvitationRepository,
     private val events: EventModuleApi,
     private val tenants: TenantModuleApi,
     private val ticketing: TicketingModuleApi,
@@ -63,6 +66,111 @@ class RsvpService(
         return buildView(guest)
     }
 
+    /**
+     * Hands a confirmed guest's place to someone else (JIKU-64).
+     *
+     * The recipient becomes a new guest of the event, already confirmed, holding a
+     * freshly issued ticket; the sender's ticket is cancelled — so their QR code
+     * stops validating at the door — and their row is kept as `TRANSFERRED` with a
+     * link to the recipient, which is what lets a validator reconstruct who a place
+     * originally belonged to if it is ever disputed.
+     *
+     * Capacity is deliberately untouched: the place is moved, not released and
+     * re-taken, so a transfer can never lose the slot to someone else mid-way and
+     * can never be used to slip past a full event. For the same reason the
+     * recipient's invitation does not re-charge the tenant's guest allowance —
+     * that seat was already paid for when the sender was invited.
+     */
+    @Transactional
+    fun transfer(
+        guestId: UUID,
+        eventId: UUID,
+        request: TransferTicketRequest,
+    ): RsvpView {
+        requireNotCancelled(eventId)
+        val email = request.email?.trim()?.takeIf { it.isNotEmpty() }
+        val phone = request.phoneNumber?.trim()?.takeIf { it.isNotEmpty() }
+        if (email == null && phone == null) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Give the recipient an email address or a phone number so they can receive their invitation",
+            )
+        }
+
+        val event =
+            events.findEvent(eventId)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found")
+        if (!event.transferAllowed) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Transfers are closed for this event")
+        }
+        event.transferDeadline?.let { deadline ->
+            if (Instant.now().isAfter(deadline)) {
+                throw ResponseStatusException(HttpStatus.CONFLICT, "The transfer deadline for this event has passed")
+            }
+        }
+
+        val sender = loadGuest(guestId)
+        if (sender.personalDataErased) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "This invitation is no longer available")
+        }
+        if (sender.rsvpStatus != RsvpStatus.CONFIRMED) {
+            throw ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Only a confirmed guest can hand their place to someone else",
+            )
+        }
+        val ticket =
+            ticketing.findByGuest(guestId)
+                ?: throw ResponseStatusException(HttpStatus.CONFLICT, "There is no ticket to transfer")
+        if (ticket.status == TicketInfo.STATUS_CHECKED_IN) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "This ticket has already been used at the entrance")
+        }
+
+        val recipient =
+            Guest(
+                eventId = eventId,
+                firstName = request.firstName.trim(),
+                lastName = request.lastName.trim(),
+                email = email,
+                phoneNumber = phone,
+            )
+        recipient.rsvpStatus = RsvpStatus.CONFIRMED
+        recipient.transferredFromGuestId = guestId
+        guests.save(recipient)
+        val recipientId = requireNotNull(recipient.id)
+
+        ticketing.cancelByGuest(guestId)
+        ticketing.issueTicket(eventId, recipientId)
+
+        sender.rsvpStatus = RsvpStatus.TRANSFERRED
+        sender.transferredToGuestId = recipientId
+        sender.transferredAt = Instant.now()
+        guests.save(sender)
+
+        queueRecipientInvitation(eventId, recipientId, email, phone)
+        return buildView(sender)
+    }
+
+    /**
+     * Queues the recipient's own invitation on every channel their contact details
+     * support. Delivery itself runs after commit, driven by the same dispatcher the
+     * organizer's send uses — the recipient's link resolves straight to their
+     * ticket, since they are already confirmed.
+     */
+    private fun queueRecipientInvitation(
+        eventId: UUID,
+        recipientId: UUID,
+        email: String?,
+        phone: String?,
+    ) {
+        val channels =
+            listOfNotNull(
+                email?.let { InvitationChannel.EMAIL },
+                phone?.let { InvitationChannel.WHATSAPP },
+            )
+        channels.forEach { channel -> invitations.save(Invitation(eventId, recipientId, channel)) }
+    }
+
     private fun loadGuest(guestId: UUID): Guest =
         guests.findById(guestId).orElseThrow {
             ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation not found")
@@ -92,8 +200,30 @@ class RsvpService(
             ticketCode = ticket?.ticketCode,
             eventStatus = event?.status,
             erased = guest.personalDataErased,
+            transferAllowed = canTransfer(guest, event, ticket),
+            transferDeadline = event?.transferDeadline,
+            transferredTo = guest.transferredToGuestId?.let { recipientName(it) },
         )
     }
+
+    /**
+     * Whether the transfer affordance should be offered. Mirrors the checks
+     * [transfer] enforces, so the UI never shows a control that the endpoint would
+     * refuse — and the endpoint never trusts that the UI got it right.
+     */
+    private fun canTransfer(
+        guest: Guest,
+        event: EventInfo?,
+        ticket: TicketInfo?,
+    ): Boolean {
+        if (event == null || !event.transferAllowed || event.status == EventInfo.STATUS_CANCELLED) return false
+        if (guest.rsvpStatus != RsvpStatus.CONFIRMED || guest.personalDataErased) return false
+        if (ticket == null || ticket.status == TicketInfo.STATUS_CHECKED_IN) return false
+        return event.transferDeadline?.isAfter(Instant.now()) ?: true
+    }
+
+    private fun recipientName(recipientId: UUID): String? =
+        guests.findById(recipientId).orElse(null)?.let { "${it.firstName} ${it.lastName}" }
 
     private fun formatWhen(
         instant: Instant,

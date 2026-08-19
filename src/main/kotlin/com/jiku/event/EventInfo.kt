@@ -16,6 +16,10 @@ data class EventInfo(
     val endDateTime: Instant?,
     val timezone: String,
     val location: String?,
+    /** Whether a confirmed guest may hand their place to someone else (JIKU-64). */
+    val transferAllowed: Boolean = false,
+    /** Instant after which transfers close; null means "until the event itself". */
+    val transferDeadline: Instant? = null,
 ) {
     companion object {
         /** [status] value of a cancelled event, shared so consumers avoid magic strings. */

@@ -72,7 +72,15 @@ data class TicketInfo(
     val issuedAt: Instant,
     val checkedInAt: Instant? = null,
     val checkedInBy: String? = null,
-)
+) {
+    companion object {
+        /** [status] of a ticket already used at the entrance, shared so consumers avoid magic strings. */
+        const val STATUS_CHECKED_IN = "CHECKED_IN"
+
+        /** [status] of a ticket cancelled by a decline or a transfer; it no longer validates. */
+        const val STATUS_CANCELLED = "CANCELLED"
+    }
+}
 
 /**
  * Outcome of a check-in attempt, carrying enough detail for the caller to render a

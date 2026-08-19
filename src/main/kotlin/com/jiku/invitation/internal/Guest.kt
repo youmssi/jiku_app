@@ -50,6 +50,17 @@ class Guest(
     @Column(name = "excluded_from_invitations", nullable = false)
     var excludedFromInvitations: Boolean = false
 
+    /** Guest who now holds this place, once it has been handed over (JIKU-64). */
+    @Column(name = "transferred_to_guest_id")
+    var transferredToGuestId: UUID? = null
+
+    /** Guest this place was received from, for a guest created by a transfer. */
+    @Column(name = "transferred_from_guest_id")
+    var transferredFromGuestId: UUID? = null
+
+    @Column(name = "transferred_at")
+    var transferredAt: Instant? = null
+
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now()
 }

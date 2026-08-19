@@ -24,7 +24,7 @@ class InvitationModuleApiService(
     @Transactional(readOnly = true)
     override fun guestStats(eventId: UUID): GuestStats =
         GuestStats(
-            total = guests.countByEventId(eventId),
+            total = guests.countByEventIdAndRsvpStatusNot(eventId, RsvpStatus.TRANSFERRED),
             invited = invitations.countInvitedGuests(eventId),
             confirmed = guests.countByEventIdAndRsvpStatus(eventId, RsvpStatus.CONFIRMED),
             declined = guests.countByEventIdAndRsvpStatus(eventId, RsvpStatus.DECLINED),

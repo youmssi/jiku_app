@@ -19,6 +19,16 @@ interface GuestRepository : JpaRepository<Guest, UUID> {
 
     fun countByEventId(eventId: UUID): Long
 
+    /**
+     * Guests of an event excluding those superseded by a transfer (JIKU-64), so the
+     * headline total stays equal to confirmed + declined + pending. The transferred
+     * row is kept for the audit trail, not counted as a second attendee.
+     */
+    fun countByEventIdAndRsvpStatusNot(
+        eventId: UUID,
+        rsvpStatus: RsvpStatus,
+    ): Long
+
     fun countByEventIdAndRsvpStatus(
         eventId: UUID,
         rsvpStatus: RsvpStatus,

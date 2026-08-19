@@ -3,10 +3,12 @@ package com.jiku.invitation.internal
 import com.jiku.shared.TenantAccessGate
 import com.jiku.shared.TenantContext
 import io.jsonwebtoken.Claims
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
@@ -23,6 +25,7 @@ class RsvpController(
     private val tokenService: InvitationTokenService,
     private val rsvpService: RsvpService,
     private val erasureService: GuestErasureService,
+    private val dispatcher: InvitationDispatcher,
     private val tenantAccessGate: TenantAccessGate,
 ) {
     @GetMapping("/{token}")
@@ -53,6 +56,24 @@ class RsvpController(
     fun decline(
         @PathVariable token: String,
     ): RsvpView = withTokenContext(token) { guestId, eventId -> rsvpService.decline(guestId, eventId) }
+
+    /**
+     * Hands this guest's place to someone else (JIKU-64). Dispatch of the
+     * recipient's own invitation runs after the transfer commits, following the
+     * same pattern as the organizer's send.
+     */
+    @PostMapping("/{token}/transfer")
+    fun transfer(
+        @PathVariable token: String,
+        @Valid @RequestBody request: TransferTicketRequest,
+    ): RsvpView =
+        withTokenContext(token) { guestId, eventId ->
+            val view = rsvpService.transfer(guestId, eventId, request)
+            // The transfer transaction has committed by now, so the async
+            // dispatcher sees the recipient's queued invitation.
+            dispatcher.dispatchPending(eventId)
+            view
+        }
 
     private fun withTokenContext(
         token: String,
