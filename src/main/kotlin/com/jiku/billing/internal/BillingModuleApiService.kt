@@ -4,6 +4,7 @@ import com.jiku.billing.AdminPaymentView
 import com.jiku.billing.AdminTrialView
 import com.jiku.billing.BillingAllowance
 import com.jiku.billing.BillingModuleApi
+import com.jiku.billing.BillingTierOption
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.UUID
@@ -81,6 +82,9 @@ class BillingModuleApiService(
         }
 
     override fun currency(): String = properties.currency
+
+    override fun tierOptions(): List<BillingTierOption> =
+        properties.tiers.map { BillingTierOption(name = it.name, maxGuests = it.maxGuests, priceMinor = it.priceMinor) }
 
     override fun unlockTier(
         eventId: UUID,
