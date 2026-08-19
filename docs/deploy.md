@@ -1,5 +1,40 @@
 # Deploying to a permanent host
 
+## Where things run today
+
+| Piece | Location | Notes |
+|---|---|---|
+| Backend | Render — `https://jiku-app.onrender.com` (API under `/api/v1`, OpenAPI at `/swagger-ui/index.html`) | Free-tier instances sleep after inactivity; the first request after a gap can take tens of seconds or return 503 |
+| Frontend | Vercel — `https://jiku.mrvin100.de` | Points at the Render origin through `NEXT_PUBLIC_API_URL` / `API_BASE_URL` |
+| Database | Neon | Managed backups and PITR |
+| Email | Resend, sending domain `contact.mrvin100.de` (verified) | `MAIL_TRANSPORT=resend`, `MAIL_FROM` on that domain |
+
+**Set `MAIL_FROM` to an address on the verified domain** (e.g.
+`jiku@contact.mrvin100.de`). Resend rejects sends from any unverified domain, so
+this is not cosmetic — invitations simply do not leave otherwise.
+
+### Adding Brevo as the overflow provider
+
+Resend's free tier stops at 100 emails/day, which one 300-guest event exhausts
+immediately. The routing transport (JIKU-62) sends through Resend until its daily
+cap and then falls back to Brevo, without any manual switch:
+
+1. Create a Brevo account, then Senders, Domains & Dedicated IPs -> Domains and
+   add `contact.mrvin100.de`. Brevo issues its own SPF/DKIM records, which
+   coexist with Resend's — SPF takes multiple `include:` mechanisms in one
+   record, and DKIM selectors are provider-specific.
+2. Wait for Brevo to mark the domain verified.
+3. On Render, set `BREVO_API_KEY` (Brevo dashboard -> SMTP & API -> API Keys)
+   and flip `MAIL_TRANSPORT` from `resend` to `routing`.
+4. Optionally tune `EMAIL_RESEND_DAILY_CAP` (100), `EMAIL_BREVO_DAILY_CAP` (300)
+   and `EMAIL_GLOBAL_DAILY_CAP` (350). The global cap sits below the sum of the
+   two on purpose — the free tiers are not reliably additive in practice.
+
+Nothing else changes: once both caps are exhausted, invitations stay `QUEUED`
+rather than failing, and `NotificationQueueSweepJob` retries them.
+
+## Moving off the sleeping instance
+
 Render's free tier sleeps the API after inactivity, which breaks WhatsApp/email
 webhook delivery and produces a slow first request for every visitor after a gap.
 This runbook moves the backend to an always-on Hetzner box while the frontend
