@@ -1,6 +1,6 @@
 package com.jiku.shared
 
-import com.jiku.shared.ratelimit.FixedWindowRateLimiter
+import com.jiku.shared.ratelimit.InMemoryRateLimiter
 import com.jiku.shared.ratelimit.RateLimitFilter
 import com.jiku.shared.ratelimit.RateLimitProperties
 import org.assertj.core.api.Assertions.assertThat
@@ -40,7 +40,7 @@ class RateLimitTest {
         @Test
         fun `allows up to the budget and rejects beyond it with the time to reset`() {
             val clock = SteppingClock(Instant.parse("2026-07-03T10:00:00Z"))
-            val limiter = FixedWindowRateLimiter(clock)
+            val limiter = InMemoryRateLimiter(clock)
 
             repeat(3) {
                 assertThat(limiter.tryAcquire("key", 3, Duration.ofMinutes(1))).isNull()
@@ -53,7 +53,7 @@ class RateLimitTest {
         @Test
         fun `a fresh window resets the budget`() {
             val clock = SteppingClock(Instant.parse("2026-07-03T10:00:00Z"))
-            val limiter = FixedWindowRateLimiter(clock)
+            val limiter = InMemoryRateLimiter(clock)
 
             repeat(4) { limiter.tryAcquire("key", 3, Duration.ofMinutes(1)) }
             clock.advance(Duration.ofSeconds(61))
@@ -63,7 +63,7 @@ class RateLimitTest {
         @Test
         fun `keys have independent budgets`() {
             val clock = SteppingClock(Instant.parse("2026-07-03T10:00:00Z"))
-            val limiter = FixedWindowRateLimiter(clock)
+            val limiter = InMemoryRateLimiter(clock)
 
             repeat(4) { limiter.tryAcquire("busy", 3, Duration.ofMinutes(1)) }
             assertThat(limiter.tryAcquire("quiet", 3, Duration.ofMinutes(1))).isNull()
@@ -93,7 +93,7 @@ class RateLimitTest {
                     ),
             )
 
-        private fun filter() = RateLimitFilter(properties, ApiProperties(basePath = "/api/v1"), FixedWindowRateLimiter())
+        private fun filter() = RateLimitFilter(properties, ApiProperties(basePath = "/api/v1"), InMemoryRateLimiter())
 
         private fun request(
             uri: String,
