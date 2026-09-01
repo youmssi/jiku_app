@@ -43,6 +43,10 @@ dependencies {
     // no resource-server starter, so nothing is auto-configured.
     implementation("org.springframework.security:spring-security-oauth2-jose")
     implementation("org.apache.commons:commons-csv:1.14.1")
+    // Error tracking (JIKU-70). Core SDK only — the Spring Boot starter is
+    // deliberately avoided so nothing is auto-configured and the reporting path
+    // stays behind the ErrorTracker port.
+    implementation("io.sentry:sentry:8.16.0")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
     runtimeOnly("org.postgresql:postgresql")
