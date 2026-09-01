@@ -188,6 +188,18 @@ api:
         max-requests: ${RATE_LIMIT_BOOKING_MAX_REQUESTS:20}
         window: ${RATE_LIMIT_BOOKING_WINDOW:PT1M}
 
+error-tracking:
+  # Unhandled-error reporting (JIKU-70). The DSN is the switch: blank — the default
+  # — leaves the logging tracker in place, so a fresh clone and the test suite make
+  # no outbound calls and need no provider account. Set it per environment to route
+  # unhandled exceptions to the provider instead.
+  dsn: ${ERROR_TRACKING_DSN:}
+  environment: ${ERROR_TRACKING_ENVIRONMENT:local}
+  # Must match the frontend's NEXT_PUBLIC_ERROR_TRACKING_RELEASE for the same
+  # deployment, otherwise a backend event and the frontend report for the same
+  # request cannot be lined up.
+  release: ${ERROR_TRACKING_RELEASE:}
+
 management:
   # Observability surface for uptime and performance monitoring (JIKU-30).
   endpoints:
