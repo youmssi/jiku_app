@@ -152,6 +152,20 @@ docker compose -f docker-compose.prod.yml up -d --build
 Flyway migrations run automatically on app startup, same as locally — no
 separate migration step.
 
+## Running more than one instance
+
+**Set `RATE_LIMIT_STORE=database` before starting a second instance.** Rate-limit
+counters default to `memory`, which is per-instance: with two instances each keeps
+its own counters and every configured budget is silently doubled — a login policy
+of five attempts per minute becomes ten. Nothing detects a second instance, so
+this is a checklist item, not a safety net.
+
+The shared store needs no extra infrastructure; it is a table in the existing
+database, created by migration `V33`. Switching is a single environment variable
+and a restart, and it can be switched back the same way. See
+`docs/adr/adr-79-distributed-rate-limit-counters.md` for the trade-offs, including
+why the shared limiter fails open when the database is unreachable.
+
 ## Backups
 
 See `docs/backup.md`. Neon (the database host) is the primary backup mechanism;

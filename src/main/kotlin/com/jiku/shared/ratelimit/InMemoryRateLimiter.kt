@@ -1,6 +1,5 @@
 package com.jiku.shared.ratelimit
 
-import org.springframework.stereotype.Component
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -8,18 +7,21 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
 /**
- * In-memory, fixed-window request counter keyed by an arbitrary string. In-memory
- * and per-instance by design at MVP scale (a single API replica); if the API ever
- * runs behind more than one instance, back this with a shared store instead of
- * scaling the map.
+ * Per-instance, in-memory fixed-window counter. Correct only while the API runs as
+ * a single instance: each instance keeps its own map, so N instances allow N times
+ * every configured budget. That is why it is not the right choice once the API
+ * scales out — see [DatabaseRateLimiter], selected with `api.rate-limit.store`.
+ *
+ * Kept as the default because it needs no database round trip on the hot path and
+ * is exactly right for local development, the test suite and the current
+ * single-instance deployment.
  *
  * Expired counters are swept periodically so abandoned keys (one-off guests,
  * scanning attempts) do not accumulate without bound.
  */
-@Component
-class FixedWindowRateLimiter(
+class InMemoryRateLimiter(
     private val clock: Clock = Clock.systemUTC(),
-) {
+) : RateLimiter {
     private class Counter(
         val windowStart: Instant,
         val expiresAt: Instant,
@@ -29,12 +31,7 @@ class FixedWindowRateLimiter(
     private val counters = ConcurrentHashMap<String, Counter>()
     private val acquisitions = AtomicLong()
 
-    /**
-     * Records one request for [key] and returns `null` when it fits within
-     * [maxRequests] per [window], or the time remaining until the window resets
-     * when the budget is exhausted (suitable for a `Retry-After` header).
-     */
-    fun tryAcquire(
+    override fun tryAcquire(
         key: String,
         maxRequests: Int,
         window: Duration,

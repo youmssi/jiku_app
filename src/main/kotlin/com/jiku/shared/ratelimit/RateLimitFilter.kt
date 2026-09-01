@@ -28,7 +28,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 class RateLimitFilter(
     private val properties: RateLimitProperties,
     private val apiProperties: ApiProperties,
-    private val limiter: FixedWindowRateLimiter,
+    private val limiter: RateLimiter,
 ) : OncePerRequestFilter() {
     private val pathMatcher = AntPathMatcher()
 

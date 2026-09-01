@@ -13,9 +13,23 @@ import java.time.Duration
 data class RateLimitProperties(
     /** Master switch. Disabled only in tests that intentionally flood endpoints. */
     val enabled: Boolean = true,
+    /**
+     * Where counters live. [Store.MEMORY] is per-instance and multiplies every
+     * budget by the number of running instances, so [Store.DATABASE] is mandatory
+     * before the API scales beyond one.
+     */
+    val store: Store = Store.MEMORY,
     /** Named policies, matched against the request path relative to the API base path. */
     val policies: Map<String, Policy> = emptyMap(),
 ) {
+    enum class Store {
+        /** Per-instance counters held in a map; no database round trip. */
+        MEMORY,
+
+        /** Counters shared through the `rate_limit_counter` table. */
+        DATABASE,
+    }
+
     data class Policy(
         /**
          * Ant-style patterns relative to the API base path (e.g. a `**` wildcard

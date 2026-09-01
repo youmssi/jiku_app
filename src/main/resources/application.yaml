@@ -137,11 +137,19 @@ api:
     # Abuse protection for every endpoint reachable without an organizer login.
     # Budgets are per client IP — plus the link token where one is in the path, so
     # a busy venue NAT does not lump every validator together and an attacker
-    # cannot rotate tokens for a fresh budget. Counters are in-memory and
-    # per-instance by design at MVP scale (one API replica); exceeding a budget
-    # returns 429 with a Retry-After header. Paths are relative to api.base-path
-    # and must not overlap across policies.
+    # cannot rotate tokens for a fresh budget. Exceeding a budget returns 429 with
+    # a Retry-After header. Where the counters themselves live is the `store`
+    # setting below. Paths are relative to api.base-path and must not overlap
+    # across policies.
     enabled: ${RATE_LIMIT_ENABLED:true}
+    # Where counters live: memory (per-instance, no database round trip — right for
+    # local development, the test suite and a single instance) or database (one
+    # budget shared by every instance, JIKU-79). MUST be set to database before the
+    # API runs more than one instance: with memory, N instances each grant the full
+    # budget, silently multiplying every limit below by N.
+    store: ${RATE_LIMIT_STORE:memory}
+    # How often elapsed windows are deleted; only runs with store=database.
+    sweep-cron: ${RATE_LIMIT_SWEEP_CRON:0 */10 * * * *}
     policies:
       login:
         # Blunt credential brute-force: a human retries a handful of times per
