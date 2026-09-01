@@ -43,3 +43,8 @@ out/
 .env
 .env.*
 !.env.example
+
+### End-to-end suite (JIKU-71) ###
+e2e/node_modules/
+e2e/playwright-report/
+e2e/test-results/

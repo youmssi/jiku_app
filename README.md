@@ -104,6 +104,22 @@ Schema is owned by Flyway migrations under `src/main/resources/db/migration`.
 > provisions one automatically through Testcontainers, so Docker must be available
 > when running the full `./gradlew build`.
 
+### End-to-end journeys
+
+`./gradlew build` proves this service in isolation. The end-to-end suite in `e2e/`
+proves it against the real frontend, PostgreSQL and Mailpit — registration, a real
+verification email, guest import, invitation, RSVP, ticket and check-in — because
+two independently green unit suites cannot catch a wiring bug between them.
+
+```bash
+./scripts/run-e2e.sh                 # every journey
+./scripts/run-e2e.sh --grep @smoke   # the subset CI runs per pull request
+```
+
+It needs a checkout of the `web` repository beside this one (or `E2E_WEB_DIR`
+pointing at it). See `e2e/README.md` for how the suite is written and what it
+deliberately does not cover.
+
 ## Engineering rules
 
 See `AGENTS.md` (and `CLAUDE.md`) in this directory for the full set of rules every
