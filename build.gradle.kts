@@ -47,6 +47,9 @@ dependencies {
     // deliberately avoided so nothing is auto-configured and the reporting path
     // stays behind the ErrorTracker port.
     implementation("io.sentry:sentry:8.16.0")
+    // Invoice documents (JIKU-69). A buyer's accounts department cannot process
+    // the plain-text receipt the platform issued before this.
+    implementation("com.github.librepdf:openpdf:2.2.2")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
     runtimeOnly("org.postgresql:postgresql")

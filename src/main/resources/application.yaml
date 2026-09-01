@@ -274,6 +274,31 @@ billing:
   # fragmenting guests across many small free events.
   free-tier-window: ${BILLING_FREE_TIER_WINDOW:P365D}
   currency: ${BILLING_CURRENCY:GNF}
+  invoice:
+    # Accounting-grade invoicing (JIKU-69). Numbers are gapless per tenant per
+    # fiscal year; these prefixes only shape the human-readable form.
+    number-prefix: ${BILLING_INVOICE_PREFIX:INV}
+    credit-note-prefix: ${BILLING_CREDIT_NOTE_PREFIX:CN}
+    # An invoice is dated by calendar day in its jurisdiction, not by UTC instant;
+    # near midnight the two differ.
+    issue-zone: ${BILLING_INVOICE_ISSUE_ZONE:Africa/Conakry}
+    seller:
+      # The selling entity as it must appear on the document. Set these before
+      # issuing a real invoice — the defaults name no registered company.
+      name: ${BILLING_SELLER_NAME:Jiku}
+      address-line: ${BILLING_SELLER_ADDRESS:}
+      tax-identifier: ${BILLING_SELLER_TAX_ID:}
+    # Consumption tax per ISO 3166-1 alpha-2 country. DELIBERATELY EMPTY: the GTM
+    # plan records Guinea's rate as unconfirmed and warns explicitly not to plan
+    # against an assumed figure for Cameroon, so shipping a guess here would put a
+    # wrong number on a legal document. An unconfigured country bills at zero tax.
+    # The key is left out entirely rather than written as an empty mapping: Spring
+    # reads `tax: {}` as the string "{}" and fails to bind it. Confirm each rate
+    # with a local accountant, then add it here, e.g.:
+    #   tax:
+    #     GN:
+    #       label: "TVA 18%"
+    #       rate: "0.18"
   custom:
     # CUSTOM tier pricing (beyond the OR tier's 1,000 guests): quoted in USD
     # cents and converted through this rate, since both move independently of a
