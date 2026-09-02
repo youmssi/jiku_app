@@ -2,6 +2,8 @@ package com.jiku.invitation.internal
 
 import com.jiku.catalog.EventModuleApi
 import com.jiku.messaging.NotificationModuleApi
+import com.jiku.ticket.TicketInfo
+import com.jiku.ticket.TicketingModuleApi
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVRecord
 import org.springframework.http.HttpStatus
@@ -23,9 +25,19 @@ class GuestService(
     private val events: EventModuleApi,
     private val properties: GuestImportProperties,
     private val notifications: NotificationModuleApi,
+    private val ticketing: TicketingModuleApi,
 ) {
     @Transactional(readOnly = true)
-    fun list(eventId: UUID): List<GuestResponse> = guests.findByEventId(eventId).map { it.toResponse() }
+    fun list(eventId: UUID): List<GuestResponse> {
+        // Une seule lecture des tickets pour toute la liste : la table d'invités
+        // se recharge à chaque filtre, et une requête par ligne s'y verrait.
+        val checkedInByGuest =
+            ticketing
+                .findTicketsByEvent(eventId)
+                .filter { it.status == TicketInfo.STATUS_CHECKED_IN }
+                .associate { it.guestId to it.checkedInAt }
+        return guests.findByEventId(eventId).map { it.toResponse(checkedInByGuest[it.id]) }
+    }
 
     /**
      * Removes a guest who has never been invited (added by mistake, duplicate entry,
@@ -66,7 +78,16 @@ class GuestService(
         return guests.save(guest).toResponse()
     }
 
-    private fun Guest.toResponse() = GuestResponse(requireNotNull(id), firstName, lastName, email, phoneNumber, excludedFromInvitations)
+    private fun Guest.toResponse(checkedInAt: java.time.Instant? = null) =
+        GuestResponse(
+            requireNotNull(id),
+            firstName,
+            lastName,
+            email,
+            phoneNumber,
+            excludedFromInvitations,
+            checkedInAt,
+        )
 
     @Transactional
     fun import(
