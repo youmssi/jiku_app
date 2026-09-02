@@ -51,6 +51,8 @@ data class EventResponse(
     val status: String,
     val settings: EventSettingsDto,
     val invitationChannels: Set<InvitationChannel>,
+    /** Règle de quorum, si l'organisateur en a défini une (JIKU-94). */
+    val quorum: QuorumResponse? = null,
 )
 
 /**
