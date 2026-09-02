@@ -1,8 +1,8 @@
 package com.jiku.invitation.internal
 
-import com.jiku.event.EventModuleApi
-import com.jiku.event.InvitationChannel
-import com.jiku.ticketing.TicketingModuleApi
+import com.jiku.catalog.EventModuleApi
+import com.jiku.catalog.InvitationChannel
+import com.jiku.ticket.TicketingModuleApi
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import org.springframework.http.HttpStatus

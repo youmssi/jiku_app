@@ -1,6 +1,6 @@
 package com.jiku.invitation.internal
 
-import com.jiku.event.InvitationChannel
+import com.jiku.catalog.InvitationChannel
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable

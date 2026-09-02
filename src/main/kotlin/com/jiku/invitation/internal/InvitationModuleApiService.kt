@@ -1,6 +1,6 @@
 package com.jiku.invitation.internal
 
-import com.jiku.event.InvitationChannel
+import com.jiku.catalog.InvitationChannel
 import com.jiku.invitation.ChannelBreakdown
 import com.jiku.invitation.GuestInfo
 import com.jiku.invitation.GuestStats

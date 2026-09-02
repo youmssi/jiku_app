@@ -1,7 +1,7 @@
 package com.jiku.invitation.internal
 
-import com.jiku.event.EventModuleApi
-import com.jiku.notification.NotificationModuleApi
+import com.jiku.catalog.EventModuleApi
+import com.jiku.messaging.NotificationModuleApi
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVRecord
 import org.springframework.http.HttpStatus

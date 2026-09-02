@@ -1,6 +1,6 @@
 package com.jiku.invitation.internal
 
-import com.jiku.event.EventModuleApi
+import com.jiku.catalog.EventModuleApi
 import com.jiku.shared.RetentionProperties
 import com.jiku.shared.TenantContext
 import org.slf4j.LoggerFactory

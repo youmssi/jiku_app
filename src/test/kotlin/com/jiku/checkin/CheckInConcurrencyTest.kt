@@ -2,8 +2,8 @@ package com.jiku.checkin
 
 import com.jiku.TestcontainersConfiguration
 import com.jiku.shared.TenantContext
-import com.jiku.ticketing.CheckInOutcome
-import com.jiku.ticketing.TicketingModuleApi
+import com.jiku.ticket.CheckInOutcome
+import com.jiku.ticket.TicketingModuleApi
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired

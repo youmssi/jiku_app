@@ -1,6 +1,6 @@
 package com.jiku.invitation.internal
 
-import com.jiku.event.InvitationChannel
+import com.jiku.catalog.InvitationChannel
 import com.jiku.shared.BaseTenantEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity

@@ -4,6 +4,15 @@
 **Story:** JIKU-81 (unscheduled)
 **Reference:** `docs/jiku-queue-management-evaluation.md`
 
+> **Note de renommage (JIKU-100, 2026-09-02).** Le corps de cette décision cite
+> `ticketing.internal.Ticket` et `event.internal.Event`. Ces paquets s'appellent
+> désormais `ticket` et `catalog`. Le texte n'est pas réécrit — un ADR consigne une
+> décision à une date donnée — mais les types visés sont bien
+> `ticket.internal.Ticket` et `catalog.internal.Event`.
+>
+> Le raisonnement, lui, est intact : la contrainte `uq_ticket_guest` existe toujours
+> et rend le ticket 1:1 avec un invité nommé.
+
 ## Context
 
 Queue and numbered-ticket management (banks, private clinics, administrations) has
