@@ -38,5 +38,11 @@ class Tenant(
     @Embedded
     var branding: TenantBranding? = null
 
+    /** Supplied only by organizations that need a compliant invoice (JIKU-69). */
+    @Embedded
+    var legalIdentity: TenantLegalIdentity? = null
+
     fun ensureBranding(): TenantBranding = branding ?: TenantBranding().also { branding = it }
+
+    fun ensureLegalIdentity(): TenantLegalIdentity = legalIdentity ?: TenantLegalIdentity().also { legalIdentity = it }
 }
