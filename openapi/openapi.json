@@ -494,6 +494,36 @@
         }
       }
     },
+    "/api/v1/prospects" : {
+      "post" : {
+        "tags" : [
+          "prospect-lead-controller"
+        ],
+        "operationId" : "register",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ProspectLeadRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProspectLeadAck"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs" : {
       "post" : {
         "tags" : [
@@ -1575,7 +1605,7 @@
         "tags" : [
           "auth-controller"
         ],
-        "operationId" : "register",
+        "operationId" : "register_1",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1997,6 +2027,37 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/TenantInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/prospects/{id}/contacted" : {
+      "post" : {
+        "tags" : [
+          "admin-prospect-lead-controller"
+        ],
+        "operationId" : "markContacted",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProspectLeadView"
                 }
               }
             }
@@ -3390,12 +3451,45 @@
         }
       }
     },
+    "/api/v1/admin/prospects" : {
+      "get" : {
+        "tags" : [
+          "admin-prospect-lead-controller"
+        ],
+        "operationId" : "list_7",
+        "parameters" : [
+          {
+            "name" : "status",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProspectLeadView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/payments" : {
       "get" : {
         "tags" : [
           "admin-payment-controller"
         ],
-        "operationId" : "list_7",
+        "operationId" : "list_8",
         "parameters" : [
           {
             "name" : "status",
@@ -3465,7 +3559,7 @@
         "tags" : [
           "admin-booking-controller"
         ],
-        "operationId" : "list_8",
+        "operationId" : "list_9",
         "parameters" : [
           {
             "name" : "status",
@@ -3518,7 +3612,7 @@
         "tags" : [
           "admin-booking-payment-controller"
         ],
-        "operationId" : "list_9",
+        "operationId" : "list_10",
         "parameters" : [
           {
             "name" : "status",
@@ -3591,7 +3685,7 @@
         "tags" : [
           "admin-audit-controller"
         ],
-        "operationId" : "list_10",
+        "operationId" : "list_11",
         "parameters" : [
           {
             "name" : "action",
@@ -4366,6 +4460,86 @@
               "string",
               "null"
             ]
+          }
+        }
+      },
+      "ProspectLeadRequest" : {
+        "type" : "object",
+        "properties" : {
+          "businessName" : {
+            "type" : "string",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "contactName" : {
+            "type" : "string",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "phone" : {
+            "type" : "string",
+            "maxLength" : 32,
+            "minLength" : 0
+          },
+          "sector" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "email" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "email",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "city" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "weeklyVolume" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "note" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 1000,
+            "minLength" : 0
+          },
+          "source" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 100,
+            "minLength" : 0
+          }
+        },
+        "required" : [
+          "businessName",
+          "contactName",
+          "phone",
+          "sector"
+        ]
+      },
+      "ProspectLeadAck" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
           }
         }
       },
@@ -5468,6 +5642,71 @@
           },
           "country" : {
             "type" : "string"
+          }
+        }
+      },
+      "ProspectLeadView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "businessName" : {
+            "type" : "string"
+          },
+          "contactName" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "sector" : {
+            "type" : "string"
+          },
+          "city" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "weeklyVolume" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "note" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "source" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "contactedAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
           }
         }
       },
