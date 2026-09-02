@@ -42,6 +42,7 @@ class DashboardService(
         validators.findByEventIdOrderByCreatedAtAsc(eventId).forEach { labels.add(it.label) }
         labels.addAll(countsByLabel.keys)
         val entrances = labels.map { EntranceCount(it, countsByLabel[it] ?: 0L) }
+        val quorum = events.quorum(eventId, guests.total, attendance.checkedIn)
         val deliverability = notifications.currentTenantDeliverability()
         val allowance = billing.allowance(eventId)
 
@@ -55,6 +56,15 @@ class DashboardService(
             pending = guests.pending,
             checkedIn = attendance.checkedIn,
             entrances = entrances,
+            quorum =
+                quorum?.let {
+                    QuorumView(
+                        required = it.required,
+                        current = it.current,
+                        reached = it.reached,
+                        reachedAt = it.reachedAt,
+                    )
+                },
             deliverability =
                 DeliverabilityFlag(
                     bounceRatePercent = Math.round(deliverability.bounceRate * 100).toInt(),

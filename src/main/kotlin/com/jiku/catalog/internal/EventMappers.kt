@@ -22,6 +22,18 @@ fun Event.toResponse(): EventResponse =
                 maxOverbookingCount = settings.maxOverbookingCount,
             ),
         invitationChannels = invitationChannels.toSet(),
+        // Null quand aucun quorum n'est configuré, ce qui est le cas de la
+        // quasi-totalité des événements : un mariage n'a pas de quorum.
+        quorum =
+            quorum?.takeIf { it.isConfigured() }?.let {
+                QuorumResponse(
+                    mode = it.mode?.name ?: QuorumMode.NONE.name,
+                    numerator = it.numerator,
+                    denominator = it.denominator,
+                    absolute = it.absolute,
+                    reachedAt = it.reachedAt,
+                )
+            },
     )
 
 fun Event.toEventInfo(): EventInfo =

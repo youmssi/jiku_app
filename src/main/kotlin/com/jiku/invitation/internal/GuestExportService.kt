@@ -32,6 +32,24 @@ class GuestExportService(
     ) {
         events.findEvent(eventId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found")
 
+        val allGuests = guests.findByEventId(eventId)
+        // En-tête de quorum (JIKU-94) : c'est ce qui fait de l'export une preuve
+        // opposable plutôt qu'une simple liste. Absent si aucun quorum n'est
+        // configuré, pour ne pas polluer l'export d'un mariage.
+        val quorum =
+            events.quorum(
+                eventId,
+                totalGuests = allGuests.size.toLong(),
+                checkedIn = ticketing.attendanceStats(eventId).checkedIn,
+            )
+        if (quorum != null) {
+            val atteint = quorum.reachedAt?.toString() ?: "non atteint"
+            appendable.append("Quorum requis,").append(quorum.required.toString()).append(NEWLINE)
+            appendable.append("Presents,").append(quorum.current.toString()).append(NEWLINE)
+            appendable.append("Atteint le,").append(atteint).append(NEWLINE)
+            appendable.append(NEWLINE)
+        }
+
         val invitationByGuestChannel =
             invitations.findByEventId(eventId).associateBy { it.guestId to it.channel }
         val ticketByGuest = ticketing.findTicketsByEvent(eventId).associateBy { it.guestId }
@@ -43,7 +61,7 @@ class GuestExportService(
                 .get()
 
         CSVPrinter(appendable, format).use { printer ->
-            for (guest in guests.findByEventId(eventId)) {
+            for (guest in allGuests) {
                 val guestId = requireNotNull(guest.id)
                 val ticket = ticketByGuest[guestId]
                 printer.printRecord(
@@ -63,6 +81,9 @@ class GuestExportService(
     }
 
     private companion object {
+        /** Séparateur explicite : le CSV doit être identique quelle que soit la plateforme. */
+        const val NEWLINE = "\n"
+
         val HEADERS =
             arrayOf(
                 "First name",

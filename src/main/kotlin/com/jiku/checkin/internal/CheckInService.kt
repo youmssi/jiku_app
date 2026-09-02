@@ -28,6 +28,8 @@ class CheckInService(
     private val events: EventModuleApi,
     private val tenants: TenantModuleApi,
 ) {
+    private val log = org.slf4j.LoggerFactory.getLogger(CheckInService::class.java)
+
     /**
      * Branding and live attendance context for the validator opening [validatorLabel]'s
      * link against [eventId]. The tenant is already bound by the caller.
@@ -164,6 +166,9 @@ class CheckInService(
     }
 
     private fun respond(result: CheckInResult): CheckInResponse {
+        if (result.outcome == CheckInOutcome.CHECKED_IN) {
+            result.ticket?.let { recordQuorumIfReached(it.eventId) }
+        }
         val guestName = result.ticket?.let { invitation.findGuest(it.guestId)?.fullName() }
         return CheckInResponse(
             outcome = result.outcome.name,
@@ -172,6 +177,30 @@ class CheckInService(
             checkedInAt = result.checkedInAt,
             checkedInBy = result.checkedInBy,
         )
+    }
+
+    /**
+     * Horodate l'atteinte du quorum si cette entrée vient de la franchir
+     * (JIKU-94). L'écriture est conditionnelle en base — `WHERE reached_at IS
+     * NULL` — donc deux portiers qui scannent simultanément au franchissement
+     * n'enregistrent qu'une seule date, et les arrivées suivantes ne la
+     * réécrivent jamais.
+     *
+     * Un échec ici ne doit jamais faire échouer une entrée : le portier a scanné,
+     * la personne est admise. Le quorum est une lecture de cet état, pas une
+     * condition de son enregistrement.
+     */
+    private fun recordQuorumIfReached(eventId: UUID) {
+        try {
+            val guests = invitation.guestStats(eventId)
+            val stats = ticketing.attendanceStats(eventId)
+            val quorum = events.quorum(eventId, guests.total, stats.checkedIn) ?: return
+            if (quorum.reached && quorum.reachedAt == null) {
+                events.markQuorumReached(eventId)
+            }
+        } catch (ex: Exception) {
+            log.warn("Impossible d'horodater le quorum pour l'événement {}", eventId, ex)
+        }
     }
 
     private fun notFound() = CheckInResponse(CheckInOutcome.NOT_FOUND.name, null, null, null, null)

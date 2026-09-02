@@ -31,6 +31,27 @@ interface EventModuleApi {
     fun releaseAttendanceSlot(eventId: UUID)
 
     /**
+     * Règle de quorum de l'événement, ou null si l'organisateur n'en a pas
+     * défini (JIKU-94).
+     *
+     * Un quorum compte les personnes **présentes**, pas les confirmations : une
+     * assemblée délibère avec ceux qui sont dans la salle. Ce module ne connaît
+     * ni les inscrits ni les présents, donc l'appelant fournit les deux.
+     */
+    fun quorum(
+        eventId: UUID,
+        totalGuests: Long,
+        checkedIn: Long,
+    ): QuorumInfo?
+
+    /**
+     * Horodate l'atteinte du quorum, une seule fois. Sans effet si elle est déjà
+     * enregistrée : la date d'atteinte est la valeur probante et ne se réécrit
+     * jamais.
+     */
+    fun markQuorumReached(eventId: UUID)
+
+    /**
      * Creates a draft event pre-filled from a verified booking (JIKU-55), under
      * the tenant bound in the current [com.jiku.shared.TenantContext]. Returns
      * the new event's id. The organizer completes and publishes it themselves —
