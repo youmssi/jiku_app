@@ -5,7 +5,7 @@ import java.math.BigDecimal
 
 /**
  * Deposit-reservation configuration (JIKU-55). The deposit percentage and payee
- * details are configuration, not literals, exactly like [com.jiku.billing.internal.ManualPaymentProperties] —
+ * details are configuration, not literals, exactly like [com.jiku.money.internal.ManualPaymentProperties] —
  * these are the same class of "where does the client send money" detail, kept
  * separate because the booking flow is a distinct product surface from the
  * concierge tier-unlock flow.

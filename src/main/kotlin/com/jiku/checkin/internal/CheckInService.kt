@@ -1,14 +1,14 @@
 package com.jiku.checkin.internal
 
-import com.jiku.event.EventInfo
-import com.jiku.event.EventModuleApi
+import com.jiku.catalog.EventInfo
+import com.jiku.catalog.EventModuleApi
 import com.jiku.invitation.GuestInfo
 import com.jiku.invitation.InvitationModuleApi
 import com.jiku.shared.TenantContext
 import com.jiku.tenant.TenantModuleApi
-import com.jiku.ticketing.CheckInOutcome
-import com.jiku.ticketing.CheckInResult
-import com.jiku.ticketing.TicketingModuleApi
+import com.jiku.ticket.CheckInOutcome
+import com.jiku.ticket.CheckInResult
+import com.jiku.ticket.TicketingModuleApi
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException

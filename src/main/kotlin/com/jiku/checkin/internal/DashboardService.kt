@@ -1,11 +1,11 @@
 package com.jiku.checkin.internal
 
-import com.jiku.billing.BillingModuleApi
-import com.jiku.event.EventModuleApi
+import com.jiku.catalog.EventModuleApi
 import com.jiku.invitation.InvitationModuleApi
-import com.jiku.notification.NotificationModuleApi
+import com.jiku.messaging.NotificationModuleApi
+import com.jiku.money.BillingModuleApi
 import com.jiku.shared.RetentionProperties
-import com.jiku.ticketing.TicketingModuleApi
+import com.jiku.ticket.TicketingModuleApi
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

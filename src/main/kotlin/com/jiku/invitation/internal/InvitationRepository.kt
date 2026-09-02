@@ -1,6 +1,6 @@
 package com.jiku.invitation.internal
 
-import com.jiku.event.InvitationChannel
+import com.jiku.catalog.InvitationChannel
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param

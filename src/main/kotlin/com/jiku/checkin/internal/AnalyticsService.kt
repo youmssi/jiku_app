@@ -1,8 +1,8 @@
 package com.jiku.checkin.internal
 
-import com.jiku.event.EventModuleApi
+import com.jiku.catalog.EventModuleApi
 import com.jiku.invitation.InvitationModuleApi
-import com.jiku.ticketing.TicketingModuleApi
+import com.jiku.ticket.TicketingModuleApi
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

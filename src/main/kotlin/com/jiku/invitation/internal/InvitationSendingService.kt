@@ -1,7 +1,7 @@
 package com.jiku.invitation.internal
 
-import com.jiku.event.EventModuleApi
-import com.jiku.event.InvitationChannel
+import com.jiku.catalog.EventModuleApi
+import com.jiku.catalog.InvitationChannel
 import com.jiku.shared.UsageAllowanceGate
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service

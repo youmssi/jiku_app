@@ -1,11 +1,11 @@
 package com.jiku.booking.internal
 
-import com.jiku.billing.BillingModuleApi
 import com.jiku.booking.AdminBookingCancellationView
 import com.jiku.booking.AdminBookingView
 import com.jiku.booking.AdminPaymentDeclarationView
-import com.jiku.event.EventModuleApi
-import com.jiku.event.InvitationChannel
+import com.jiku.catalog.EventModuleApi
+import com.jiku.catalog.InvitationChannel
+import com.jiku.money.BillingModuleApi
 import com.jiku.shared.BookingNotice
 import com.jiku.shared.TenantContext
 import com.jiku.tenant.TenantModuleApi
@@ -353,7 +353,7 @@ class BookingService(
     /**
      * Records a balance payment as prepaid credit against the booking's event
      * (JIKU-57) — same rebind-then-fresh-transaction reasoning as
-     * [provisionOrganizerAccount], since [com.jiku.billing.internal.UsageRecord]
+     * [provisionOrganizerAccount], since [com.jiku.money.internal.UsageRecord]
      * is tenant-scoped. A no-op if the booking has no event yet, which should
      * not happen for a balance (the deposit already provisioned one).
      */

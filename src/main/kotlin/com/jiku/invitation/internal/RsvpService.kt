@@ -1,12 +1,12 @@
 package com.jiku.invitation.internal
 
-import com.jiku.event.EventInfo
-import com.jiku.event.EventModuleApi
-import com.jiku.event.InvitationChannel
+import com.jiku.catalog.EventInfo
+import com.jiku.catalog.EventModuleApi
+import com.jiku.catalog.InvitationChannel
 import com.jiku.shared.TenantContext
 import com.jiku.tenant.TenantModuleApi
-import com.jiku.ticketing.TicketInfo
-import com.jiku.ticketing.TicketingModuleApi
+import com.jiku.ticket.TicketInfo
+import com.jiku.ticket.TicketingModuleApi
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
