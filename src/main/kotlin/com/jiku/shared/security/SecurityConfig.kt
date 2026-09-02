@@ -67,6 +67,10 @@ class SecurityConfig(
                 // every booking endpoint is either fully open or gated by the booking's
                 // own access token (query param) rather than a JWT.
                 it.requestMatchers("${apiProperties.basePath}/bookings/**").permitAll()
+                // Liste d'accès anticipé rendez-vous (JIKU-98) : un professionnel
+                // intéressé n'a pas de compte. Écriture seule et limitée ; la
+                // consultation passe par /admin/prospects, qui exige PLATFORM_ADMIN.
+                it.requestMatchers(HttpMethod.POST, "${apiProperties.basePath}/prospects").permitAll()
                 it.requestMatchers("${apiProperties.basePath}/notifications/email-feedback/**").permitAll()
                 // Mobile Money provider payment callback: the caller is the provider,
                 // authenticated by the signature the payment provider verifies, not a
