@@ -125,6 +125,30 @@ tasks.withType<Test> {
     }
 }
 
+// Rewrites openapi/openapi.json from the running controllers (JIKU-72). The same
+// test that verifies the contract produces it, so the two can never disagree about
+// formatting. Needs Docker, like any Testcontainers-backed test.
+//
+//   ./gradlew regenerateOpenApi
+//
+// Then commit openapi/openapi.json and regenerate the frontend types from it
+// (see web/openapi/README.md).
+tasks.register<Test>("regenerateOpenApi") {
+    group = "documentation"
+    description = "Regenerates the committed OpenAPI contract from the controllers."
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform()
+    filter { includeTestsMatching("com.jiku.OpenApiContractTest") }
+    systemProperty("jiku.openapi.regenerate", "true")
+    systemProperty("jiku.mail.transport", "log")
+    systemProperty("jiku.whatsapp.transport", "log")
+    maxHeapSize = "2g"
+    // The point of the task is to rewrite a file, so it must never be considered
+    // up to date on an unchanged input.
+    outputs.upToDateWhen { false }
+}
+
 // Seeds the demo tenant (see DemoDataSeeder) against whatever database the
 // POSTGRES_* variables point at, then exits. Safe to re-run: the demo tenant's
 // data is reset first. Locally: `docker compose up -d && ./gradlew seedDemoData`.
