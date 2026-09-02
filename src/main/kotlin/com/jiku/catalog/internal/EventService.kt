@@ -60,6 +60,46 @@ class EventService(
         return event.toResponse()
     }
 
+    /**
+     * Enregistre la règle de quorum (JIKU-94).
+     *
+     * `reachedAt` n'est jamais touché ici : c'est la valeur probante, écrite une
+     * seule fois à la porte. Changer la règle après coup ne réécrit pas
+     * l'histoire — si l'organisateur corrige son quorum en cours d'assemblée, la
+     * date de première atteinte sous l'ancienne règle demeure, et c'est
+     * volontaire.
+     */
+    @Transactional
+    fun setQuorum(
+        id: UUID,
+        request: UpdateQuorumRequest,
+    ): QuorumResponse {
+        val event = load(id)
+        when (request.mode) {
+            QuorumMode.FRACTION ->
+                require(request.numerator != null && request.denominator != null) {
+                    "Une fraction exige un numérateur et un dénominateur"
+                }
+            QuorumMode.ABSOLUTE ->
+                require(request.absolute != null) { "Un quorum absolu exige un nombre" }
+            QuorumMode.NONE -> Unit
+        }
+        event.ensureQuorum().apply {
+            mode = request.mode
+            numerator = request.numerator
+            denominator = request.denominator
+            absolute = request.absolute
+        }
+        val saved = events.save(event).quorum
+        return QuorumResponse(
+            mode = saved?.mode?.name ?: QuorumMode.NONE.name,
+            numerator = saved?.numerator,
+            denominator = saved?.denominator,
+            absolute = saved?.absolute,
+            reachedAt = saved?.reachedAt,
+        )
+    }
+
     @Transactional
     fun publish(id: UUID): EventResponse {
         val event = load(id)

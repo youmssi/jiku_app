@@ -236,6 +236,47 @@
         }
       }
     },
+    "/api/v1/events/{id}/quorum" : {
+      "put" : {
+        "tags" : [
+          "event-controller"
+        ],
+        "operationId" : "setQuorum",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateQuorumRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/QuorumResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/branding" : {
       "get" : {
         "tags" : [
@@ -4262,6 +4303,79 @@
           }
         }
       },
+      "UpdateQuorumRequest" : {
+        "type" : "object",
+        "properties" : {
+          "mode" : {
+            "type" : "string",
+            "enum" : [
+              "NONE",
+              "FRACTION",
+              "ABSOLUTE"
+            ]
+          },
+          "numerator" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "denominator" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "absolute" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          }
+        },
+        "required" : [
+          "mode"
+        ]
+      },
+      "QuorumResponse" : {
+        "type" : "object",
+        "properties" : {
+          "mode" : {
+            "type" : "string"
+          },
+          "numerator" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "denominator" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "absolute" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "reachedAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          }
+        }
+      },
       "UpdateBrandingRequest" : {
         "type" : "object",
         "properties" : {
@@ -6212,6 +6326,16 @@
               "$ref" : "#/components/schemas/EntranceCount"
             }
           },
+          "quorum" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/QuorumView"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          },
           "deliverability" : {
             "$ref" : "#/components/schemas/DeliverabilityFlag"
           },
@@ -6250,6 +6374,29 @@
           "checkedIn" : {
             "type" : "integer",
             "format" : "int64"
+          }
+        }
+      },
+      "QuorumView" : {
+        "type" : "object",
+        "properties" : {
+          "required" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "current" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "reached" : {
+            "type" : "boolean"
+          },
+          "reachedAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
           }
         }
       },

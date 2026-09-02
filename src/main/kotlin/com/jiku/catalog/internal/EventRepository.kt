@@ -39,6 +39,22 @@ interface EventRepository : JpaRepository<Event, UUID> {
         @Param("limit") limit: Int,
     ): Int
 
+    /**
+     * Horodate l'atteinte du quorum, une seule fois (JIKU-94). La condition
+     * `IS NULL` rend l'écriture idempotente et concurrente-sûre : deux scans
+     * simultanés qui franchissent le seuil ensemble n'écrivent qu'une date, et
+     * les arrivées suivantes ne la réécrivent jamais. Retourne le nombre de
+     * lignes modifiées — 1 la première fois, 0 ensuite.
+     *
+     * En HQL, donc le prédicat de tenant s'applique.
+     */
+    @Modifying
+    @Query("UPDATE Event e SET e.quorum.reachedAt = :at WHERE e.id = :id AND e.quorum.reachedAt IS NULL")
+    fun markQuorumReached(
+        @Param("id") id: UUID,
+        @Param("at") at: java.time.Instant,
+    ): Int
+
     @Modifying
     @Query("UPDATE Event e SET e.confirmedCount = e.confirmedCount - 1 WHERE e.id = :id AND e.confirmedCount > 0")
     fun releaseSlot(

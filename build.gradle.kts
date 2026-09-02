@@ -136,6 +136,14 @@ tasks.withType<Test> {
 tasks.register<Test>("regenerateOpenApi") {
     group = "documentation"
     description = "Regenerates the committed OpenAPI contract from the controllers."
+    // Le plugin jvm-test-suite accroche TOUTE tâche de type Test au cycle `check`,
+    // donc `./gradlew build` exécutait cette régénération avant la vérification :
+    // le contrat était réécrit puis comparé à lui-même, et le garde-fou ne pouvait
+    // jamais échouer. Ce garde ne laisse la tâche agir que si elle est demandée
+    // explicitement en ligne de commande, quel que soit ce qui la câble ailleurs.
+    onlyIf {
+        gradle.startParameter.taskNames.any { it.substringAfterLast(':') == "regenerateOpenApi" }
+    }
     testClassesDirs = sourceSets["test"].output.classesDirs
     classpath = sourceSets["test"].runtimeClasspath
     useJUnitPlatform()

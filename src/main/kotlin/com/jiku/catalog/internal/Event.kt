@@ -50,6 +50,16 @@ class Event(
     @Embedded
     var settings: EventSettings = EventSettings()
 
+    /**
+     * Règle de quorum, si l'organisateur en a défini une (JIKU-94). Nullable
+     * parce que Hibernate mappe un embeddable entièrement nul à une référence
+     * nulle — même piège que [branding].
+     */
+    @Embedded
+    var quorum: EventQuorum? = null
+
+    fun ensureQuorum(): EventQuorum = quorum ?: EventQuorum().also { quorum = it }
+
     @Column(name = "max_capacity")
     var maxCapacity: Int? = null
 

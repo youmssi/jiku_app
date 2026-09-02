@@ -32,3 +32,18 @@ data class RetentionCandidate(
     val eventId: UUID,
     val tenantId: String,
 )
+
+/**
+ * État du quorum d'un événement (JIKU-94), partagé au-delà du module.
+ *
+ * [reached] reflète l'instant présent ; [reachedAt] est la date de la **première**
+ * atteinte et ne se réécrit jamais. Les deux peuvent diverger — des participants
+ * repartis font retomber [reached] à faux alors que [reachedAt] demeure — et
+ * c'est voulu : les deux informations sont vraies.
+ */
+data class QuorumInfo(
+    val required: Long,
+    val current: Long,
+    val reached: Boolean,
+    val reachedAt: java.time.Instant?,
+)

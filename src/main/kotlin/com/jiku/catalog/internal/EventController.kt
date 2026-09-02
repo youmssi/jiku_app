@@ -39,6 +39,17 @@ class EventController(
         @Valid @RequestBody request: UpdateEventRequest,
     ): EventResponse = eventService.update(id, request)
 
+    /**
+     * Règle de quorum de l'événement (JIKU-94). Séparée de la mise à jour
+     * générale : c'est une règle statutaire, saisie une fois, pas un réglage
+     * qu'on ajuste en modifiant le lieu ou l'horaire.
+     */
+    @PutMapping("/{id}/quorum")
+    fun setQuorum(
+        @PathVariable id: UUID,
+        @Valid @RequestBody request: UpdateQuorumRequest,
+    ): QuorumResponse = eventService.setQuorum(id, request)
+
     @PostMapping("/{id}/publish")
     fun publish(
         @PathVariable id: UUID,
