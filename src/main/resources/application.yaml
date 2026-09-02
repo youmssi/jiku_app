@@ -195,6 +195,13 @@ api:
         paths: [/bookings/**]
         max-requests: ${RATE_LIMIT_BOOKING_MAX_REQUESTS:20}
         window: ${RATE_LIMIT_BOOKING_WINDOW:PT1M}
+      prospect:
+        # Liste d'accès anticipé rendez-vous (JIKU-98). Un professionnel légitime
+        # soumet une fois, éventuellement deux s'il se corrige ; au-delà c'est du
+        # script. Plus serré que booking parce qu'il n'y a aucun jeton à présenter.
+        paths: [/prospects]
+        max-requests: ${RATE_LIMIT_PROSPECT_MAX_REQUESTS:5}
+        window: ${RATE_LIMIT_PROSPECT_WINDOW:PT1M}
 
 error-tracking:
   # Unhandled-error reporting (JIKU-70). The DSN is the switch: blank — the default
