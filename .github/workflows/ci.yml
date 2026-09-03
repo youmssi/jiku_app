@@ -64,17 +64,18 @@ jobs:
         with:
           path: app
 
-      # La suite pilote la pile réelle : elle a besoin des deux dépôts. La
-      # branche de même nom est utilisée si elle existe, pour qu'une paire de PR
-      # liées soit vérifiée ensemble plutôt que contre un frontend divergent.
+      # La suite pilote la pile réelle : elle a besoin des deux dépôts. Le dépôt
+      # frontend est public, donc le jeton par défaut suffit à le cloner.
+      #
+      # Pas de continue-on-error : sans frontend, la suite ne peut rien prouver.
+      # Échouer ici, en disant pourquoi, vaut mieux qu'échouer cinq minutes plus
+      # tard sur un symptôme sans rapport.
       - name: Checkout frontend
         uses: actions/checkout@v4
         with:
           repository: youmssi/jiku_web
           path: web
           ref: develop
-          token: ${{ secrets.WEB_REPO_TOKEN || github.token }}
-        continue-on-error: true
 
       - name: Set up JDK 25
         uses: actions/setup-java@v4
@@ -85,8 +86,12 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      # La version vient du `packageManager` du frontend : dupliquer un numéro
+      # ici le ferait diverger silencieusement du dépôt qu'il sert à construire.
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
+        with:
+          package_json_file: web/package.json
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
