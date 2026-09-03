@@ -1,0 +1,59 @@
+package com.jiku.catalog.internal
+
+import com.jiku.shared.BaseTenantEntity
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
+import java.time.Instant
+import java.util.UUID
+
+enum class ServiceReservationStatus {
+    /** Demande en attente de confirmation : la case est bloquée jusqu'à [heldUntil]. */
+    PENDING,
+
+    /** Réservation confirmée : la case est prise. */
+    CONFIRMED,
+}
+
+/**
+ * L'occupation d'une ressource par un créneau (JIKU-85). L'unicité
+ * (resource_id, starts_at) est la garde de concurrence : deux réservations du
+ * même créneau sur la même ressource sont impossibles, et le gagnant est celui
+ * dont l'INSERT conditionnel aboutit.
+ */
+@Entity
+@Table(
+    name = "service_reservation",
+    uniqueConstraints = [UniqueConstraint(name = "uq_reservation_resource_start", columnNames = ["resource_id", "starts_at"])],
+)
+class ServiceReservation(
+    @Column(name = "service_id", nullable = false, updatable = false)
+    val serviceId: UUID,
+    @Column(name = "resource_id", nullable = false, updatable = false)
+    val resourceId: UUID,
+    @Column(name = "starts_at", nullable = false, updatable = false)
+    val startsAt: Instant,
+    @Column(name = "ends_at", nullable = false, updatable = false)
+    val endsAt: Instant,
+) : BaseTenantEntity() {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    var id: UUID? = null
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 32)
+    var status: ServiceReservationStatus = ServiceReservationStatus.PENDING
+
+    /** Fin du blocage d'une demande en attente ; nulle pour une confirmation. */
+    @Column(name = "held_until")
+    var heldUntil: Instant? = null
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    val createdAt: Instant = Instant.now()
+}
