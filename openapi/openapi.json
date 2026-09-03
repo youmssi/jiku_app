@@ -2342,6 +2342,19 @@
         }
       }
     },
+    "/api/v1/admin/diagnostics/error" : {
+      "post" : {
+        "tags" : [
+          "admin-diagnostics-controller"
+        ],
+        "operationId" : "triggerError",
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
     "/api/v1/admin/bookings/{id}/cancel" : {
       "post" : {
         "tags" : [
