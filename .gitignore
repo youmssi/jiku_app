@@ -46,5 +46,10 @@ out/
 
 ### End-to-end suite (JIKU-71) ###
 e2e/node_modules/
+# Un `npx` lancé depuis la racine y dépose un node_modules et un package.json.
+# Ce dépôt est un service Kotlin : rien de tout cela n'y a sa place.
+/node_modules/
+/package.json
+/package-lock.json
 e2e/playwright-report/
 e2e/test-results/

@@ -77,8 +77,34 @@ isolation would be worse than no restore at all.
 
 | Date | Schema | Dataset | Dump | Measured RTO | Conditions |
 |---|---|---|---|---|---|
-| 2026-09-03 | V38 | 80 471 rows (60 135 guests, 20 035 tickets) | 3.7 MB | **21 s** | Local Docker Postgres, application running and holding connections |
+| 2026-09-03 | V32 | production as it stood | n/a (branch) | **18 s** | **Neon PITR, real production project** — see below |
+| 2026-09-03 | V38 | 80 471 rows (60 135 guests, 20 035 tickets) | 3.7 MB | 21 s | Local Docker Postgres, application running and holding connections |
 | 2026-09-03 | V33 | 471 rows | 68 KB | 4 s | Local Docker Postgres, idle |
+
+### The Neon rehearsal (2026-09-03)
+
+Performed against the real `jiku` production project, not a copy. A branch was
+created at a point one hour in the past — the same operation the runbook's case 1
+prescribes for a bad migration — verified, then deleted.
+
+```
+neonctl branches create --project-id <project> --name restore-drill-<ts> --parent <iso-timestamp>
+```
+
+**Result:** branch ready in **18 s**. Flyway history intact at V32 with zero failed
+migrations, and zero events missing a `tenant_id` — tenant isolation survived the
+restore. The branch was deleted afterwards; only `production` remains.
+
+Two things this rehearsal establishes, and one it does not:
+
+- Neon point-in-time recovery works on this project, and the procedure in the
+  runbook is executable as written. This was previously an assumption.
+- Branch creation is copy-on-write and does not touch the parent, so the
+  rehearsal is safe to repeat at any time, including during an incident.
+- **It says nothing about restore time at volume.** Production held 2 tenants and
+  1 event at the time. Neon branching is near-constant-time by design, but that
+  claim is untested here at scale — the 21 s local figure remains the one to
+  budget against for a loaded database.
 
 **How to read these numbers.** They measure the *restore step* — create the target
 database, load the dump, verify it. They are not an incident-to-service RTO: a
