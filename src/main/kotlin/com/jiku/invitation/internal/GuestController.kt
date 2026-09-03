@@ -49,6 +49,13 @@ class GuestController(
         @RequestBody body: SetGuestExclusionRequest,
     ): GuestResponse = guestService.setExcluded(eventId, guestId, body.excluded)
 
+    @PatchMapping("/{guestId}/ticket-type")
+    fun setTicketType(
+        @PathVariable eventId: UUID,
+        @PathVariable guestId: UUID,
+        @RequestBody body: SetGuestTicketTypeRequest,
+    ): GuestResponse = guestService.setTicketType(eventId, guestId, body.ticketTypeId)
+
     @GetMapping("/export", produces = ["text/csv"])
     fun export(
         @PathVariable eventId: UUID,

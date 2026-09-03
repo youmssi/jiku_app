@@ -49,4 +49,12 @@ class Ticket(
 
     @Column(name = "checked_in_by")
     var checkedInBy: String? = null
+
+    /**
+     * Catégorie d'accès, recopiée depuis l'invité à l'émission (JIKU-93). Figée
+     * comme le reste du billet : si l'organisateur reclasse l'invité ensuite, le
+     * billet déjà remis continue de dire ce qu'il disait.
+     */
+    @Column(name = "ticket_type_id", updatable = false)
+    var ticketTypeId: UUID? = null
 }

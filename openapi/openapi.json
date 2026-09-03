@@ -277,6 +277,87 @@
         }
       }
     },
+    "/api/v1/events/{eventId}/ticket-types/{typeId}" : {
+      "put" : {
+        "tags" : [
+          "ticket-type-controller"
+        ],
+        "operationId" : "update_2",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "typeId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpsertTicketTypeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TicketTypeResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [
+          "ticket-type-controller"
+        ],
+        "operationId" : "delete",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "typeId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    },
     "/api/v1/branding" : {
       "get" : {
         "tags" : [
@@ -300,7 +381,7 @@
         "tags" : [
           "branding-controller"
         ],
-        "operationId" : "update_2",
+        "operationId" : "update_3",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -954,6 +1035,79 @@
         }
       }
     },
+    "/api/v1/events/{eventId}/ticket-types" : {
+      "get" : {
+        "tags" : [
+          "ticket-type-controller"
+        ],
+        "operationId" : "list_2",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/TicketTypeResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "ticket-type-controller"
+        ],
+        "operationId" : "create_3",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpsertTicketTypeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TicketTypeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/events/{eventId}/payments" : {
       "post" : {
         "tags" : [
@@ -1383,7 +1537,7 @@
         "tags" : [
           "booking-controller"
         ],
-        "operationId" : "create_3",
+        "operationId" : "create_4",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1867,7 +2021,7 @@
         "tags" : [
           "admin-trial-controller"
         ],
-        "operationId" : "list_2",
+        "operationId" : "list_3",
         "parameters" : [
           {
             "name" : "status",
@@ -2356,7 +2510,7 @@
         "tags" : [
           "admin-agreement-controller"
         ],
-        "operationId" : "list_3",
+        "operationId" : "list_4",
         "parameters" : [
           {
             "name" : "status",
@@ -2424,7 +2578,7 @@
         "tags" : [
           "admin-agreement-controller"
         ],
-        "operationId" : "create_4",
+        "operationId" : "create_5",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2524,6 +2678,56 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/AgreementView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/guests/{guestId}/ticket-type" : {
+      "patch" : {
+        "tags" : [
+          "guest-controller"
+        ],
+        "operationId" : "setTicketType",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "guestId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetGuestTicketTypeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GuestResponse"
                 }
               }
             }
@@ -2747,7 +2951,7 @@
         "tags" : [
           "guest-controller"
         ],
-        "operationId" : "list_4",
+        "operationId" : "list_5",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3361,7 +3565,7 @@
         "tags" : [
           "invoice-controller"
         ],
-        "operationId" : "list_5",
+        "operationId" : "list_6",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -3520,7 +3724,7 @@
         "tags" : [
           "admin-tenant-controller"
         ],
-        "operationId" : "list_6",
+        "operationId" : "list_7",
         "parameters" : [
           {
             "name" : "query",
@@ -3570,7 +3774,7 @@
         "tags" : [
           "admin-prospect-lead-controller"
         ],
-        "operationId" : "list_7",
+        "operationId" : "list_8",
         "parameters" : [
           {
             "name" : "status",
@@ -3603,7 +3807,7 @@
         "tags" : [
           "admin-payment-controller"
         ],
-        "operationId" : "list_8",
+        "operationId" : "list_9",
         "parameters" : [
           {
             "name" : "status",
@@ -3673,7 +3877,7 @@
         "tags" : [
           "admin-booking-controller"
         ],
-        "operationId" : "list_9",
+        "operationId" : "list_10",
         "parameters" : [
           {
             "name" : "status",
@@ -3726,7 +3930,7 @@
         "tags" : [
           "admin-booking-payment-controller"
         ],
-        "operationId" : "list_10",
+        "operationId" : "list_11",
         "parameters" : [
           {
             "name" : "status",
@@ -3799,7 +4003,7 @@
         "tags" : [
           "admin-audit-controller"
         ],
-        "operationId" : "list_11",
+        "operationId" : "list_12",
         "parameters" : [
           {
             "name" : "action",
@@ -4458,6 +4662,64 @@
         "required" : [
           "mode"
         ]
+      },
+      "UpsertTicketTypeRequest" : {
+        "type" : "object",
+        "properties" : {
+          "label" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "maxCapacity" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "colorHex" : {
+            "type" : "string",
+            "pattern" : "^#[0-9a-fA-F]{6}$"
+          },
+          "position" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [
+          "label"
+        ]
+      },
+      "TicketTypeResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "colorHex" : {
+            "type" : "string"
+          },
+          "maxCapacity" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "confirmedCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "position" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
       },
       "UpdateBrandingRequest" : {
         "type" : "object",
@@ -5143,6 +5405,18 @@
             "format" : "date-time"
           },
           "checkedInBy" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "ticketTypeLabel" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "ticketTypeColor" : {
             "type" : [
               "string",
               "null"
@@ -6271,11 +6545,15 @@
           "reason"
         ]
       },
-      "SetGuestExclusionRequest" : {
+      "SetGuestTicketTypeRequest" : {
         "type" : "object",
         "properties" : {
-          "excluded" : {
-            "type" : "boolean"
+          "ticketTypeId" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "uuid"
           }
         }
       },
@@ -6313,6 +6591,21 @@
               "null"
             ],
             "format" : "date-time"
+          },
+          "ticketTypeId" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "uuid"
+          }
+        }
+      },
+      "SetGuestExclusionRequest" : {
+        "type" : "object",
+        "properties" : {
+          "excluded" : {
+            "type" : "boolean"
           }
         }
       },
@@ -6585,6 +6878,18 @@
               "string",
               "null"
             ]
+          },
+          "ticketTypeLabel" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "ticketTypeColor" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         }
       },
@@ -6750,6 +7055,18 @@
             "format" : "date-time"
           },
           "checkedInBy" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "ticketTypeLabel" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "ticketTypeColor" : {
             "type" : [
               "string",
               "null"

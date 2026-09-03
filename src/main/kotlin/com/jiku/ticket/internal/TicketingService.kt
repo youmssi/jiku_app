@@ -19,6 +19,7 @@ class TicketingService(
     override fun issueTicket(
         eventId: UUID,
         guestId: UUID,
+        ticketTypeId: UUID?,
     ): TicketInfo {
         val existing = tickets.findByGuestId(guestId)
         if (existing != null) {
@@ -28,7 +29,9 @@ class TicketingService(
             }
             return existing.toInfo()
         }
-        val ticket = Ticket(eventId = eventId, guestId = guestId, ticketCode = codeGenerator.generate())
+        val ticket =
+            Ticket(eventId = eventId, guestId = guestId, ticketCode = codeGenerator.generate())
+                .apply { this.ticketTypeId = ticketTypeId }
         tickets.save(ticket)
         return ticket.toInfo()
     }
@@ -153,4 +156,5 @@ private fun Ticket.toInfo(): TicketInfo =
         issuedAt = issuedAt,
         checkedInAt = checkedInAt,
         checkedInBy = checkedInBy,
+        ticketTypeId = ticketTypeId,
     )

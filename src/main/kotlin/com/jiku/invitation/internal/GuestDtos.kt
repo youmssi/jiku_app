@@ -28,8 +28,17 @@ data class GuestResponse(
      * qui décide si une attestation de présence peut être délivrée.
      */
     val checkedInAt: Instant? = null,
+    /** Catégorie d'accès de l'invité, si l'événement en définit (JIKU-93). */
+    val ticketTypeId: UUID? = null,
 )
 
 data class SetGuestExclusionRequest(
     val excluded: Boolean,
+)
+
+/**
+ * Rattache un invité à une catégorie d'accès, ou l'en détache (`null`). JIKU-93.
+ */
+data class SetGuestTicketTypeRequest(
+    val ticketTypeId: UUID?,
 )

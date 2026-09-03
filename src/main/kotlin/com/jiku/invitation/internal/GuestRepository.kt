@@ -60,4 +60,6 @@ interface GuestRepository : JpaRepository<Guest, UUID> {
         @Param("eventId") eventId: UUID,
         @Param("pattern") pattern: String,
     ): List<Guest>
+
+    fun countByTicketTypeId(ticketTypeId: java.util.UUID): Long
 }
