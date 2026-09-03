@@ -93,8 +93,10 @@ class CheckInService(
         if (eventCancelled(eventId)) {
             throw ResponseStatusException(HttpStatus.GONE, "This event has been cancelled")
         }
+        val typesById = events.ticketTypes(eventId).associateBy { it.id }
         return invitation.searchGuests(eventId, query).map { guest ->
             val ticket = ticketing.findByGuest(guest.id)
+            val type = ticket?.ticketTypeId?.let { typesById[it] }
             GuestMatch(
                 guestId = guest.id,
                 name = guest.fullName(),
@@ -105,6 +107,8 @@ class CheckInService(
                 ticketStatus = ticket?.status,
                 checkedInAt = ticket?.checkedInAt,
                 checkedInBy = ticket?.checkedInBy,
+                ticketTypeLabel = type?.label,
+                ticketTypeColor = type?.colorHex,
             )
         }
     }
@@ -117,8 +121,10 @@ class CheckInService(
     /** Full guest/ticket roster for an event, for a validator to cache offline. */
     fun roster(eventId: UUID): List<RosterEntry> {
         val ticketsByGuest = ticketing.findTicketsByEvent(eventId).associateBy { it.guestId }
+        val typesById = events.ticketTypes(eventId).associateBy { it.id }
         return invitation.listGuests(eventId).map { guest ->
             val ticket = ticketsByGuest[guest.id]
+            val type = ticket?.ticketTypeId?.let { typesById[it] }
             RosterEntry(
                 guestId = guest.id,
                 name = guest.fullName(),
@@ -129,6 +135,8 @@ class CheckInService(
                 ticketStatus = ticket?.status,
                 checkedInAt = ticket?.checkedInAt,
                 checkedInBy = ticket?.checkedInBy,
+                ticketTypeLabel = type?.label,
+                ticketTypeColor = type?.colorHex,
             )
         }
     }
@@ -170,12 +178,21 @@ class CheckInService(
             result.ticket?.let { recordQuorumIfReached(it.eventId) }
         }
         val guestName = result.ticket?.let { invitation.findGuest(it.guestId)?.fullName() }
+        // La catégorie vient du billet, pas de l'invité : si l'organisateur a
+        // reclassé quelqu'un après émission, le portier doit voir ce que porte
+        // le billet présenté.
+        val type =
+            result.ticket?.ticketTypeId?.let { typeId ->
+                events.ticketTypes(result.ticket.eventId).firstOrNull { it.id == typeId }
+            }
         return CheckInResponse(
             outcome = result.outcome.name,
             guestName = guestName,
             ticketCode = result.ticket?.ticketCode,
             checkedInAt = result.checkedInAt,
             checkedInBy = result.checkedInBy,
+            ticketTypeLabel = type?.label,
+            ticketTypeColor = type?.colorHex,
         )
     }
 

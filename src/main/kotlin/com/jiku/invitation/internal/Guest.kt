@@ -46,6 +46,10 @@ class Guest(
     @Column(name = "erased_at")
     var erasedAt: Instant? = null
 
+    /** Catégorie d'accès, si l'événement en définit (JIKU-93). */
+    @Column(name = "ticket_type_id")
+    var ticketTypeId: UUID? = null
+
     /** True when the organizer has opted this guest out of future invitation sends. */
     @Column(name = "excluded_from_invitations", nullable = false)
     var excludedFromInvitations: Boolean = false

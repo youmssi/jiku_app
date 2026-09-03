@@ -47,3 +47,15 @@ data class QuorumInfo(
     val reached: Boolean,
     val reachedAt: java.time.Instant?,
 )
+
+/**
+ * Une catégorie d'accès (JIKU-93), partagée au-delà du module : le portier doit
+ * l'afficher, le tableau de bord doit la ventiler.
+ */
+data class TicketTypeInfo(
+    val id: java.util.UUID,
+    val label: String,
+    val colorHex: String,
+    val maxCapacity: Int?,
+    val confirmedCount: Int,
+)

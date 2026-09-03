@@ -40,12 +40,14 @@ class RsvpService(
         requireNotCancelled(eventId)
         val guest = loadGuest(guestId)
         if (guest.rsvpStatus != RsvpStatus.CONFIRMED) {
-            if (!events.reserveAttendanceSlot(eventId)) {
+            // La catégorie de l'invité, s'il en a une : les deux plafonds sont
+            // alors vérifiés ensemble (JIKU-93).
+            if (!events.reserveAttendanceSlot(eventId, guest.ticketTypeId)) {
                 throw ResponseStatusException(HttpStatus.CONFLICT, "This event is full")
             }
             guest.rsvpStatus = RsvpStatus.CONFIRMED
             guests.save(guest)
-            ticketing.issueTicket(eventId, guestId)
+            ticketing.issueTicket(eventId, guestId, guest.ticketTypeId)
         }
         return buildView(guest)
     }
@@ -58,7 +60,7 @@ class RsvpService(
         requireNotCancelled(eventId)
         val guest = loadGuest(guestId)
         if (guest.rsvpStatus == RsvpStatus.CONFIRMED) {
-            events.releaseAttendanceSlot(eventId)
+            events.releaseAttendanceSlot(eventId, guest.ticketTypeId)
             ticketing.cancelByGuest(guestId)
         }
         guest.rsvpStatus = RsvpStatus.DECLINED

@@ -27,6 +27,46 @@ interface EventModuleApi {
      */
     fun reserveAttendanceSlot(eventId: UUID): Boolean
 
+    /**
+     * Réserve une place en respectant **à la fois** la capacité de l'événement et
+     * celle de la catégorie d'accès (JIKU-93), dans une seule transaction.
+     *
+     * Si la catégorie est pleine alors que l'événement ne l'est pas, rien n'est
+     * consommé : une place globale prise sans place de catégorie ferait mentir le
+     * compteur, et le portier refuserait quelqu'un que le système croit admis.
+     *
+     * [ticketTypeId] nul revient exactement à [reserveAttendanceSlot].
+     */
+    fun reserveAttendanceSlot(
+        eventId: UUID,
+        ticketTypeId: UUID?,
+    ): Boolean
+
+    /** Libère une place, et celle de la catégorie si le billet en portait une. */
+    fun releaseAttendanceSlot(
+        eventId: UUID,
+        ticketTypeId: UUID?,
+    )
+
+    /** Catégories d'accès d'un événement, vides si l'organisateur n'en a pas défini. */
+    fun ticketTypes(eventId: UUID): List<TicketTypeInfo>
+
+    /**
+     * Déplace la place d'un invité **déjà confirmé** d'une catégorie à une autre,
+     * sans toucher au compteur global : la personne était déjà comptée dans la
+     * salle, elle l'est toujours, seule sa catégorie change.
+     *
+     * Renvoie `false` si la catégorie d'arrivée est pleine ; dans ce cas rien n'a
+     * bougé et l'invité reste dans sa catégorie d'origine.
+     *
+     * `from` ou `to` à `null` couvre l'entrée dans une catégorie depuis « aucune »
+     * et la sortie vers « aucune ».
+     */
+    fun moveTicketTypeSlot(
+        from: UUID?,
+        to: UUID?,
+    ): Boolean
+
     /** Releases a previously reserved attendance slot (e.g. a guest who declines). */
     fun releaseAttendanceSlot(eventId: UUID)
 

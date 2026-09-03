@@ -29,6 +29,13 @@ data class CheckInResponse(
     val ticketCode: String?,
     val checkedInAt: Instant?,
     val checkedInBy: String?,
+    /**
+     * Catégorie d'accès du billet (JIKU-93), null si l'événement n'en définit
+     * pas. Le portier la lit à deux mètres : c'est elle qui décide si la
+     * personne entre en salle, au carré VIP ou sur scène.
+     */
+    val ticketTypeLabel: String? = null,
+    val ticketTypeColor: String? = null,
 )
 
 /** A guest matched by the manual search path, enriched with ticket state. */
@@ -42,6 +49,9 @@ data class GuestMatch(
     val ticketStatus: String?,
     val checkedInAt: Instant?,
     val checkedInBy: String?,
+    /** Catégorie d'accès du billet (JIKU-93), si l'événement en définit. */
+    val ticketTypeLabel: String? = null,
+    val ticketTypeColor: String? = null,
 )
 
 /** Real-time attendance counters for the event being checked in. */
@@ -65,6 +75,13 @@ data class RosterEntry(
     val ticketStatus: String?,
     val checkedInAt: Instant?,
     val checkedInBy: String?,
+    /**
+     * Catégorie d'accès (JIKU-93). Portée par le roster parce que c'est hors ligne
+     * que le portier en a le plus besoin : sans réseau, l'appareil ne peut la lire
+     * nulle part ailleurs.
+     */
+    val ticketTypeLabel: String? = null,
+    val ticketTypeColor: String? = null,
 )
 
 /** A batch of check-ins captured offline, each stamped with its on-device scan time. */

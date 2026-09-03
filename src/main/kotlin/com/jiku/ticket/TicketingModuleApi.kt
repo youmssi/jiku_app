@@ -13,6 +13,7 @@ interface TicketingModuleApi {
     fun issueTicket(
         eventId: UUID,
         guestId: UUID,
+        ticketTypeId: UUID? = null,
     ): TicketInfo
 
     fun cancelByGuest(guestId: UUID)
@@ -72,6 +73,8 @@ data class TicketInfo(
     val issuedAt: Instant,
     val checkedInAt: Instant? = null,
     val checkedInBy: String? = null,
+    /** Catégorie d'accès figée à l'émission (JIKU-93). */
+    val ticketTypeId: UUID? = null,
 ) {
     companion object {
         /** [status] of a ticket already used at the entrance, shared so consumers avoid magic strings. */
