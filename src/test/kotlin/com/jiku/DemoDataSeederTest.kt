@@ -3,7 +3,7 @@ package com.jiku
 import com.jiku.invitation.internal.InvitationStatus
 import com.jiku.invitation.internal.RsvpStatus
 import com.jiku.shared.TenantContext
-import com.jiku.ticketing.internal.TicketStatus
+import com.jiku.ticket.internal.TicketStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -21,7 +21,7 @@ class DemoDataSeederTest {
     lateinit var seeder: DemoDataSeeder
 
     @Autowired
-    lateinit var events: com.jiku.event.internal.EventRepository
+    lateinit var events: com.jiku.catalog.internal.EventRepository
 
     @Autowired
     lateinit var guests: com.jiku.invitation.internal.GuestRepository
@@ -30,7 +30,7 @@ class DemoDataSeederTest {
     lateinit var invitations: com.jiku.invitation.internal.InvitationRepository
 
     @Autowired
-    lateinit var tickets: com.jiku.ticketing.internal.TicketRepository
+    lateinit var tickets: com.jiku.ticket.internal.TicketRepository
 
     @Test
     fun `seeds a complete demo tenant and is idempotent`() {

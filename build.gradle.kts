@@ -43,6 +43,13 @@ dependencies {
     // no resource-server starter, so nothing is auto-configured.
     implementation("org.springframework.security:spring-security-oauth2-jose")
     implementation("org.apache.commons:commons-csv:1.14.1")
+    // Error tracking (JIKU-70). Core SDK only — the Spring Boot starter is
+    // deliberately avoided so nothing is auto-configured and the reporting path
+    // stays behind the ErrorTracker port.
+    implementation("io.sentry:sentry:8.16.0")
+    // Invoice documents (JIKU-69). A buyer's accounts department cannot process
+    // the plain-text receipt the platform issued before this.
+    implementation("com.github.librepdf:openpdf:2.2.2")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
     runtimeOnly("org.postgresql:postgresql")
@@ -116,6 +123,38 @@ tasks.withType<Test> {
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
         showStandardStreams = true
     }
+}
+
+// Rewrites openapi/openapi.json from the running controllers (JIKU-72). The same
+// test that verifies the contract produces it, so the two can never disagree about
+// formatting. Needs Docker, like any Testcontainers-backed test.
+//
+//   ./gradlew regenerateOpenApi
+//
+// Then commit openapi/openapi.json and regenerate the frontend types from it
+// (see web/openapi/README.md).
+tasks.register<Test>("regenerateOpenApi") {
+    group = "documentation"
+    description = "Regenerates the committed OpenAPI contract from the controllers."
+    // Le plugin jvm-test-suite accroche TOUTE tâche de type Test au cycle `check`,
+    // donc `./gradlew build` exécutait cette régénération avant la vérification :
+    // le contrat était réécrit puis comparé à lui-même, et le garde-fou ne pouvait
+    // jamais échouer. Ce garde ne laisse la tâche agir que si elle est demandée
+    // explicitement en ligne de commande, quel que soit ce qui la câble ailleurs.
+    onlyIf {
+        gradle.startParameter.taskNames.any { it.substringAfterLast(':') == "regenerateOpenApi" }
+    }
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform()
+    filter { includeTestsMatching("com.jiku.OpenApiContractTest") }
+    systemProperty("jiku.openapi.regenerate", "true")
+    systemProperty("jiku.mail.transport", "log")
+    systemProperty("jiku.whatsapp.transport", "log")
+    maxHeapSize = "2g"
+    // The point of the task is to rewrite a file, so it must never be considered
+    // up to date on an unchanged input.
+    outputs.upToDateWhen { false }
 }
 
 // Seeds the demo tenant (see DemoDataSeeder) against whatever database the

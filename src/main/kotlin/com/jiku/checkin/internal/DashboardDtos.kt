@@ -16,6 +16,8 @@ data class DashboardResponse(
     val pending: Long,
     val checkedIn: Long,
     val entrances: List<EntranceCount>,
+    /** Présent uniquement si l'organisateur a configuré un quorum (JIKU-94). */
+    val quorum: QuorumView? = null,
     val deliverability: DeliverabilityFlag,
     val usage: UsageSummary,
 )
@@ -54,4 +56,18 @@ data class DeliverabilityFlag(
 data class EntranceCount(
     val label: String,
     val checkedIn: Long,
+)
+
+/**
+ * État du quorum tel que le tableau de bord le montre (JIKU-94).
+ *
+ * [reached] est l'état à l'instant présent ; [reachedAt] est la première
+ * atteinte, conservée même si des départs font retomber le compte. Les deux sont
+ * vraies, et l'écran doit montrer les deux.
+ */
+data class QuorumView(
+    val required: Long,
+    val current: Long,
+    val reached: Boolean,
+    val reachedAt: java.time.Instant?,
 )

@@ -1,0 +1,70 @@
+name: Post-deploy verification
+
+# Render redéploie tout seul à chaque fusion sur `main` — le déclenchement
+# automatique existe déjà et n'a pas besoin d'être reconstruit ici. Ce qui
+# manquait (JIKU-80), c'est que **rien ne vérifiait que le déploiement avait
+# abouti**. Une fusion pouvait partir en production, échouer au démarrage, et
+# personne ne l'apprenait avant le premier organisateur qui appelait.
+#
+# Ce workflow attend que l'hôte ait redéployé, puis interroge le service. Il ne
+# déploie rien et ne peut rien casser : il constate, et il échoue bruyamment.
+on:
+  push:
+    branches: [main]
+  # Rejouable à la main après une bascule de base ou un incident.
+  workflow_dispatch:
+
+concurrency:
+  group: post-deploy
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify the deployed service answers
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      # Render reconstruit l'image avant de basculer. Interroger trop tôt
+      # mesurerait la version précédente et déclarerait vert un déploiement qui
+      # n'a pas encore eu lieu.
+      - name: Wait for the host to pick up the merge
+        run: sleep 90
+
+      # L'instance gratuite Render s'endort : la première requête après une
+      # période creuse peut prendre des dizaines de secondes ou renvoyer 503.
+      # Une seule tentative confondrait « endormi » et « cassé ».
+      - name: Poll the health endpoint until it answers
+        env:
+          API_URL: ${{ vars.PRODUCTION_API_URL || 'https://jiku-app.onrender.com' }}
+        run: |
+          for attempt in $(seq 1 30); do
+            body=$(curl -sf --max-time 30 "$API_URL/api/v1/health" || true)
+            if [ -n "$body" ]; then
+              echo "$body"
+              echo "$body" | grep -q '"status":"UP"' && exit 0
+              echo "Le service répond mais ne se déclare pas UP." >&2
+              exit 1
+            fi
+            echo "Tentative $attempt : pas de réponse, nouvelle tentative dans 20 s"
+            sleep 20
+          done
+          echo "::error::Le service n'a pas répondu après 10 minutes. La version précédente reste en service — vérifiez les logs de déploiement Render." >&2
+          exit 1
+
+      # `/api/v1/health` prouve que le processus tourne. Il ne prouve pas que la
+      # base est jointe : une migration ratée laisse une application debout et
+      # inutilisable. La sonde readiness d'Actuator, elle, agrège l'état de la
+      # source de données (`management.health.db.enabled: true`) et bascule en
+      # DOWN — donc 503 — dès que la base est hors d'atteinte.
+      - name: Verify the database is actually reachable
+        env:
+          API_URL: ${{ vars.PRODUCTION_API_URL || 'https://jiku-app.onrender.com' }}
+        run: |
+          body=$(curl -s --max-time 30 -w '\n%{http_code}' "$API_URL/actuator/health/readiness")
+          code=$(echo "$body" | tail -1)
+          echo "$body" | head -1
+          if [ "$code" != "200" ]; then
+            echo "::error::Readiness HTTP $code — la base n'est pas jointe. La version précédente reste en service ; consultez les logs de migration." >&2
+            exit 1
+          fi

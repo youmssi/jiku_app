@@ -1,12 +1,12 @@
 package com.jiku.invitation.internal
 
-import com.jiku.event.EventInfo
-import com.jiku.event.EventModuleApi
-import com.jiku.event.InvitationChannel
+import com.jiku.catalog.EventInfo
+import com.jiku.catalog.EventModuleApi
+import com.jiku.catalog.InvitationChannel
 import com.jiku.shared.TenantContext
 import com.jiku.tenant.TenantModuleApi
-import com.jiku.ticketing.TicketInfo
-import com.jiku.ticketing.TicketingModuleApi
+import com.jiku.ticket.TicketInfo
+import com.jiku.ticket.TicketingModuleApi
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -40,12 +40,14 @@ class RsvpService(
         requireNotCancelled(eventId)
         val guest = loadGuest(guestId)
         if (guest.rsvpStatus != RsvpStatus.CONFIRMED) {
-            if (!events.reserveAttendanceSlot(eventId)) {
+            // La catégorie de l'invité, s'il en a une : les deux plafonds sont
+            // alors vérifiés ensemble (JIKU-93).
+            if (!events.reserveAttendanceSlot(eventId, guest.ticketTypeId)) {
                 throw ResponseStatusException(HttpStatus.CONFLICT, "This event is full")
             }
             guest.rsvpStatus = RsvpStatus.CONFIRMED
             guests.save(guest)
-            ticketing.issueTicket(eventId, guestId)
+            ticketing.issueTicket(eventId, guestId, guest.ticketTypeId)
         }
         return buildView(guest)
     }
@@ -58,7 +60,7 @@ class RsvpService(
         requireNotCancelled(eventId)
         val guest = loadGuest(guestId)
         if (guest.rsvpStatus == RsvpStatus.CONFIRMED) {
-            events.releaseAttendanceSlot(eventId)
+            events.releaseAttendanceSlot(eventId, guest.ticketTypeId)
             ticketing.cancelByGuest(guestId)
         }
         guest.rsvpStatus = RsvpStatus.DECLINED

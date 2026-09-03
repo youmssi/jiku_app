@@ -1,6 +1,6 @@
 package com.jiku.invitation.internal
 
-import com.jiku.event.InvitationChannel
+import com.jiku.catalog.InvitationChannel
 import com.jiku.shared.DemoSeedContext
 import com.jiku.shared.DemoSeedContributor
 import com.jiku.shared.DemoSeedPlan

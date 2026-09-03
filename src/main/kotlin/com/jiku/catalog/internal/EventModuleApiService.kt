@@ -1,0 +1,149 @@
+package com.jiku.catalog.internal
+
+import com.jiku.catalog.EventInfo
+import com.jiku.catalog.EventModuleApi
+import com.jiku.catalog.InvitationChannel
+import com.jiku.catalog.QuorumInfo
+import com.jiku.catalog.RetentionCandidate
+import com.jiku.catalog.TicketTypeInfo
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.time.Instant
+import java.util.UUID
+
+@Service
+class EventModuleApiService(
+    private val events: EventRepository,
+    private val eventService: EventService,
+    private val ticketTypes: TicketTypeRepository,
+) : EventModuleApi {
+    @Transactional(readOnly = true)
+    override fun findEvent(eventId: UUID): EventInfo? = events.findById(eventId).map { it.toEventInfo() }.orElse(null)
+
+    @Transactional(readOnly = true)
+    override fun eventsPastRetention(cutoff: Instant): List<RetentionCandidate> =
+        events.findEventsPastRetention(cutoff).map {
+            RetentionCandidate(eventId = UUID.fromString(it[0].toString()), tenantId = it[1].toString())
+        }
+
+    @Transactional
+    override fun reserveAttendanceSlot(eventId: UUID): Boolean {
+        val event = events.findById(eventId).orElse(null) ?: return false
+        val limit =
+            event.maxCapacity?.let { capacity ->
+                capacity + if (event.settings.overbookingAllowed) (event.settings.maxOverbookingCount ?: 0) else 0
+            } ?: Int.MAX_VALUE
+        return events.reserveSlot(eventId, limit) == 1
+    }
+
+    /**
+     * Les deux plafonds sont vérifiés dans **une seule transaction**. Si la
+     * catégorie est pleine, la place globale déjà prise est rendue en annulant :
+     * consommer une place globale sans place de catégorie ferait mentir le
+     * compteur, et le portier refuserait quelqu'un que le système croit admis.
+     */
+    @Transactional
+    override fun reserveAttendanceSlot(
+        eventId: UUID,
+        ticketTypeId: UUID?,
+    ): Boolean {
+        if (ticketTypeId == null) {
+            return reserveAttendanceSlot(eventId)
+        }
+        if (!reserveAttendanceSlot(eventId)) {
+            return false
+        }
+        if (ticketTypes.reserveSlot(ticketTypeId) == 1) {
+            return true
+        }
+        // La catégorie est pleine : on rend la place globale plutôt que de la
+        // laisser consommée pour rien.
+        events.releaseSlot(eventId)
+        return false
+    }
+
+    @Transactional
+    override fun releaseAttendanceSlot(eventId: UUID) {
+        events.releaseSlot(eventId)
+    }
+
+    @Transactional
+    override fun releaseAttendanceSlot(
+        eventId: UUID,
+        ticketTypeId: UUID?,
+    ) {
+        events.releaseSlot(eventId)
+        ticketTypeId?.let { ticketTypes.releaseSlot(it) }
+    }
+
+    /**
+     * L'ordre compte : on prend d'abord la place d'arrivée, on ne rend l'ancienne
+     * qu'une fois la nouvelle acquise. L'inverse ouvrirait une fenêtre pendant
+     * laquelle la place libérée peut être prise par quelqu'un d'autre, laissant
+     * l'invité déplacé sans catégorie ni moyen de revenir dans la sienne.
+     */
+    @Transactional
+    override fun moveTicketTypeSlot(
+        from: UUID?,
+        to: UUID?,
+    ): Boolean {
+        if (from == to) return true
+        if (to != null && ticketTypes.reserveSlot(to) != 1) return false
+        from?.let { ticketTypes.releaseSlot(it) }
+        return true
+    }
+
+    @Transactional(readOnly = true)
+    override fun ticketTypes(eventId: UUID): List<TicketTypeInfo> =
+        ticketTypes.findByEventIdOrderByPositionAsc(eventId).map {
+            TicketTypeInfo(
+                id = requireNotNull(it.id),
+                label = it.label,
+                colorHex = it.colorHex,
+                maxCapacity = it.maxCapacity,
+                confirmedCount = it.confirmedCount,
+            )
+        }
+
+    @Transactional(readOnly = true)
+    override fun quorum(
+        eventId: UUID,
+        totalGuests: Long,
+        checkedIn: Long,
+    ): QuorumInfo? {
+        val event = events.findById(eventId).orElse(null) ?: return null
+        val quorum = event.quorum ?: return null
+        if (!quorum.isConfigured()) {
+            return null
+        }
+        val required = quorum.requiredFor(totalGuests) ?: return null
+        return QuorumInfo(
+            required = required,
+            current = checkedIn,
+            reached = checkedIn >= required,
+            reachedAt = quorum.reachedAt,
+        )
+    }
+
+    @Transactional
+    override fun markQuorumReached(eventId: UUID) {
+        events.markQuorumReached(eventId, Instant.now())
+    }
+
+    @Transactional
+    override fun createDraftEvent(
+        name: String,
+        timezone: String,
+        startDateTime: Instant?,
+        invitationChannels: Set<InvitationChannel>,
+    ): UUID =
+        eventService
+            .create(
+                CreateEventRequest(
+                    name = name,
+                    timezone = timezone,
+                    startDateTime = startDateTime,
+                    invitationChannels = invitationChannels,
+                ),
+            ).id
+}

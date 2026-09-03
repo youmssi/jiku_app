@@ -2,10 +2,10 @@ package com.jiku.booking
 
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
-import com.jiku.admin.internal.PlatformAdmin
-import com.jiku.admin.internal.PlatformAdminRepository
-import com.jiku.billing.internal.UsageRecordRepository
-import com.jiku.event.internal.EventRepository
+import com.jiku.backoffice.internal.PlatformAdmin
+import com.jiku.backoffice.internal.PlatformAdminRepository
+import com.jiku.catalog.internal.EventRepository
+import com.jiku.money.internal.UsageRecordRepository
 import com.jiku.shared.TenantContext
 import com.jiku.tenant.internal.OrganizerUserRepository
 import org.junit.jupiter.api.Test

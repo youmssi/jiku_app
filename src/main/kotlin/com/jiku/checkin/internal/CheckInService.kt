@@ -1,14 +1,14 @@
 package com.jiku.checkin.internal
 
-import com.jiku.event.EventInfo
-import com.jiku.event.EventModuleApi
+import com.jiku.catalog.EventInfo
+import com.jiku.catalog.EventModuleApi
 import com.jiku.invitation.GuestInfo
 import com.jiku.invitation.InvitationModuleApi
 import com.jiku.shared.TenantContext
 import com.jiku.tenant.TenantModuleApi
-import com.jiku.ticketing.CheckInOutcome
-import com.jiku.ticketing.CheckInResult
-import com.jiku.ticketing.TicketingModuleApi
+import com.jiku.ticket.CheckInOutcome
+import com.jiku.ticket.CheckInResult
+import com.jiku.ticket.TicketingModuleApi
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -28,6 +28,8 @@ class CheckInService(
     private val events: EventModuleApi,
     private val tenants: TenantModuleApi,
 ) {
+    private val log = org.slf4j.LoggerFactory.getLogger(CheckInService::class.java)
+
     /**
      * Branding and live attendance context for the validator opening [validatorLabel]'s
      * link against [eventId]. The tenant is already bound by the caller.
@@ -91,8 +93,10 @@ class CheckInService(
         if (eventCancelled(eventId)) {
             throw ResponseStatusException(HttpStatus.GONE, "This event has been cancelled")
         }
+        val typesById = events.ticketTypes(eventId).associateBy { it.id }
         return invitation.searchGuests(eventId, query).map { guest ->
             val ticket = ticketing.findByGuest(guest.id)
+            val type = ticket?.ticketTypeId?.let { typesById[it] }
             GuestMatch(
                 guestId = guest.id,
                 name = guest.fullName(),
@@ -103,6 +107,8 @@ class CheckInService(
                 ticketStatus = ticket?.status,
                 checkedInAt = ticket?.checkedInAt,
                 checkedInBy = ticket?.checkedInBy,
+                ticketTypeLabel = type?.label,
+                ticketTypeColor = type?.colorHex,
             )
         }
     }
@@ -115,8 +121,10 @@ class CheckInService(
     /** Full guest/ticket roster for an event, for a validator to cache offline. */
     fun roster(eventId: UUID): List<RosterEntry> {
         val ticketsByGuest = ticketing.findTicketsByEvent(eventId).associateBy { it.guestId }
+        val typesById = events.ticketTypes(eventId).associateBy { it.id }
         return invitation.listGuests(eventId).map { guest ->
             val ticket = ticketsByGuest[guest.id]
+            val type = ticket?.ticketTypeId?.let { typesById[it] }
             RosterEntry(
                 guestId = guest.id,
                 name = guest.fullName(),
@@ -127,6 +135,8 @@ class CheckInService(
                 ticketStatus = ticket?.status,
                 checkedInAt = ticket?.checkedInAt,
                 checkedInBy = ticket?.checkedInBy,
+                ticketTypeLabel = type?.label,
+                ticketTypeColor = type?.colorHex,
             )
         }
     }
@@ -164,14 +174,50 @@ class CheckInService(
     }
 
     private fun respond(result: CheckInResult): CheckInResponse {
+        if (result.outcome == CheckInOutcome.CHECKED_IN) {
+            result.ticket?.let { recordQuorumIfReached(it.eventId) }
+        }
         val guestName = result.ticket?.let { invitation.findGuest(it.guestId)?.fullName() }
+        // La catégorie vient du billet, pas de l'invité : si l'organisateur a
+        // reclassé quelqu'un après émission, le portier doit voir ce que porte
+        // le billet présenté.
+        val type =
+            result.ticket?.ticketTypeId?.let { typeId ->
+                events.ticketTypes(result.ticket.eventId).firstOrNull { it.id == typeId }
+            }
         return CheckInResponse(
             outcome = result.outcome.name,
             guestName = guestName,
             ticketCode = result.ticket?.ticketCode,
             checkedInAt = result.checkedInAt,
             checkedInBy = result.checkedInBy,
+            ticketTypeLabel = type?.label,
+            ticketTypeColor = type?.colorHex,
         )
+    }
+
+    /**
+     * Horodate l'atteinte du quorum si cette entrée vient de la franchir
+     * (JIKU-94). L'écriture est conditionnelle en base — `WHERE reached_at IS
+     * NULL` — donc deux portiers qui scannent simultanément au franchissement
+     * n'enregistrent qu'une seule date, et les arrivées suivantes ne la
+     * réécrivent jamais.
+     *
+     * Un échec ici ne doit jamais faire échouer une entrée : le portier a scanné,
+     * la personne est admise. Le quorum est une lecture de cet état, pas une
+     * condition de son enregistrement.
+     */
+    private fun recordQuorumIfReached(eventId: UUID) {
+        try {
+            val guests = invitation.guestStats(eventId)
+            val stats = ticketing.attendanceStats(eventId)
+            val quorum = events.quorum(eventId, guests.total, stats.checkedIn) ?: return
+            if (quorum.reached && quorum.reachedAt == null) {
+                events.markQuorumReached(eventId)
+            }
+        } catch (ex: Exception) {
+            log.warn("Impossible d'horodater le quorum pour l'événement {}", eventId, ex)
+        }
     }
 
     private fun notFound() = CheckInResponse(CheckInOutcome.NOT_FOUND.name, null, null, null, null)

@@ -1,0 +1,7575 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "title" : "Jikū API",
+    "description" : "Event invitation, ticketing, RSVP and check-in API.",
+    "version" : "v1"
+  },
+  "servers" : [
+    {
+      "url" : "http://localhost",
+      "description" : "Generated server url"
+    }
+  ],
+  "security" : [
+    {
+      "bearer-jwt" : [ ]
+    }
+  ],
+  "paths" : {
+    "/api/v1/settings/providers/whatsapp" : {
+      "put" : {
+        "tags" : [
+          "provider-settings-controller"
+        ],
+        "operationId" : "updateWhatsApp",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateWhatsAppProviderRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/settings/providers/email" : {
+      "put" : {
+        "tags" : [
+          "provider-settings-controller"
+        ],
+        "operationId" : "updateEmail",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateEmailProviderRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/members/{userId}/role" : {
+      "put" : {
+        "tags" : [
+          "member-controller"
+        ],
+        "operationId" : "changeRole",
+        "parameters" : [
+          {
+            "name" : "userId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ChangeRoleRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MemberView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/legal-identity" : {
+      "get" : {
+        "tags" : [
+          "legal-identity-controller"
+        ],
+        "operationId" : "get",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegalIdentityResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [
+          "legal-identity-controller"
+        ],
+        "operationId" : "update",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateLegalIdentityRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegalIdentityResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{id}" : {
+      "get" : {
+        "tags" : [
+          "event-controller"
+        ],
+        "operationId" : "get_1",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EventResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [
+          "event-controller"
+        ],
+        "operationId" : "update_1",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateEventRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EventResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{id}/quorum" : {
+      "put" : {
+        "tags" : [
+          "event-controller"
+        ],
+        "operationId" : "setQuorum",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateQuorumRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/QuorumResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/ticket-types/{typeId}" : {
+      "put" : {
+        "tags" : [
+          "ticket-type-controller"
+        ],
+        "operationId" : "update_2",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "typeId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpsertTicketTypeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TicketTypeResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [
+          "ticket-type-controller"
+        ],
+        "operationId" : "delete",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "typeId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/branding" : {
+      "get" : {
+        "tags" : [
+          "branding-controller"
+        ],
+        "operationId" : "get_2",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BrandingResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [
+          "branding-controller"
+        ],
+        "operationId" : "update_3",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateBrandingRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BrandingResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/whatsapp/pricing/{category}" : {
+      "put" : {
+        "tags" : [
+          "admin-whats-app-controller"
+        ],
+        "operationId" : "updatePricing",
+        "parameters" : [
+          {
+            "name" : "category",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdatePricingRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WhatsAppPricingInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/settings/providers/{channel}/test" : {
+      "post" : {
+        "tags" : [
+          "provider-settings-controller"
+        ],
+        "operationId" : "testSend",
+        "parameters" : [
+          {
+            "name" : "channel",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TestSendRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TestSendResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rsvp/{token}/transfer" : {
+      "post" : {
+        "tags" : [
+          "rsvp-controller"
+        ],
+        "operationId" : "transfer",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TransferTicketRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RsvpView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rsvp/{token}/erase" : {
+      "post" : {
+        "tags" : [
+          "rsvp-controller"
+        ],
+        "operationId" : "erase",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RsvpView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rsvp/{token}/decline" : {
+      "post" : {
+        "tags" : [
+          "rsvp-controller"
+        ],
+        "operationId" : "decline",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RsvpView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rsvp/{token}/confirm" : {
+      "post" : {
+        "tags" : [
+          "rsvp-controller"
+        ],
+        "operationId" : "confirm",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RsvpView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/prospects" : {
+      "post" : {
+        "tags" : [
+          "prospect-lead-controller"
+        ],
+        "operationId" : "register",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ProspectLeadRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProspectLeadAck"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs" : {
+      "post" : {
+        "tags" : [
+          "org-controller"
+        ],
+        "operationId" : "create",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateOrgRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/email-feedback" : {
+      "post" : {
+        "tags" : [
+          "email-feedback-controller"
+        ],
+        "operationId" : "receive",
+        "parameters" : [
+          {
+            "name" : "X-Webhook-Secret",
+            "in" : "header",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/EmailFeedbackWebhookRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "202" : {
+            "description" : "Accepted"
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/email-feedback/resend" : {
+      "post" : {
+        "tags" : [
+          "resend-email-feedback-controller"
+        ],
+        "operationId" : "receive_1",
+        "parameters" : [
+          {
+            "name" : "svix-id",
+            "in" : "header",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "svix-timestamp",
+            "in" : "header",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "svix-signature",
+            "in" : "header",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "202" : {
+            "description" : "Accepted"
+          }
+        }
+      }
+    },
+    "/api/v1/members/invitations" : {
+      "get" : {
+        "tags" : [
+          "member-controller"
+        ],
+        "operationId" : "invitations",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/InvitationView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "member-controller"
+        ],
+        "operationId" : "invite",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InviteMemberRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InvitationView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events" : {
+      "get" : {
+        "tags" : [
+          "event-controller"
+        ],
+        "operationId" : "list",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/EventResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "event-controller"
+        ],
+        "operationId" : "create_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateEventRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EventResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{id}/publish" : {
+      "post" : {
+        "tags" : [
+          "event-controller"
+        ],
+        "operationId" : "publish",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EventResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{id}/cancel" : {
+      "post" : {
+        "tags" : [
+          "event-controller"
+        ],
+        "operationId" : "cancel",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EventResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/validators" : {
+      "get" : {
+        "tags" : [
+          "validator-controller"
+        ],
+        "operationId" : "list_1",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ValidatorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "validator-controller"
+        ],
+        "operationId" : "create_2",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateValidatorRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ValidatorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/validators/{validatorId}/revoke" : {
+      "post" : {
+        "tags" : [
+          "validator-controller"
+        ],
+        "operationId" : "revoke",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "validatorId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ValidatorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/ticket-types" : {
+      "get" : {
+        "tags" : [
+          "ticket-type-controller"
+        ],
+        "operationId" : "list_2",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/TicketTypeResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "ticket-type-controller"
+        ],
+        "operationId" : "create_3",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpsertTicketTypeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TicketTypeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/payments" : {
+      "post" : {
+        "tags" : [
+          "payment-controller"
+        ],
+        "operationId" : "initiate",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InitiatePaymentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentInitiationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/payments/manual" : {
+      "get" : {
+        "tags" : [
+          "manual-payment-controller"
+        ],
+        "operationId" : "current",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ManualPaymentInstructions"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "manual-payment-controller"
+        ],
+        "operationId" : "request",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ManualPaymentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ManualPaymentInstructions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/invitations/send" : {
+      "post" : {
+        "tags" : [
+          "invitation-controller"
+        ],
+        "operationId" : "send",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "channels",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "array",
+              "default" : [
+                "EMAIL"
+              ],
+              "items" : {
+                "type" : "string",
+                "enum" : [
+                  "EMAIL",
+                  "WHATSAPP"
+                ]
+              },
+              "uniqueItems" : true
+            }
+          },
+          {
+            "name" : "onlyUnsent",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "boolean",
+              "default" : true
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SendInvitationsResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/guests/import" : {
+      "post" : {
+        "tags" : [
+          "guest-controller"
+        ],
+        "operationId" : "import",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                },
+                "required" : [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GuestImportResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/checkin/scan" : {
+      "post" : {
+        "tags" : [
+          "check-in-controller"
+        ],
+        "operationId" : "scan",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ScanRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CheckInResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/checkin/manual" : {
+      "post" : {
+        "tags" : [
+          "check-in-controller"
+        ],
+        "operationId" : "manual",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ManualCheckInRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CheckInResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/checkin/{token}/sync" : {
+      "post" : {
+        "tags" : [
+          "validator-check-in-controller"
+        ],
+        "operationId" : "sync",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/SyncResultEntry"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/checkin/{token}/scan" : {
+      "post" : {
+        "tags" : [
+          "validator-check-in-controller"
+        ],
+        "operationId" : "scan_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ScanRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CheckInResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/checkin/{token}/manual" : {
+      "post" : {
+        "tags" : [
+          "validator-check-in-controller"
+        ],
+        "operationId" : "manual_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ManualCheckInRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CheckInResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bookings" : {
+      "post" : {
+        "tags" : [
+          "booking-controller"
+        ],
+        "operationId" : "create_4",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateBookingRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BookingCreationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bookings/{id}/payment-declarations" : {
+      "post" : {
+        "tags" : [
+          "booking-controller"
+        ],
+        "operationId" : "declarePayment",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "token",
+            "in" : "query",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DeclarePaymentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentDeclarationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/payments/callback" : {
+      "post" : {
+        "tags" : [
+          "payment-callback-controller"
+        ],
+        "operationId" : "callback",
+        "parameters" : [
+          {
+            "name" : "X-Signature",
+            "in" : "header",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/billing/invoices/{invoiceId}/credit-note" : {
+      "post" : {
+        "tags" : [
+          "invoice-controller"
+        ],
+        "operationId" : "creditNote",
+        "parameters" : [
+          {
+            "name" : "invoiceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InvoiceDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/invoices/payments/{paymentId}" : {
+      "post" : {
+        "tags" : [
+          "invoice-controller"
+        ],
+        "operationId" : "issueForPayment",
+        "parameters" : [
+          {
+            "name" : "paymentId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InvoiceDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/verify-email" : {
+      "post" : {
+        "tags" : [
+          "auth-controller"
+        ],
+        "operationId" : "verifyEmail",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VerifyEmailRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/verify-email/resend" : {
+      "post" : {
+        "tags" : [
+          "auth-controller"
+        ],
+        "operationId" : "resendVerification",
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/switch-org" : {
+      "post" : {
+        "tags" : [
+          "auth-controller"
+        ],
+        "operationId" : "switchOrg",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SwitchOrgRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/reset-password" : {
+      "post" : {
+        "tags" : [
+          "auth-controller"
+        ],
+        "operationId" : "resetPassword",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register" : {
+      "post" : {
+        "tags" : [
+          "auth-controller"
+        ],
+        "operationId" : "register_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh" : {
+      "post" : {
+        "tags" : [
+          "auth-controller"
+        ],
+        "operationId" : "refresh",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RefreshRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login" : {
+      "post" : {
+        "tags" : [
+          "auth-controller"
+        ],
+        "operationId" : "login",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/invitations/accept" : {
+      "post" : {
+        "tags" : [
+          "member-invitation-accept-controller"
+        ],
+        "operationId" : "accept",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AcceptInvitationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/google" : {
+      "post" : {
+        "tags" : [
+          "auth-controller"
+        ],
+        "operationId" : "google",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/GoogleLoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/forgot-password" : {
+      "post" : {
+        "tags" : [
+          "auth-controller"
+        ],
+        "operationId" : "forgotPassword",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/whatsapp/content-override" : {
+      "get" : {
+        "tags" : [
+          "admin-whats-app-controller"
+        ],
+        "operationId" : "contentOverride",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WhatsAppOverrideStatus"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "admin-whats-app-controller"
+        ],
+        "operationId" : "setContentOverride",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetContentOverrideRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WhatsAppOverrideStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/trials" : {
+      "get" : {
+        "tags" : [
+          "admin-trial-controller"
+        ],
+        "operationId" : "list_3",
+        "parameters" : [
+          {
+            "name" : "status",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "tenantId",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "page",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "integer",
+              "format" : "int32",
+              "default" : 0
+            }
+          },
+          {
+            "name" : "size",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "integer",
+              "format" : "int32",
+              "default" : 20
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/AdminTrialView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "admin-trial-controller"
+        ],
+        "operationId" : "grant",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/GrantTrialRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminTrialView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/trials/{id}/end" : {
+      "post" : {
+        "tags" : [
+          "admin-trial-controller"
+        ],
+        "operationId" : "end",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/EndTrialRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminTrialView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/tenants/{id}/suspend" : {
+      "post" : {
+        "tags" : [
+          "admin-tenant-controller"
+        ],
+        "operationId" : "suspend",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TenantStatusChangeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TenantInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/tenants/{id}/reactivate" : {
+      "post" : {
+        "tags" : [
+          "admin-tenant-controller"
+        ],
+        "operationId" : "reactivate",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TenantStatusChangeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TenantInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/prospects/{id}/contacted" : {
+      "post" : {
+        "tags" : [
+          "admin-prospect-lead-controller"
+        ],
+        "operationId" : "markContacted",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProspectLeadView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/payments/{id}/reject" : {
+      "post" : {
+        "tags" : [
+          "admin-payment-controller"
+        ],
+        "operationId" : "reject",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RejectPaymentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminPaymentView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/payments/{id}/confirm" : {
+      "post" : {
+        "tags" : [
+          "admin-payment-controller"
+        ],
+        "operationId" : "confirm_1",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ConfirmPaymentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminPaymentView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/bookings/{id}/cancel" : {
+      "post" : {
+        "tags" : [
+          "admin-booking-controller"
+        ],
+        "operationId" : "cancel_1",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminBookingCancellationView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/booking-payments/{id}/verify" : {
+      "post" : {
+        "tags" : [
+          "admin-booking-payment-controller"
+        ],
+        "operationId" : "verify",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminPaymentDeclarationView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/booking-payments/{id}/reject" : {
+      "post" : {
+        "tags" : [
+          "admin-booking-payment-controller"
+        ],
+        "operationId" : "reject_1",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RejectDeclarationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminPaymentDeclarationView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/auth/refresh" : {
+      "post" : {
+        "tags" : [
+          "admin-auth-controller"
+        ],
+        "operationId" : "refresh_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdminRefreshRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminAuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/auth/login" : {
+      "post" : {
+        "tags" : [
+          "admin-auth-controller"
+        ],
+        "operationId" : "login_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdminLoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminAuthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/agreements" : {
+      "get" : {
+        "tags" : [
+          "admin-agreement-controller"
+        ],
+        "operationId" : "list_4",
+        "parameters" : [
+          {
+            "name" : "status",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "kind",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "tenantId",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "page",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "integer",
+              "format" : "int32",
+              "default" : 0
+            }
+          },
+          {
+            "name" : "size",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "integer",
+              "format" : "int32",
+              "default" : 20
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/AgreementView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "admin-agreement-controller"
+        ],
+        "operationId" : "create_5",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateAgreementRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AgreementView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/agreements/{id}/renew" : {
+      "post" : {
+        "tags" : [
+          "admin-agreement-controller"
+        ],
+        "operationId" : "renew",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RenewAgreementRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AgreementView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/agreements/{id}/interrupt" : {
+      "post" : {
+        "tags" : [
+          "admin-agreement-controller"
+        ],
+        "operationId" : "interrupt",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InterruptAgreementRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AgreementView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/guests/{guestId}/ticket-type" : {
+      "patch" : {
+        "tags" : [
+          "guest-controller"
+        ],
+        "operationId" : "setTicketType",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "guestId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetGuestTicketTypeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GuestResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/guests/{guestId}/exclusion" : {
+      "patch" : {
+        "tags" : [
+          "guest-controller"
+        ],
+        "operationId" : "setExclusion",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "guestId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SetGuestExclusionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GuestResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/settings/providers" : {
+      "get" : {
+        "tags" : [
+          "provider-settings-controller"
+        ],
+        "operationId" : "overview",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rsvp/{token}" : {
+      "get" : {
+        "tags" : [
+          "rsvp-controller"
+        ],
+        "operationId" : "view",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RsvpView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/members" : {
+      "get" : {
+        "tags" : [
+          "member-controller"
+        ],
+        "operationId" : "members",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/MemberView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health" : {
+      "get" : {
+        "tags" : [
+          "health-controller"
+        ],
+        "operationId" : "health",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object",
+                  "additionalProperties" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/usage" : {
+      "get" : {
+        "tags" : [
+          "billing-controller"
+        ],
+        "operationId" : "usage",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BillingAllowance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/invitations" : {
+      "get" : {
+        "tags" : [
+          "invitation-controller"
+        ],
+        "operationId" : "statuses",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/InvitationStatusResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/guests" : {
+      "get" : {
+        "tags" : [
+          "guest-controller"
+        ],
+        "operationId" : "list_5",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/GuestResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/guests/export" : {
+      "get" : {
+        "tags" : [
+          "guest-controller"
+        ],
+        "operationId" : "export",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/dashboard" : {
+      "get" : {
+        "tags" : [
+          "dashboard-controller"
+        ],
+        "operationId" : "get_3",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DashboardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/checkin/stats" : {
+      "get" : {
+        "tags" : [
+          "check-in-controller"
+        ],
+        "operationId" : "stats",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AttendanceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/checkin/search" : {
+      "get" : {
+        "tags" : [
+          "check-in-controller"
+        ],
+        "operationId" : "search",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "q",
+            "in" : "query",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/GuestMatch"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/attendance/register" : {
+      "get" : {
+        "tags" : [
+          "attendance-certificate-controller"
+        ],
+        "operationId" : "register_2",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/attendance/certificate/{guestId}" : {
+      "get" : {
+        "tags" : [
+          "attendance-certificate-controller"
+        ],
+        "operationId" : "certificate",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "guestId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/analytics" : {
+      "get" : {
+        "tags" : [
+          "analytics-controller"
+        ],
+        "operationId" : "get_4",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AnalyticsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/checkin/{token}" : {
+      "get" : {
+        "tags" : [
+          "validator-check-in-controller"
+        ],
+        "operationId" : "context",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ValidatorContextResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/checkin/{token}/stats" : {
+      "get" : {
+        "tags" : [
+          "validator-check-in-controller"
+        ],
+        "operationId" : "stats_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AttendanceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/checkin/{token}/search" : {
+      "get" : {
+        "tags" : [
+          "validator-check-in-controller"
+        ],
+        "operationId" : "search_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "q",
+            "in" : "query",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/GuestMatch"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/checkin/{token}/roster" : {
+      "get" : {
+        "tags" : [
+          "validator-check-in-controller"
+        ],
+        "operationId" : "roster",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RosterEntry"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bookings/{id}" : {
+      "get" : {
+        "tags" : [
+          "booking-controller"
+        ],
+        "operationId" : "status",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "token",
+            "in" : "query",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BookingStatusView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bookings/{id}/payee" : {
+      "get" : {
+        "tags" : [
+          "booking-controller"
+        ],
+        "operationId" : "payee",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "token",
+            "in" : "query",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BookingPayeeDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bookings/quote" : {
+      "get" : {
+        "tags" : [
+          "booking-controller"
+        ],
+        "operationId" : "quote",
+        "parameters" : [
+          {
+            "name" : "guestCountEstimate",
+            "in" : "query",
+            "required" : true,
+            "schema" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BookingQuote"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/tiers" : {
+      "get" : {
+        "tags" : [
+          "billing-tiers-controller"
+        ],
+        "operationId" : "tiers",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TierCatalog"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/tiers/custom-quote" : {
+      "get" : {
+        "tags" : [
+          "billing-tiers-controller"
+        ],
+        "operationId" : "customQuote",
+        "parameters" : [
+          {
+            "name" : "guestCount",
+            "in" : "query",
+            "required" : true,
+            "schema" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CustomQuote"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/payments" : {
+      "get" : {
+        "tags" : [
+          "billing-history-controller"
+        ],
+        "operationId" : "history",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PaymentHistoryItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/payments/{paymentId}/receipt" : {
+      "get" : {
+        "tags" : [
+          "billing-history-controller"
+        ],
+        "operationId" : "receipt",
+        "parameters" : [
+          {
+            "name" : "paymentId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/invoices" : {
+      "get" : {
+        "tags" : [
+          "invoice-controller"
+        ],
+        "operationId" : "list_6",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/InvoiceSummary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/invoices/{invoiceId}" : {
+      "get" : {
+        "tags" : [
+          "invoice-controller"
+        ],
+        "operationId" : "get_5",
+        "parameters" : [
+          {
+            "name" : "invoiceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InvoiceDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/invoices/{invoiceId}/document" : {
+      "get" : {
+        "tags" : [
+          "invoice-controller"
+        ],
+        "operationId" : "document",
+        "parameters" : [
+          {
+            "name" : "invoiceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me" : {
+      "get" : {
+        "tags" : [
+          "auth-controller"
+        ],
+        "operationId" : "me",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/invitations/{token}" : {
+      "get" : {
+        "tags" : [
+          "member-invitation-accept-controller"
+        ],
+        "operationId" : "preview",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InvitationPreview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/whatsapp/pricing" : {
+      "get" : {
+        "tags" : [
+          "admin-whats-app-controller"
+        ],
+        "operationId" : "pricing",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/WhatsAppPricingInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/tenants" : {
+      "get" : {
+        "tags" : [
+          "admin-tenant-controller"
+        ],
+        "operationId" : "list_7",
+        "parameters" : [
+          {
+            "name" : "query",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "page",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "integer",
+              "format" : "int32",
+              "default" : 0
+            }
+          },
+          {
+            "name" : "size",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "integer",
+              "format" : "int32",
+              "default" : 20
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TenantDirectoryPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/prospects" : {
+      "get" : {
+        "tags" : [
+          "admin-prospect-lead-controller"
+        ],
+        "operationId" : "list_8",
+        "parameters" : [
+          {
+            "name" : "status",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProspectLeadView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/payments" : {
+      "get" : {
+        "tags" : [
+          "admin-payment-controller"
+        ],
+        "operationId" : "list_9",
+        "parameters" : [
+          {
+            "name" : "status",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "provider",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "tenantId",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "page",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "integer",
+              "format" : "int32",
+              "default" : 0
+            }
+          },
+          {
+            "name" : "size",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "integer",
+              "format" : "int32",
+              "default" : 20
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/AdminPaymentView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/bookings" : {
+      "get" : {
+        "tags" : [
+          "admin-booking-controller"
+        ],
+        "operationId" : "list_10",
+        "parameters" : [
+          {
+            "name" : "status",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "page",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "integer",
+              "format" : "int32",
+              "default" : 0
+            }
+          },
+          {
+            "name" : "size",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "integer",
+              "format" : "int32",
+              "default" : 20
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/AdminBookingView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/booking-payments" : {
+      "get" : {
+        "tags" : [
+          "admin-booking-payment-controller"
+        ],
+        "operationId" : "list_11",
+        "parameters" : [
+          {
+            "name" : "status",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "page",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "integer",
+              "format" : "int32",
+              "default" : 0
+            }
+          },
+          {
+            "name" : "size",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "integer",
+              "format" : "int32",
+              "default" : 20
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/AdminPaymentDeclarationView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/billing/tiers" : {
+      "get" : {
+        "tags" : [
+          "admin-billing-catalog-controller"
+        ],
+        "operationId" : "catalog",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminTierCatalog"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/audit" : {
+      "get" : {
+        "tags" : [
+          "admin-audit-controller"
+        ],
+        "operationId" : "list_12",
+        "parameters" : [
+          {
+            "name" : "action",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "page",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "integer",
+              "format" : "int32",
+              "default" : 0
+            }
+          },
+          {
+            "name" : "size",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "integer",
+              "format" : "int32",
+              "default" : 50
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuditPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/settings/providers/{channel}" : {
+      "delete" : {
+        "tags" : [
+          "provider-settings-controller"
+        ],
+        "operationId" : "remove",
+        "parameters" : [
+          {
+            "name" : "channel",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/members/{userId}" : {
+      "delete" : {
+        "tags" : [
+          "member-controller"
+        ],
+        "operationId" : "remove_1",
+        "parameters" : [
+          {
+            "name" : "userId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/members/invitations/{invitationId}" : {
+      "delete" : {
+        "tags" : [
+          "member-controller"
+        ],
+        "operationId" : "revoke_1",
+        "parameters" : [
+          {
+            "name" : "invitationId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/guests/{guestId}" : {
+      "delete" : {
+        "tags" : [
+          "guest-controller"
+        ],
+        "operationId" : "remove_2",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "guestId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "UpdateWhatsAppProviderRequest" : {
+        "type" : "object",
+        "properties" : {
+          "accessToken" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "phoneNumberId" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "templateName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "templateLanguage" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required" : [
+          "accessToken",
+          "phoneNumberId"
+        ]
+      },
+      "EmailProviderView" : {
+        "type" : "object",
+        "properties" : {
+          "configured" : {
+            "type" : "boolean"
+          },
+          "provider" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "from" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "fromName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "apiKeyMasked" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "ProviderSettingsResponse" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "$ref" : "#/components/schemas/EmailProviderView"
+          },
+          "whatsapp" : {
+            "$ref" : "#/components/schemas/WhatsAppProviderView"
+          }
+        }
+      },
+      "WhatsAppProviderView" : {
+        "type" : "object",
+        "properties" : {
+          "configured" : {
+            "type" : "boolean"
+          },
+          "provider" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "phoneNumberId" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "accessTokenMasked" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "templateName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "templateLanguage" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "UpdateEmailProviderRequest" : {
+        "type" : "object",
+        "properties" : {
+          "apiKey" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "from" : {
+            "type" : "string",
+            "format" : "email",
+            "minLength" : 1
+          },
+          "fromName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required" : [
+          "apiKey",
+          "from"
+        ]
+      },
+      "ChangeRoleRequest" : {
+        "type" : "object",
+        "properties" : {
+          "role" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "role"
+        ]
+      },
+      "MemberView" : {
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string"
+          },
+          "joinedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "UpdateLegalIdentityRequest" : {
+        "type" : "object",
+        "properties" : {
+          "legalName" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "registrationNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "taxIdentifier" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "addressLine" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "city" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "country" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "pattern" : "^$|^[A-Za-z]{2}$"
+          }
+        }
+      },
+      "LegalIdentityResponse" : {
+        "type" : "object",
+        "properties" : {
+          "legalName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "registrationNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "taxIdentifier" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "addressLine" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "city" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "country" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "completeForInvoicing" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "EventSettingsDto" : {
+        "type" : "object",
+        "properties" : {
+          "placementEnabled" : {
+            "type" : "boolean"
+          },
+          "transferAllowed" : {
+            "type" : "boolean"
+          },
+          "transferDeadline" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "overbookingAllowed" : {
+            "type" : "boolean"
+          },
+          "maxOverbookingCount" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          }
+        }
+      },
+      "UpdateEventRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "description" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "startDateTime" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "endDateTime" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "timezone" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "location" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "maxCapacity" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "settings" : {
+            "$ref" : "#/components/schemas/EventSettingsDto"
+          },
+          "invitationChannels" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [
+                "EMAIL",
+                "WHATSAPP"
+              ]
+            },
+            "uniqueItems" : true
+          }
+        },
+        "required" : [
+          "name",
+          "timezone"
+        ]
+      },
+      "EventResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "startDateTime" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "endDateTime" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "timezone" : {
+            "type" : "string"
+          },
+          "location" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "maxCapacity" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "settings" : {
+            "$ref" : "#/components/schemas/EventSettingsDto"
+          },
+          "invitationChannels" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [
+                "EMAIL",
+                "WHATSAPP"
+              ]
+            },
+            "uniqueItems" : true
+          },
+          "quorum" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/QuorumResponse"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          }
+        }
+      },
+      "QuorumResponse" : {
+        "type" : "object",
+        "properties" : {
+          "mode" : {
+            "type" : "string"
+          },
+          "numerator" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "denominator" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "absolute" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "reachedAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          }
+        }
+      },
+      "UpdateQuorumRequest" : {
+        "type" : "object",
+        "properties" : {
+          "mode" : {
+            "type" : "string",
+            "enum" : [
+              "NONE",
+              "FRACTION",
+              "ABSOLUTE"
+            ]
+          },
+          "numerator" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "denominator" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "absolute" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          }
+        },
+        "required" : [
+          "mode"
+        ]
+      },
+      "UpsertTicketTypeRequest" : {
+        "type" : "object",
+        "properties" : {
+          "label" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "maxCapacity" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "colorHex" : {
+            "type" : "string",
+            "pattern" : "^#[0-9a-fA-F]{6}$"
+          },
+          "position" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [
+          "label"
+        ]
+      },
+      "TicketTypeResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "colorHex" : {
+            "type" : "string"
+          },
+          "maxCapacity" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "confirmedCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "position" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "UpdateBrandingRequest" : {
+        "type" : "object",
+        "properties" : {
+          "displayName" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "logoUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 2048,
+            "minLength" : 0
+          },
+          "primaryColor" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "pattern" : "^#[0-9a-fA-F]{6}$"
+          }
+        }
+      },
+      "BrandingResponse" : {
+        "type" : "object",
+        "properties" : {
+          "displayName" : {
+            "type" : "string"
+          },
+          "logoUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "primaryColor" : {
+            "type" : "string"
+          }
+        }
+      },
+      "UpdatePricingRequest" : {
+        "type" : "object",
+        "properties" : {
+          "costUsdMinor" : {
+            "type" : "integer",
+            "format" : "int64",
+            "minimum" : 0
+          }
+        }
+      },
+      "WhatsAppPricingInfo" : {
+        "type" : "object",
+        "properties" : {
+          "category" : {
+            "type" : "string"
+          },
+          "costUsdMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "TestSendRequest" : {
+        "type" : "object",
+        "properties" : {
+          "recipient" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "recipient"
+        ]
+      },
+      "TestSendResponse" : {
+        "type" : "object",
+        "properties" : {
+          "delivered" : {
+            "type" : "boolean"
+          },
+          "usingTenantProvider" : {
+            "type" : "boolean"
+          },
+          "error" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "TransferTicketRequest" : {
+        "type" : "object",
+        "properties" : {
+          "firstName" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "lastName" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "email" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "email",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "phoneNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 32,
+            "minLength" : 0
+          }
+        },
+        "required" : [
+          "firstName",
+          "lastName"
+        ]
+      },
+      "RsvpView" : {
+        "type" : "object",
+        "properties" : {
+          "eventName" : {
+            "type" : "string"
+          },
+          "eventWhen" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "eventLocation" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "organizerName" : {
+            "type" : "string"
+          },
+          "primaryColor" : {
+            "type" : "string"
+          },
+          "logoUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "guestName" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "ticketCode" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "eventStatus" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "erased" : {
+            "type" : "boolean"
+          },
+          "transferAllowed" : {
+            "type" : "boolean"
+          },
+          "transferDeadline" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "transferredTo" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "ProspectLeadRequest" : {
+        "type" : "object",
+        "properties" : {
+          "businessName" : {
+            "type" : "string",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "contactName" : {
+            "type" : "string",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "phone" : {
+            "type" : "string",
+            "maxLength" : 32,
+            "minLength" : 0
+          },
+          "sector" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "email" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "email",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "city" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "weeklyVolume" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "note" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 1000,
+            "minLength" : 0
+          },
+          "source" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 100,
+            "minLength" : 0
+          }
+        },
+        "required" : [
+          "businessName",
+          "contactName",
+          "phone",
+          "sector"
+        ]
+      },
+      "ProspectLeadAck" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }
+      },
+      "CreateOrgRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "name"
+        ]
+      },
+      "AuthResponse" : {
+        "type" : "object",
+        "properties" : {
+          "accessToken" : {
+            "type" : "string"
+          },
+          "refreshToken" : {
+            "type" : "string"
+          },
+          "tokenType" : {
+            "type" : "string"
+          }
+        }
+      },
+      "EmailFeedbackEventDto" : {
+        "type" : "object",
+        "properties" : {
+          "recipient" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "type" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "recipient",
+          "type"
+        ]
+      },
+      "EmailFeedbackWebhookRequest" : {
+        "type" : "object",
+        "properties" : {
+          "events" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/EmailFeedbackEventDto"
+            }
+          }
+        }
+      },
+      "InviteMemberRequest" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string",
+            "format" : "email",
+            "minLength" : 1
+          },
+          "role" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "email",
+          "role"
+        ]
+      },
+      "InvitationView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string"
+          },
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "CreateEventRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "description" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "startDateTime" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "endDateTime" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "timezone" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "location" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "maxCapacity" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "settings" : {
+            "$ref" : "#/components/schemas/EventSettingsDto"
+          },
+          "invitationChannels" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [
+                "EMAIL",
+                "WHATSAPP"
+              ]
+            },
+            "uniqueItems" : true
+          }
+        },
+        "required" : [
+          "name",
+          "timezone"
+        ]
+      },
+      "CreateValidatorRequest" : {
+        "type" : "object",
+        "properties" : {
+          "label" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 255,
+            "minLength" : 0
+          }
+        }
+      },
+      "ValidatorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "link" : {
+            "type" : "string"
+          },
+          "revoked" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "revokedAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          }
+        }
+      },
+      "InitiatePaymentRequest" : {
+        "type" : "object",
+        "properties" : {
+          "tier" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "tier"
+        ]
+      },
+      "PaymentInitiationResult" : {
+        "type" : "object",
+        "properties" : {
+          "paymentId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "amountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "instruction" : {
+            "$ref" : "#/components/schemas/PaymentInstruction"
+          }
+        }
+      },
+      "PaymentInstruction" : {
+        "type" : "object",
+        "properties" : {
+          "type" : {
+            "type" : "string"
+          },
+          "value" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ManualPaymentRequest" : {
+        "type" : "object",
+        "properties" : {
+          "tier" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "tier"
+        ]
+      },
+      "ManualPaymentInstructions" : {
+        "type" : "object",
+        "properties" : {
+          "paymentId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "reference" : {
+            "type" : "string"
+          },
+          "tier" : {
+            "type" : "string"
+          },
+          "amountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "payee" : {
+            "$ref" : "#/components/schemas/PayeeDetails"
+          }
+        }
+      },
+      "PayeeDetails" : {
+        "type" : "object",
+        "properties" : {
+          "payeeName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "mobileMoneyNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "mobileMoneyOperator" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "bankDetails" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "SendInvitationsResult" : {
+        "type" : "object",
+        "properties" : {
+          "queued" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "GuestImportResult" : {
+        "type" : "object",
+        "properties" : {
+          "imported" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "skippedDuplicates" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "failed" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "failures" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RowIssue"
+            }
+          },
+          "warnings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RowIssue"
+            }
+          }
+        }
+      },
+      "RowIssue" : {
+        "type" : "object",
+        "properties" : {
+          "row" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ScanRequest" : {
+        "type" : "object",
+        "properties" : {
+          "ticketCode" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "ticketCode"
+        ]
+      },
+      "CheckInResponse" : {
+        "type" : "object",
+        "properties" : {
+          "outcome" : {
+            "type" : "string"
+          },
+          "guestName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "ticketCode" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "checkedInAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "checkedInBy" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "ticketTypeLabel" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "ticketTypeColor" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "ManualCheckInRequest" : {
+        "type" : "object",
+        "properties" : {
+          "guestId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }
+      },
+      "SyncItem" : {
+        "type" : "object",
+        "properties" : {
+          "ticketCode" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "scannedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [
+          "ticketCode"
+        ]
+      },
+      "SyncRequest" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SyncItem"
+            }
+          }
+        }
+      },
+      "SyncResultEntry" : {
+        "type" : "object",
+        "properties" : {
+          "ticketCode" : {
+            "type" : "string"
+          },
+          "outcome" : {
+            "type" : "string"
+          },
+          "guestName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "checkedInAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "checkedInBy" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "CreateBookingRequest" : {
+        "type" : "object",
+        "properties" : {
+          "customerName" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "customerPhone" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "customerEmail" : {
+            "type" : "string",
+            "format" : "email",
+            "minLength" : 1
+          },
+          "eventType" : {
+            "type" : "string",
+            "enum" : [
+              "MARIAGE",
+              "BAPTEME",
+              "SALLE",
+              "SEMINAIRE",
+              "AUTRE"
+            ]
+          },
+          "eventDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "guestCountEstimate" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "acquisitionSource" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required" : [
+          "customerEmail",
+          "customerName",
+          "customerPhone"
+        ]
+      },
+      "BookingCreationResult" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "accessToken" : {
+            "type" : "string"
+          },
+          "tier" : {
+            "type" : "string"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "totalAmountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "depositAmountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "balanceAmountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "balanceDueDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "status" : {
+            "type" : "string"
+          }
+        }
+      },
+      "DeclarePaymentRequest" : {
+        "type" : "object",
+        "properties" : {
+          "amountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [
+              "DEPOSIT",
+              "BALANCE"
+            ]
+          },
+          "operator" : {
+            "type" : "string",
+            "enum" : [
+              "ORANGE_MONEY",
+              "MTN_MOMO"
+            ]
+          },
+          "transactionReference" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "transactionReference"
+        ]
+      },
+      "PaymentDeclarationResult" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "bookingId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "verificationStatus" : {
+            "type" : "string"
+          },
+          "declaredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "InvoiceDetail" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "invoiceNumber" : {
+            "type" : "string"
+          },
+          "documentType" : {
+            "type" : "string"
+          },
+          "correctedInvoiceId" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "uuid"
+          },
+          "buyer" : {
+            "$ref" : "#/components/schemas/InvoiceParty"
+          },
+          "seller" : {
+            "$ref" : "#/components/schemas/InvoiceParty"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/InvoiceLineView"
+            }
+          },
+          "subtotalMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "taxLabel" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "taxRate" : {
+            "type" : "number"
+          },
+          "taxAmountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "issueDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "issuedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "paymentId" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "uuid"
+          }
+        }
+      },
+      "InvoiceLineView" : {
+        "type" : "object",
+        "properties" : {
+          "lineNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "quantity" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "unitPriceMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lineTotalMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "InvoiceParty" : {
+        "type" : "object",
+        "properties" : {
+          "legalName" : {
+            "type" : "string"
+          },
+          "addressLine" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "city" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "country" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "registrationNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "taxIdentifier" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "VerifyEmailRequest" : {
+        "type" : "object",
+        "properties" : {
+          "token" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "token"
+        ]
+      },
+      "SwitchOrgRequest" : {
+        "type" : "object",
+        "properties" : {
+          "tenantId" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "tenantId"
+        ]
+      },
+      "ResetPasswordRequest" : {
+        "type" : "object",
+        "properties" : {
+          "token" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "password" : {
+            "type" : "string",
+            "maxLength" : 2147483647,
+            "minLength" : 8
+          }
+        },
+        "required" : [
+          "password",
+          "token"
+        ]
+      },
+      "RegisterRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "fullName" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "email" : {
+            "type" : "string",
+            "format" : "email",
+            "minLength" : 1
+          },
+          "password" : {
+            "type" : "string",
+            "maxLength" : 2147483647,
+            "minLength" : 8
+          }
+        },
+        "required" : [
+          "email",
+          "password"
+        ]
+      },
+      "RefreshRequest" : {
+        "type" : "object",
+        "properties" : {
+          "refreshToken" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "refreshToken"
+        ]
+      },
+      "LoginRequest" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string",
+            "format" : "email",
+            "minLength" : 1
+          },
+          "password" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "email",
+          "password"
+        ]
+      },
+      "AcceptInvitationRequest" : {
+        "type" : "object",
+        "properties" : {
+          "token" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "token"
+        ]
+      },
+      "GoogleLoginRequest" : {
+        "type" : "object",
+        "properties" : {
+          "idToken" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "idToken"
+        ]
+      },
+      "ForgotPasswordRequest" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string",
+            "format" : "email",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "email"
+        ]
+      },
+      "SetContentOverrideRequest" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "reason" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "reason"
+        ]
+      },
+      "WhatsAppOverrideStatus" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "reason" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "activatedBy" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "activatedAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          }
+        }
+      },
+      "GrantTrialRequest" : {
+        "type" : "object",
+        "properties" : {
+          "tenantId" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "uuid"
+          },
+          "eventId" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "uuid"
+          },
+          "tier" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "expiresAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          }
+        },
+        "required" : [
+          "eventId",
+          "expiresAt",
+          "tenantId",
+          "tier"
+        ]
+      },
+      "AdminTrialView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "tenantId" : {
+            "type" : "string"
+          },
+          "eventId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "tier" : {
+            "type" : "string"
+          },
+          "grantedAllowance" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "endedReason" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "EndTrialRequest" : {
+        "type" : "object",
+        "properties" : {
+          "reason" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "reason"
+        ]
+      },
+      "TenantStatusChangeRequest" : {
+        "type" : "object",
+        "properties" : {
+          "note" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "note"
+        ]
+      },
+      "TenantInfo" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "contactEmail" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "displayName" : {
+            "type" : "string"
+          },
+          "logoUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "primaryColor" : {
+            "type" : "string"
+          },
+          "legalIdentity" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/TenantLegalIdentityInfo"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          }
+        }
+      },
+      "TenantLegalIdentityInfo" : {
+        "type" : "object",
+        "properties" : {
+          "legalName" : {
+            "type" : "string"
+          },
+          "registrationNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "taxIdentifier" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "addressLine" : {
+            "type" : "string"
+          },
+          "city" : {
+            "type" : "string"
+          },
+          "country" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ProspectLeadView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "businessName" : {
+            "type" : "string"
+          },
+          "contactName" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "sector" : {
+            "type" : "string"
+          },
+          "city" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "weeklyVolume" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "note" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "source" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "contactedAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          }
+        }
+      },
+      "RejectPaymentRequest" : {
+        "type" : "object",
+        "properties" : {
+          "reason" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "reason"
+        ]
+      },
+      "AdminPaymentView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "tenantId" : {
+            "type" : "string"
+          },
+          "eventId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "tier" : {
+            "type" : "string"
+          },
+          "amountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "provider" : {
+            "type" : "string"
+          },
+          "reference" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "ConfirmPaymentRequest" : {
+        "type" : "object",
+        "properties" : {
+          "transactionReference" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "transactionReference"
+        ]
+      },
+      "AdminBookingCancellationView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "refundAmountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "currency" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AdminPaymentDeclarationView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "bookingId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "customerName" : {
+            "type" : "string"
+          },
+          "amountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "operator" : {
+            "type" : "string"
+          },
+          "transactionReference" : {
+            "type" : "string"
+          },
+          "declaredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "verificationStatus" : {
+            "type" : "string"
+          },
+          "verifiedBy" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "verifiedAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "rejectionReason" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "RejectDeclarationRequest" : {
+        "type" : "object",
+        "properties" : {
+          "reason" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "reason"
+        ]
+      },
+      "AdminRefreshRequest" : {
+        "type" : "object",
+        "properties" : {
+          "refreshToken" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AdminAuthResponse" : {
+        "type" : "object",
+        "properties" : {
+          "accessToken" : {
+            "type" : "string"
+          },
+          "refreshToken" : {
+            "type" : "string"
+          }
+        }
+      },
+      "AdminLoginRequest" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string"
+          },
+          "password" : {
+            "type" : "string"
+          }
+        }
+      },
+      "CreateAgreementRequest" : {
+        "type" : "object",
+        "properties" : {
+          "tenantId" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "uuid"
+          },
+          "kind" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "periodStart" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "periodEnd" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "renewalAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "amountMinor" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
+          },
+          "currency" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "notes" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required" : [
+          "kind",
+          "periodEnd",
+          "periodStart",
+          "tenantId"
+        ]
+      },
+      "AgreementView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "tenantId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "periodStart" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "periodEnd" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "renewalAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "amountMinor" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
+          },
+          "currency" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "notes" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "interruptedReason" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "renewedBy" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "uuid"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "RenewAgreementRequest" : {
+        "type" : "object",
+        "properties" : {
+          "periodEnd" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "renewalAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "amountMinor" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
+          },
+          "currency" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "notes" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required" : [
+          "periodEnd"
+        ]
+      },
+      "InterruptAgreementRequest" : {
+        "type" : "object",
+        "properties" : {
+          "reason" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "reason"
+        ]
+      },
+      "SetGuestTicketTypeRequest" : {
+        "type" : "object",
+        "properties" : {
+          "ticketTypeId" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "uuid"
+          }
+        }
+      },
+      "GuestResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "firstName" : {
+            "type" : "string"
+          },
+          "lastName" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "phoneNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "excludedFromInvitations" : {
+            "type" : "boolean"
+          },
+          "checkedInAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "ticketTypeId" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "uuid"
+          }
+        }
+      },
+      "SetGuestExclusionRequest" : {
+        "type" : "object",
+        "properties" : {
+          "excluded" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "BillingAllowance" : {
+        "type" : "object",
+        "properties" : {
+          "invitedGuests" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "allowance" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "remaining" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "withinAllowance" : {
+            "type" : "boolean"
+          },
+          "tier" : {
+            "type" : "string"
+          },
+          "guestsImported" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "invitationsSentEmail" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "invitationsSentWhatsapp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "InvitationStatusResponse" : {
+        "type" : "object",
+        "properties" : {
+          "guestId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "channel" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "attempts" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sentAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          }
+        }
+      },
+      "DashboardResponse" : {
+        "type" : "object",
+        "properties" : {
+          "eventName" : {
+            "type" : "string"
+          },
+          "eventStatus" : {
+            "type" : "string"
+          },
+          "totalGuests" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "invited" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "confirmed" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "declined" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "pending" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "checkedIn" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "entrances" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/EntranceCount"
+            }
+          },
+          "quorum" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/QuorumView"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          },
+          "deliverability" : {
+            "$ref" : "#/components/schemas/DeliverabilityFlag"
+          },
+          "usage" : {
+            "$ref" : "#/components/schemas/UsageSummary"
+          }
+        }
+      },
+      "DataRetentionNotice" : {
+        "type" : "object",
+        "properties" : {
+          "anonymizeOn" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "DeliverabilityFlag" : {
+        "type" : "object",
+        "properties" : {
+          "bounceRatePercent" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "warn" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "EntranceCount" : {
+        "type" : "object",
+        "properties" : {
+          "label" : {
+            "type" : "string"
+          },
+          "checkedIn" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "QuorumView" : {
+        "type" : "object",
+        "properties" : {
+          "required" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "current" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "reached" : {
+            "type" : "boolean"
+          },
+          "reachedAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          }
+        }
+      },
+      "UsageSummary" : {
+        "type" : "object",
+        "properties" : {
+          "invited" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "allowance" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "remaining" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "tier" : {
+            "type" : "string"
+          },
+          "withinAllowance" : {
+            "type" : "boolean"
+          },
+          "dataRetention" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/DataRetentionNotice"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          }
+        }
+      },
+      "AttendanceResponse" : {
+        "type" : "object",
+        "properties" : {
+          "checkedIn" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "confirmed" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "GuestMatch" : {
+        "type" : "object",
+        "properties" : {
+          "guestId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "phoneNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "rsvpStatus" : {
+            "type" : "string"
+          },
+          "ticketCode" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "ticketStatus" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "checkedInAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "checkedInBy" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "ticketTypeLabel" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "ticketTypeColor" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "AnalyticsResponse" : {
+        "type" : "object",
+        "properties" : {
+          "checkInTimeline" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TimeBucket"
+            }
+          },
+          "channelBreakdown" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ChannelBreakdown"
+            }
+          },
+          "guestGrowth" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DateCount"
+            }
+          }
+        }
+      },
+      "ChannelBreakdown" : {
+        "type" : "object",
+        "properties" : {
+          "channel" : {
+            "type" : "string"
+          },
+          "sent" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "failed" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "pending" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "DateCount" : {
+        "type" : "object",
+        "properties" : {
+          "date" : {
+            "type" : "string"
+          },
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "TimeBucket" : {
+        "type" : "object",
+        "properties" : {
+          "label" : {
+            "type" : "string"
+          },
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "ValidatorContextResponse" : {
+        "type" : "object",
+        "properties" : {
+          "eventName" : {
+            "type" : "string"
+          },
+          "eventStatus" : {
+            "type" : "string"
+          },
+          "startDateTime" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "timezone" : {
+            "type" : "string"
+          },
+          "eventLocation" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "organizerName" : {
+            "type" : "string"
+          },
+          "primaryColor" : {
+            "type" : "string"
+          },
+          "logoUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "validatorLabel" : {
+            "type" : "string"
+          },
+          "checkedIn" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "confirmed" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "RosterEntry" : {
+        "type" : "object",
+        "properties" : {
+          "guestId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "phoneNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "rsvpStatus" : {
+            "type" : "string"
+          },
+          "ticketCode" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "ticketStatus" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "checkedInAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "checkedInBy" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "ticketTypeLabel" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "ticketTypeColor" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "BookingStatusView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "customerName" : {
+            "type" : "string"
+          },
+          "eventType" : {
+            "type" : "string"
+          },
+          "eventDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "guestCountEstimate" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "tier" : {
+            "type" : "string"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "totalAmountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "depositAmountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "balanceAmountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "balanceDueDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "BookingPayeeDetails" : {
+        "type" : "object",
+        "properties" : {
+          "payeeName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "orangeMoneyNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "mtnMomoNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "BookingQuote" : {
+        "type" : "object",
+        "properties" : {
+          "tier" : {
+            "type" : "string"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "totalAmountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "depositAmountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "balanceAmountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "CustomTierOption" : {
+        "type" : "object",
+        "properties" : {
+          "perGuestUsdCents" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "setupFeeUsdCents" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "TierCatalog" : {
+        "type" : "object",
+        "properties" : {
+          "currency" : {
+            "type" : "string"
+          },
+          "freeTierGuests" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "tiers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TierOption"
+            }
+          },
+          "custom" : {
+            "$ref" : "#/components/schemas/CustomTierOption"
+          }
+        }
+      },
+      "TierOption" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "maxGuests" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "priceMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "CustomQuote" : {
+        "type" : "object",
+        "properties" : {
+          "guestCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "priceMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "PaymentHistoryItem" : {
+        "type" : "object",
+        "properties" : {
+          "paymentId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "eventId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "eventName" : {
+            "type" : "string"
+          },
+          "tier" : {
+            "type" : "string"
+          },
+          "amountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "InvoiceSummary" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "invoiceNumber" : {
+            "type" : "string"
+          },
+          "documentType" : {
+            "type" : "string"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "totalMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "issueDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "issuedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "MeResponse" : {
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "fullName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "tenantId" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string"
+          },
+          "memberships" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MembershipView"
+            }
+          }
+        }
+      },
+      "MembershipView" : {
+        "type" : "object",
+        "properties" : {
+          "tenantId" : {
+            "type" : "string"
+          },
+          "tenantName" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string"
+          }
+        }
+      },
+      "InvitationPreview" : {
+        "type" : "object",
+        "properties" : {
+          "organizationName" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string"
+          }
+        }
+      },
+      "TenantDirectoryEntry" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "contactEmail" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "organizerCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "TenantDirectoryPage" : {
+        "type" : "object",
+        "properties" : {
+          "entries" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TenantDirectoryEntry"
+            }
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "AdminBookingView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "customerName" : {
+            "type" : "string"
+          },
+          "customerPhone" : {
+            "type" : "string"
+          },
+          "customerEmail" : {
+            "type" : "string"
+          },
+          "eventType" : {
+            "type" : "string"
+          },
+          "eventDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "guestCountEstimate" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "tier" : {
+            "type" : "string"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "totalAmountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "depositAmountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "balanceAmountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "balanceDueDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "tenantId" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "eventId" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "uuid"
+          },
+          "acquisitionSource" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "AdminTierCatalog" : {
+        "type" : "object",
+        "properties" : {
+          "currency" : {
+            "type" : "string"
+          },
+          "tiers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BillingTierOption"
+            }
+          }
+        }
+      },
+      "BillingTierOption" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "maxGuests" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "priceMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "AuditEntry" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "adminId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "action" : {
+            "type" : "string"
+          },
+          "target" : {
+            "type" : "string"
+          },
+          "note" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "AuditPage" : {
+        "type" : "object",
+        "properties" : {
+          "entries" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AuditEntry"
+            }
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      }
+    },
+    "securitySchemes" : {
+      "bearer-jwt" : {
+        "type" : "http",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT"
+      }
+    }
+  }
+}

@@ -137,11 +137,19 @@ api:
     # Abuse protection for every endpoint reachable without an organizer login.
     # Budgets are per client IP — plus the link token where one is in the path, so
     # a busy venue NAT does not lump every validator together and an attacker
-    # cannot rotate tokens for a fresh budget. Counters are in-memory and
-    # per-instance by design at MVP scale (one API replica); exceeding a budget
-    # returns 429 with a Retry-After header. Paths are relative to api.base-path
-    # and must not overlap across policies.
+    # cannot rotate tokens for a fresh budget. Exceeding a budget returns 429 with
+    # a Retry-After header. Where the counters themselves live is the `store`
+    # setting below. Paths are relative to api.base-path and must not overlap
+    # across policies.
     enabled: ${RATE_LIMIT_ENABLED:true}
+    # Where counters live: memory (per-instance, no database round trip — right for
+    # local development, the test suite and a single instance) or database (one
+    # budget shared by every instance, JIKU-79). MUST be set to database before the
+    # API runs more than one instance: with memory, N instances each grant the full
+    # budget, silently multiplying every limit below by N.
+    store: ${RATE_LIMIT_STORE:memory}
+    # How often elapsed windows are deleted; only runs with store=database.
+    sweep-cron: ${RATE_LIMIT_SWEEP_CRON:0 */10 * * * *}
     policies:
       login:
         # Blunt credential brute-force: a human retries a handful of times per
@@ -187,6 +195,25 @@ api:
         paths: [/bookings/**]
         max-requests: ${RATE_LIMIT_BOOKING_MAX_REQUESTS:20}
         window: ${RATE_LIMIT_BOOKING_WINDOW:PT1M}
+      prospect:
+        # Liste d'accès anticipé rendez-vous (JIKU-98). Un professionnel légitime
+        # soumet une fois, éventuellement deux s'il se corrige ; au-delà c'est du
+        # script. Plus serré que booking parce qu'il n'y a aucun jeton à présenter.
+        paths: [/prospects]
+        max-requests: ${RATE_LIMIT_PROSPECT_MAX_REQUESTS:5}
+        window: ${RATE_LIMIT_PROSPECT_WINDOW:PT1M}
+
+error-tracking:
+  # Unhandled-error reporting (JIKU-70). The DSN is the switch: blank — the default
+  # — leaves the logging tracker in place, so a fresh clone and the test suite make
+  # no outbound calls and need no provider account. Set it per environment to route
+  # unhandled exceptions to the provider instead.
+  dsn: ${ERROR_TRACKING_DSN:}
+  environment: ${ERROR_TRACKING_ENVIRONMENT:local}
+  # Must match the frontend's NEXT_PUBLIC_ERROR_TRACKING_RELEASE for the same
+  # deployment, otherwise a backend event and the frontend report for the same
+  # request cannot be lined up.
+  release: ${ERROR_TRACKING_RELEASE:}
 
 management:
   # Observability surface for uptime and performance monitoring (JIKU-30).
@@ -254,6 +281,31 @@ billing:
   # fragmenting guests across many small free events.
   free-tier-window: ${BILLING_FREE_TIER_WINDOW:P365D}
   currency: ${BILLING_CURRENCY:GNF}
+  invoice:
+    # Accounting-grade invoicing (JIKU-69). Numbers are gapless per tenant per
+    # fiscal year; these prefixes only shape the human-readable form.
+    number-prefix: ${BILLING_INVOICE_PREFIX:INV}
+    credit-note-prefix: ${BILLING_CREDIT_NOTE_PREFIX:CN}
+    # An invoice is dated by calendar day in its jurisdiction, not by UTC instant;
+    # near midnight the two differ.
+    issue-zone: ${BILLING_INVOICE_ISSUE_ZONE:Africa/Conakry}
+    seller:
+      # The selling entity as it must appear on the document. Set these before
+      # issuing a real invoice — the defaults name no registered company.
+      name: ${BILLING_SELLER_NAME:Jiku}
+      address-line: ${BILLING_SELLER_ADDRESS:}
+      tax-identifier: ${BILLING_SELLER_TAX_ID:}
+    # Consumption tax per ISO 3166-1 alpha-2 country. DELIBERATELY EMPTY: the GTM
+    # plan records Guinea's rate as unconfirmed and warns explicitly not to plan
+    # against an assumed figure for Cameroon, so shipping a guess here would put a
+    # wrong number on a legal document. An unconfigured country bills at zero tax.
+    # The key is left out entirely rather than written as an empty mapping: Spring
+    # reads `tax: {}` as the string "{}" and fails to bind it. Confirm each rate
+    # with a local accountant, then add it here, e.g.:
+    #   tax:
+    #     GN:
+    #       label: "TVA 18%"
+    #       rate: "0.18"
   custom:
     # CUSTOM tier pricing (beyond the OR tier's 1,000 guests): quoted in USD
     # cents and converted through this rate, since both move independently of a

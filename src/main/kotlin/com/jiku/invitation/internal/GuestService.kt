@@ -1,7 +1,9 @@
 package com.jiku.invitation.internal
 
-import com.jiku.event.EventModuleApi
-import com.jiku.notification.NotificationModuleApi
+import com.jiku.catalog.EventModuleApi
+import com.jiku.messaging.NotificationModuleApi
+import com.jiku.ticket.TicketInfo
+import com.jiku.ticket.TicketingModuleApi
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVRecord
 import org.springframework.http.HttpStatus
@@ -23,9 +25,19 @@ class GuestService(
     private val events: EventModuleApi,
     private val properties: GuestImportProperties,
     private val notifications: NotificationModuleApi,
+    private val ticketing: TicketingModuleApi,
 ) {
     @Transactional(readOnly = true)
-    fun list(eventId: UUID): List<GuestResponse> = guests.findByEventId(eventId).map { it.toResponse() }
+    fun list(eventId: UUID): List<GuestResponse> {
+        // Une seule lecture des tickets pour toute la liste : la table d'invités
+        // se recharge à chaque filtre, et une requête par ligne s'y verrait.
+        val checkedInByGuest =
+            ticketing
+                .findTicketsByEvent(eventId)
+                .filter { it.status == TicketInfo.STATUS_CHECKED_IN }
+                .associate { it.guestId to it.checkedInAt }
+        return guests.findByEventId(eventId).map { it.toResponse(checkedInByGuest[it.id]) }
+    }
 
     /**
      * Removes a guest who has never been invited (added by mistake, duplicate entry,
@@ -66,7 +78,47 @@ class GuestService(
         return guests.save(guest).toResponse()
     }
 
-    private fun Guest.toResponse() = GuestResponse(requireNotNull(id), firstName, lastName, email, phoneNumber, excludedFromInvitations)
+    /**
+     * Rattache un invité à une catégorie d'accès (JIKU-93).
+     *
+     * Si l'invité a déjà confirmé, sa place suit : elle quitte l'ancienne catégorie
+     * pour la nouvelle. Le compteur global ne bouge pas — la personne était déjà
+     * comptée dans la salle. Si la catégorie visée est pleine, on refuse plutôt que
+     * de la faire déborder.
+     */
+    @Transactional
+    fun setTicketType(
+        eventId: UUID,
+        guestId: UUID,
+        ticketTypeId: UUID?,
+    ): GuestResponse {
+        val guest =
+            guests.findByIdAndEventId(guestId, eventId)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Guest not found")
+        if (ticketTypeId != null && events.ticketTypes(eventId).none { it.id == ticketTypeId }) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Catégorie inconnue pour cet événement")
+        }
+        if (guest.ticketTypeId == ticketTypeId) return guest.toResponse()
+        if (guest.rsvpStatus == RsvpStatus.CONFIRMED &&
+            !events.moveTicketTypeSlot(guest.ticketTypeId, ticketTypeId)
+        ) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Cette catégorie est complète")
+        }
+        guest.ticketTypeId = ticketTypeId
+        return guests.save(guest).toResponse()
+    }
+
+    private fun Guest.toResponse(checkedInAt: java.time.Instant? = null) =
+        GuestResponse(
+            requireNotNull(id),
+            firstName,
+            lastName,
+            email,
+            phoneNumber,
+            excludedFromInvitations,
+            checkedInAt,
+            ticketTypeId,
+        )
 
     @Transactional
     fun import(
@@ -77,6 +129,9 @@ class GuestService(
 
         val failures = mutableListOf<RowIssue>()
         val warnings = mutableListOf<RowIssue>()
+        // Colonne `type` facultative (JIKU-93) : rapprochée par libellé, insensible
+        // à la casse, parce que l'organisateur retape « vip » à la main.
+        val typeIdByLabel = events.ticketTypes(eventId).associate { it.label.lowercase() to it.id }
         val seenEmails = mutableSetOf<String>()
         val seenPhones = mutableSetOf<String>()
         var imported = 0
@@ -124,6 +179,7 @@ class GuestService(
                 val lastName = field(record, "lastname")
                 val email = field(record, "email")?.lowercase()
                 val phone = field(record, "phone")
+                val typeLabel = field(record, "type")
 
                 val problem = validateRow(firstName, lastName, email, phone)
                 if (problem != null) {
@@ -141,6 +197,13 @@ class GuestService(
                     warnings += RowIssue(rowNumber, "Email previously bounced and may be undeliverable")
                 }
 
+                // Un libellé inconnu ne fait pas échouer la ligne : perdre l'invité
+                // coûte plus cher que le rattacher plus tard. On le signale.
+                val typeId = typeLabel?.let { typeIdByLabel[it.lowercase()] }
+                if (typeLabel != null && typeId == null) {
+                    warnings += RowIssue(rowNumber, "Catégorie « $typeLabel » inconnue : invité importé sans catégorie")
+                }
+
                 guests.save(
                     Guest(
                         eventId = eventId,
@@ -148,7 +211,7 @@ class GuestService(
                         lastName = requireNotNull(lastName),
                         email = email,
                         phoneNumber = phone,
-                    ),
+                    ).apply { ticketTypeId = typeId },
                 )
                 imported++
             }

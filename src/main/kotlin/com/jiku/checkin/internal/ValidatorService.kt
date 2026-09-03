@@ -1,6 +1,6 @@
 package com.jiku.checkin.internal
 
-import com.jiku.event.EventModuleApi
+import com.jiku.catalog.EventModuleApi
 import com.jiku.shared.TenantContext
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
