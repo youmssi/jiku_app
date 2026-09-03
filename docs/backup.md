@@ -50,9 +50,52 @@ copy.
 
 ## Restoring
 
+The step-by-step procedure, for both the common case (Neon point-in-time) and the
+dump case, is in **`docs/runbooks/database-restore.md`**. It is written to be
+executed by someone other than its author, during an incident.
+
+The short form, for a dump:
+
 ```
 gunzip -c jiku-<timestamp>.sql.gz | psql "postgresql://<user>:<password>@<host>:5432/<target-db>?sslmode=require"
 ```
 
 Restore into a fresh/empty database, not the live one, unless the intent is
 genuinely to overwrite current data.
+
+## Rehearsals and measured RTO (JIKU-80)
+
+`scripts/restore-drill.sh` restores a dump into a throwaway database, verifies the
+result is actually usable, times it, then drops the database. It writes to no
+existing database, so it is safe to run at any time — including against a
+production dump before committing to a real restore.
+
+Verification is not "psql returned 0": the drill checks the Flyway history is
+present with no failed migration, counts rows in the load-bearing tables, and
+fails if any event lost its `tenant_id` — a restore that silently breaks tenant
+isolation would be worse than no restore at all.
+
+| Date | Schema | Dataset | Dump | Measured RTO | Conditions |
+|---|---|---|---|---|---|
+| 2026-09-03 | V38 | 80 471 rows (60 135 guests, 20 035 tickets) | 3.7 MB | **21 s** | Local Docker Postgres, application running and holding connections |
+| 2026-09-03 | V33 | 471 rows | 68 KB | 4 s | Local Docker Postgres, idle |
+
+**How to read these numbers.** They measure the *restore step* — create the target
+database, load the dump, verify it. They are not an incident-to-service RTO: a
+real incident adds detection, the decision of which point to restore to, and the
+cutover. Budget those separately; the runbook lists them.
+
+The 21 s figure is the one to quote. It was taken on the current schema with the
+application connected, which is the state a real restore happens in. The 4 s
+figure is kept only to show what a near-empty database measures — it is the number
+one would misleadingly report by rehearsing on a dev database and stopping there.
+
+Re-run at least quarterly and after any significant schema change:
+
+```
+docker compose up -d
+./scripts/restore-drill.sh --scale 60000
+```
+
+Add a row above each time. An RTO that drifts between quarters is the useful
+signal; an RTO never measured is not one.
