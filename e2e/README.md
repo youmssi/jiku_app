@@ -40,7 +40,10 @@ cd e2e && npx playwright test tests/checkin.spec.ts
 | `checkin.spec.ts` | Validator admits a guest, and a second attempt reports who admitted them and when |
 
 `@smoke` marks the load-bearing case in each file; the tag is what CI runs on
-every pull request.
+every pull request (`.github/workflows/ci.yml`, job `e2e`). The full suite is not
+run there — it is too slow to gate every push, and the smoke subset already
+catches the class of failure that matters: the service that will not start, the
+page that will not render, the email that never leaves.
 
 ## How it is written
 
