@@ -616,6 +616,203 @@
         }
       }
     },
+    "/api/v1/resources" : {
+      "get" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "list",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ResourceView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "create",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ResourceCreateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResourceView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/resources/{id}/unavailability" : {
+      "get" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "unavailability",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ResourceUnavailabilityView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "addUnavailability",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UnavailabilityRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResourceUnavailabilityView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/resources/{id}/availability" : {
+      "get" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "availability",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ResourceAvailabilityView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "addAvailability",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AvailabilityRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResourceAvailabilityView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/prospects" : {
       "post" : {
         "tags" : [
@@ -651,7 +848,7 @@
         "tags" : [
           "org-controller"
         ],
-        "operationId" : "create",
+        "operationId" : "create_1",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -814,7 +1011,7 @@
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "list",
+        "operationId" : "list_1",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -835,7 +1032,7 @@
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "create_1",
+        "operationId" : "create_2",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -927,7 +1124,7 @@
         "tags" : [
           "validator-controller"
         ],
-        "operationId" : "list_1",
+        "operationId" : "list_2",
         "parameters" : [
           {
             "name" : "eventId",
@@ -959,7 +1156,7 @@
         "tags" : [
           "validator-controller"
         ],
-        "operationId" : "create_2",
+        "operationId" : "create_3",
         "parameters" : [
           {
             "name" : "eventId",
@@ -1040,7 +1237,7 @@
         "tags" : [
           "ticket-type-controller"
         ],
-        "operationId" : "list_2",
+        "operationId" : "list_3",
         "parameters" : [
           {
             "name" : "eventId",
@@ -1072,7 +1269,7 @@
         "tags" : [
           "ticket-type-controller"
         ],
-        "operationId" : "create_3",
+        "operationId" : "create_4",
         "parameters" : [
           {
             "name" : "eventId",
@@ -1537,7 +1734,7 @@
         "tags" : [
           "booking-controller"
         ],
-        "operationId" : "create_4",
+        "operationId" : "create_5",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2021,7 +2218,7 @@
         "tags" : [
           "admin-trial-controller"
         ],
-        "operationId" : "list_3",
+        "operationId" : "list_4",
         "parameters" : [
           {
             "name" : "status",
@@ -2523,7 +2720,7 @@
         "tags" : [
           "admin-agreement-controller"
         ],
-        "operationId" : "list_4",
+        "operationId" : "list_5",
         "parameters" : [
           {
             "name" : "status",
@@ -2591,7 +2788,7 @@
         "tags" : [
           "admin-agreement-controller"
         ],
-        "operationId" : "create_5",
+        "operationId" : "create_6",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2691,6 +2888,76 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/AgreementView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/resources/{id}" : {
+      "get" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "get_3",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResourceView"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "update_4",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ResourceUpdateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResourceView"
                 }
               }
             }
@@ -2848,6 +3115,55 @@
         }
       }
     },
+    "/api/v1/resources/{id}/free" : {
+      "get" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "free",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "from",
+            "in" : "query",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "date-time"
+            }
+          },
+          {
+            "name" : "to",
+            "in" : "query",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "date-time"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FreeSlotResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/members" : {
       "get" : {
         "tags" : [
@@ -2964,7 +3280,7 @@
         "tags" : [
           "guest-controller"
         ],
-        "operationId" : "list_5",
+        "operationId" : "list_6",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3022,7 +3338,7 @@
         "tags" : [
           "dashboard-controller"
         ],
-        "operationId" : "get_3",
+        "operationId" : "get_4",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3199,7 +3515,7 @@
         "tags" : [
           "analytics-controller"
         ],
-        "operationId" : "get_4",
+        "operationId" : "get_5",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3578,7 +3894,7 @@
         "tags" : [
           "invoice-controller"
         ],
-        "operationId" : "list_6",
+        "operationId" : "list_7",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -3601,7 +3917,7 @@
         "tags" : [
           "invoice-controller"
         ],
-        "operationId" : "get_5",
+        "operationId" : "get_6",
         "parameters" : [
           {
             "name" : "invoiceId",
@@ -3737,7 +4053,7 @@
         "tags" : [
           "admin-tenant-controller"
         ],
-        "operationId" : "list_7",
+        "operationId" : "list_8",
         "parameters" : [
           {
             "name" : "query",
@@ -3787,7 +4103,7 @@
         "tags" : [
           "admin-prospect-lead-controller"
         ],
-        "operationId" : "list_8",
+        "operationId" : "list_9",
         "parameters" : [
           {
             "name" : "status",
@@ -3820,7 +4136,7 @@
         "tags" : [
           "admin-payment-controller"
         ],
-        "operationId" : "list_9",
+        "operationId" : "list_10",
         "parameters" : [
           {
             "name" : "status",
@@ -3890,7 +4206,7 @@
         "tags" : [
           "admin-booking-controller"
         ],
-        "operationId" : "list_10",
+        "operationId" : "list_11",
         "parameters" : [
           {
             "name" : "status",
@@ -3943,7 +4259,7 @@
         "tags" : [
           "admin-booking-payment-controller"
         ],
-        "operationId" : "list_11",
+        "operationId" : "list_12",
         "parameters" : [
           {
             "name" : "status",
@@ -4016,7 +4332,7 @@
         "tags" : [
           "admin-audit-controller"
         ],
-        "operationId" : "list_12",
+        "operationId" : "list_13",
         "parameters" : [
           {
             "name" : "action",
@@ -4087,6 +4403,72 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/resources/{id}/unavailability/{unavailabilityId}" : {
+      "delete" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "removeUnavailability",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "unavailabilityId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/resources/{id}/availability/{availabilityId}" : {
+      "delete" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "removeAvailability",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "availabilityId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
           }
         }
       }
@@ -4932,6 +5314,144 @@
               "string",
               "null"
             ]
+          }
+        }
+      },
+      "ResourceCreateRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [
+              "PERSON",
+              "LOCATION",
+              "EQUIPMENT"
+            ]
+          },
+          "timezone" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "name",
+          "timezone"
+        ]
+      },
+      "ResourceView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [
+              "PERSON",
+              "LOCATION",
+              "EQUIPMENT"
+            ]
+          },
+          "timezone" : {
+            "type" : "string"
+          },
+          "active" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "UnavailabilityRequest" : {
+        "type" : "object",
+        "properties" : {
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "reason" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "ResourceUnavailabilityView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "resourceId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "reason" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "AvailabilityRequest" : {
+        "type" : "object",
+        "properties" : {
+          "dayOfWeek" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 7,
+            "minimum" : 1
+          },
+          "start" : {
+            "type" : "string"
+          },
+          "end" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ResourceAvailabilityView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "resourceId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "dayOfWeek" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "start" : {
+            "type" : "string"
+          },
+          "end" : {
+            "type" : "string"
           }
         }
       },
@@ -6558,6 +7078,25 @@
           "reason"
         ]
       },
+      "ResourceUpdateRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "active" : {
+            "type" : [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      },
       "SetGuestTicketTypeRequest" : {
         "type" : "object",
         "properties" : {
@@ -6618,6 +7157,14 @@
         "type" : "object",
         "properties" : {
           "excluded" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "FreeSlotResponse" : {
+        "type" : "object",
+        "properties" : {
+          "free" : {
             "type" : "boolean"
           }
         }
