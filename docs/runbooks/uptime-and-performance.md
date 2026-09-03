@@ -7,6 +7,9 @@ fires. Keep this current as endpoints or thresholds change.
 
 ### Health probe (external uptime monitoring)
 
+- **Public status surface:** `GET /api/v1/health` — returns `{"status":"UP"}` and
+  nothing else. This is the endpoint the external uptime monitor and the platform's
+  health-check path use (JIKU-97), kept deliberately apart from `/actuator/health`.
 - **Endpoint:** `GET /actuator/health` (public — returns only `{"status":"UP|DOWN"}`,
   never internal component details).
 - **What it checks:** application liveness and readiness. Readiness includes
@@ -51,7 +54,9 @@ Provision a lightweight uptime-monitoring SaaS (e.g. UptimeRobot, Better Uptime,
 or the hosting platform's built-in monitor — a free/low tier is sufficient; do not
 build a custom pipeline):
 
-1. **Monitor:** HTTP(s) check against `https://<backend-host>/actuator/health`.
+1. **Monitor:** HTTP(s) check against `https://<backend-host>/api/v1/health`
+   (the public status surface — returns `{"status":"UP"}`; any other response or a
+   timeout counts as down).
 2. **Interval:** 60 seconds.
 3. **Alert threshold:** notify after **2 consecutive failed checks** (avoids a
    single transient blip paging the team) — a failed check is any non-200 status
