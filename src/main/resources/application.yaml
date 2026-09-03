@@ -378,6 +378,21 @@ checkin:
     # immediate and independent of this window.
     validity: ${CHECKIN_VALIDATOR_LINK_VALIDITY:P30D}
 
+catalog:
+  slot:
+    # Grille fixe du moteur de créneaux (JIKU-85) : les valeurs par défaut,
+    # que la configuration par service (JIKU-86) remplacera service par service.
+    # Un créneau commence à un multiple du pas à partir de minuit local.
+    step-minutes: ${CATALOG_SLOT_STEP_MINUTES:30}
+    duration-minutes: ${CATALOG_SLOT_DURATION_MINUTES:30}
+    # Espace minimum entre deux réservations, réservé à la fin de chaque créneau.
+    buffer-minutes: ${CATALOG_SLOT_BUFFER_MINUTES:0}
+    # Un créneau qui commence à moins de l'horizon minimum est refusé.
+    min-horizon-minutes: ${CATALOG_SLOT_MIN_HORIZON_MINUTES:120}
+    # Durée de blocage d'une demande en attente (mode « sur demande », §5), avant
+    # qu'elle soit libérée par la purge.
+    hold-minutes: ${CATALOG_SLOT_HOLD_MINUTES:1440}
+
 notification:
   sales:
     # Mailbox notified of new manual activation requests (JIKU-41); blank keeps
