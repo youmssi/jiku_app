@@ -31,6 +31,14 @@ rapide et il n'exige aucun dump.
 2. **Create branch** → *Include data up to* → choisir un instant **avant**
    l'heure notée plus haut. Neon crée une branche complète en quelques secondes ;
    la production n'est pas touchée.
+
+   En ligne de commande, ce qui a été réellement exécuté lors de la répétition
+   du 3 septembre 2026 (branche prête en 18 s) :
+   ```
+   neonctl branches create --project-id <projet> --name restore-<date> --parent <instant-iso>
+   neonctl connection-string restore-<date> --project-id <projet>
+   ```
+   `--parent` accepte un horodatage ISO 8601, par exemple `2026-09-03T10:33:35Z`.
 3. Récupérer la chaîne de connexion de la nouvelle branche.
 4. **Vérifier avant de basculer** — les données attendues sont-elles là ?
    ```
