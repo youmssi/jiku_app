@@ -486,6 +486,130 @@
         }
       }
     },
+    "/api/v1/services" : {
+      "get" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "list",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ServiceResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "create",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ServiceCreateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ServiceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{id}/requirements" : {
+      "get" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "requirements",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ServiceRequirementResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "addRequirement",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ServiceRequirementRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ServiceRequirementResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/rsvp/{token}/transfer" : {
       "post" : {
         "tags" : [
@@ -621,7 +745,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "list",
+        "operationId" : "list_1",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -642,7 +766,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "create",
+        "operationId" : "create_1",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -848,7 +972,7 @@
         "tags" : [
           "org-controller"
         ],
-        "operationId" : "create_1",
+        "operationId" : "create_2",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1011,7 +1135,7 @@
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "list_1",
+        "operationId" : "list_2",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -1032,7 +1156,7 @@
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "create_2",
+        "operationId" : "create_3",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1124,7 +1248,7 @@
         "tags" : [
           "validator-controller"
         ],
-        "operationId" : "list_2",
+        "operationId" : "list_3",
         "parameters" : [
           {
             "name" : "eventId",
@@ -1156,7 +1280,7 @@
         "tags" : [
           "validator-controller"
         ],
-        "operationId" : "create_3",
+        "operationId" : "create_4",
         "parameters" : [
           {
             "name" : "eventId",
@@ -1237,7 +1361,7 @@
         "tags" : [
           "ticket-type-controller"
         ],
-        "operationId" : "list_3",
+        "operationId" : "list_4",
         "parameters" : [
           {
             "name" : "eventId",
@@ -1269,7 +1393,7 @@
         "tags" : [
           "ticket-type-controller"
         ],
-        "operationId" : "create_4",
+        "operationId" : "create_5",
         "parameters" : [
           {
             "name" : "eventId",
@@ -1734,7 +1858,7 @@
         "tags" : [
           "booking-controller"
         ],
-        "operationId" : "create_5",
+        "operationId" : "create_6",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2218,7 +2342,7 @@
         "tags" : [
           "admin-trial-controller"
         ],
-        "operationId" : "list_4",
+        "operationId" : "list_5",
         "parameters" : [
           {
             "name" : "status",
@@ -2720,7 +2844,7 @@
         "tags" : [
           "admin-agreement-controller"
         ],
-        "operationId" : "list_5",
+        "operationId" : "list_6",
         "parameters" : [
           {
             "name" : "status",
@@ -2788,7 +2912,7 @@
         "tags" : [
           "admin-agreement-controller"
         ],
-        "operationId" : "create_6",
+        "operationId" : "create_7",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2895,12 +3019,82 @@
         }
       }
     },
+    "/api/v1/services/{id}" : {
+      "get" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "get_3",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ServiceResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "update_4",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ServiceUpdateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ServiceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/resources/{id}" : {
       "get" : {
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "get_3",
+        "operationId" : "get_4",
         "parameters" : [
           {
             "name" : "id",
@@ -2929,7 +3123,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "update_4",
+        "operationId" : "update_5",
         "parameters" : [
           {
             "name" : "id",
@@ -3280,7 +3474,7 @@
         "tags" : [
           "guest-controller"
         ],
-        "operationId" : "list_6",
+        "operationId" : "list_7",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3338,7 +3532,7 @@
         "tags" : [
           "dashboard-controller"
         ],
-        "operationId" : "get_4",
+        "operationId" : "get_5",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3515,7 +3709,7 @@
         "tags" : [
           "analytics-controller"
         ],
-        "operationId" : "get_5",
+        "operationId" : "get_6",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3894,7 +4088,7 @@
         "tags" : [
           "invoice-controller"
         ],
-        "operationId" : "list_7",
+        "operationId" : "list_8",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -3917,7 +4111,7 @@
         "tags" : [
           "invoice-controller"
         ],
-        "operationId" : "get_6",
+        "operationId" : "get_7",
         "parameters" : [
           {
             "name" : "invoiceId",
@@ -4053,7 +4247,7 @@
         "tags" : [
           "admin-tenant-controller"
         ],
-        "operationId" : "list_8",
+        "operationId" : "list_9",
         "parameters" : [
           {
             "name" : "query",
@@ -4103,7 +4297,7 @@
         "tags" : [
           "admin-prospect-lead-controller"
         ],
-        "operationId" : "list_9",
+        "operationId" : "list_10",
         "parameters" : [
           {
             "name" : "status",
@@ -4136,7 +4330,7 @@
         "tags" : [
           "admin-payment-controller"
         ],
-        "operationId" : "list_10",
+        "operationId" : "list_11",
         "parameters" : [
           {
             "name" : "status",
@@ -4206,7 +4400,7 @@
         "tags" : [
           "admin-booking-controller"
         ],
-        "operationId" : "list_11",
+        "operationId" : "list_12",
         "parameters" : [
           {
             "name" : "status",
@@ -4259,7 +4453,7 @@
         "tags" : [
           "admin-booking-payment-controller"
         ],
-        "operationId" : "list_12",
+        "operationId" : "list_13",
         "parameters" : [
           {
             "name" : "status",
@@ -4332,7 +4526,7 @@
         "tags" : [
           "admin-audit-controller"
         ],
-        "operationId" : "list_13",
+        "operationId" : "list_14",
         "parameters" : [
           {
             "name" : "action",
@@ -4403,6 +4597,39 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{id}/requirements/{requirementId}" : {
+      "delete" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "removeRequirement",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "requirementId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
           }
         }
       }
@@ -5209,6 +5436,83 @@
               "string",
               "null"
             ]
+          }
+        }
+      },
+      "ServiceCreateRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "timezone" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "name",
+          "timezone"
+        ]
+      },
+      "ServiceResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "timezone" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ServiceRequirementRequest" : {
+        "type" : "object",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "enum" : [
+              "PERSON",
+              "LOCATION",
+              "EQUIPMENT"
+            ]
+          },
+          "quantity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 100,
+            "minimum" : 1
+          }
+        }
+      },
+      "ServiceRequirementResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "serviceId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [
+              "PERSON",
+              "LOCATION",
+              "EQUIPMENT"
+            ]
+          },
+          "quantity" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },
@@ -7077,6 +7381,19 @@
         "required" : [
           "reason"
         ]
+      },
+      "ServiceUpdateRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 120,
+            "minLength" : 0
+          }
+        }
       },
       "ResourceUpdateRequest" : {
         "type" : "object",
