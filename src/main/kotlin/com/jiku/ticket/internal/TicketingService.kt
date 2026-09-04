@@ -44,6 +44,22 @@ class TicketingService(
         }
     }
 
+    @Transactional
+    override fun issueAppointment(
+        guestId: UUID,
+        startsAt: Instant,
+        endsAt: Instant,
+    ): String {
+        val ticket =
+            Ticket(eventId = null, guestId = guestId, ticketCode = codeGenerator.generate()).apply {
+                kind = TicketKind.APPOINTMENT
+                this.startsAt = startsAt
+                this.endsAt = endsAt
+            }
+        tickets.save(ticket)
+        return ticket.ticketCode
+    }
+
     @Transactional(readOnly = true)
     override fun findByGuest(guestId: UUID): TicketInfo? = tickets.findByGuestId(guestId)?.toInfo()
 

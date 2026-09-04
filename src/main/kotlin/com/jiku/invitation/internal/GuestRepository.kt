@@ -8,6 +8,9 @@ import java.util.UUID
 interface GuestRepository : JpaRepository<Guest, UUID> {
     fun findByEventId(eventId: UUID): List<Guest>
 
+    /** Titulaires de rendez-vous, sans événement (JIKU-87). */
+    fun findAllByEventIdIsNull(): List<Guest>
+
     /** Scopes a guest lookup to the event in the URL, so one event's controller can never act on another's guest. */
     fun findByIdAndEventId(
         id: UUID,

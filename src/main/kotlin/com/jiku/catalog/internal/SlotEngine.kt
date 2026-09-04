@@ -1,7 +1,10 @@
 package com.jiku.catalog.internal
 
 import com.jiku.catalog.ResourceType
+import com.jiku.shared.AppointmentBooked
+import com.jiku.shared.TenantContext
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Configuration
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.transaction.annotation.Transactional
@@ -61,6 +64,7 @@ class SlotEngine(
     private val unavailabilities: ResourceUnavailabilityRepository,
     private val reservations: ServiceReservationRepository,
     private val configService: ServiceConfigService,
+    private val events: ApplicationEventPublisher,
 ) {
     /** Créneaux du [day] (fuseau du service) satisfaisant chaque exigence. */
     @Transactional(readOnly = true)
@@ -147,6 +151,19 @@ class SlotEngine(
                 clientPhone = clientPhone.trim(),
                 bookingTokenHash = BookingToken.hash(rawToken),
             )
+        val tenantId = TenantContext.get() ?: throw SlotUnavailableException("No tenant context")
+        // Matérialise l'invité et son billet dans le tenant du service (JIKU-87) ;
+        // l'écouteur du module invitation tourne dans cette même transaction.
+        events.publishEvent(
+            AppointmentBooked(
+                serviceId = serviceId,
+                tenantId = tenantId,
+                startsAt = outcome.startsAt,
+                endsAt = outcome.endsAt,
+                clientName = clientName.trim(),
+                clientPhone = clientPhone.trim(),
+            ),
+        )
         return ClientBookingOutcome(
             bookingToken = rawToken,
             serviceId = outcome.serviceId,
