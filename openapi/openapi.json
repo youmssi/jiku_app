@@ -3279,6 +3279,37 @@
         }
       }
     },
+    "/api/v1/services/{id}/booking-link" : {
+      "get" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "bookingLink",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BookingLinkResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/rsvp/{token}" : {
       "get" : {
         "tags" : [
@@ -4212,6 +4243,44 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/InvitationPreview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/appointments/{token}" : {
+      "get" : {
+        "tags" : [
+          "appointment-public-controller"
+        ],
+        "operationId" : "view_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "date",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AppointmentServiceView"
                 }
               }
             }
@@ -7478,6 +7547,14 @@
           }
         }
       },
+      "BookingLinkResponse" : {
+        "type" : "object",
+        "properties" : {
+          "token" : {
+            "type" : "string"
+          }
+        }
+      },
       "FreeSlotResponse" : {
         "type" : "object",
         "properties" : {
@@ -8229,6 +8306,49 @@
           },
           "role" : {
             "type" : "string"
+          }
+        }
+      },
+      "AppointmentServiceView" : {
+        "type" : "object",
+        "properties" : {
+          "serviceId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "timezone" : {
+            "type" : "string"
+          },
+          "confirmationMode" : {
+            "type" : "string"
+          },
+          "professionals" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "slots" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AppointmentSlotView"
+            }
+          }
+        }
+      },
+      "AppointmentSlotView" : {
+        "type" : "object",
+        "properties" : {
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endsAt" : {
+            "type" : "string",
+            "format" : "date-time"
           }
         }
       },

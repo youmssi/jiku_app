@@ -33,3 +33,7 @@ data class ServiceRequirementResponse(
     val type: ResourceType,
     val quantity: Int,
 )
+
+data class BookingLinkResponse(
+    val token: String,
+)
