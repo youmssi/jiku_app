@@ -52,11 +52,8 @@ class SlotEngine(
     private val availabilities: ResourceAvailabilityRepository,
     private val unavailabilities: ResourceUnavailabilityRepository,
     private val reservations: ServiceReservationRepository,
-    private val props: SlotGridProperties,
+    private val configService: ServiceConfigService,
 ) {
-    private val duration: Long get() = props.durationMinutes + props.bufferMinutes.toLong()
-    private val step: Long get() = props.stepMinutes.toLong()
-
     /** Créneaux du [day] (fuseau du service) satisfaisant chaque exigence. */
     @Transactional(readOnly = true)
     fun openSlots(
@@ -65,6 +62,9 @@ class SlotEngine(
         now: Instant = Instant.now(),
     ): List<OpenSlot> {
         val service = service(serviceId) ?: return emptyList()
+        val eff = configService.effective(serviceId)
+        val step = eff.stepMinutes.toLong()
+        val occupancy = eff.occupancyMinutes
         val zone = ZoneId.of(service.timezone)
         val dayStart = day.atStartOfDay(zone).toInstant()
         val dayEnd = day.plusDays(1).atStartOfDay(zone).toInstant()
@@ -72,13 +72,13 @@ class SlotEngine(
         if (required.isEmpty()) {
             return emptyList()
         }
-        val minHorizon = now.plusSeconds(props.minHorizonMinutes * 60L)
+        val minHorizon = now.plusSeconds(eff.minHorizonMinutes * 60L)
 
         val slots = mutableListOf<OpenSlot>()
         var offset = 0L
         while (true) {
             val startsAt = dayStart.plusSeconds(offset * 60)
-            val endsAt = startsAt.plusSeconds(duration * 60)
+            val endsAt = startsAt.plusSeconds(occupancy * 60)
             if (endsAt.isAfter(dayEnd)) break
             if (!startsAt.isBefore(minHorizon)) {
                 if (required.all { freeOfType(it.type, startsAt, endsAt, now).size >= it.quantity }) {
@@ -90,7 +90,7 @@ class SlotEngine(
         return slots
     }
 
-    /** Réserve sur demande : la case est bloquée [SlotGridProperties.holdMinutes], puis purgée. */
+    /** Réserve sur demande : la case est bloquée `hold` minutes, puis purgée. */
     @Transactional
     fun reserve(
         serviceId: UUID,
@@ -99,7 +99,7 @@ class SlotEngine(
         reserveWithHold(
             serviceId,
             startsAt,
-            Instant.now().plusSeconds(props.holdMinutes * 60),
+            Instant.now().plusSeconds(configService.effective(serviceId).holdMinutes * 60),
         )
 
     /** Réserve immédiatement (mode instantané) : la case est confirmée d'emblée. */
@@ -125,11 +125,12 @@ class SlotEngine(
         heldUntil: Instant?,
     ): ReservationOutcome {
         val service = service(serviceId) ?: throw SlotUnavailableException("Service inconnu")
+        val eff = configService.effective(serviceId)
         val zone = ZoneId.of(service.timezone)
-        val endsAt = startsAt.plusSeconds(duration * 60)
+        val endsAt = startsAt.plusSeconds(eff.occupancyMinutes * 60)
         val now = Instant.now()
         // Garde de grille : un créneau proposé ailleurs est déjà dans ces bornes.
-        if (startsAt.isBefore(now.plusSeconds(props.minHorizonMinutes * 60L))) {
+        if (startsAt.isBefore(now.plusSeconds(eff.minHorizonMinutes * 60L))) {
             throw SlotUnavailableException("Créneau trop proche de l'instant présent")
         }
         if (startsAt.atZone(zone).toLocalDate() != endsAt.atZone(zone).toLocalDate()) {
@@ -208,5 +209,5 @@ class SlotEngine(
 }
 
 @Configuration
-@EnableConfigurationProperties(SlotGridProperties::class)
+@EnableConfigurationProperties(SlotGridProperties::class, ServiceDefaultsProperties::class)
 class SlotEngineConfiguration

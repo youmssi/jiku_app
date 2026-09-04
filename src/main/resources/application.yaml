@@ -392,6 +392,16 @@ catalog:
     # Durée de blocage d'une demande en attente (mode « sur demande », §5), avant
     # qu'elle soit libérée par la purge.
     hold-minutes: ${CATALOG_SLOT_HOLD_MINUTES:1440}
+  service:
+    # Défauts des options de service hors grille (JIKU-86) ; un service peut les
+    # surcharger dans service_config. La grille garde ses défauts dans
+    # catalog.slot.*.
+    confirmation-mode: ${CATALOG_SERVICE_CONFIRMATION_MODE:ON_REQUEST}
+    max-horizon-days: ${CATALOG_SERVICE_MAX_HORIZON_DAYS:30}
+    cancel-deadline-hours: ${CATALOG_SERVICE_CANCEL_DEADLINE_HOURS:24}
+    no-show-tolerance-minutes: ${CATALOG_SERVICE_NO_SHOW_TOLERANCE_MINUTES:10}
+    walk-ins-allowed: ${CATALOG_SERVICE_WALK_INS_ALLOWED:true}
+    payment-mode: ${CATALOG_SERVICE_PAYMENT_MODE:FREE}
 
 notification:
   sales:
