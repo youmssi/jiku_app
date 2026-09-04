@@ -1,5 +1,6 @@
 package com.jiku.catalog.internal
 
+import com.jiku.shared.TenantContext
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
@@ -12,18 +13,20 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
 /**
  * Services d'un organisateur (JIKU-87) : ce qu'on réserve (coupe, coloration…),
- * avec ses exigences en ressources. Le partage d'un lien de réservation client
- * s'ajoute dans la foulée.
+ * avec ses exigences en ressources et le lien de réservation partageable au
+ * client.
  */
 @RestController
 @RequestMapping("/services")
 @PreAuthorize("hasRole('ORGANIZER')")
 class ServiceController(
     private val services: ServiceAdminService,
+    private val linkTokens: ServiceLinkTokenService,
 ) {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -38,6 +41,16 @@ class ServiceController(
     fun get(
         @PathVariable id: UUID,
     ): ServiceResponse = services.get(id)
+
+    /** Lien signé partageable au client, sans compte (JIKU-87). */
+    @GetMapping("/{id}/booking-link")
+    fun bookingLink(
+        @PathVariable id: UUID,
+    ): BookingLinkResponse {
+        services.get(id)
+        val tenantId = TenantContext.get() ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "No tenant")
+        return BookingLinkResponse(token = linkTokens.issue(id, tenantId))
+    }
 
     @PatchMapping("/{id}")
     fun update(

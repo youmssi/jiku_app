@@ -63,6 +63,9 @@ class SecurityConfig(
                 it.requestMatchers("${apiProperties.basePath}/admin/**").hasRole("PLATFORM_ADMIN")
                 it.requestMatchers("${apiProperties.basePath}/rsvp/**").permitAll()
                 it.requestMatchers("${apiProperties.basePath}/checkin/**").permitAll()
+                // Parcours client rendez-vous (JIKU-87) : le client n'a pas de compte,
+                // il est authentifié par le lien de service signé porté dans le chemin.
+                it.requestMatchers("${apiProperties.basePath}/appointments/**").permitAll()
                 // Deposit-reservation flow (JIKU-55): a prospect has no account yet, so
                 // every booking endpoint is either fully open or gated by the booking's
                 // own access token (query param) rather than a JWT.
