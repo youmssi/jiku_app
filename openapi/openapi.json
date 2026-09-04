@@ -2289,6 +2289,46 @@
         }
       }
     },
+    "/api/v1/appointments/{token}/book" : {
+      "post" : {
+        "tags" : [
+          "appointment-public-controller"
+        ],
+        "operationId" : "book",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AppointmentBookingRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AppointmentBookingView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/whatsapp/content-override" : {
       "get" : {
         "tags" : [
@@ -4284,6 +4324,73 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/appointments/{token}/booking/{bookingToken}" : {
+      "get" : {
+        "tags" : [
+          "appointment-public-controller"
+        ],
+        "operationId" : "status_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "bookingToken",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AppointmentStatusView"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [
+          "appointment-public-controller"
+        ],
+        "operationId" : "cancel_2",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "bookingToken",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
           }
         }
       }
@@ -6807,6 +6914,47 @@
           "email"
         ]
       },
+      "AppointmentBookingRequest" : {
+        "type" : "object",
+        "properties" : {
+          "clientName" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "clientPhone" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [
+          "clientName",
+          "clientPhone"
+        ]
+      },
+      "AppointmentBookingView" : {
+        "type" : "object",
+        "properties" : {
+          "bookingToken" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
       "SetContentOverrideRequest" : {
         "type" : "object",
         "properties" : {
@@ -8349,6 +8497,28 @@
           "endsAt" : {
             "type" : "string",
             "format" : "date-time"
+          }
+        }
+      },
+      "AppointmentStatusView" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "string"
+          },
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "clientName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         }
       },

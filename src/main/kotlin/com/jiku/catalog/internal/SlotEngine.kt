@@ -29,6 +29,14 @@ data class ReservationOutcome(
     val resourceIds: List<UUID>,
 )
 
+data class ClientBookingOutcome(
+    val bookingToken: String,
+    val serviceId: UUID,
+    val startsAt: Instant,
+    val endsAt: Instant,
+    val status: ServiceReservationStatus,
+)
+
 /**
  * Moteur de créneaux et réservation atomique (JIKU-85), le cœur du produit
  * rendez-vous. Une grille fixe (multiples du pas depuis minuit local au fuseau du
@@ -107,7 +115,46 @@ class SlotEngine(
     fun reserveConfirmed(
         serviceId: UUID,
         startsAt: Instant,
-    ): ReservationOutcome = claim(serviceId, startsAt, heldUntil = null)
+    ): ReservationOutcome = doClaim(serviceId, startsAt, heldUntil = null)
+
+    /**
+     * Réservation par un client sans compte (JIKU-87). Suit le mode effectif du
+     * service : sur demande → PENDING (bloqué jusqu'à expiration), sinon
+     * CONFIRMÉ. Remet un jeton client (stocké hashé) qui permet de consulter et
+     * d'annuler.
+     */
+    @Transactional
+    fun bookClient(
+        serviceId: UUID,
+        startsAt: Instant,
+        clientName: String,
+        clientPhone: String,
+    ): ClientBookingOutcome {
+        val eff = configService.effective(serviceId)
+        val heldUntil =
+            if (eff.confirmationMode == ConfirmationMode.ON_REQUEST) {
+                Instant.now().plusSeconds(eff.holdMinutes * 60)
+            } else {
+                null
+            }
+        val rawToken = BookingToken.new()
+        val outcome =
+            doClaim(
+                serviceId,
+                startsAt,
+                heldUntil,
+                clientName = clientName.trim(),
+                clientPhone = clientPhone.trim(),
+                bookingTokenHash = BookingToken.hash(rawToken),
+            )
+        return ClientBookingOutcome(
+            bookingToken = rawToken,
+            serviceId = outcome.serviceId,
+            startsAt = outcome.startsAt,
+            endsAt = outcome.endsAt,
+            status = outcome.status,
+        )
+    }
 
     /** Purge les demandes en attente expirées : leurs cases redeviennent réservables. */
     @Transactional
@@ -117,12 +164,15 @@ class SlotEngine(
         serviceId: UUID,
         startsAt: Instant,
         heldUntil: Instant,
-    ): ReservationOutcome = claim(serviceId, startsAt, heldUntil)
+    ): ReservationOutcome = doClaim(serviceId, startsAt, heldUntil)
 
-    private fun claim(
+    private fun doClaim(
         serviceId: UUID,
         startsAt: Instant,
         heldUntil: Instant?,
+        clientName: String? = null,
+        clientPhone: String? = null,
+        bookingTokenHash: String? = null,
     ): ReservationOutcome {
         val service = service(serviceId) ?: throw SlotUnavailableException("Service inconnu")
         val eff = configService.effective(serviceId)
@@ -157,6 +207,9 @@ class SlotEngine(
                     ServiceReservation(serviceId = serviceId, resourceId = resourceId, startsAt = startsAt, endsAt = endsAt).apply {
                         this.status = status
                         this.heldUntil = heldUntil
+                        this.clientName = clientName
+                        this.clientPhone = clientPhone
+                        this.bookingTokenHash = bookingTokenHash
                     },
                 )
             } catch (ex: DataIntegrityViolationException) {
