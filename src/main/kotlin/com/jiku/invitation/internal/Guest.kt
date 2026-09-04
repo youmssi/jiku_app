@@ -20,8 +20,9 @@ import java.util.UUID
 @Entity
 @Table(name = "guest")
 class Guest(
-    @Column(name = "event_id", nullable = false, updatable = false)
-    val eventId: UUID,
+    /** Nul pour un titulaire de rendez-vous (JIKU-87) : il n'appartient à aucun événement. */
+    @Column(name = "event_id", updatable = false)
+    val eventId: UUID?,
     @Column(name = "first_name", nullable = false)
     var firstName: String,
     @Column(name = "last_name", nullable = false)

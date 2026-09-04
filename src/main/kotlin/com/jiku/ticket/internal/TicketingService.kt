@@ -149,7 +149,7 @@ class TicketingService(
 private fun Ticket.toInfo(): TicketInfo =
     TicketInfo(
         id = requireNotNull(id),
-        eventId = eventId,
+        eventId = requireNotNull(eventId),
         guestId = guestId,
         ticketCode = ticketCode,
         status = status.name,

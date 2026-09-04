@@ -23,8 +23,8 @@ import java.util.UUID
 class GuestErasureLog(
     @Column(name = "guest_id", nullable = false, updatable = false)
     val guestId: UUID,
-    @Column(name = "event_id", nullable = false, updatable = false)
-    val eventId: UUID,
+    @Column(name = "event_id", updatable = false)
+    val eventId: UUID?,
     @Enumerated(EnumType.STRING)
     @Column(name = "reason", nullable = false, updatable = false)
     val reason: ErasureReason,
