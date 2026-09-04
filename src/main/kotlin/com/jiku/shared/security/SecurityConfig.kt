@@ -66,6 +66,10 @@ class SecurityConfig(
                 // Parcours client rendez-vous (JIKU-87) : le client n'a pas de compte,
                 // il est authentifié par le lien de service signé porté dans le chemin.
                 it.requestMatchers("${apiProperties.basePath}/appointments/**").permitAll()
+                // Console de ligne du jour du personnel (JIKU-88) : le personnel n'a
+                // pas de compte, il est authentifié par le lien signé du comptoir porté
+                // dans le chemin, comme les validateurs sous /checkin.
+                it.requestMatchers("${apiProperties.basePath}/line/**").permitAll()
                 // Deposit-reservation flow (JIKU-55): a prospect has no account yet, so
                 // every booking endpoint is either fully open or gated by the booking's
                 // own access token (query param) rather than a JWT.
