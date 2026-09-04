@@ -537,6 +537,346 @@
         }
       }
     },
+    "/api/v1/services/{serviceId}/staff-links" : {
+      "get" : {
+        "tags" : [
+          "service-staff-controller"
+        ],
+        "operationId" : "list_1",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ServiceStaffView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "service-staff-controller"
+        ],
+        "operationId" : "create_1",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ServiceStaffCreateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ServiceStaffCreatedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/day-line/walk-in" : {
+      "post" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "walkIn",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WalkInRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DayLineView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/day-line/tickets/{ticketCode}/present" : {
+      "post" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "present",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/day-line/tickets/{ticketCode}/no-show" : {
+      "post" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "noShow",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/day-line/tickets/{ticketCode}/finish" : {
+      "post" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "finish",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/day-line/tickets/{ticketCode}/call" : {
+      "post" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "call",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/day-line/tickets/{ticketCode}/arrive" : {
+      "post" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "arrive",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/day-line/next" : {
+      "post" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "next",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NextResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/services/{id}/requirements" : {
       "get" : {
         "tags" : [
@@ -745,7 +1085,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "list_1",
+        "operationId" : "list_2",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -766,7 +1106,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "create_1",
+        "operationId" : "create_2",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -972,7 +1312,7 @@
         "tags" : [
           "org-controller"
         ],
-        "operationId" : "create_2",
+        "operationId" : "create_3",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1130,12 +1470,272 @@
         }
       }
     },
+    "/api/v1/line/{token}/walk-in" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "walkIn_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WalkInRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DayLineView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/tickets/{ticketCode}/present" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "present_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/tickets/{ticketCode}/no-show" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "noShow_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/tickets/{ticketCode}/finish" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "finish_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/tickets/{ticketCode}/call" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "call_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/tickets/{ticketCode}/arrive" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "arrive_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/next" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "next_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NextResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/events" : {
       "get" : {
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "list_2",
+        "operationId" : "list_3",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -1156,7 +1756,7 @@
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "create_3",
+        "operationId" : "create_4",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1248,7 +1848,7 @@
         "tags" : [
           "validator-controller"
         ],
-        "operationId" : "list_3",
+        "operationId" : "list_4",
         "parameters" : [
           {
             "name" : "eventId",
@@ -1280,7 +1880,7 @@
         "tags" : [
           "validator-controller"
         ],
-        "operationId" : "create_4",
+        "operationId" : "create_5",
         "parameters" : [
           {
             "name" : "eventId",
@@ -1361,7 +1961,7 @@
         "tags" : [
           "ticket-type-controller"
         ],
-        "operationId" : "list_4",
+        "operationId" : "list_5",
         "parameters" : [
           {
             "name" : "eventId",
@@ -1393,7 +1993,7 @@
         "tags" : [
           "ticket-type-controller"
         ],
-        "operationId" : "create_5",
+        "operationId" : "create_6",
         "parameters" : [
           {
             "name" : "eventId",
@@ -1858,7 +2458,7 @@
         "tags" : [
           "booking-controller"
         ],
-        "operationId" : "create_6",
+        "operationId" : "create_7",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2382,7 +2982,7 @@
         "tags" : [
           "admin-trial-controller"
         ],
-        "operationId" : "list_5",
+        "operationId" : "list_6",
         "parameters" : [
           {
             "name" : "status",
@@ -2884,7 +3484,7 @@
         "tags" : [
           "admin-agreement-controller"
         ],
-        "operationId" : "list_6",
+        "operationId" : "list_7",
         "parameters" : [
           {
             "name" : "status",
@@ -2952,7 +3552,7 @@
         "tags" : [
           "admin-agreement-controller"
         ],
-        "operationId" : "create_7",
+        "operationId" : "create_8",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3319,6 +3919,45 @@
         }
       }
     },
+    "/api/v1/services/{serviceId}/day-line" : {
+      "get" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "view",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "date",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DayLineView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/services/{id}/booking-link" : {
       "get" : {
         "tags" : [
@@ -3355,7 +3994,7 @@
         "tags" : [
           "rsvp-controller"
         ],
-        "operationId" : "view",
+        "operationId" : "view_1",
         "parameters" : [
           {
             "name" : "token",
@@ -3445,6 +4084,44 @@
                   "items" : {
                     "$ref" : "#/components/schemas/MemberView"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}" : {
+      "get" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "view_2",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "date",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DayLineView"
                 }
               }
             }
@@ -3545,7 +4222,7 @@
         "tags" : [
           "guest-controller"
         ],
-        "operationId" : "list_7",
+        "operationId" : "list_8",
         "parameters" : [
           {
             "name" : "eventId",
@@ -4159,7 +4836,7 @@
         "tags" : [
           "invoice-controller"
         ],
-        "operationId" : "list_8",
+        "operationId" : "list_9",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -4295,7 +4972,7 @@
         "tags" : [
           "appointment-public-controller"
         ],
-        "operationId" : "view_1",
+        "operationId" : "view_3",
         "parameters" : [
           {
             "name" : "token",
@@ -4423,7 +5100,7 @@
         "tags" : [
           "admin-tenant-controller"
         ],
-        "operationId" : "list_9",
+        "operationId" : "list_10",
         "parameters" : [
           {
             "name" : "query",
@@ -4473,7 +5150,7 @@
         "tags" : [
           "admin-prospect-lead-controller"
         ],
-        "operationId" : "list_10",
+        "operationId" : "list_11",
         "parameters" : [
           {
             "name" : "status",
@@ -4506,7 +5183,7 @@
         "tags" : [
           "admin-payment-controller"
         ],
-        "operationId" : "list_11",
+        "operationId" : "list_12",
         "parameters" : [
           {
             "name" : "status",
@@ -4576,7 +5253,7 @@
         "tags" : [
           "admin-booking-controller"
         ],
-        "operationId" : "list_12",
+        "operationId" : "list_13",
         "parameters" : [
           {
             "name" : "status",
@@ -4629,7 +5306,7 @@
         "tags" : [
           "admin-booking-payment-controller"
         ],
-        "operationId" : "list_13",
+        "operationId" : "list_14",
         "parameters" : [
           {
             "name" : "status",
@@ -4702,7 +5379,7 @@
         "tags" : [
           "admin-audit-controller"
         ],
-        "operationId" : "list_14",
+        "operationId" : "list_15",
         "parameters" : [
           {
             "name" : "action",
@@ -4773,6 +5450,39 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/staff-links/{staffId}" : {
+      "delete" : {
+        "tags" : [
+          "service-staff-controller"
+        ],
+        "operationId" : "revoke_1",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "staffId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
           }
         }
       }
@@ -4905,7 +5615,7 @@
         "tags" : [
           "member-controller"
         ],
-        "operationId" : "revoke_1",
+        "operationId" : "revoke_2",
         "parameters" : [
           {
             "name" : "invitationId",
@@ -5645,6 +6355,178 @@
           },
           "timezone" : {
             "type" : "string"
+          }
+        }
+      },
+      "ServiceStaffCreateRequest" : {
+        "type" : "object",
+        "properties" : {
+          "label" : {
+            "type" : "string",
+            "maxLength" : 80,
+            "minLength" : 0
+          }
+        },
+        "required" : [
+          "label"
+        ]
+      },
+      "ServiceStaffCreatedResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "token" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "WalkInRequest" : {
+        "type" : "object",
+        "properties" : {
+          "clientName" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "clientPhone" : {
+            "type" : "string",
+            "maxLength" : 32,
+            "minLength" : 0
+          }
+        },
+        "required" : [
+          "clientName",
+          "clientPhone"
+        ]
+      },
+      "DayLineView" : {
+        "type" : "object",
+        "properties" : {
+          "serviceId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "serviceName" : {
+            "type" : "string"
+          },
+          "timezone" : {
+            "type" : "string"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "entries" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/LineTicket"
+            }
+          }
+        }
+      },
+      "LineTicket" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "ticketCode" : {
+            "type" : "string"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "clientName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "clientPhone" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "startsAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "endsAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "arrivedAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "dayRank" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          }
+        }
+      },
+      "LineActionResult" : {
+        "type" : "object",
+        "properties" : {
+          "outcome" : {
+            "type" : "string",
+            "enum" : [
+              "OK",
+              "NOT_FOUND",
+              "WRONG_STATE"
+            ]
+          },
+          "ticket" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/LineTicket"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          }
+        }
+      },
+      "NextResponse" : {
+        "type" : "object",
+        "properties" : {
+          "ticket" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/LineTicket"
+              },
+              {
+                "type" : "null"
+              }
+            ]
           }
         }
       },
@@ -7692,6 +8574,36 @@
         "properties" : {
           "excluded" : {
             "type" : "boolean"
+          }
+        }
+      },
+      "ServiceStaffView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "serviceId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "revoked" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "revokedAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
           }
         }
       },
