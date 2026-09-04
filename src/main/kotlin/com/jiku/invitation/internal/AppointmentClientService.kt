@@ -24,6 +24,12 @@ class AppointmentClientService(
                     phoneNumber = booking.clientPhone,
                 ),
             )
-        ticketing.issueAppointment(requireNotNull(guest.id), booking.startsAt, booking.endsAt)
+        ticketing.issueAppointment(
+            guestId = requireNotNull(guest.id),
+            startsAt = booking.startsAt,
+            endsAt = booking.endsAt,
+            serviceId = booking.serviceId,
+            professionalName = booking.professionalName,
+        )
     }
 }

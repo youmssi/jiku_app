@@ -49,12 +49,16 @@ class TicketingService(
         guestId: UUID,
         startsAt: Instant,
         endsAt: Instant,
+        serviceId: UUID,
+        professionalName: String?,
     ): String {
         val ticket =
             Ticket(eventId = null, guestId = guestId, ticketCode = codeGenerator.generate()).apply {
                 kind = TicketKind.APPOINTMENT
                 this.startsAt = startsAt
                 this.endsAt = endsAt
+                this.serviceId = serviceId
+                this.professionalName = professionalName
             }
         tickets.save(ticket)
         return ticket.ticketCode

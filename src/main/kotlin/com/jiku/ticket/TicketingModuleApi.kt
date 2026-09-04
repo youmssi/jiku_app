@@ -20,12 +20,15 @@ interface TicketingModuleApi {
 
     /**
      * Émet le billet d'un rendez-vous sans compte (JIKU-87) : billet sans
-     * événement portant le créneau. Renvoie le code (le QR sera rendu côté web).
+     * événement portant le créneau, le service et le nom du professionnel.
+     * Renvoie le code (le QR sera rendu côté web).
      */
     fun issueAppointment(
         guestId: UUID,
         startsAt: Instant,
         endsAt: Instant,
+        serviceId: UUID,
+        professionalName: String?,
     ): String
 
     fun findByGuest(guestId: UUID): TicketInfo?
