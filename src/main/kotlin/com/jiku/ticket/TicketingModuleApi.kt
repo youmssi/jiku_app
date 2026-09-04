@@ -18,6 +18,16 @@ interface TicketingModuleApi {
 
     fun cancelByGuest(guestId: UUID)
 
+    /**
+     * Émet le billet d'un rendez-vous sans compte (JIKU-87) : billet sans
+     * événement portant le créneau. Renvoie le code (le QR sera rendu côté web).
+     */
+    fun issueAppointment(
+        guestId: UUID,
+        startsAt: Instant,
+        endsAt: Instant,
+    ): String
+
     fun findByGuest(guestId: UUID): TicketInfo?
 
     fun findByCode(ticketCode: String): TicketInfo?
