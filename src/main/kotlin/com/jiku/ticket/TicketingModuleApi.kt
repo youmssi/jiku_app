@@ -1,6 +1,7 @@
 package com.jiku.ticket
 
 import java.time.Instant
+import java.time.LocalDate
 import java.util.UUID
 
 /**
@@ -108,7 +109,8 @@ interface TicketingModuleApi {
 
     /**
      * Arrivée au comptoir d'un rendez-vous du jour : ISSUED → EN_ATTENTE,
-     * horodatée, avec son rang du jour. La garde sur l'état la rend atomique
+     * horodatée, avec son rang du jour — alloué séquentiellement par (service,
+     * [rankDay]) sous verrou. La garde sur l'état rend la transition atomique
      * (double scan refusé).
      */
     fun arriveByCode(
@@ -117,6 +119,7 @@ interface TicketingModuleApi {
         at: Instant,
         dayStart: Instant,
         dayEnd: Instant,
+        rankDay: LocalDate,
     ): LineActionResult
 
     /** Appel d'une personne précise : EN_ATTENTE → APPELÉ. */
@@ -145,8 +148,9 @@ interface TicketingModuleApi {
 
     /**
      * Crée un sans-rendez-vous au comptoir (JIKU-88) : le client est déjà présent,
-     * son ticket naît en EN_ATTENTE avec son rang du jour. L'invité est matérialisé
-     * par le module invitation, qui appelle cette méthode.
+     * son ticket naît en EN_ATTENTE avec son rang du jour — alloué
+     * séquentiellement par (service, [rankDay]) sous verrou. L'invité est
+     * matérialisé par le module invitation, qui appelle cette méthode.
      */
     fun issueWalkIn(
         guestId: UUID,
@@ -157,6 +161,7 @@ interface TicketingModuleApi {
         arrivedAt: Instant,
         dayStart: Instant,
         dayEnd: Instant,
+        rankDay: LocalDate,
     ): LineTicket
 }
 

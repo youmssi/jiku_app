@@ -52,9 +52,9 @@ class DayLineConsoleService(
     /** Appelle la personne suivante sur la ligne d'aujourd'hui (règle §4.1). */
     @Transactional
     fun next(serviceId: UUID): LineTicket? {
-        val (start, end) = todayWindow(serviceId)
+        val today = today(serviceId)
         val tolerance = config.effective(serviceId).noShowToleranceMinutes.toLong()
-        return ticketing.callNext(serviceId, start, end, Instant.now(), tolerance)
+        return ticketing.callNext(serviceId, today.start, today.end, Instant.now(), tolerance)
     }
 
     /** Arrivée au comptoir d'un rendez-vous d'aujourd'hui. */
@@ -63,8 +63,8 @@ class DayLineConsoleService(
         serviceId: UUID,
         ticketCode: String,
     ): LineActionResult {
-        val (start, end) = todayWindow(serviceId)
-        return ticketing.arriveByCode(serviceId, ticketCode, Instant.now(), start, end)
+        val today = today(serviceId)
+        return ticketing.arriveByCode(serviceId, ticketCode, Instant.now(), today.start, today.end, today.day)
     }
 
     /** Appel d'une personne précise de la ligne d'aujourd'hui. */
@@ -126,16 +126,25 @@ class DayLineConsoleService(
                 arrivedAt = now,
                 dayStart = start,
                 dayEnd = end,
+                rankDay = day,
             ),
         )
         return view(serviceId, day)
     }
 
-    private fun todayWindow(serviceId: UUID): Pair<Instant, Instant> {
+    private fun today(serviceId: UUID): DayWindow {
         val service = services.get(serviceId)
         val zone = ZoneId.of(service.timezone)
-        return window(zone, LocalDate.now(zone))
+        val day = LocalDate.now(zone)
+        val (start, end) = window(zone, day)
+        return DayWindow(day, start, end)
     }
+
+    private data class DayWindow(
+        val day: LocalDate,
+        val start: Instant,
+        val end: Instant,
+    )
 
     private fun window(
         zone: ZoneId,

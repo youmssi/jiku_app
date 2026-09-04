@@ -1,10 +1,13 @@
 package com.jiku.ticket.internal
 
+import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.time.Instant
+import java.time.LocalDate
 import java.util.UUID
 
 interface TicketRepository : JpaRepository<Ticket, UUID> {
@@ -91,17 +94,6 @@ interface TicketRepository : JpaRepository<Ticket, UUID> {
         @Param("to") to: Instant,
     ): List<Ticket>
 
-    @Query(
-        "SELECT COALESCE(MAX(t.dayRank), 0) FROM Ticket t " +
-            "WHERE t.serviceId = :serviceId AND t.dayRank IS NOT NULL " +
-            "AND t.arrivedAt >= :from AND t.arrivedAt < :to",
-    )
-    fun maxDayRank(
-        @Param("serviceId") serviceId: UUID,
-        @Param("from") from: Instant,
-        @Param("to") to: Instant,
-    ): Int
-
     /**
      * Arrivée au comptoir (JIKU-88) : ISSUED → WAITING, horodatée, avec son rang
      * du jour. La garde sur l'état rend la transition atomique (double scan).
@@ -160,4 +152,39 @@ interface TicketRepository : JpaRepository<Ticket, UUID> {
         @Param("id") id: UUID,
         @Param("serviceId") serviceId: UUID,
     ): Int
+}
+
+/**
+ * Compteur de rang par (service, journée locale). Les lectures de l'incrément se
+ * font sous verrou pessimiste ; la création de ligne se fait en propre
+ * transaction par [TicketDayRankAllocator].
+ */
+interface TicketDayCounterRepository : JpaRepository<TicketDayCounter, UUID> {
+    /**
+     * Prend le verrou d'écriture du compteur du service pour la journée, tenu
+     * jusqu'à l'engagement de la transaction d'arrivée. Deux arrivées
+     * concurrentes se mettent donc en file plutôt que de lire le même rang.
+     *
+     * Reste une requête dérivée et non du SQL natif pour que le prédicat
+     * `@TenantId` de Hibernate s'applique — une lecture native trouverait le
+     * compteur d'un autre tenant.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select c from TicketDayCounter c where c.serviceId = :serviceId and c.day = :day")
+    fun findForUpdate(
+        @Param("serviceId") serviceId: UUID,
+        @Param("day") day: LocalDate,
+    ): TicketDayCounter?
+
+    /**
+     * Vérification d'existence sans verrou, utilisée uniquement à la création de
+     * la ligne d'une nouvelle journée. Prendre le verrou ici mettrait en file
+     * chaque arrivée derrière le chemin de création plutôt que derrière
+     * l'incrément. HQL et non SQL natif, pour le prédicat tenant.
+     */
+    @Query("select c from TicketDayCounter c where c.serviceId = :serviceId and c.day = :day")
+    fun findExisting(
+        @Param("serviceId") serviceId: UUID,
+        @Param("day") day: LocalDate,
+    ): TicketDayCounter?
 }

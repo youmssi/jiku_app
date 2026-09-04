@@ -161,6 +161,7 @@ class LineStaffControllerTest {
                 arrivedAt = Instant.now(),
                 dayStart = start,
                 dayEnd = end,
+                rankDay = today,
             ).ticketCode
     }
 

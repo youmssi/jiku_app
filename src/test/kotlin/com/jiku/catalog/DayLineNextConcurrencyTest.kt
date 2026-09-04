@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
@@ -67,7 +68,10 @@ class DayLineNextConcurrencyTest {
         val codes = ticketing.serviceLine(serviceId, dayStart, dayEnd).map { it.ticketCode }
         codes.forEachIndexed { index, code ->
             val at = slot.plusSeconds(1800L * index).minusSeconds(300)
-            assertEquals(com.jiku.ticket.LineOutcome.OK, ticketing.arriveByCode(serviceId, code, at, dayStart, dayEnd).outcome)
+            assertEquals(
+                com.jiku.ticket.LineOutcome.OK,
+                ticketing.arriveByCode(serviceId, code, at, dayStart, dayEnd, rankDay = LocalDate.parse("2026-11-02")).outcome,
+            )
         }
 
         val pool = Executors.newFixedThreadPool(3)
@@ -97,6 +101,55 @@ class DayLineNextConcurrencyTest {
         assertEquals(called.size, called.groupBy { it }.keys.size)
         val statuses = ticketing.serviceLine(serviceId, dayStart, dayEnd).map { it.status }.toSet()
         assertEquals(setOf("CALLED"), statuses)
+    }
+
+    @Test
+    fun `two simultaneous first arrivals get distinct sequential day ranks`() {
+        TenantContext.set(tenant)
+        val serviceId = serviceWithMorning()
+        val slot = Instant.parse("2026-11-02T09:00:00Z")
+
+        engine.bookClient(serviceId, slot, "Alpha", "+224600000040")
+        engine.bookClient(serviceId, slot.plusSeconds(1800), "Beta", "+224600000041")
+        val codes = ticketing.serviceLine(serviceId, dayStart, dayEnd).map { it.ticketCode }
+        assertEquals(2, codes.size)
+
+        // Deux premiers arrivants de la journée : même s'ils passent en même
+        // temps, le compteur (verrou + création en propre transaction) leur
+        // donne des rangs 1 et 2 — jamais deux fois le même numéro.
+        val pool = Executors.newFixedThreadPool(2)
+        val start = CountDownLatch(1)
+        val gate = CountDownLatch(2)
+        val ranks = CopyOnWriteArrayList<Int>()
+        repeat(2) {
+            pool.execute {
+                TenantContext.set(tenant)
+                try {
+                    gate.countDown()
+                    start.await()
+                    val at = slot.plusSeconds(1800L * it).minusSeconds(300)
+                    val result =
+                        ticketing.arriveByCode(
+                            serviceId,
+                            codes[it],
+                            at,
+                            dayStart,
+                            dayEnd,
+                            rankDay = LocalDate.parse("2026-11-02"),
+                        )
+                    result.ticket?.dayRank?.let { ranks += it }
+                } finally {
+                    TenantContext.clear()
+                }
+            }
+        }
+        assertTrue(gate.await(10, TimeUnit.SECONDS))
+        start.countDown()
+        pool.shutdown()
+        assertTrue(pool.awaitTermination(10, TimeUnit.SECONDS))
+
+        assertEquals(2, ranks.size)
+        assertEquals(setOf(1, 2), ranks.toSet())
     }
 
     private fun serviceWithMorning(): UUID {

@@ -8,16 +8,23 @@ import com.jiku.ticket.LineOutcome
 import com.jiku.ticket.LineTicket
 import com.jiku.ticket.TicketInfo
 import com.jiku.ticket.TicketingModuleApi
+import org.slf4j.LoggerFactory
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
+import java.time.LocalDate
 import java.util.UUID
 
 @Service
 class TicketingService(
     private val tickets: TicketRepository,
     private val codeGenerator: TicketCodeGenerator,
+    private val rankAllocator: TicketDayRankAllocator,
+    private val rankCounters: TicketDayCounterRepository,
 ) : TicketingModuleApi {
+    private val log = LoggerFactory.getLogger(TicketingService::class.java)
+
     @Transactional
     override fun issueTicket(
         eventId: UUID,
@@ -182,6 +189,7 @@ class TicketingService(
         at: Instant,
         dayStart: Instant,
         dayEnd: Instant,
+        rankDay: LocalDate,
     ): LineActionResult {
         val ticket =
             tickets.findByTicketCode(ticketCode)
@@ -194,7 +202,11 @@ class TicketingService(
         if (startsAt == null || startsAt < dayStart || startsAt >= dayEnd) {
             return LineActionResult(LineOutcome.WRONG_STATE, ticket.toLine())
         }
-        val rank = tickets.maxDayRank(serviceId, dayStart, dayEnd) + 1
+        // Déjà en attente (double scan) : pas de rang consommé pour rien.
+        if (ticket.status != TicketStatus.ISSUED) {
+            return LineActionResult(LineOutcome.WRONG_STATE, ticket.toLine())
+        }
+        val rank = allocateDayRank(serviceId, rankDay)
         if (tickets.arriveLine(requireNotNull(ticket.id), serviceId, at, rank) == 1) {
             return LineActionResult(LineOutcome.OK, reload(serviceId, ticketCode))
         }
@@ -235,9 +247,10 @@ class TicketingService(
         arrivedAt: Instant,
         dayStart: Instant,
         dayEnd: Instant,
+        rankDay: LocalDate,
     ): LineTicket {
         require(arrivedAt >= dayStart && arrivedAt < dayEnd) { "Walk-in arrival falls outside its service day" }
-        val rank = tickets.maxDayRank(serviceId, dayStart, dayEnd) + 1
+        val rank = allocateDayRank(serviceId, rankDay)
         val ticket =
             Ticket(eventId = null, guestId = guestId, ticketCode = codeGenerator.generate()).apply {
                 kind = TicketKind.WALK_IN
@@ -251,6 +264,31 @@ class TicketingService(
             }
         tickets.save(ticket)
         return ticket.toLine()
+    }
+
+    /**
+     * Alloue le prochain rang du jour de (service, [day]), séquentiel et unique.
+     * La ligne de compteur est créée en propre transaction (une course perdue
+     * aborterait la transaction de l'arrivée, qui a encore un billet à écrire),
+     * puis l'incrément se fait sous verrou pessimiste : deux arrivées simultanées
+     * obtiennent des rangs distincts, et un repli rend le rang.
+     */
+    private fun allocateDayRank(
+        serviceId: UUID,
+        day: LocalDate,
+    ): Int {
+        try {
+            rankAllocator.ensureCounterExists(serviceId, day)
+        } catch (ex: DataIntegrityViolationException) {
+            log.debug("Day-rank counter for {} on {} was created concurrently", serviceId, day, ex)
+        }
+        val counter =
+            rankCounters.findForUpdate(serviceId, day)
+                ?: throw IllegalStateException("Day-rank counter for $serviceId on $day was not created")
+        val rank = counter.nextRank
+        counter.nextRank = rank + 1
+        rankCounters.save(counter)
+        return rank
     }
 
     private fun lineStep(

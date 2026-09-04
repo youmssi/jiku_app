@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
 import kotlin.test.assertEquals
@@ -70,7 +71,15 @@ class ServiceDayLineTest {
         // Personne en attente, rien à appeler.
         assertNull(ticketing.callNext(serviceId, dayStart, dayEnd, Instant.parse("2026-11-02T09:00:00Z"), 10))
 
-        val arrived = ticketing.arriveByCode(serviceId, code, Instant.parse("2026-11-02T08:55:00Z"), dayStart, dayEnd)
+        val arrived =
+            ticketing.arriveByCode(
+                serviceId,
+                code,
+                Instant.parse("2026-11-02T08:55:00Z"),
+                dayStart,
+                dayEnd,
+                rankDay = LocalDate.parse("2026-11-02"),
+            )
         assertEquals(LineOutcome.OK, arrived.outcome)
         assertEquals(1, assertNotNull(arrived.ticket).dayRank)
         assertEquals("WAITING", arrived.ticket.status)
@@ -98,7 +107,14 @@ class ServiceDayLineTest {
         engine.bookClient(serviceId, Instant.parse("2026-11-02T09:00:00Z"), "Aminata", "+224600000001")
         val code = dayLine(serviceId).single().ticketCode
 
-        ticketing.arriveByCode(serviceId, code, Instant.parse("2026-11-02T08:55:00Z"), dayStart, dayEnd)
+        ticketing.arriveByCode(
+            serviceId,
+            code,
+            Instant.parse("2026-11-02T08:55:00Z"),
+            dayStart,
+            dayEnd,
+            rankDay = LocalDate.parse("2026-11-02"),
+        )
         ticketing.callByCode(serviceId, code)
 
         val absent = ticketing.noShowByCode(serviceId, code)
@@ -125,15 +141,56 @@ class ServiceDayLineTest {
         val codes = dayLine(serviceId).map { it.ticketCode }
         assertEquals(3, codes.size)
 
-        assertEquals(LineOutcome.OK, ticketing.arriveByCode(serviceId, codes[0], slot.minusSeconds(300), dayStart, dayEnd).outcome)
-        assertEquals(LineOutcome.OK, ticketing.arriveByCode(serviceId, codes[1], slot.plusSeconds(1500), dayStart, dayEnd).outcome)
-        assertEquals(LineOutcome.OK, ticketing.arriveByCode(serviceId, codes[2], slot.plusSeconds(3000), dayStart, dayEnd).outcome)
+        assertEquals(
+            LineOutcome.OK,
+            ticketing
+                .arriveByCode(
+                    serviceId,
+                    codes[0],
+                    slot.minusSeconds(300),
+                    dayStart,
+                    dayEnd,
+                    rankDay = LocalDate.parse("2026-11-02"),
+                ).outcome,
+        )
+        assertEquals(
+            LineOutcome.OK,
+            ticketing
+                .arriveByCode(
+                    serviceId,
+                    codes[1],
+                    slot.plusSeconds(1500),
+                    dayStart,
+                    dayEnd,
+                    rankDay = LocalDate.parse("2026-11-02"),
+                ).outcome,
+        )
+        assertEquals(
+            LineOutcome.OK,
+            ticketing
+                .arriveByCode(
+                    serviceId,
+                    codes[2],
+                    slot.plusSeconds(3000),
+                    dayStart,
+                    dayEnd,
+                    rankDay = LocalDate.parse("2026-11-02"),
+                ).outcome,
+        )
 
         val ranks = dayLine(serviceId).map { it.dayRank }
         assertEquals(listOf(1, 2, 3), ranks)
 
         // Le double scan est refusé : la transition est gardée par l'état.
-        val again = ticketing.arriveByCode(serviceId, codes[0], slot.plusSeconds(3600), dayStart, dayEnd)
+        val again =
+            ticketing.arriveByCode(
+                serviceId,
+                codes[0],
+                slot.plusSeconds(3600),
+                dayStart,
+                dayEnd,
+                rankDay = LocalDate.parse("2026-11-02"),
+            )
         assertEquals(LineOutcome.WRONG_STATE, again.outcome)
         assertEquals("WAITING", assertNotNull(again.ticket).status)
     }
@@ -153,8 +210,8 @@ class ServiceDayLineTest {
         assertNull(ticketing.callNext(serviceId, dayStart, dayEnd, slot.plusSeconds(1920), 10))
 
         // « A » (créneau 09:00) arrive à 08:55 ; « B » (créneau 09:30) à 09:32.
-        ticketing.arriveByCode(serviceId, codes[0], slot.minusSeconds(300), dayStart, dayEnd)
-        ticketing.arriveByCode(serviceId, codes[1], slot.plusSeconds(1920), dayStart, dayEnd)
+        ticketing.arriveByCode(serviceId, codes[0], slot.minusSeconds(300), dayStart, dayEnd, rankDay = LocalDate.parse("2026-11-02"))
+        ticketing.arriveByCode(serviceId, codes[1], slot.plusSeconds(1920), dayStart, dayEnd, rankDay = LocalDate.parse("2026-11-02"))
 
         // À 09:32 le créneau de B est en cours et B est arrivé : B prime sur A.
         val first = assertNotNull(ticketing.callNext(serviceId, dayStart, dayEnd, slot.plusSeconds(1920), 10))
@@ -190,6 +247,7 @@ class ServiceDayLineTest {
             arrivedAt = Instant.parse("2026-11-02T09:10:00Z"),
             dayStart = dayStart,
             dayEnd = dayEnd,
+            rankDay = LocalDate.parse("2026-11-02"),
         )
 
         val line = dayLine(serviceId)

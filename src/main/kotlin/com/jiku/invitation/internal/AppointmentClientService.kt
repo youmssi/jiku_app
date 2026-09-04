@@ -39,6 +39,7 @@ class AppointmentClientService(
             arrivedAt = walkIn.arrivedAt,
             dayStart = walkIn.dayStart,
             dayEnd = walkIn.dayEnd,
+            rankDay = walkIn.rankDay,
         )
     }
 
