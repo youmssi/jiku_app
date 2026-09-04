@@ -26,8 +26,9 @@ import java.util.UUID
     ],
 )
 class Ticket(
-    @Column(name = "event_id", nullable = false, updatable = false)
-    val eventId: UUID,
+    /** Nul pour un billet de rendez-vous (JIKU-87) : il n'appartient à aucun événement. */
+    @Column(name = "event_id", updatable = false)
+    val eventId: UUID?,
     @Column(name = "guest_id", nullable = false, updatable = false)
     val guestId: UUID,
     @Column(name = "ticket_code", nullable = false, updatable = false)

@@ -186,7 +186,10 @@ class RsvpService(
     }
 
     private fun buildView(guest: Guest): RsvpView {
-        val event = events.findEvent(guest.eventId)
+        // Les titulaires de rendez-vous n'ont pas d'événement : ce flux (RSVP d'un
+        // événement) ne les concerne jamais.
+        val eventId = guest.eventId ?: throw ResponseStatusException(HttpStatus.GONE, "This link has no event")
+        val event = events.findEvent(eventId)
         val tenant = TenantContext.get()?.let { tenants.findTenant(UUID.fromString(it)) }
         val ticket =
             if (guest.rsvpStatus == RsvpStatus.CONFIRMED) ticketing.findByGuest(requireNotNull(guest.id)) else null
