@@ -54,6 +54,17 @@ class ServiceReservation(
     @Column(name = "held_until")
     var heldUntil: Instant? = null
 
+    /** Nom du client qui a réservé (JIKU-87) ; nul pour les réservations d'essai/moteur. */
+    @Column(name = "client_name")
+    var clientName: String? = null
+
+    @Column(name = "client_phone")
+    var clientPhone: String? = null
+
+    /** Hash du jeton de réservation remis au client ; partagé par toutes les lignes d'une réservation. */
+    @Column(name = "booking_token_hash")
+    var bookingTokenHash: String? = null
+
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now()
 }

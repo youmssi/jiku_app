@@ -14,6 +14,8 @@ interface ServiceRequirementRepository : JpaRepository<ServiceRequirement, UUID>
 }
 
 interface ServiceReservationRepository : JpaRepository<ServiceReservation, UUID> {
+    fun findByBookingTokenHash(tokenHash: String): List<ServiceReservation>
+
     /**
      * Nombre de réservations qui occupent [resourceId] sur la fenêtre
      * [startsAt]..[endsAt] : une confirmation, ou une demande en attente non
