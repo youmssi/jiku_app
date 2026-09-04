@@ -15,4 +15,6 @@ data class AppointmentBooked(
     val endsAt: Instant,
     val clientName: String,
     val clientPhone: String,
+    /** Nom du professionnel à inscrire sur le billet (JIKU-87). */
+    val professionalName: String?,
 )

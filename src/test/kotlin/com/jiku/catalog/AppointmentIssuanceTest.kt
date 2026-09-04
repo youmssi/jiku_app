@@ -84,5 +84,7 @@ class AppointmentIssuanceTest {
         assertEquals(slot, appointment.startsAt)
         assertEquals(slot.plusSeconds(1800), appointment.endsAt)
         assertEquals(TicketKind.APPOINTMENT, appointment.kind)
+        assertEquals(service.id, appointment.serviceId)
+        assertEquals("Coiffeuse", appointment.professionalName)
     }
 }

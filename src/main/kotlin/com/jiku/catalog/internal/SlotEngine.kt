@@ -154,6 +154,8 @@ class SlotEngine(
         val tenantId = TenantContext.get() ?: throw SlotUnavailableException("No tenant context")
         // Matérialise l'invité et son billet dans le tenant du service (JIKU-87) ;
         // l'écouteur du module invitation tourne dans cette même transaction.
+        val professionalName =
+            resources.findByActiveTrueAndTypeOrderByNameAsc(ResourceType.PERSON).firstOrNull()?.name
         events.publishEvent(
             AppointmentBooked(
                 serviceId = serviceId,
@@ -162,6 +164,7 @@ class SlotEngine(
                 endsAt = outcome.endsAt,
                 clientName = clientName.trim(),
                 clientPhone = clientPhone.trim(),
+                professionalName = professionalName,
             ),
         )
         return ClientBookingOutcome(

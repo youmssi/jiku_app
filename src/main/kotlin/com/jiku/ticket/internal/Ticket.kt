@@ -82,4 +82,12 @@ class Ticket(
     /** Rang du jour, séquentiel par service et par jour ; rempli par la ligne du jour (JIKU-88). */
     @Column(name = "day_rank")
     var dayRank: Int? = null
+
+    /** Service réservé, pour un billet de rendez-vous (JIKU-87) ; nul pour une invitation. */
+    @Column(name = "service_id", updatable = false)
+    var serviceId: UUID? = null
+
+    /** Nom du professionnel, figé à l'émission (JIKU-87) ; affiché seul sur le billet. */
+    @Column(name = "professional_name", length = 120)
+    var professionalName: String? = null
 }
