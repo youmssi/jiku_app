@@ -1,5 +1,6 @@
 package com.jiku.catalog.internal
 
+import com.jiku.shared.ReminderOffsets
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 import org.springframework.stereotype.Service as SpringService
@@ -32,6 +33,9 @@ class ServiceConfigService(
             noShowToleranceMinutes = config?.noShowToleranceMinutes ?: serviceDefaults.noShowToleranceMinutes,
             walkInsAllowed = config?.walkInsAllowed ?: serviceDefaults.walkInsAllowed,
             paymentMode = config?.paymentMode ?: serviceDefaults.paymentMode,
+            reminderChannel = config?.reminderChannel ?: serviceDefaults.reminderChannel,
+            reminderOffsetsMinutes =
+                ReminderOffsets.parse(config?.reminderOffsetsMinutes) ?: serviceDefaults.reminderOffsetsMinutes,
         )
     }
 
@@ -53,6 +57,8 @@ class ServiceConfigService(
         update.noShowToleranceMinutes?.let { config.noShowToleranceMinutes = it }
         update.walkInsAllowed?.let { config.walkInsAllowed = it }
         update.paymentMode?.let { config.paymentMode = it }
+        update.reminderChannel?.let { config.reminderChannel = it }
+        update.reminderOffsetsMinutes?.let { config.reminderOffsetsMinutes = ReminderOffsets.encode(it) }
         configs.save(config)
         return effective(serviceId)
     }

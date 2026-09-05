@@ -74,6 +74,7 @@ class AppointmentPublicController(
     private val resources: ResourceRepository,
     private val reservations: ServiceReservationRepository,
     private val tenantAccessGate: TenantAccessGate,
+    private val cancellations: AppointmentCancellationService,
 ) {
     @GetMapping("/{token}")
     fun view(
@@ -137,16 +138,7 @@ class AppointmentPublicController(
         @PathVariable token: String,
         @PathVariable bookingToken: String,
     ) {
-        withService(token) { _ ->
-            val rows = byBookingToken(bookingToken)
-            val serviceId = rows.first().serviceId
-            val eff = config.effective(serviceId)
-            val cancelDeadline = Instant.now().plusSeconds(eff.cancelDeadlineHours * 3600L)
-            if (rows.first().startsAt.isBefore(cancelDeadline)) {
-                throw ResponseStatusException(HttpStatus.CONFLICT, "Ce rendez-vous ne peut plus être annulé")
-            }
-            reservations.deleteAll(rows)
-        }
+        withService(token) { _ -> cancellations.cancel(bookingToken) }
     }
 
     private fun byBookingToken(raw: String): List<ServiceReservation> {

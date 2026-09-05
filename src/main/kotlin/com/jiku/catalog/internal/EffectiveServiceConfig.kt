@@ -18,6 +18,8 @@ data class EffectiveServiceConfig(
     val noShowToleranceMinutes: Int,
     val walkInsAllowed: Boolean,
     val paymentMode: PaymentMode,
+    val reminderChannel: ReminderChannel,
+    val reminderOffsetsMinutes: List<Int>,
 ) {
     /** Durée totale réservée sur la grille : service + tampon de respiration. */
     val occupancyMinutes: Long
@@ -37,4 +39,6 @@ data class ServiceConfigUpdate(
     val noShowToleranceMinutes: Int? = null,
     val walkInsAllowed: Boolean? = null,
     val paymentMode: PaymentMode? = null,
+    val reminderChannel: ReminderChannel? = null,
+    val reminderOffsetsMinutes: List<Int>? = null,
 )

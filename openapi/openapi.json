@@ -77,6 +77,76 @@
         }
       }
     },
+    "/api/v1/services/{id}/configuration" : {
+      "get" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "configuration",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EffectiveServiceConfig"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "updateConfiguration",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ServiceConfigUpdate"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EffectiveServiceConfig"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/members/{userId}/role" : {
       "put" : {
         "tags" : [
@@ -5803,6 +5873,187 @@
           "apiKey",
           "from"
         ]
+      },
+      "ServiceConfigUpdate" : {
+        "type" : "object",
+        "properties" : {
+          "confirmationMode" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "enum" : [
+              "INSTANTANEOUS",
+              "ON_REQUEST"
+            ]
+          },
+          "stepMinutes" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "durationMinutes" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "bufferMinutes" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "minHorizonMinutes" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "maxHorizonDays" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "holdMinutes" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
+          },
+          "cancelDeadlineHours" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "noShowToleranceMinutes" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "walkInsAllowed" : {
+            "type" : [
+              "boolean",
+              "null"
+            ]
+          },
+          "paymentMode" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "enum" : [
+              "FREE",
+              "BEFORE",
+              "AFTER"
+            ]
+          },
+          "reminderChannel" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "enum" : [
+              "WHATSAPP",
+              "NONE"
+            ]
+          },
+          "reminderOffsetsMinutes" : {
+            "type" : [
+              "array",
+              "null"
+            ],
+            "items" : {
+              "type" : "integer",
+              "format" : "int32"
+            }
+          }
+        }
+      },
+      "EffectiveServiceConfig" : {
+        "type" : "object",
+        "properties" : {
+          "confirmationMode" : {
+            "type" : "string",
+            "enum" : [
+              "INSTANTANEOUS",
+              "ON_REQUEST"
+            ]
+          },
+          "stepMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "durationMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "bufferMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "minHorizonMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "maxHorizonDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "holdMinutes" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cancelDeadlineHours" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "noShowToleranceMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "walkInsAllowed" : {
+            "type" : "boolean"
+          },
+          "paymentMode" : {
+            "type" : "string",
+            "enum" : [
+              "FREE",
+              "BEFORE",
+              "AFTER"
+            ]
+          },
+          "reminderChannel" : {
+            "type" : "string",
+            "enum" : [
+              "WHATSAPP",
+              "NONE"
+            ]
+          },
+          "reminderOffsetsMinutes" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int32"
+            }
+          },
+          "occupancyMinutes" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
       },
       "ChangeRoleRequest" : {
         "type" : "object",

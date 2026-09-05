@@ -23,6 +23,17 @@ enum class PaymentMode {
 }
 
 /**
+ * Canal de rappel d'un service (JIKU-89). NONE tant que l'organisateur n'active
+ * pas les rappels : aucun rappel n'est émis avant ce choix. Seul le canal
+ * WhatsApp est exposé : le parcours de réservation ne capture que le téléphone
+ * du client, jamais son adresse e-mail.
+ */
+enum class ReminderChannel {
+    WHATSAPP,
+    NONE,
+}
+
+/**
  * Options d'un service (JIKU-86), toutes nulles par défaut : une valeur nulle
  * signifie « appliquer le défaut de configuration » (catalog.slot.* et
  * catalog.service.*). Un service créé sans configuration est donc utilisable tel
@@ -73,4 +84,12 @@ class ServiceConfig(
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_mode", length = 32)
     var paymentMode: PaymentMode? = null
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "reminder_channel", length = 16)
+    var reminderChannel: ReminderChannel? = null
+
+    /** Décalages avant le créneau (minutes), format défini par ReminderOffsets. */
+    @Column(name = "reminder_offsets_minutes", length = 120)
+    var reminderOffsetsMinutes: String? = null
 }

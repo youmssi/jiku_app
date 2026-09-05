@@ -16,4 +16,6 @@ data class ServiceDefaultsProperties(
     val noShowToleranceMinutes: Int = 10,
     val walkInsAllowed: Boolean = true,
     val paymentMode: PaymentMode = PaymentMode.FREE,
+    val reminderChannel: ReminderChannel = ReminderChannel.NONE,
+    val reminderOffsetsMinutes: List<Int> = listOf(1440, 120),
 )

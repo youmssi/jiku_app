@@ -49,3 +49,15 @@ data class WhatsAppCancellation(
     val eventWhen: String?,
     val organizerName: String,
 )
+
+/**
+ * Everything the WhatsApp appointment-reminder template needs (JIKU-89). Built
+ * inside the notification module from the inbound [com.jiku.shared.ReminderDue].
+ * [when] est l'heure du rendez-vous déjà écrite dans le fuseau du service.
+ */
+data class WhatsAppReminder(
+    val recipientPhone: String,
+    val recipientName: String,
+    val appointmentWhen: String,
+    val professionalName: String?,
+)

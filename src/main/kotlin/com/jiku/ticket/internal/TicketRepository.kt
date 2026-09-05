@@ -27,6 +27,14 @@ interface TicketRepository : JpaRepository<Ticket, UUID> {
 
     fun findByEventId(eventId: UUID): List<Ticket>
 
+    /** Billet(s) d'un créneau de service — lecture d'annulation (JIKU-89). */
+    fun findByServiceIdAndStartsAtAndStatusAndKind(
+        serviceId: UUID,
+        startsAt: Instant,
+        status: TicketStatus,
+        kind: TicketKind,
+    ): List<Ticket>
+
     /** Rows of [checkedInBy label, count] for an event's checked-in tickets. */
     @Query(
         "SELECT t.checkedInBy, COUNT(t) FROM Ticket t " +

@@ -17,6 +17,10 @@ class WhatsAppTemplateRenderer {
         ClassPathResource("whatsapp-templates/event-cancelled.txt").inputStream.bufferedReader().use { it.readText() }
     }
 
+    private val appointmentReminderTemplate: String by lazy {
+        ClassPathResource("whatsapp-templates/appointment-reminder.txt").inputStream.bufferedReader().use { it.readText() }
+    }
+
     fun renderInvitation(invitation: WhatsAppInvitation): String =
         invitationTemplate
             .replace("{{guestName}}", invitation.recipientName)
@@ -31,4 +35,10 @@ class WhatsAppTemplateRenderer {
             .replace("{{organizerName}}", cancellation.organizerName)
             .replace("{{eventName}}", cancellation.eventName)
             .replace("{{eventWhen}}", cancellation.eventWhen?.let { " on $it" } ?: "")
+
+    fun renderAppointmentReminder(reminder: WhatsAppReminder): String =
+        appointmentReminderTemplate
+            .replace("{{clientName}}", reminder.recipientName)
+            .replace("{{professional}}", reminder.professionalName?.let { " with $it" } ?: "")
+            .replace("{{when}}", reminder.appointmentWhen)
 }
