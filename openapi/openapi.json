@@ -17,6 +17,131 @@
     }
   ],
   "paths" : {
+    "/api/v1/settings/vocabulary" : {
+      "get" : {
+        "tags" : [
+          "vocabulary-controller"
+        ],
+        "operationId" : "list",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/VocabularyEntry"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [
+          "vocabulary-controller"
+        ],
+        "operationId" : "save",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "items" : {
+                  "$ref" : "#/components/schemas/VocabularyUpdate"
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/VocabularyEntry"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/settings/templates/{name}" : {
+      "get" : {
+        "tags" : [
+          "templates-controller"
+        ],
+        "operationId" : "detail",
+        "parameters" : [
+          {
+            "name" : "name",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TemplateDetail"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [
+          "templates-controller"
+        ],
+        "operationId" : "save_1",
+        "parameters" : [
+          {
+            "name" : "name",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TemplateUpdate"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TemplateDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/settings/providers/whatsapp" : {
       "put" : {
         "tags" : [
@@ -516,6 +641,46 @@
         }
       }
     },
+    "/api/v1/settings/templates/{name}/preview" : {
+      "post" : {
+        "tags" : [
+          "templates-controller"
+        ],
+        "operationId" : "preview",
+        "parameters" : [
+          {
+            "name" : "name",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TemplatePreviewRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TemplatePreviewResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/settings/providers/{channel}/test" : {
       "post" : {
         "tags" : [
@@ -561,7 +726,7 @@
         "tags" : [
           "service-controller"
         ],
-        "operationId" : "list",
+        "operationId" : "list_1",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -612,7 +777,7 @@
         "tags" : [
           "service-staff-controller"
         ],
-        "operationId" : "list_1",
+        "operationId" : "list_2",
         "parameters" : [
           {
             "name" : "serviceId",
@@ -1155,7 +1320,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "list_2",
+        "operationId" : "list_3",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -1805,7 +1970,7 @@
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "list_3",
+        "operationId" : "list_4",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -1918,7 +2083,7 @@
         "tags" : [
           "validator-controller"
         ],
-        "operationId" : "list_4",
+        "operationId" : "list_5",
         "parameters" : [
           {
             "name" : "eventId",
@@ -2031,7 +2196,7 @@
         "tags" : [
           "ticket-type-controller"
         ],
-        "operationId" : "list_5",
+        "operationId" : "list_6",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3082,7 +3247,7 @@
         "tags" : [
           "admin-trial-controller"
         ],
-        "operationId" : "list_6",
+        "operationId" : "list_7",
         "parameters" : [
           {
             "name" : "status",
@@ -3584,7 +3749,7 @@
         "tags" : [
           "admin-agreement-controller"
         ],
-        "operationId" : "list_7",
+        "operationId" : "list_8",
         "parameters" : [
           {
             "name" : "status",
@@ -3999,6 +4164,29 @@
         }
       }
     },
+    "/api/v1/settings/templates" : {
+      "get" : {
+        "tags" : [
+          "templates-controller"
+        ],
+        "operationId" : "list_9",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/TemplateSummary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/settings/providers" : {
       "get" : {
         "tags" : [
@@ -4322,7 +4510,7 @@
         "tags" : [
           "guest-controller"
         ],
-        "operationId" : "list_8",
+        "operationId" : "list_10",
         "parameters" : [
           {
             "name" : "eventId",
@@ -4956,7 +5144,7 @@
         "tags" : [
           "invoice-controller"
         ],
-        "operationId" : "list_9",
+        "operationId" : "list_11",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -5062,7 +5250,7 @@
         "tags" : [
           "member-invitation-accept-controller"
         ],
-        "operationId" : "preview",
+        "operationId" : "preview_1",
         "parameters" : [
           {
             "name" : "token",
@@ -5220,7 +5408,7 @@
         "tags" : [
           "admin-tenant-controller"
         ],
-        "operationId" : "list_10",
+        "operationId" : "list_12",
         "parameters" : [
           {
             "name" : "query",
@@ -5270,7 +5458,7 @@
         "tags" : [
           "admin-prospect-lead-controller"
         ],
-        "operationId" : "list_11",
+        "operationId" : "list_13",
         "parameters" : [
           {
             "name" : "status",
@@ -5303,7 +5491,7 @@
         "tags" : [
           "admin-payment-controller"
         ],
-        "operationId" : "list_12",
+        "operationId" : "list_14",
         "parameters" : [
           {
             "name" : "status",
@@ -5373,7 +5561,7 @@
         "tags" : [
           "admin-booking-controller"
         ],
-        "operationId" : "list_13",
+        "operationId" : "list_15",
         "parameters" : [
           {
             "name" : "status",
@@ -5426,7 +5614,7 @@
         "tags" : [
           "admin-booking-payment-controller"
         ],
-        "operationId" : "list_14",
+        "operationId" : "list_16",
         "parameters" : [
           {
             "name" : "status",
@@ -5499,7 +5687,7 @@
         "tags" : [
           "admin-audit-controller"
         ],
-        "operationId" : "list_15",
+        "operationId" : "list_17",
         "parameters" : [
           {
             "name" : "action",
@@ -5790,6 +5978,114 @@
   },
   "components" : {
     "schemas" : {
+      "VocabularyUpdate" : {
+        "type" : "object",
+        "properties" : {
+          "key" : {
+            "type" : "string"
+          },
+          "value" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "VocabularyEntry" : {
+        "type" : "object",
+        "properties" : {
+          "key" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "defaultValue" : {
+            "type" : "string"
+          },
+          "value" : {
+            "type" : "string"
+          },
+          "overridden" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "TemplateUpdate" : {
+        "type" : "object",
+        "properties" : {
+          "channel" : {
+            "type" : "string"
+          },
+          "body" : {
+            "type" : "string"
+          },
+          "active" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "TemplateChannelView" : {
+        "type" : "object",
+        "properties" : {
+          "channel" : {
+            "type" : "string"
+          },
+          "defaultBody" : {
+            "type" : "string"
+          },
+          "body" : {
+            "type" : "string"
+          },
+          "active" : {
+            "type" : "boolean"
+          },
+          "override" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "TemplateDetail" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "channels" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TemplateChannelView"
+            }
+          },
+          "variables" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TemplateVariable"
+            }
+          }
+        }
+      },
+      "TemplateVariable" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "sample" : {
+            "type" : "string"
+          },
+          "required" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "UpdateWhatsAppProviderRequest" : {
         "type" : "object",
         "properties" : {
@@ -6594,6 +6890,28 @@
           "costUsdMinor" : {
             "type" : "integer",
             "format" : "int64"
+          }
+        }
+      },
+      "TemplatePreviewRequest" : {
+        "type" : "object",
+        "properties" : {
+          "channel" : {
+            "type" : "string"
+          },
+          "body" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "TemplatePreviewResponse" : {
+        "type" : "object",
+        "properties" : {
+          "body" : {
+            "type" : "string"
           }
         }
       },
@@ -8895,6 +9213,23 @@
         "properties" : {
           "excluded" : {
             "type" : "boolean"
+          }
+        }
+      },
+      "TemplateSummary" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "channels" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }
       },
