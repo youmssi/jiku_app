@@ -3581,6 +3581,47 @@
         }
       }
     },
+    "/api/v1/admin/bookings/{id}/refund" : {
+      "post" : {
+        "tags" : [
+          "admin-booking-controller"
+        ],
+        "operationId" : "refund",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RefundBookingRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminBookingRefundView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/bookings/{id}/cancel" : {
       "post" : {
         "tags" : [
@@ -8818,6 +8859,55 @@
         "required" : [
           "transactionReference"
         ]
+      },
+      "RefundBookingRequest" : {
+        "type" : "object",
+        "properties" : {
+          "amountMinor" : {
+            "type" : "integer",
+            "format" : "int64",
+            "minimum" : 1
+          },
+          "reason" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "reason"
+        ]
+      },
+      "AdminBookingRefundView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "bookingId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "amountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "creditNoteNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "status" : {
+            "type" : "string"
+          }
+        }
       },
       "AdminBookingCancellationView" : {
         "type" : "object",

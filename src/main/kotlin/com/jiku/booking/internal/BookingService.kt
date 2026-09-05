@@ -1,6 +1,7 @@
 package com.jiku.booking.internal
 
 import com.jiku.booking.AdminBookingCancellationView
+import com.jiku.booking.AdminBookingRefundView
 import com.jiku.booking.AdminBookingView
 import com.jiku.booking.AdminPaymentDeclarationView
 import com.jiku.catalog.EventModuleApi
@@ -37,6 +38,7 @@ import java.util.UUID
 class BookingService(
     private val bookings: BookingRepository,
     private val declarations: PaymentDeclarationRepository,
+    private val refunds: BookingRefundRepository,
     private val properties: BookingProperties,
     private val billing: BillingModuleApi,
     private val tenantModuleApi: TenantModuleApi,
@@ -203,6 +205,110 @@ class BookingService(
             status = booking.status.name,
             refundAmountMinor = refund,
             currency = billing.currency(),
+        )
+    }
+
+    /**
+     * Enregistre le remboursement exécuté (JIKU-75) contre l'acompte vérifié
+     * d'origine : montant partiel possible (jamais au-delà du restant de
+     * l'acompte), motif obligatoire, avoir CREDIT_NOTE émis sous le tenant de
+     * l'organisateur, client notifié, réservation passée à REFUNDED.
+     */
+    @Transactional
+    fun adminRefundBooking(
+        bookingId: UUID,
+        amountMinor: Long,
+        reason: String,
+    ): AdminBookingRefundView {
+        if (amountMinor <= 0) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "A refund amount must be positive")
+        }
+        val booking =
+            bookings.findById(bookingId).orElseThrow {
+                ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found")
+            }
+        if (booking.status == BookingStatus.REFUNDED) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "This booking is already refunded")
+        }
+        if (booking.status != BookingStatus.CANCELLED) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Cancel the booking before refunding it")
+        }
+        val deposit =
+            declarations.findFirstByBookingIdAndKindAndVerificationStatusOrderByDeclaredAtDesc(
+                bookingId,
+                PaymentDeclarationKind.DEPOSIT,
+                PaymentVerificationStatus.VERIFIED,
+            ) ?: throw ResponseStatusException(HttpStatus.CONFLICT, "No settled deposit to refund")
+        val alreadyRefunded = refunds.findByDeclarationId(requireNotNull(deposit.id)).sumOf { it.amountMinor }
+        if (amountMinor > deposit.amountMinor - alreadyRefunded) {
+            throw ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Refund exceeds the remaining deposit (${deposit.amountMinor - alreadyRefunded})",
+            )
+        }
+        val tenantId =
+            booking.tenantId
+                ?: throw ResponseStatusException(HttpStatus.CONFLICT, "This booking has no organizer tenant yet")
+        val trimmedReason = reason.trim()
+        if (trimmedReason.isEmpty()) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "A refund reason is required")
+        }
+
+        val refund =
+            BookingRefund(
+                bookingId = bookingId,
+                declarationId = requireNotNull(deposit.id),
+                amountMinor = amountMinor,
+                currency = billing.currency(),
+                reason = trimmedReason,
+            )
+        refunds.save(refund)
+
+        // L'avoir se numérote dans le tenant de l'organisateur (REQUIRES_NEW côté
+        // money) : on lie ce tenant avant l'appel, comme pour les autres écritures
+        // du module money lancées hors requête organisateur.
+        val previous = TenantContext.get()
+        TenantContext.set(tenantId)
+        try {
+            val doc =
+                billing.issueBookingAvoir(
+                    customerName = booking.customerName,
+                    customerCountry = properties.refundCountry,
+                    amountMinor = amountMinor,
+                    currency = billing.currency(),
+                    description = "Remboursement d'acompte — ${booking.eventType} du ${booking.eventDate}",
+                )
+            refund.creditNoteId = doc.invoiceId
+            refund.creditNoteNumber = doc.invoiceNumber
+        } finally {
+            if (previous != null) TenantContext.set(previous) else TenantContext.clear()
+        }
+
+        booking.status = BookingStatus.REFUNDED
+        booking.updatedAt = Instant.now()
+        bookings.save(booking)
+
+        eventPublisher.publishEvent(
+            BookingNotice(
+                kind = BookingNotice.KIND_REFUNDED,
+                bookingId = bookingId,
+                customerName = booking.customerName,
+                customerEmail = booking.customerEmail,
+                customerPhone = booking.customerPhone,
+                reference = refund.creditNoteNumber,
+                amountMinor = amountMinor,
+                currency = billing.currency(),
+                note = null,
+            ),
+        )
+        return AdminBookingRefundView(
+            id = requireNotNull(refund.id),
+            bookingId = bookingId,
+            amountMinor = amountMinor,
+            currency = billing.currency(),
+            reason = trimmedReason,
+            creditNoteNumber = refund.creditNoteNumber,
+            status = booking.status.name,
         )
     }
 

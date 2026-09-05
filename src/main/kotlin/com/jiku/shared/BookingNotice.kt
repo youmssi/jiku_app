@@ -35,5 +35,6 @@ data class BookingNotice(
         const val KIND_DEPOSIT_VERIFIED = "DEPOSIT_VERIFIED"
         const val KIND_BALANCE_VERIFIED = "BALANCE_VERIFIED"
         const val KIND_PAYMENT_REJECTED = "PAYMENT_REJECTED"
+        const val KIND_REFUNDED = "REFUNDED"
     }
 }

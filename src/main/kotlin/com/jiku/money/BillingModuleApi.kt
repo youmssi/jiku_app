@@ -114,6 +114,19 @@ interface BillingModuleApi {
         eventId: UUID,
         amountMinor: Long,
     )
+
+    /**
+     * Emits the standalone credit note (avoir, JIKU-75) documenting a booking
+     * deposit refund returned to a customer. The caller has bound the organizer's
+     * tenant; the document numbers against that tenant's fiscal year.
+     */
+    fun issueBookingAvoir(
+        customerName: String,
+        customerCountry: String,
+        amountMinor: Long,
+        currency: String,
+        description: String,
+    ): BookingAvoirDocument
 }
 
 /** One configured fixed-price tier: what it costs and how many guests it unlocks. */

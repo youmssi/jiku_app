@@ -31,6 +31,7 @@ class EmailTemplateRenderer(
     private val bookingDepositVerifiedTemplate: String by lazy { load("booking-deposit-verified.html") }
     private val bookingBalanceVerifiedTemplate: String by lazy { load("booking-balance-verified.html") }
     private val bookingPaymentRejectedTemplate: String by lazy { load("booking-payment-rejected.html") }
+    private val bookingRefundedTemplate: String by lazy { load("booking-refunded.html") }
 
     fun renderInvitation(email: InvitationEmail): String =
         clientTemplates.render(
@@ -183,6 +184,13 @@ class EmailTemplateRenderer(
             .replace("{{reference}}", escape(notice.reference.orEmpty()))
             .replace("{{reasonBlock}}", reasonBlock)
     }
+
+    fun renderBookingRefunded(notice: BookingNotice): String =
+        bookingRefundedTemplate
+            .replace("{{customerName}}", escape(notice.customerName))
+            .replace("{{amount}}", formatAmount(notice.amountMinor ?: 0, notice.currency))
+            .replace("{{reference}}", escape(notice.reference.orEmpty()))
+            .replace("{{bookingId}}", notice.bookingId.toString())
 
     /**
      * Minor units to a display amount (e.g. 150000 GNF-minor → "150 000 GNF").

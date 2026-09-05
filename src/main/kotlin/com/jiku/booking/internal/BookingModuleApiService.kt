@@ -1,6 +1,7 @@
 package com.jiku.booking.internal
 
 import com.jiku.booking.AdminBookingCancellationView
+import com.jiku.booking.AdminBookingRefundView
 import com.jiku.booking.AdminBookingView
 import com.jiku.booking.AdminPaymentDeclarationView
 import com.jiku.booking.BookingModuleApi
@@ -18,6 +19,12 @@ class BookingModuleApiService(
     ): List<AdminBookingView> = bookingService.adminListBookings(status, page, size)
 
     override fun adminCancelBooking(bookingId: UUID): AdminBookingCancellationView = bookingService.adminCancelBooking(bookingId)
+
+    override fun adminRefundBooking(
+        bookingId: UUID,
+        amountMinor: Long,
+        reason: String,
+    ): AdminBookingRefundView = bookingService.adminRefundBooking(bookingId, amountMinor, reason)
 
     override fun adminListPaymentDeclarations(
         status: String?,

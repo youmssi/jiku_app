@@ -1,6 +1,7 @@
 package com.jiku.money.internal
 
 import com.jiku.catalog.EventModuleApi
+import com.jiku.money.BookingAvoirDocument
 import com.jiku.shared.TenantContext
 import com.jiku.tenant.TenantLegalIdentityInfo
 import com.jiku.tenant.TenantModuleApi
@@ -8,6 +9,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
@@ -119,6 +121,44 @@ class InvoiceService(
             paymentId = original.paymentId,
             correctedInvoiceId = invoiceId,
         )
+    }
+
+    /**
+     * Émet un avoir autonome (CREDIT_NOTE, JIKU-75) pour un remboursement
+     * d'acompte de réservation : aucun acompte n'a jamais été facturé, l'avoir ne
+     * corrige donc pas une facture — il documente l'argent rendu au client, avec
+     * le numéro de séquence CN du module facturation. Le client est une personne
+     * physique sans identité légale ; le pays sert à la résolution fiscale et les
+     * adresses sont neutralisées. L'appelant a lié le tenant de l'organisateur :
+     * la transaction REQUIRES_NEW s'ouvre sous ce contexte.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun issueBookingAvoir(
+        customerName: String,
+        customerCountry: String,
+        amountMinor: Long,
+        currency: String,
+        description: String,
+    ): BookingAvoirDocument {
+        val buyer =
+            TenantLegalIdentityInfo(
+                legalName = customerName,
+                registrationNumber = null,
+                taxIdentifier = null,
+                addressLine = "—",
+                city = "—",
+                country = customerCountry.uppercase(),
+            )
+        val invoice =
+            issue(
+                documentType = DocumentType.CREDIT_NOTE,
+                buyer = buyer,
+                currency = currency,
+                lines = listOf(DraftLine(description, quantity = 1, unitPriceMinor = -amountMinor)),
+                paymentId = null,
+                correctedInvoiceId = null,
+            )
+        return BookingAvoirDocument(invoiceId = requireNotNull(invoice.id), invoiceNumber = invoice.invoiceNumber)
     }
 
     private data class DraftLine(

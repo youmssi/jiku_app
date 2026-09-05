@@ -5,6 +5,7 @@ import com.jiku.money.AdminTrialView
 import com.jiku.money.BillingAllowance
 import com.jiku.money.BillingModuleApi
 import com.jiku.money.BillingTierOption
+import com.jiku.money.BookingAvoirDocument
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.UUID
@@ -20,6 +21,7 @@ class BillingModuleApiService(
     private val manualPaymentService: ManualPaymentService,
     private val trialService: TrialService,
     private val tierUnlockService: TierUnlockService,
+    private val invoiceService: InvoiceService,
     private val properties: BillingProperties,
 ) : BillingModuleApi {
     override fun recordPrepayment(
@@ -90,4 +92,12 @@ class BillingModuleApiService(
         eventId: UUID,
         tierName: String,
     ) = tierUnlockService.unlock(eventId, tierName)
+
+    override fun issueBookingAvoir(
+        customerName: String,
+        customerCountry: String,
+        amountMinor: Long,
+        currency: String,
+        description: String,
+    ): BookingAvoirDocument = invoiceService.issueBookingAvoir(customerName, customerCountry, amountMinor, currency, description)
 }
