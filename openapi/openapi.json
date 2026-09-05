@@ -2602,6 +2602,36 @@
         }
       }
     },
+    "/api/v1/billing/subscription/request" : {
+      "post" : {
+        "tags" : [
+          "subscription-controller"
+        ],
+        "operationId" : "request_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SubscriptionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ManualPaymentInstructions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/billing/payments/callback" : {
       "post" : {
         "tags" : [
@@ -4847,6 +4877,26 @@
         }
       }
     },
+    "/api/v1/billing/subscription" : {
+      "get" : {
+        "tags" : [
+          "subscription-controller"
+        ],
+        "operationId" : "view_3",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SubscriptionView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/billing/payments" : {
       "get" : {
         "tags" : [
@@ -5042,7 +5092,7 @@
         "tags" : [
           "appointment-public-controller"
         ],
-        "operationId" : "view_3",
+        "operationId" : "view_4",
         "parameters" : [
           {
             "name" : "token",
@@ -7770,6 +7820,23 @@
           }
         }
       },
+      "SubscriptionRequest" : {
+        "type" : "object",
+        "properties" : {
+          "plan" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "months" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 1
+          }
+        },
+        "required" : [
+          "plan"
+        ]
+      },
       "InvoiceDetail" : {
         "type" : "object",
         "properties" : {
@@ -8391,7 +8458,10 @@
             "type" : "string"
           },
           "eventId" : {
-            "type" : "string",
+            "type" : [
+              "string",
+              "null"
+            ],
             "format" : "uuid"
           },
           "tier" : {
@@ -9500,6 +9570,84 @@
           }
         }
       },
+      "MonthOption" : {
+        "type" : "object",
+        "properties" : {
+          "months" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "factorMilli" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "PlanOption" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "maxResources" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "priceMinorPerMonth" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "SubscriptionView" : {
+        "type" : "object",
+        "properties" : {
+          "plan" : {
+            "type" : "string"
+          },
+          "resourcesActive" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "resourcesIncluded" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "overLimit" : {
+            "type" : "boolean"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "startedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "suspensionAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "plans" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PlanOption"
+            }
+          },
+          "months" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MonthOption"
+            }
+          }
+        }
+      },
       "PaymentHistoryItem" : {
         "type" : "object",
         "properties" : {
@@ -9508,7 +9656,10 @@
             "format" : "uuid"
           },
           "eventId" : {
-            "type" : "string",
+            "type" : [
+              "string",
+              "null"
+            ],
             "format" : "uuid"
           },
           "eventName" : {

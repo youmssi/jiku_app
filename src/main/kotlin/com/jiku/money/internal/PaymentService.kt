@@ -108,7 +108,7 @@ class PaymentService(
         payment.updatedAt = Instant.now()
         payments.save(payment)
         if (succeeded) {
-            tierUnlockService.unlock(payment.eventId, payment.tier)
+            tierUnlockService.unlock(requireNotNull(payment.eventId) { "A provider payment always references an event" }, payment.tier)
             return CallbackOutcome.SUCCEEDED
         }
         return CallbackOutcome.FAILED

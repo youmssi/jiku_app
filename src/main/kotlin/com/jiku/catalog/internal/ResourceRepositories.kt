@@ -7,6 +7,9 @@ import java.util.UUID
 interface ResourceRepository : JpaRepository<Resource, UUID> {
     /** Ressources actives d'un type, dans un ordre stable pour l'affectation. */
     fun findByActiveTrueAndTypeOrderByNameAsc(type: ResourceType): List<Resource>
+
+    /** Nombre de ressources actives du tenant courant (JIKU-90). */
+    fun countByActiveTrue(): Long
 }
 
 interface ResourceAvailabilityRepository : JpaRepository<ResourceAvailability, UUID> {

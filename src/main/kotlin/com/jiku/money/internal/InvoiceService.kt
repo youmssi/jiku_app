@@ -68,7 +68,7 @@ class InvoiceService(
         }
 
         val buyer = requireLegalIdentity()
-        val eventName = events.findEvent(payment.eventId)?.name
+        val eventName = payment.eventId?.let { events.findEvent(it)?.name }
         val description =
             listOfNotNull(
                 "Jiku ${payment.tier} tier",
