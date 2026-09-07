@@ -2,7 +2,7 @@ package com.jiku.catalog
 
 import com.jiku.TestcontainersConfiguration
 import com.jiku.catalog.internal.ConfirmationMode
-import com.jiku.catalog.internal.PaymentMode
+import com.jiku.catalog.internal.ReminderChannel
 import com.jiku.catalog.internal.Resource
 import com.jiku.catalog.internal.ResourceAvailability
 import com.jiku.catalog.internal.ResourceAvailabilityRepository
@@ -14,13 +14,14 @@ import com.jiku.catalog.internal.ServiceRepository
 import com.jiku.catalog.internal.ServiceRequirement
 import com.jiku.catalog.internal.ServiceRequirementRepository
 import com.jiku.catalog.internal.SlotEngine
+import com.jiku.catalog.internal.SlotUnavailableException
 import com.jiku.shared.TenantContext
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
@@ -57,7 +58,15 @@ class ServiceConfigTest {
     @AfterEach
     fun clearContext() = TenantContext.clear()
 
-    private val monday = LocalDate.of(2026, 11, 2)
+    private val zone = java.time.ZoneId.of("Africa/Conakry")
+
+    /** Le prochain lundi à venir (toujours ≥ demain), dans l'horizon par défaut de 30 j. */
+    private val monday: LocalDate =
+        run {
+            val today = LocalDate.now(zone)
+            val daysUntilMonday = ((1 - today.dayOfWeek.value + 7) % 7).toLong()
+            today.plusDays(if (daysUntilMonday == 0L) 7L else daysUntilMonday)
+        }
 
     private fun serviceWithOneCabine(tenant: String): UUID {
         TenantContext.set(tenant)
@@ -92,7 +101,6 @@ class ServiceConfigTest {
         assertEquals(24, effective.cancelDeadlineHours)
         assertEquals(10, effective.noShowToleranceMinutes)
         assertTrue(effective.walkInsAllowed)
-        assertEquals(PaymentMode.FREE, effective.paymentMode)
 
         // Usable straight away: the 09:00-12:30 half-hour grid opens.
         assertEquals(8, engine.openSlots(serviceId, monday).size)
@@ -119,7 +127,7 @@ class ServiceConfigTest {
         val opens = engine.openSlots(serviceId, monday)
         assertEquals(4, opens.size)
         val starts = opens.map { it.startsAt }
-        assertEquals(Instant.parse("2026-11-02T09:00:00Z"), starts.first())
+        assertEquals(monday.atStartOfDay(zone).plusHours(9).toInstant(), starts.first())
         assertEquals(3600L, starts[1].epochSecond - starts[0].epochSecond)
     }
 
@@ -134,5 +142,33 @@ class ServiceConfigTest {
         assertEquals(30, effective.stepMinutes)
         assertEquals(1440L, effective.holdMinutes)
         assertEquals(ConfirmationMode.ON_REQUEST, effective.confirmationMode)
+    }
+
+    @Test
+    fun `a day beyond the default horizon opens nothing and booking is refused`() {
+        TenantContext.set("cfg-tenant-horizon")
+        val serviceId = serviceWithOneCabine("cfg-tenant-horizon")
+
+        // Au-delà de aujourd'hui + 30 jours : aucun créneau exposé.
+        val farDay = LocalDate.now(zone).plusDays(45)
+        assertTrue(engine.openSlots(serviceId, farDay).isEmpty())
+
+        // Et la réservation directe est refusée, même sur une case alignée.
+        assertThrows<SlotUnavailableException> {
+            engine.reserveConfirmed(serviceId, farDay.atStartOfDay(zone).plusHours(9).toInstant())
+        }
+    }
+
+    @Test
+    fun `enabling whatsapp reminders without offsets applies the default ones`() {
+        TenantContext.set("cfg-tenant-reminders")
+        val serviceId = serviceWithOneCabine("cfg-tenant-reminders")
+
+        // Activer le canal seul suffit : les décalages par défaut (J-1/H-2) sont
+        // persistés, le balayage n'a jamais de valeur nulle à résoudre.
+        configService.update(serviceId, ServiceConfigUpdate(reminderChannel = ReminderChannel.WHATSAPP))
+        val effective = configService.effective(serviceId)
+        assertEquals(ReminderChannel.WHATSAPP, effective.reminderChannel)
+        assertEquals(listOf(1440, 120), effective.reminderOffsetsMinutes)
     }
 }

@@ -112,7 +112,7 @@ class AppointmentPublicController(
                     endsAt = outcome.endsAt,
                 )
             } catch (ex: SlotUnavailableException) {
-                throw ResponseStatusException(HttpStatus.CONFLICT, "Ce créneau n'est plus disponible", ex)
+                throw ResponseStatusException(HttpStatus.CONFLICT, "This slot is no longer available", ex)
             }
         }
 
@@ -144,7 +144,7 @@ class AppointmentPublicController(
     private fun byBookingToken(raw: String): List<ServiceReservation> {
         val rows = reservations.findByBookingTokenHash(BookingToken.hash(raw))
         if (rows.isEmpty()) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Cette réservation est introuvable")
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "This booking was not found")
         }
         return rows
     }

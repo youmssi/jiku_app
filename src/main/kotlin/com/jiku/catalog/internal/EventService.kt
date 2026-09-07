@@ -34,7 +34,7 @@ class EventService(
     }
 
     @Transactional(readOnly = true)
-    fun list(): List<EventResponse> = events.findAll().map { it.toResponse() }
+    fun list(): List<EventResponse> = events.findAllWithChannels().map { it.toResponse() }
 
     @Transactional(readOnly = true)
     fun get(id: UUID): EventResponse = load(id).toResponse()
@@ -77,11 +77,13 @@ class EventService(
         val event = load(id)
         when (request.mode) {
             QuorumMode.FRACTION ->
-                require(request.numerator != null && request.denominator != null) {
-                    "Une fraction exige un numérateur et un dénominateur"
+                if (request.numerator == null || request.denominator == null) {
+                    throw ResponseStatusException(HttpStatus.BAD_REQUEST, "A fraction requires a numerator and a denominator")
                 }
             QuorumMode.ABSOLUTE ->
-                require(request.absolute != null) { "Un quorum absolu exige un nombre" }
+                if (request.absolute == null) {
+                    throw ResponseStatusException(HttpStatus.BAD_REQUEST, "An absolute quorum requires a number")
+                }
             QuorumMode.NONE -> Unit
         }
         event.ensureQuorum().apply {

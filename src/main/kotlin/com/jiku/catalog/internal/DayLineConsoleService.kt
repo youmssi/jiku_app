@@ -109,7 +109,7 @@ class DayLineConsoleService(
     ): DayLineView {
         val service = services.get(serviceId)
         if (!config.effective(serviceId).walkInsAllowed) {
-            throw ResponseStatusException(HttpStatus.CONFLICT, "Ce service n'accueille pas de sans-rendez-vous")
+            throw ResponseStatusException(HttpStatus.CONFLICT, "This service does not accept walk-ins")
         }
         val tenantId = TenantContext.get() ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "No tenant")
         val zone = ZoneId.of(service.timezone)

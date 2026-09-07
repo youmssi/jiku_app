@@ -32,6 +32,7 @@ class LineStaffController(
     private val tokens: DayLineTokenService,
     private val staff: ServiceStaffRepository,
     private val console: DayLineConsoleService,
+    private val requests: AppointmentRequestService,
     private val tenantAccessGate: TenantAccessGate,
 ) {
     @GetMapping
@@ -39,6 +40,27 @@ class LineStaffController(
         @PathVariable token: String,
         @RequestParam(required = false) date: String? = null,
     ): DayLineView = withStaff(token) { serviceId -> console.view(serviceId, parseDate(date)) }
+
+    /** Demandes de rendez-vous en attente de confirmation (mode « sur demande »). */
+    @GetMapping("/requests")
+    fun pendingRequests(
+        @PathVariable token: String,
+        @RequestParam(required = false) date: String? = null,
+    ): List<PendingAppointmentRequest> = withStaff(token) { serviceId -> requests.pending(serviceId, parseDate(date)) }
+
+    /** Confirme une demande en attente : le rendez-vous et son billet sont émis. */
+    @PostMapping("/requests/{requestId}/accept")
+    fun acceptRequest(
+        @PathVariable token: String,
+        @PathVariable requestId: UUID,
+    ): Unit = withStaff(token) { serviceId -> requests.accept(serviceId, requestId) }
+
+    /** Refuse une demande en attente : le créneau se libère. */
+    @PostMapping("/requests/{requestId}/reject")
+    fun rejectRequest(
+        @PathVariable token: String,
+        @PathVariable requestId: UUID,
+    ): Unit = withStaff(token) { serviceId -> requests.reject(serviceId, requestId) }
 
     @PostMapping("/next")
     fun next(
@@ -86,11 +108,11 @@ class LineStaffController(
         when (result.outcome) {
             LineOutcome.OK -> result
             LineOutcome.NOT_FOUND ->
-                throw ResponseStatusException(HttpStatus.NOT_FOUND, "Aucune entrée avec ce code sur ce service")
+                throw ResponseStatusException(HttpStatus.NOT_FOUND, "No line entry with this code on this service")
             LineOutcome.WRONG_STATE ->
                 throw ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Cette entrée n'est plus dans l'état attendu — elle a peut-être été traitée par un autre poste",
+                    "This entry is no longer in the expected state — it may have been handled by another desk",
                 )
         }
 
@@ -101,9 +123,9 @@ class LineStaffController(
         val claims = parse(token)
         val tenantId =
             claims[DayLineTokenService.CLAIM_TENANT_ID] as? String
-                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Ce lien de comptoir est invalide")
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "This counter link is invalid")
         if (tenantAccessGate.isSuspended(tenantId)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Ce lien de comptoir n'est plus disponible")
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "This counter link is no longer available")
         }
         TenantContext.set(tenantId)
         try {
@@ -112,13 +134,13 @@ class LineStaffController(
                 UUID.fromString(claims[DayLineTokenService.CLAIM_SERVICE_ID] as String)
             val row =
                 staff.findById(staffId).orElse(null)
-                    ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Ce lien de comptoir a été révoqué")
+                    ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "This counter link has been revoked")
             if (row.revoked || row.serviceId != serviceId) {
-                throw ResponseStatusException(HttpStatus.NOT_FOUND, "Ce lien de comptoir a été révoqué")
+                throw ResponseStatusException(HttpStatus.NOT_FOUND, "This counter link has been revoked")
             }
             return block(serviceId)
         } catch (ex: IllegalArgumentException) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Ce lien de comptoir est invalide", ex)
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "This counter link is invalid", ex)
         } finally {
             TenantContext.clear()
         }
@@ -128,7 +150,7 @@ class LineStaffController(
         try {
             tokens.parse(token)
         } catch (ex: RuntimeException) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Ce lien de comptoir est invalide ou a expiré", ex)
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "This counter link is invalid or has expired", ex)
         }
 
     private fun parseDate(date: String?): LocalDate? =

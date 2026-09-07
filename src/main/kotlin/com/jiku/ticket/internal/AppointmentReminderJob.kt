@@ -22,28 +22,11 @@ class AppointmentReminderJob(
     fun sweep() {
         val now = Instant.now()
         for (ref in reminders.findQueuedReminders()) {
-            withTenant(ref.tenantId) { claims.requeue(ref.reminderId, ref.tenantId) }
+            TenantContext.withTenant(ref.tenantId) { claims.requeue(ref.reminderId, ref.tenantId) }
         }
         for (ref in reminders.findReminderEnabledServices()) {
-            withTenant(ref.tenantId) {
+            TenantContext.withTenant(ref.tenantId) {
                 sweep.sweepService(ref.serviceId, ref.channel, ref.offsets, ref.tenantId, ref.timezone, now)
-            }
-        }
-    }
-
-    private fun <T> withTenant(
-        tenantId: String,
-        block: () -> T,
-    ): T {
-        val previous = TenantContext.get()
-        TenantContext.set(tenantId)
-        return try {
-            block()
-        } finally {
-            if (previous == null) {
-                TenantContext.clear()
-            } else {
-                TenantContext.set(previous)
             }
         }
     }

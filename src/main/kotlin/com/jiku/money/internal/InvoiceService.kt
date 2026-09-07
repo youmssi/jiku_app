@@ -42,7 +42,7 @@ class InvoiceService(
 ) {
     private val log = LoggerFactory.getLogger(InvoiceService::class.java)
 
-    fun list(): List<Invoice> = invoices.findAllByOrderByIssuedAtDesc()
+    fun list(): List<Invoice> = invoices.findAllWithLinesOrderByIssuedAtDesc()
 
     fun find(id: UUID): Invoice =
         invoices.findById(id).orElseThrow {

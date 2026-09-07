@@ -31,10 +31,20 @@ data class NextResponse(
     val ticket: LineTicket?,
 )
 
-/** Réponse d'une action de transition sur la ligne du jour. */
-data class LineActionResponse(
-    val outcome: String,
-    val ticket: LineTicket?,
+/**
+ * Demande de rendez-vous en attente de confirmation (JIKU-87/88), mode « sur
+ * demande ». Une demande bloque les créneaux de ses ressources jusqu'à [heldUntil]
+ * tant qu'aucune décision n'est prise ; l'organisateur ou le comptoir la confirme
+ * ou la refuse depuis la console.
+ */
+data class PendingAppointmentRequest(
+    val id: UUID,
+    val startsAt: Instant,
+    val endsAt: Instant,
+    val clientName: String?,
+    val clientPhone: String?,
+    val requestedAt: Instant,
+    val heldUntil: Instant?,
 )
 
 /** Création d'un lien du personnel pour un service (JIKU-88). */

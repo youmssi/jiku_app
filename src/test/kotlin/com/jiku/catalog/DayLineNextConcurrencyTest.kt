@@ -1,11 +1,14 @@
 package com.jiku.catalog
 
 import com.jiku.TestcontainersConfiguration
+import com.jiku.catalog.internal.ConfirmationMode
 import com.jiku.catalog.internal.Resource
 import com.jiku.catalog.internal.ResourceAvailability
 import com.jiku.catalog.internal.ResourceAvailabilityRepository
 import com.jiku.catalog.internal.ResourceRepository
 import com.jiku.catalog.internal.ServiceAdminService
+import com.jiku.catalog.internal.ServiceConfigService
+import com.jiku.catalog.internal.ServiceConfigUpdate
 import com.jiku.catalog.internal.SlotEngine
 import com.jiku.shared.TenantContext
 import com.jiku.ticket.TicketingModuleApi
@@ -38,6 +41,9 @@ class DayLineNextConcurrencyTest {
 
     @Autowired
     lateinit var services: ServiceAdminService
+
+    @Autowired
+    lateinit var configService: ServiceConfigService
 
     @Autowired
     lateinit var resources: ResourceRepository
@@ -164,6 +170,10 @@ class DayLineNextConcurrencyTest {
         )
         val service = services.create("Coupe", "Africa/Conakry")
         services.addRequirement(service.id, ResourceType.PERSON, 1)
+        configService.update(
+            service.id,
+            ServiceConfigUpdate(confirmationMode = ConfirmationMode.INSTANTANEOUS, maxHorizonDays = 365),
+        )
         return service.id
     }
 }

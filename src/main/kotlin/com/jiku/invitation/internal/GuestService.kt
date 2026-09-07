@@ -96,13 +96,13 @@ class GuestService(
             guests.findByIdAndEventId(guestId, eventId)
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Guest not found")
         if (ticketTypeId != null && events.ticketTypes(eventId).none { it.id == ticketTypeId }) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Catégorie inconnue pour cet événement")
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown category for this event")
         }
         if (guest.ticketTypeId == ticketTypeId) return guest.toResponse()
         if (guest.rsvpStatus == RsvpStatus.CONFIRMED &&
             !events.moveTicketTypeSlot(guest.ticketTypeId, ticketTypeId)
         ) {
-            throw ResponseStatusException(HttpStatus.CONFLICT, "Cette catégorie est complète")
+            throw ResponseStatusException(HttpStatus.CONFLICT, "This category is full")
         }
         guest.ticketTypeId = ticketTypeId
         return guests.save(guest).toResponse()
@@ -201,7 +201,7 @@ class GuestService(
                 // coûte plus cher que le rattacher plus tard. On le signale.
                 val typeId = typeLabel?.let { typeIdByLabel[it.lowercase()] }
                 if (typeLabel != null && typeId == null) {
-                    warnings += RowIssue(rowNumber, "Catégorie « $typeLabel » inconnue : invité importé sans catégorie")
+                    warnings += RowIssue(rowNumber, "Unknown category « $typeLabel »: guest imported without a category")
                 }
 
                 guests.save(

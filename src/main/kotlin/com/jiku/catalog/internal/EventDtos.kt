@@ -10,7 +10,6 @@ import java.time.Instant
 import java.util.UUID
 
 data class EventSettingsDto(
-    val placementEnabled: Boolean = false,
     val transferAllowed: Boolean = false,
     val transferDeadline: Instant? = null,
     val overbookingAllowed: Boolean = false,
@@ -97,7 +96,7 @@ data class UpsertTicketTypeRequest(
     val maxCapacity: Int? = null,
     @field:Pattern(
         regexp = "^#[0-9a-fA-F]{6}$",
-        message = "colorHex doit être une couleur hexadécimale à 6 chiffres, par exemple #1E293B",
+        message = "colorHex must be a 6-digit hexadecimal color, e.g. #1E293B",
     )
     val colorHex: String = "#1E293B",
     val position: Int = 0,

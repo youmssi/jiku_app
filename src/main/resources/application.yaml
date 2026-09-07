@@ -363,8 +363,6 @@ invitation:
   send:
     # Frontend base URL used to build guest invitation links.
     app-base-url: ${SERVER_BASE_URL:http://localhost:3000}
-    # Delivery attempts before an invitation is marked permanently FAILED.
-    max-attempts: ${INVITATION_MAX_ATTEMPTS:3}
   # How often QUEUED invitations (withheld by a delivery-capacity guardrail —
   # the WhatsApp conversation window, JIKU-61, or the email routing quota,
   # JIKU-62) are retried.
@@ -401,7 +399,6 @@ catalog:
     cancel-deadline-hours: ${CATALOG_SERVICE_CANCEL_DEADLINE_HOURS:24}
     no-show-tolerance-minutes: ${CATALOG_SERVICE_NO_SHOW_TOLERANCE_MINUTES:10}
     walk-ins-allowed: ${CATALOG_SERVICE_WALK_INS_ALLOWED:true}
-    payment-mode: ${CATALOG_SERVICE_PAYMENT_MODE:FREE}
 
 notification:
   sales:

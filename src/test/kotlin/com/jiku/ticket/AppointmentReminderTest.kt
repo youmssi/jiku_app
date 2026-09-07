@@ -3,6 +3,7 @@ package com.jiku.ticket
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.catalog.ResourceType
+import com.jiku.catalog.internal.ConfirmationMode
 import com.jiku.catalog.internal.ReminderChannel
 import com.jiku.catalog.internal.Resource
 import com.jiku.catalog.internal.ResourceAvailability
@@ -188,7 +189,12 @@ class AppointmentReminderTest {
         services.addRequirement(service.id, ResourceType.PERSON, 1)
         configService.update(
             service.id,
-            ServiceConfigUpdate(reminderChannel = ReminderChannel.WHATSAPP, reminderOffsetsMinutes = listOf(120)),
+            ServiceConfigUpdate(
+                confirmationMode = ConfirmationMode.INSTANTANEOUS,
+                maxHorizonDays = 365,
+                reminderChannel = ReminderChannel.WHATSAPP,
+                reminderOffsetsMinutes = listOf(120),
+            ),
         )
         cleanup = tenant to requireNotNull(service.id)
         return service.id

@@ -26,13 +26,13 @@ class AppointmentCancellationService(
     fun cancel(rawBookingToken: String) {
         val rows = reservations.findByBookingTokenHash(BookingToken.hash(rawBookingToken))
         if (rows.isEmpty()) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Cette réservation est introuvable")
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "This booking was not found")
         }
         val first = rows.first()
         val eff = config.effective(first.serviceId)
         val cancelDeadline = Instant.now().plusSeconds(eff.cancelDeadlineHours * 3600L)
         if (first.startsAt.isBefore(cancelDeadline)) {
-            throw ResponseStatusException(HttpStatus.CONFLICT, "Ce rendez-vous ne peut plus être annulé")
+            throw ResponseStatusException(HttpStatus.CONFLICT, "This appointment can no longer be cancelled")
         }
         events.publishEvent(
             AppointmentCancelled(

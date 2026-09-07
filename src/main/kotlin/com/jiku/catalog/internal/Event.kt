@@ -9,7 +9,6 @@ import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
-import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
@@ -66,7 +65,7 @@ class Event(
     @Column(name = "confirmed_count", nullable = false)
     var confirmedCount: Int = 0
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection
     @CollectionTable(name = "event_invitation_channel", joinColumns = [JoinColumn(name = "event_id")])
     @Enumerated(EnumType.STRING)
     @Column(name = "channel", nullable = false)

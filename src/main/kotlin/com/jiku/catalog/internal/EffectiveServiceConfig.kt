@@ -17,7 +17,6 @@ data class EffectiveServiceConfig(
     val cancelDeadlineHours: Int,
     val noShowToleranceMinutes: Int,
     val walkInsAllowed: Boolean,
-    val paymentMode: PaymentMode,
     val reminderChannel: ReminderChannel,
     val reminderOffsetsMinutes: List<Int>,
 ) {
@@ -38,7 +37,6 @@ data class ServiceConfigUpdate(
     val cancelDeadlineHours: Int? = null,
     val noShowToleranceMinutes: Int? = null,
     val walkInsAllowed: Boolean? = null,
-    val paymentMode: PaymentMode? = null,
     val reminderChannel: ReminderChannel? = null,
     val reminderOffsetsMinutes: List<Int>? = null,
 )

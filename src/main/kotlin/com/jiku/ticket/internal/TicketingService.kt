@@ -206,8 +206,12 @@ class TicketingService(
         if (ticket.status != TicketStatus.ISSUED) {
             return LineActionResult(LineOutcome.WRONG_STATE, ticket.toLine())
         }
-        val rank = allocateDayRank(serviceId, rankDay)
-        if (tickets.arriveLine(requireNotNull(ticket.id), serviceId, at, rank) == 1) {
+        // Transition d'abord, rang ensuite : si deux appareils scannent le même
+        // billet, le perdant (0 ligne) repart sans avoir consommé de numéro, et la
+        // numérotation du jour reste sans trou.
+        val ticketId = requireNotNull(ticket.id)
+        if (tickets.startWait(ticketId, serviceId, at) == 1) {
+            tickets.assignDayRank(ticketId, allocateDayRank(serviceId, rankDay))
             return LineActionResult(LineOutcome.OK, reload(serviceId, ticketCode))
         }
         return LineActionResult(LineOutcome.WRONG_STATE, reload(serviceId, ticketCode))

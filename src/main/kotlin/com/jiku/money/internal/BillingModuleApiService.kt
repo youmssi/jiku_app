@@ -31,6 +31,8 @@ class BillingModuleApiService(
 
     override fun allowance(eventId: UUID): BillingAllowance = usageService.allowance(eventId)
 
+    override fun readAllowance(eventId: UUID): BillingAllowance = usageService.readAllowance(eventId)
+
     override fun canInvite(
         eventId: UUID,
         additionalGuests: Long,

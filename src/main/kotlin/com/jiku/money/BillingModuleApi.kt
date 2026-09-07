@@ -17,6 +17,13 @@ interface BillingModuleApi {
     fun allowance(eventId: UUID): BillingAllowance
 
     /**
+     * La position de facturation de [eventId] **sans** rafraîchir le snapshot
+     * persisté : la lecture du tableau de bord (polling, transaction read-only)
+     * n'écrit jamais dans une ligne de facturation.
+     */
+    fun readAllowance(eventId: UUID): BillingAllowance
+
+    /**
      * Whether sending to [additionalGuests] more distinct guests would stay within
      * the event's unlocked allowance. Used by the invitation module's paywall
      * (JIKU-34); here it simply reflects the metered allowance.

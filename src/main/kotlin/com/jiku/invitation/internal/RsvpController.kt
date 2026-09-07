@@ -80,6 +80,9 @@ class RsvpController(
         block: (UUID, UUID) -> RsvpView,
     ): RsvpView {
         val claims = parse(token)
+        if (claims[InvitationTokenService.CLAIM_TYPE] != InvitationTokenService.TOKEN_TYPE) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "This invitation link is invalid")
+        }
         val tenantId =
             claims[InvitationTokenService.CLAIM_TENANT_ID] as? String
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "This invitation link is invalid")

@@ -79,12 +79,21 @@ class WhatsAppSendingTest {
                     post("/api/v1/events")
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"name":"Gala","timezone":"Africa/Abidjan"}"""),
+                        .content(
+                            """
+                            {"name":"Gala","timezone":"Africa/Abidjan",
+                            "startDateTime":"2026-12-01T18:00:00Z","invitationChannels":["EMAIL","WHATSAPP"]}
+                            """.trimIndent(),
+                        ),
                 ).andExpect(status().isCreated())
                 .andReturn()
                 .response
                 .contentAsString
-        return JsonPath.read(body, "$.id")
+        val eventId = JsonPath.read<String>(body, "$.id")
+        mockMvc
+            .perform(post("/api/v1/events/$eventId/publish").header("Authorization", "Bearer $token"))
+            .andExpect(status().isOk())
+        return eventId
     }
 
     private fun register(

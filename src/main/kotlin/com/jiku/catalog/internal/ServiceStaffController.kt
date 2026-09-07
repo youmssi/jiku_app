@@ -67,7 +67,7 @@ class ServiceStaffController(
     }
 
     private fun notFound(staffId: UUID): ResponseStatusException =
-        ResponseStatusException(HttpStatus.NOT_FOUND, "Lien du personnel introuvable : $staffId")
+        ResponseStatusException(HttpStatus.NOT_FOUND, "Staff link not found: $staffId")
 }
 
 private fun ServiceStaff.toView(): ServiceStaffView =

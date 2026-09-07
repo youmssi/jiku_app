@@ -36,10 +36,10 @@ class AttendanceCertificateService(
     ): RenderedDocument {
         val event =
             events.findEvent(eventId)
-                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Événement introuvable")
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found")
         val guest =
             invitation.findGuest(guestId)?.takeIf { it.eventId == eventId }
-                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Participant introuvable")
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Attendee not found")
         val ticket = ticketing.findByGuest(guestId)
 
         // Une attestation ne s'émet que pour quelqu'un qui est venu : sinon elle
@@ -49,7 +49,7 @@ class AttendanceCertificateService(
             ticket?.takeIf { it.status == TicketInfo.STATUS_CHECKED_IN }?.checkedInAt
                 ?: throw ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Ce participant n'a pas été enregistré à l'entrée",
+                    "This attendee was not checked in at the entrance",
                 )
 
         val data =
@@ -69,7 +69,7 @@ class AttendanceCertificateService(
     fun register(eventId: UUID): RenderedDocument {
         val event =
             events.findEvent(eventId)
-                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Événement introuvable")
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found")
 
         val guestsById = invitation.listGuests(eventId).associateBy { it.id }
         val entries =

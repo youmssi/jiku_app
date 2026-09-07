@@ -15,7 +15,6 @@ fun Event.toResponse(): EventResponse =
         status = status.name,
         settings =
             EventSettingsDto(
-                placementEnabled = settings.placementEnabled,
                 transferAllowed = settings.transferAllowed,
                 transferDeadline = settings.transferDeadline,
                 overbookingAllowed = settings.overbookingAllowed,
@@ -48,11 +47,11 @@ fun Event.toEventInfo(): EventInfo =
         location = location,
         transferAllowed = settings.transferAllowed,
         transferDeadline = settings.transferDeadline,
+        invitationChannels = invitationChannels.toSet(),
     )
 
 fun EventSettingsDto.toEmbeddable(): EventSettings =
     EventSettings(
-        placementEnabled = placementEnabled,
         transferAllowed = transferAllowed,
         transferDeadline = transferDeadline,
         overbookingAllowed = overbookingAllowed,

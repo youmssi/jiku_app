@@ -84,6 +84,45 @@ class SlotEngine(
         if (required.isEmpty()) {
             return emptyList()
         }
+        // Horizon maximum : au-delà de aujourd'hui + maxHorizonDays dans le fuseau
+        // du service, on ne propose aucun créneau (JIKU-B1).
+        val lastAllowedDay = LocalDate.now(zone).plusDays(eff.maxHorizonDays.toLong())
+        if (day.isAfter(lastAllowedDay)) {
+            return emptyList()
+        }
+
+        // Précharge la fenêtre de la journée en quelques requêtes au lieu d'une
+        // rafale par case et par exigence : ressources actives des types requis,
+        // leurs horaires hebdomadaires, leurs indisponibilités chevauchant le jour,
+        // et leurs occupations (confirmées ou en attente non expirée). L'évaluation
+        // de chaque case se fait ensuite en mémoire, avec le même prédicat.
+        val types = required.map { it.type }.distinct()
+        val resourcesOfType = resources.findByActiveTrueAndTypeInOrderByNameAsc(types).groupBy { it.type }
+        val resourceIds =
+            resourcesOfType.values
+                .flatten()
+                .mapNotNull { it.id }
+                .toSet()
+        val availabilitiesByResource =
+            availabilities.findByResourceIdIn(resourceIds).groupBy { it.resourceId }
+        val unavailabilitiesByResource =
+            unavailabilities.findOverlappingByResourceIdIn(resourceIds, dayStart, dayEnd).groupBy { it.resourceId }
+        val reservationsByResource =
+            reservations.findOccupyingBetweenResources(resourceIds, dayStart, dayEnd, now).groupBy { it.resourceId }
+
+        fun resourceFree(
+            resource: Resource,
+            startsAt: Instant,
+            endsAt: Instant,
+        ): Boolean =
+            availabilityCovers(resource, startsAt, endsAt, availabilitiesByResource[requireNotNull(resource.id)]) &&
+                unavailabilitiesByResource[requireNotNull(resource.id)].orEmpty().none {
+                    it.startsAt < endsAt && it.endsAt > startsAt
+                } &&
+                reservationsByResource[requireNotNull(resource.id)].orEmpty().none {
+                    it.startsAt < endsAt && it.endsAt > startsAt
+                }
+
         val minHorizon = now.plusSeconds(eff.minHorizonMinutes * 60L)
 
         val slots = mutableListOf<OpenSlot>()
@@ -93,7 +132,11 @@ class SlotEngine(
             val endsAt = startsAt.plusSeconds(occupancy * 60)
             if (endsAt.isAfter(dayEnd)) break
             if (!startsAt.isBefore(minHorizon)) {
-                if (required.all { freeOfType(it.type, startsAt, endsAt, now).size >= it.quantity }) {
+                val freePerType =
+                    resourcesOfType.mapValues { (_, resourcesOfType) ->
+                        resourcesOfType.count { resourceFree(it, startsAt, endsAt) }
+                    }
+                if (required.all { freePerType[it.type] ?: 0 >= it.quantity }) {
                     slots += OpenSlot(startsAt, endsAt)
                 }
             }
@@ -151,22 +194,26 @@ class SlotEngine(
                 clientPhone = clientPhone.trim(),
                 bookingTokenHash = BookingToken.hash(rawToken),
             )
-        val tenantId = TenantContext.get() ?: throw SlotUnavailableException("No tenant context")
-        // Matérialise l'invité et son billet dans le tenant du service (JIKU-87) ;
-        // l'écouteur du module invitation tourne dans cette même transaction.
-        val professionalName =
-            resources.findByActiveTrueAndTypeOrderByNameAsc(ResourceType.PERSON).firstOrNull()?.name
-        events.publishEvent(
-            AppointmentBooked(
-                serviceId = serviceId,
-                tenantId = tenantId,
-                startsAt = outcome.startsAt,
-                endsAt = outcome.endsAt,
-                clientName = clientName.trim(),
-                clientPhone = clientPhone.trim(),
-                professionalName = professionalName,
-            ),
-        )
+        // Une confirmation (mode instantané) matérialise l'invité et son billet
+        // dans la même transaction via l'écouteur du module invitation. Une
+        // demande en attente (mode sur demande) ne crée AUCUN billet : elle n'est
+        // matérialisée qu'au moment où l'organisateur la confirme (JIKU-87/88).
+        if (outcome.status == ServiceReservationStatus.CONFIRMED) {
+            val tenantId = TenantContext.get() ?: throw SlotUnavailableException("No tenant context")
+            val professionalName =
+                resources.findByActiveTrueAndTypeOrderByNameAsc(ResourceType.PERSON).firstOrNull()?.name
+            events.publishEvent(
+                AppointmentBooked(
+                    serviceId = serviceId,
+                    tenantId = tenantId,
+                    startsAt = outcome.startsAt,
+                    endsAt = outcome.endsAt,
+                    clientName = clientName.trim(),
+                    clientPhone = clientPhone.trim(),
+                    professionalName = professionalName,
+                ),
+            )
+        }
         return ClientBookingOutcome(
             bookingToken = rawToken,
             serviceId = outcome.serviceId,
@@ -199,16 +246,27 @@ class SlotEngine(
         val zone = ZoneId.of(service.timezone)
         val endsAt = startsAt.plusSeconds(eff.occupancyMinutes * 60)
         val now = Instant.now()
+        // Purge paresseuse : une demande en attente arrivée à expiration cède sa
+        // place avant toute nouvelle tentative. Sans elle, la contrainte d'unicité
+        // (resource_id, starts_at) garderait le créneau bloqué pour toujours bien
+        // que le comptage l'affiche libre.
+        reservations.deleteExpiredHolds(now)
+        // Garde d'horizon maximum : on refuse un créneau au-delà de aujourd'hui +
+        // maxHorizonDays dans le fuseau du service (JIKU-B1).
+        val lastAllowedDay = LocalDate.now(zone).plusDays(eff.maxHorizonDays.toLong())
+        if (startsAt.atZone(zone).toLocalDate().isAfter(lastAllowedDay)) {
+            throw SlotUnavailableException("Slot is beyond the service booking horizon")
+        }
         // Garde de grille : un créneau proposé ailleurs est déjà dans ces bornes.
         if (startsAt.isBefore(now.plusSeconds(eff.minHorizonMinutes * 60L))) {
-            throw SlotUnavailableException("Créneau trop proche de l'instant présent")
+            throw SlotUnavailableException("Slot is too close to the present moment")
         }
         if (startsAt.atZone(zone).toLocalDate() != endsAt.atZone(zone).toLocalDate()) {
-            throw SlotUnavailableException("Créneau à cheval sur deux jours")
+            throw SlotUnavailableException("Slot spans two days")
         }
         val required = requirements.findByServiceId(serviceId)
         if (required.isEmpty()) {
-            throw SlotUnavailableException("Le service ne définit aucune exigence")
+            throw SlotUnavailableException("The service defines no requirements")
         }
         // Ordre stable : on affecte la première ressource libre de chaque type.
         val assigned = mutableListOf<UUID>()
@@ -235,7 +293,7 @@ class SlotEngine(
             } catch (ex: DataIntegrityViolationException) {
                 // Quelqu'un d'autre a pris la ressource entre le comptage et l'écriture :
                 // la transaction entière se replie.
-                throw SlotUnavailableException("La case vient d'être prise sur la ressource $resourceId")
+                throw SlotUnavailableException("The slot was just taken on resource $resourceId")
             }
         }
         return ReservationOutcome(
@@ -265,6 +323,13 @@ class SlotEngine(
         resource: Resource,
         startsAt: Instant,
         endsAt: Instant,
+    ): Boolean = availabilityCovers(resource, startsAt, endsAt, availabilities.findByResourceId(requireNotNull(resource.id)))
+
+    private fun availabilityCovers(
+        resource: Resource,
+        startsAt: Instant,
+        endsAt: Instant,
+        rows: List<ResourceAvailability>?,
     ): Boolean {
         val zone = ZoneId.of(resource.timezone)
         val from = startsAt.atZone(zone)
@@ -273,7 +338,7 @@ class SlotEngine(
         val day = from.dayOfWeek.value
         val localStart = from.toLocalTime()
         val localEnd = to.toLocalTime()
-        return availabilities.findByResourceId(requireNotNull(resource.id)).any {
+        return rows.orEmpty().any {
             it.dayOfWeek == day && !it.start.isAfter(localStart) && !it.end.isBefore(localEnd)
         }
     }

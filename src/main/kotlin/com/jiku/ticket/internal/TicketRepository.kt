@@ -103,19 +103,36 @@ interface TicketRepository : JpaRepository<Ticket, UUID> {
     ): List<Ticket>
 
     /**
-     * Arrivée au comptoir (JIKU-88) : ISSUED → WAITING, horodatée, avec son rang
-     * du jour. La garde sur l'état rend la transition atomique (double scan).
+     * Arrivée au comptoir (JIKU-88) : ISSUED → WAITING, horodatée. La garde sur
+     * l'état rend la transition atomique (double scan) : le perdant ne consomme
+     * aucun rang — celui-ci n'est alloué qu'après une transition réussie (voir
+     * [assignDayRank]).
      */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
         "UPDATE Ticket t SET t.status = com.jiku.ticket.internal.TicketStatus.WAITING, " +
-            "t.arrivedAt = :at, t.dayRank = :rank " +
+            "t.arrivedAt = :at " +
             "WHERE t.id = :id AND t.serviceId = :serviceId AND t.status = com.jiku.ticket.internal.TicketStatus.ISSUED",
     )
-    fun arriveLine(
+    fun startWait(
         @Param("id") id: UUID,
         @Param("serviceId") serviceId: UUID,
         @Param("at") at: Instant,
+    ): Int
+
+    /**
+     * Pose le rang du jour d'une entrée devenue WAITING par [startWait]. Alloué
+     * dans la même transaction que l'arrivée, le rang est invisible tant que
+     * l'arrivée n'est pas engagée.
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(
+        "UPDATE Ticket t SET t.dayRank = :rank " +
+            "WHERE t.id = :id AND t.status = com.jiku.ticket.internal.TicketStatus.WAITING " +
+            "AND t.dayRank IS NULL",
+    )
+    fun assignDayRank(
+        @Param("id") id: UUID,
         @Param("rank") rank: Int,
     ): Int
 

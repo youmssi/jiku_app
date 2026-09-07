@@ -239,6 +239,7 @@ class TicketTransferTest {
                         .content(
                             """
                             {"name":"Gala","timezone":"Africa/Conakry",
+                             "startDateTime":"2026-12-01T18:00:00Z","invitationChannels":["EMAIL"],
                              "settings":{"transferAllowed":$transferAllowed$deadline}}
                             """.trimIndent(),
                         ),
@@ -246,7 +247,11 @@ class TicketTransferTest {
                 .andReturn()
                 .response
                 .contentAsString
-        return JsonPath.read(body, "$.id")
+        val eventId = JsonPath.read<String>(body, "$.id")
+        mockMvc
+            .perform(post("/api/v1/events/$eventId/publish").header("Authorization", "Bearer $accessToken"))
+            .andExpect(status().isOk())
+        return eventId
     }
 
     private fun importGuest(

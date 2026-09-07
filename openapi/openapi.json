@@ -1081,6 +1081,72 @@
         }
       }
     },
+    "/api/v1/services/{serviceId}/day-line/requests/{requestId}/reject" : {
+      "post" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "rejectRequest",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "requestId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/day-line/requests/{requestId}/accept" : {
+      "post" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "acceptRequest",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "requestId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
     "/api/v1/services/{serviceId}/day-line/next" : {
       "post" : {
         "tags" : [
@@ -1931,6 +1997,70 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/requests/{requestId}/reject" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "rejectRequest_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "requestId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/requests/{requestId}/accept" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "acceptRequest_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "requestId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
           }
         }
       }
@@ -4287,6 +4417,48 @@
         }
       }
     },
+    "/api/v1/services/{serviceId}/day-line/requests" : {
+      "get" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "pendingRequests",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "date",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PendingAppointmentRequest"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/services/{id}/booking-link" : {
       "get" : {
         "tags" : [
@@ -4451,6 +4623,47 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/DayLineView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/requests" : {
+      "get" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "pendingRequests_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "date",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PendingAppointmentRequest"
+                  }
                 }
               }
             }
@@ -6336,17 +6549,6 @@
               "null"
             ]
           },
-          "paymentMode" : {
-            "type" : [
-              "string",
-              "null"
-            ],
-            "enum" : [
-              "FREE",
-              "BEFORE",
-              "AFTER"
-            ]
-          },
           "reminderChannel" : {
             "type" : [
               "string",
@@ -6413,14 +6615,6 @@
           },
           "walkInsAllowed" : {
             "type" : "boolean"
-          },
-          "paymentMode" : {
-            "type" : "string",
-            "enum" : [
-              "FREE",
-              "BEFORE",
-              "AFTER"
-            ]
           },
           "reminderChannel" : {
             "type" : "string",
@@ -6572,9 +6766,6 @@
       "EventSettingsDto" : {
         "type" : "object",
         "properties" : {
-          "placementEnabled" : {
-            "type" : "boolean"
-          },
           "transferAllowed" : {
             "type" : "boolean"
           },
@@ -9345,6 +9536,46 @@
             "format" : "date-time"
           },
           "revokedAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          }
+        }
+      },
+      "PendingAppointmentRequest" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "clientName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "clientPhone" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "requestedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "heldUntil" : {
             "type" : [
               "string",
               "null"

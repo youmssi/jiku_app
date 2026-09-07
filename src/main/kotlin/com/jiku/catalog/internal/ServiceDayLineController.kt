@@ -29,12 +29,34 @@ import java.util.UUID
 @PreAuthorize("hasRole('ORGANIZER')")
 class ServiceDayLineController(
     private val console: DayLineConsoleService,
+    private val requests: AppointmentRequestService,
 ) {
     @GetMapping
     fun view(
         @PathVariable serviceId: UUID,
         @RequestParam(required = false) date: String?,
     ): DayLineView = console.view(serviceId, parseDate(date))
+
+    /** Demandes de rendez-vous en attente de confirmation (mode « sur demande »). */
+    @GetMapping("/requests")
+    fun pendingRequests(
+        @PathVariable serviceId: UUID,
+        @RequestParam(required = false) date: String?,
+    ): List<PendingAppointmentRequest> = requests.pending(serviceId, parseDate(date))
+
+    /** Confirme une demande en attente : le rendez-vous et son billet sont émis. */
+    @PostMapping("/requests/{requestId}/accept")
+    fun acceptRequest(
+        @PathVariable serviceId: UUID,
+        @PathVariable requestId: UUID,
+    ) = requests.accept(serviceId, requestId)
+
+    /** Refuse une demande en attente : le créneau se libère. */
+    @PostMapping("/requests/{requestId}/reject")
+    fun rejectRequest(
+        @PathVariable serviceId: UUID,
+        @PathVariable requestId: UUID,
+    ) = requests.reject(serviceId, requestId)
 
     /** Appelle la personne suivante ; ticket nul si personne n'attend. */
     @PostMapping("/next")
@@ -83,11 +105,11 @@ class ServiceDayLineController(
         when (result.outcome) {
             LineOutcome.OK -> result
             LineOutcome.NOT_FOUND ->
-                throw ResponseStatusException(HttpStatus.NOT_FOUND, "Aucune entrée avec ce code sur ce service")
+                throw ResponseStatusException(HttpStatus.NOT_FOUND, "No line entry with this code on this service")
             LineOutcome.WRONG_STATE ->
                 throw ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "Cette entrée n'est plus dans l'état attendu — elle a peut-être été traitée par un autre poste",
+                    "This entry is no longer in the expected state — it may have been handled by another desk",
                 )
         }
 

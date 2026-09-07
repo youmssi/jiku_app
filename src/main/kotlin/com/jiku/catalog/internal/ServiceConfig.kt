@@ -15,13 +15,6 @@ enum class ConfirmationMode {
     ON_REQUEST,
 }
 
-/** Moment du paiement d'un rendez-vous, quand le service en demande un. */
-enum class PaymentMode {
-    FREE,
-    BEFORE,
-    AFTER,
-}
-
 /**
  * Canal de rappel d'un service (JIKU-89). NONE tant que l'organisateur n'active
  * pas les rappels : aucun rappel n'est émis avant ce choix. Seul le canal
@@ -80,10 +73,6 @@ class ServiceConfig(
 
     @Column(name = "walk_ins_allowed")
     var walkInsAllowed: Boolean? = null
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "payment_mode", length = 32)
-    var paymentMode: PaymentMode? = null
 
     @Enumerated(EnumType.STRING)
     @Column(name = "reminder_channel", length = 16)
