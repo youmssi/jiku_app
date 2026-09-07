@@ -53,7 +53,8 @@ data class ChannelBreakdown(
  */
 data class GuestInfo(
     val id: UUID,
-    val eventId: UUID,
+    /** Nul pour un titulaire de rendez-vous (JIKU-87), qui n'appartient à aucun événement. */
+    val eventId: UUID?,
     val firstName: String,
     val lastName: String,
     val email: String?,

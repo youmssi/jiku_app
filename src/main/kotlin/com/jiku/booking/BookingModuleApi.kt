@@ -21,6 +21,17 @@ interface BookingModuleApi {
     /** Cancels a booking and computes the refund due under the JIKU-55 sliding-scale policy — the transfer itself is manual, like every payment in this flow. */
     fun adminCancelBooking(bookingId: UUID): AdminBookingCancellationView
 
+    /**
+     * Enregistre le remboursement exécuté contre l'acompte vérifié d'origine
+     * (JIKU-75) : émet l'avoir CREDIT_NOTE, notifie le client, passe la
+     * réservation à REFUNDED. Montant partiel possible, motif obligatoire.
+     */
+    fun adminRefundBooking(
+        bookingId: UUID,
+        amountMinor: Long,
+        reason: String,
+    ): AdminBookingRefundView
+
     fun adminListPaymentDeclarations(
         status: String?,
         page: Int,
@@ -66,6 +77,17 @@ data class AdminBookingCancellationView(
     val status: String,
     val refundAmountMinor: Long,
     val currency: String,
+)
+
+/** Remboursement exécuté (JIKU-75) et son avoir. */
+data class AdminBookingRefundView(
+    val id: UUID,
+    val bookingId: UUID,
+    val amountMinor: Long,
+    val currency: String,
+    val reason: String,
+    val creditNoteNumber: String?,
+    val status: String,
 )
 
 data class AdminPaymentDeclarationView(

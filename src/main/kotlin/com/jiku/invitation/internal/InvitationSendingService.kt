@@ -1,5 +1,6 @@
 package com.jiku.invitation.internal
 
+import com.jiku.catalog.EventInfo
 import com.jiku.catalog.EventModuleApi
 import com.jiku.catalog.InvitationChannel
 import com.jiku.shared.UsageAllowanceGate
@@ -32,7 +33,26 @@ class InvitationSendingService(
         channels: Set<InvitationChannel>,
         onlyUnsent: Boolean,
     ): SendInvitationsResult {
-        events.findEvent(eventId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found")
+        val event = events.findEvent(eventId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found")
+        requireOpenForSending(event)
+        val unsupported = channels - event.invitationChannels
+        if (unsupported.isNotEmpty()) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Channels not enabled for this event: ${unsupported.joinToString { it.name }}. " +
+                    "Publish the event with these channels to send on them.",
+            )
+        }
+
+        // Load the event's existing invitations once, not once per (guest, channel):
+        // a send to a 1 000-guest event must not issue thousands of point queries.
+        val existingByGuestAndChannel =
+            invitations.findByEventId(eventId).associateBy { it.guestId to it.channel }
+        // Un invité déjà pris en charge — que la livraison ait réussi (PENDING/SENT),
+        // soit en attente de rejeu (QUEUED) ou ait échoué (FAILED) — est déjà compté
+        // dans le budget : on ne le refacture jamais à chaque envoi, sinon un numéro
+        // invalide consommerait le budget gratuit à chaque tentative.
+        val committed = existingByGuestAndChannel.keys.map { it.first }.toSet()
 
         // First pass: resolve the invitations this send would create/re-queue,
         // without persisting, so the paywall can veto the whole batch.
@@ -51,7 +71,7 @@ class InvitationSendingService(
                 if (!eligible) {
                     continue
                 }
-                val existing = invitations.findByGuestIdAndChannel(guestId, channel)
+                val existing = existingByGuestAndChannel[guestId to channel]
                 if (onlyUnsent && existing?.status == InvitationStatus.SENT) {
                     continue
                 }
@@ -60,12 +80,6 @@ class InvitationSendingService(
         }
 
         val batchGuestIds = toQueue.map { it.guestId }.toSet()
-        val committed =
-            invitations
-                .findByEventId(eventId)
-                .filter { it.status != InvitationStatus.FAILED }
-                .map { it.guestId }
-                .toSet()
         enforceAllowance(eventId, committed, batchGuestIds)
 
         for (invitation in toQueue) {
@@ -81,6 +95,24 @@ class InvitationSendingService(
             allowanceGate.recordCommitment(eventId, newGuestCount)
         }
         return SendInvitationsResult(toQueue.size)
+    }
+
+    /**
+     * Un événement n'accepte d'invitations que publié : un envoi sur un brouillon
+     * (jamais montré aux invités) ou un événement annulé (dont les liens doivent
+     * cesser de se résoudre) est refusé ici, pas dans l'UI.
+     */
+    private fun requireOpenForSending(event: EventInfo) {
+        when (event.status) {
+            EventInfo.STATUS_PUBLISHED -> Unit
+            EventInfo.STATUS_CANCELLED ->
+                throw ResponseStatusException(HttpStatus.GONE, "This event has been cancelled")
+            else ->
+                throw ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Publish the event before sending invitations",
+                )
+        }
     }
 
     /**

@@ -138,19 +138,29 @@ class GuestErasureTest {
             "$.tenantId",
         )
 
-    private fun createEvent(token: String): String =
-        JsonPath.read(
+    private fun createEvent(token: String): String {
+        val body =
             mockMvc
                 .perform(
                     post("/api/v1/events")
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"name":"Erasure Event","timezone":"Africa/Abidjan","maxCapacity":10}"""),
+                        .content(
+                            """
+                            {"name":"Erasure Event","timezone":"Africa/Abidjan","maxCapacity":10,
+                            "startDateTime":"2026-12-01T18:00:00Z","invitationChannels":["EMAIL"]}
+                            """.trimIndent(),
+                        ),
                 ).andExpect(status().isCreated())
                 .andReturn()
-                .response.contentAsString,
-            "$.id",
-        )
+                .response
+                .contentAsString
+        val eventId = JsonPath.read<String>(body, "$.id")
+        mockMvc
+            .perform(post("/api/v1/events/$eventId/publish").header("Authorization", "Bearer $token"))
+            .andExpect(status().isOk())
+        return eventId
+    }
 
     private fun register(): String =
         JsonPath.read(

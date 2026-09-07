@@ -26,8 +26,9 @@ import java.util.UUID
     ],
 )
 class Ticket(
-    @Column(name = "event_id", nullable = false, updatable = false)
-    val eventId: UUID,
+    /** Nul pour un billet de rendez-vous (JIKU-87) : il n'appartient à aucun événement. */
+    @Column(name = "event_id", updatable = false)
+    val eventId: UUID?,
     @Column(name = "guest_id", nullable = false, updatable = false)
     val guestId: UUID,
     @Column(name = "ticket_code", nullable = false, updatable = false)
@@ -57,4 +58,46 @@ class Ticket(
      */
     @Column(name = "ticket_type_id", updatable = false)
     var ticketTypeId: UUID? = null
+
+    /**
+     * Ce que porte le ticket : une invitation (défaut, tous les tickets
+     * existants) ou, plus tard, un rendez-vous sur créneau (JIKU-83).
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "kind", nullable = false)
+    var kind: TicketKind = TicketKind.INVITATION
+
+    /** Début du créneau ; nul pour un ticket sans créneau (invitation, sans-rendez-vous). */
+    @Column(name = "starts_at")
+    var startsAt: Instant? = null
+
+    /** Fin du créneau ; nul pour un ticket sans créneau. */
+    @Column(name = "ends_at")
+    var endsAt: Instant? = null
+
+    /** Heure de présence effective (arrivée à la porte / au comptoir). */
+    @Column(name = "arrived_at")
+    var arrivedAt: Instant? = null
+
+    /** Rang du jour, séquentiel par service et par jour ; rempli par la ligne du jour (JIKU-88). */
+    @Column(name = "day_rank")
+    var dayRank: Int? = null
+
+    /** Service réservé, pour un billet de rendez-vous (JIKU-87) ; nul pour une invitation. */
+    @Column(name = "service_id", updatable = false)
+    var serviceId: UUID? = null
+
+    /** Nom du professionnel, figé à l'émission (JIKU-87) ; affiché seul sur le billet. */
+    @Column(name = "professional_name", length = 120)
+    var professionalName: String? = null
+
+    /**
+     * Nom et téléphone du client, figés à l'émission (JIKU-88) : la ligne du jour
+     * se rend au comptoir sans jointure vers l'invité. Nul pour une invitation.
+     */
+    @Column(name = "client_name", length = 120, updatable = false)
+    var clientName: String? = null
+
+    @Column(name = "client_phone", length = 32, updatable = false)
+    var clientPhone: String? = null
 }

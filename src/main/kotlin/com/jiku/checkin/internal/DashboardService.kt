@@ -44,7 +44,9 @@ class DashboardService(
         val entrances = labels.map { EntranceCount(it, countsByLabel[it] ?: 0L) }
         val quorum = events.quorum(eventId, guests.total, attendance.checkedIn)
         val deliverability = notifications.currentTenantDeliverability()
-        val allowance = billing.allowance(eventId)
+        // Lecture sans effet de bord : le dashboard est pollé et ne doit jamais
+        // écrire dans la ligne de facturation (contrairement à l'écran usage).
+        val allowance = billing.readAllowance(eventId)
 
         return DashboardResponse(
             eventName = event.name,

@@ -1,6 +1,7 @@
 package com.jiku.ticket
 
 import java.time.Instant
+import java.time.LocalDate
 import java.util.UUID
 
 /**
@@ -17,6 +18,22 @@ interface TicketingModuleApi {
     ): TicketInfo
 
     fun cancelByGuest(guestId: UUID)
+
+    /**
+     * Émet le billet d'un rendez-vous sans compte (JIKU-87) : billet sans
+     * événement portant le créneau, le service et le nom du professionnel.
+     * Le nom et le téléphone du client sont figés dessus (JIKU-88) pour que la
+     * ligne du jour se rende sans jointure. Renvoie le code (le QR sera rendu côté web).
+     */
+    fun issueAppointment(
+        guestId: UUID,
+        startsAt: Instant,
+        endsAt: Instant,
+        serviceId: UUID,
+        professionalName: String?,
+        clientName: String,
+        clientPhone: String,
+    ): String
 
     fun findByGuest(guestId: UUID): TicketInfo?
 
@@ -62,6 +79,123 @@ interface TicketingModuleApi {
 
     /** Checked-in counts grouped by the label that performed each check-in. */
     fun checkInCountsByLabel(eventId: UUID): Map<String, Long>
+
+    /**
+     * La ligne du jour d'un service (JIKU-88) : les tickets de la journée (par le
+     * créneau pour un rendez-vous, par l'arrivée pour un sans-rendez-vous), triés
+     * pour l'écran du comptoir. Bornée par [dayStart] (inclus) et [dayEnd] (exclu),
+     * instants UTC calculés par l'appelant dans le fuseau du service.
+     */
+    fun serviceLine(
+        serviceId: UUID,
+        dayStart: Instant,
+        dayEnd: Instant,
+    ): List<LineTicket>
+
+    /**
+     * Appelle le suivant selon la règle (§4.1) : un rendez-vous en cours dont le
+     * client est arrivé, sinon la plus longue attente. La transition EN_ATTENTE →
+     * APPELÉ est réclamée atomiquement : deux appareils qui appellent en même temps
+     * n'obtiennent jamais la même personne — le perdant resélectionne. Renvoie la
+     * personne appelée, ou null si personne n'attend.
+     */
+    fun callNext(
+        serviceId: UUID,
+        dayStart: Instant,
+        dayEnd: Instant,
+        now: Instant,
+        toleranceMinutes: Long,
+    ): LineTicket?
+
+    /**
+     * Arrivée au comptoir d'un rendez-vous du jour : ISSUED → EN_ATTENTE,
+     * horodatée, avec son rang du jour — alloué séquentiellement par (service,
+     * [rankDay]) sous verrou. La garde sur l'état rend la transition atomique
+     * (double scan refusé).
+     */
+    fun arriveByCode(
+        serviceId: UUID,
+        ticketCode: String,
+        at: Instant,
+        dayStart: Instant,
+        dayEnd: Instant,
+        rankDay: LocalDate,
+    ): LineActionResult
+
+    /** Appel d'une personne précise : EN_ATTENTE → APPELÉ. */
+    fun callByCode(
+        serviceId: UUID,
+        ticketCode: String,
+    ): LineActionResult
+
+    /** Prise en charge : APPELÉ (ou ABSENT rappelé) → EN_COURS. */
+    fun presentByCode(
+        serviceId: UUID,
+        ticketCode: String,
+    ): LineActionResult
+
+    /** Fin de la prise en charge : EN_COURS → TERMINÉ. */
+    fun finishByCode(
+        serviceId: UUID,
+        ticketCode: String,
+    ): LineActionResult
+
+    /** Absent après appel : APPELÉ → ABSENT. */
+    fun noShowByCode(
+        serviceId: UUID,
+        ticketCode: String,
+    ): LineActionResult
+
+    /**
+     * Crée un sans-rendez-vous au comptoir (JIKU-88) : le client est déjà présent,
+     * son ticket naît en EN_ATTENTE avec son rang du jour — alloué
+     * séquentiellement par (service, [rankDay]) sous verrou. L'invité est
+     * matérialisé par le module invitation, qui appelle cette méthode.
+     */
+    fun issueWalkIn(
+        guestId: UUID,
+        serviceId: UUID,
+        clientName: String,
+        clientPhone: String,
+        professionalName: String?,
+        arrivedAt: Instant,
+        dayStart: Instant,
+        dayEnd: Instant,
+        rankDay: LocalDate,
+    ): LineTicket
+}
+
+/**
+ * Une ligne de la journée d'un service : l'essentiel du ticket, avec le client,
+ * pour que l'écran du comptoir se rende sans autre lecture.
+ */
+data class LineTicket(
+    val id: UUID,
+    val ticketCode: String,
+    val kind: String,
+    val status: String,
+    val clientName: String? = null,
+    val clientPhone: String? = null,
+    val startsAt: Instant? = null,
+    val endsAt: Instant? = null,
+    val arrivedAt: Instant? = null,
+    val dayRank: Int? = null,
+)
+
+data class LineActionResult(
+    val outcome: LineOutcome,
+    val ticket: LineTicket? = null,
+)
+
+enum class LineOutcome {
+    /** Transition appliquée. */
+    OK,
+
+    /** Aucun ticket avec ce code dans le tenant courant. */
+    NOT_FOUND,
+
+    /** Le ticket existe mais n'est pas dans l'état attendu (ou pas du bon service / jour). */
+    WRONG_STATE,
 }
 
 data class TicketInfo(

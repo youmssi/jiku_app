@@ -37,8 +37,11 @@ class RsvpService(
         guestId: UUID,
         eventId: UUID,
     ): RsvpView {
-        requireNotCancelled(eventId)
+        requireOpen(eventId)
         val guest = loadGuest(guestId)
+        if (guest.personalDataErased) {
+            throw ResponseStatusException(HttpStatus.GONE, "This invitation is no longer available")
+        }
         if (guest.rsvpStatus != RsvpStatus.CONFIRMED) {
             // La catégorie de l'invité, s'il en a une : les deux plafonds sont
             // alors vérifiés ensemble (JIKU-93).
@@ -57,8 +60,11 @@ class RsvpService(
         guestId: UUID,
         eventId: UUID,
     ): RsvpView {
-        requireNotCancelled(eventId)
+        requireOpen(eventId)
         val guest = loadGuest(guestId)
+        if (guest.personalDataErased) {
+            throw ResponseStatusException(HttpStatus.GONE, "This invitation is no longer available")
+        }
         if (guest.rsvpStatus == RsvpStatus.CONFIRMED) {
             events.releaseAttendanceSlot(eventId, guest.ticketTypeId)
             ticketing.cancelByGuest(guestId)
@@ -89,7 +95,7 @@ class RsvpService(
         eventId: UUID,
         request: TransferTicketRequest,
     ): RsvpView {
-        requireNotCancelled(eventId)
+        requireOpen(eventId)
         val email = request.email?.trim()?.takeIf { it.isNotEmpty() }
         val phone = request.phoneNumber?.trim()?.takeIf { it.isNotEmpty() }
         if (email == null && phone == null) {
@@ -138,11 +144,15 @@ class RsvpService(
             )
         recipient.rsvpStatus = RsvpStatus.CONFIRMED
         recipient.transferredFromGuestId = guestId
+        // Le destinataire prend la place telle qu'elle était : même catégorie
+        // d'accès, même billet. Sans ce report, la catégorie du donneur resterait
+        // comptée pour rien et le portier verrait un billet sans catégorie (JIKU-64).
+        recipient.ticketTypeId = sender.ticketTypeId
         guests.save(recipient)
         val recipientId = requireNotNull(recipient.id)
 
         ticketing.cancelByGuest(guestId)
-        ticketing.issueTicket(eventId, recipientId)
+        ticketing.issueTicket(eventId, recipientId, recipient.ticketTypeId)
 
         sender.rsvpStatus = RsvpStatus.TRANSFERRED
         sender.transferredToGuestId = recipientId
@@ -178,15 +188,26 @@ class RsvpService(
             ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation not found")
         }
 
-    /** A cancelled event accepts no further RSVP changes (JIKU-14B). */
-    private fun requireNotCancelled(eventId: UUID) {
-        if (events.findEvent(eventId)?.status == EventInfo.STATUS_CANCELLED) {
-            throw ResponseStatusException(HttpStatus.GONE, "This event has been cancelled")
+    /** Un événement annulé n'accepte plus de changement ; un brouillon pas encore publié non plus. */
+    private fun requireOpen(eventId: UUID) {
+        val event = events.findEvent(eventId) ?: return
+        when (event.status) {
+            EventInfo.STATUS_CANCELLED ->
+                throw ResponseStatusException(HttpStatus.GONE, "This event has been cancelled")
+            EventInfo.STATUS_PUBLISHED -> Unit
+            else ->
+                throw ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "This event is not open yet — it has not been published",
+                )
         }
     }
 
     private fun buildView(guest: Guest): RsvpView {
-        val event = events.findEvent(guest.eventId)
+        // Les titulaires de rendez-vous n'ont pas d'événement : ce flux (RSVP d'un
+        // événement) ne les concerne jamais.
+        val eventId = guest.eventId ?: throw ResponseStatusException(HttpStatus.GONE, "This link has no event")
+        val event = events.findEvent(eventId)
         val tenant = TenantContext.get()?.let { tenants.findTenant(UUID.fromString(it)) }
         val ticket =
             if (guest.rsvpStatus == RsvpStatus.CONFIRMED) ticketing.findByGuest(requireNotNull(guest.id)) else null

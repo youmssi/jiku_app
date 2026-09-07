@@ -35,7 +35,11 @@ class BillingHistoryController(
             PaymentHistoryItem(
                 paymentId = requireNotNull(payment.id),
                 eventId = payment.eventId,
-                eventName = events.findEvent(payment.eventId)?.name ?: "Event",
+                eventName =
+                    when {
+                        payment.kind == Payment.KIND_SUBSCRIPTION -> "${payment.tier} subscription"
+                        else -> payment.eventId?.let { events.findEvent(it)?.name } ?: "Event"
+                    },
                 tier = payment.tier,
                 amountMinor = payment.amountMinor,
                 currency = payment.currency,
@@ -55,7 +59,11 @@ class BillingHistoryController(
         if (payment.status != PaymentStatus.SUCCEEDED) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "A receipt is only available for a successful payment")
         }
-        val eventName = events.findEvent(payment.eventId)?.name ?: "Event"
+        val eventName =
+            when {
+                payment.kind == Payment.KIND_SUBSCRIPTION -> "${payment.tier} subscription"
+                else -> payment.eventId?.let { events.findEvent(it)?.name } ?: "Event"
+            }
         val when0 = RECEIPT_DATE.format(payment.createdAt)
         val amount = formatAmount(payment.amountMinor, payment.currency)
         return buildString {
@@ -100,7 +108,8 @@ class BillingHistoryController(
 
 data class PaymentHistoryItem(
     val paymentId: UUID,
-    val eventId: UUID,
+    /** Nul pour un renouvellement d'abonnement (JIKU-90). */
+    val eventId: UUID?,
     val eventName: String,
     val tier: String,
     val amountMinor: Long,

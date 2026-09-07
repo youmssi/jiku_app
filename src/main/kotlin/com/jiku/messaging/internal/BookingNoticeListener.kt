@@ -27,7 +27,11 @@ class BookingNoticeListener(
         when (notice.kind) {
             BookingNotice.KIND_PAYMENT_DECLARED -> notifySales(notice, duplicate = false)
             BookingNotice.KIND_DUPLICATE_REFERENCE -> notifySales(notice, duplicate = true)
-            BookingNotice.KIND_DEPOSIT_VERIFIED, BookingNotice.KIND_BALANCE_VERIFIED, BookingNotice.KIND_PAYMENT_REJECTED ->
+            BookingNotice.KIND_DEPOSIT_VERIFIED,
+            BookingNotice.KIND_BALANCE_VERIFIED,
+            BookingNotice.KIND_PAYMENT_REJECTED,
+            BookingNotice.KIND_REFUNDED,
+            ->
                 notifyCustomer(notice)
             else -> log.warn("Ignoring booking notice of unknown kind: {}", notice.kind)
         }
@@ -77,6 +81,8 @@ class BookingNoticeListener(
                     "Your date is confirmed" to templateRenderer.renderBookingDepositVerified(notice)
                 BookingNotice.KIND_BALANCE_VERIFIED ->
                     "Balance received — you're all set" to templateRenderer.renderBookingBalanceVerified(notice)
+                BookingNotice.KIND_REFUNDED ->
+                    "Your deposit has been refunded" to templateRenderer.renderBookingRefunded(notice)
                 else ->
                     "About your payment declaration" to templateRenderer.renderBookingPaymentRejected(notice)
             }

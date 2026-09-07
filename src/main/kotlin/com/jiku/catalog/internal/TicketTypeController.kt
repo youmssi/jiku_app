@@ -113,7 +113,7 @@ class TicketTypeService(
         if (rattaches > 0) {
             throw ResponseStatusException(
                 HttpStatus.CONFLICT,
-                "$rattaches invité(s) sont rattachés à cette catégorie ; déplacez-les avant de la supprimer",
+                "Cannot delete a category that still has guests assigned; move them first ($rattaches affected)",
             )
         }
         types.delete(type)
@@ -121,7 +121,7 @@ class TicketTypeService(
 
     private fun requireEvent(eventId: UUID) {
         if (!events.existsById(eventId)) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Événement introuvable")
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found")
         }
     }
 
@@ -130,7 +130,7 @@ class TicketTypeService(
         typeId: UUID,
     ): TicketType =
         types.findById(typeId).orElse(null)?.takeIf { it.eventId == eventId }
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Catégorie introuvable")
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found")
 
     private fun TicketType.toResponse() =
         TicketTypeResponse(

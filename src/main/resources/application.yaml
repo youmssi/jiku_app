@@ -363,8 +363,6 @@ invitation:
   send:
     # Frontend base URL used to build guest invitation links.
     app-base-url: ${SERVER_BASE_URL:http://localhost:3000}
-    # Delivery attempts before an invitation is marked permanently FAILED.
-    max-attempts: ${INVITATION_MAX_ATTEMPTS:3}
   # How often QUEUED invitations (withheld by a delivery-capacity guardrail —
   # the WhatsApp conversation window, JIKU-61, or the email routing quota,
   # JIKU-62) are retried.
@@ -377,6 +375,30 @@ checkin:
     # How long a freshly issued validator link stays usable; revocation is
     # immediate and independent of this window.
     validity: ${CHECKIN_VALIDATOR_LINK_VALIDITY:P30D}
+
+catalog:
+  slot:
+    # Grille fixe du moteur de créneaux (JIKU-85) : les valeurs par défaut,
+    # que la configuration par service (JIKU-86) remplacera service par service.
+    # Un créneau commence à un multiple du pas à partir de minuit local.
+    step-minutes: ${CATALOG_SLOT_STEP_MINUTES:30}
+    duration-minutes: ${CATALOG_SLOT_DURATION_MINUTES:30}
+    # Espace minimum entre deux réservations, réservé à la fin de chaque créneau.
+    buffer-minutes: ${CATALOG_SLOT_BUFFER_MINUTES:0}
+    # Un créneau qui commence à moins de l'horizon minimum est refusé.
+    min-horizon-minutes: ${CATALOG_SLOT_MIN_HORIZON_MINUTES:120}
+    # Durée de blocage d'une demande en attente (mode « sur demande », §5), avant
+    # qu'elle soit libérée par la purge.
+    hold-minutes: ${CATALOG_SLOT_HOLD_MINUTES:1440}
+  service:
+    # Défauts des options de service hors grille (JIKU-86) ; un service peut les
+    # surcharger dans service_config. La grille garde ses défauts dans
+    # catalog.slot.*.
+    confirmation-mode: ${CATALOG_SERVICE_CONFIRMATION_MODE:ON_REQUEST}
+    max-horizon-days: ${CATALOG_SERVICE_MAX_HORIZON_DAYS:30}
+    cancel-deadline-hours: ${CATALOG_SERVICE_CANCEL_DEADLINE_HOURS:24}
+    no-show-tolerance-minutes: ${CATALOG_SERVICE_NO_SHOW_TOLERANCE_MINUTES:10}
+    walk-ins-allowed: ${CATALOG_SERVICE_WALK_INS_ALLOWED:true}
 
 notification:
   sales:

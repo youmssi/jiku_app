@@ -4,6 +4,7 @@ import com.jiku.money.AdminPaymentView
 import com.jiku.money.ManualPaymentInstructions
 import com.jiku.money.PayeeDetails
 import com.jiku.shared.ManualPaymentNotice
+import com.jiku.shared.SubscriptionNotice
 import com.jiku.shared.TenantContext
 import com.jiku.tenant.TenantModuleApi
 import org.springframework.context.ApplicationEventPublisher
@@ -30,6 +31,9 @@ class ManualPaymentService(
     private val payments: PaymentRepository,
     private val tierUnlockService: TierUnlockService,
     private val billingProperties: BillingProperties,
+    private val subscriptionProperties: SubscriptionProperties,
+    private val subscriptionService: SubscriptionService,
+    private val subscriptionNotifier: SubscriptionNotifier,
     private val manualProperties: ManualPaymentProperties,
     private val tenantModuleApi: TenantModuleApi,
     private val usageService: UsageService,
@@ -84,6 +88,63 @@ class ManualPaymentService(
         payments.save(payment)
 
         publishNotice(payment, tenantId, ManualPaymentNotice.KIND_REQUESTED, note = null)
+        return instructionsFor(payment)
+    }
+
+    /**
+     * Demande de prépaiement d'abonnement (JIKU-90), même circuit « concierge »
+     * que l'activation : une référence lisible, un paiement manuel en attente,
+     * confirmé ensuite par le bureau admin. Idempotent : une demande ouverte
+     * renvoie la référence existante. Aucune carte, aucun identifiant stocké.
+     */
+    @Transactional
+    fun requestSubscription(
+        planName: String,
+        months: Int,
+    ): ManualPaymentInstructions {
+        val plan =
+            subscriptionProperties.planByName(planName)
+                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown subscription plan: $planName")
+        val amount =
+            subscriptionProperties.priceMinor(plan, months)
+                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported prepaid period: $months months")
+        val tenantId = requireNotNull(TenantContext.get()) { "A subscription request requires an authenticated tenant" }
+
+        val existing =
+            payments.findFirstByKindAndProviderAndStatusOrderByCreatedAtDesc(
+                Payment.KIND_SUBSCRIPTION,
+                PROVIDER_MANUAL,
+                PaymentStatus.PENDING,
+            )
+        if (existing != null) {
+            return instructionsFor(existing)
+        }
+
+        val payment =
+            payments.save(
+                Payment(
+                    eventId = null,
+                    tier = plan.name,
+                    amountMinor = amount,
+                    currency = billingProperties.currency,
+                    provider = PROVIDER_MANUAL,
+                    kind = Payment.KIND_SUBSCRIPTION,
+                    subscriptionMonths = months,
+                ),
+            )
+        payment.providerReference = generateReference()
+        payment.updatedAt = Instant.now()
+        payments.save(payment)
+
+        subscriptionNotifier.send(
+            kind = SubscriptionNotice.KIND_REQUESTED,
+            tenantId = tenantId,
+            plan = plan.name,
+            months = months,
+            amountMinor = amount,
+            currency = billingProperties.currency,
+            reference = payment.providerReference,
+        )
         return instructionsFor(payment)
     }
 
@@ -151,6 +212,7 @@ class ManualPaymentService(
         val previous = TenantContext.get()
         TenantContext.set(tenantId)
         try {
+            var subscriptionKind = false
             val view =
                 transactions.execute {
                     val payment =
@@ -166,12 +228,24 @@ class ManualPaymentService(
                     payment.updatedAt = Instant.now()
                     payments.save(payment)
                     if (succeeded) {
-                        tierUnlockService.unlock(payment.eventId, payment.tier)
+                        if (payment.kind == Payment.KIND_SUBSCRIPTION) {
+                            // Le prépaiement (ré)active et prolonge l'abonnement et
+                            // publie son propre avis (SubscriptionNotice.REACTIVATED).
+                            subscriptionKind = true
+                            subscriptionService.confirmSubscriptionPayment(
+                                payment.tier,
+                                requireNotNull(payment.subscriptionMonths),
+                            )
+                        } else {
+                            tierUnlockService.unlock(requireNotNull(payment.eventId), payment.tier)
+                        }
                     }
                     payment.toAdminView()
                 }
-            val kind = if (succeeded) ManualPaymentNotice.KIND_CONFIRMED else ManualPaymentNotice.KIND_REJECTED
-            publishNoticeFromView(requireNotNull(view), tenantId, kind, note)
+            if (!subscriptionKind) {
+                val kind = if (succeeded) ManualPaymentNotice.KIND_CONFIRMED else ManualPaymentNotice.KIND_REJECTED
+                publishNoticeFromView(requireNotNull(view), tenantId, kind, note)
+            }
             return requireNotNull(view)
         } finally {
             if (previous != null) TenantContext.set(previous) else TenantContext.clear()
@@ -216,7 +290,7 @@ class ManualPaymentService(
                 kind = kind,
                 paymentId = view.id,
                 tenantId = tenantId,
-                eventId = view.eventId,
+                eventId = requireNotNull(view.eventId) { "A manual tier payment always references an event" },
                 tier = view.tier,
                 amountMinor = view.amountMinor,
                 currency = view.currency,

@@ -17,6 +17,131 @@
     }
   ],
   "paths" : {
+    "/api/v1/settings/vocabulary" : {
+      "get" : {
+        "tags" : [
+          "vocabulary-controller"
+        ],
+        "operationId" : "list",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/VocabularyEntry"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [
+          "vocabulary-controller"
+        ],
+        "operationId" : "save",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "items" : {
+                  "$ref" : "#/components/schemas/VocabularyUpdate"
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/VocabularyEntry"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/settings/templates/{name}" : {
+      "get" : {
+        "tags" : [
+          "templates-controller"
+        ],
+        "operationId" : "detail",
+        "parameters" : [
+          {
+            "name" : "name",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TemplateDetail"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [
+          "templates-controller"
+        ],
+        "operationId" : "save_1",
+        "parameters" : [
+          {
+            "name" : "name",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TemplateUpdate"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TemplateDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/settings/providers/whatsapp" : {
       "put" : {
         "tags" : [
@@ -70,6 +195,76 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ProviderSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{id}/configuration" : {
+      "get" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "configuration",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EffectiveServiceConfig"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "updateConfiguration",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ServiceConfigUpdate"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EffectiveServiceConfig"
                 }
               }
             }
@@ -446,6 +641,46 @@
         }
       }
     },
+    "/api/v1/settings/templates/{name}/preview" : {
+      "post" : {
+        "tags" : [
+          "templates-controller"
+        ],
+        "operationId" : "preview",
+        "parameters" : [
+          {
+            "name" : "name",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TemplatePreviewRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TemplatePreviewResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/settings/providers/{channel}/test" : {
       "post" : {
         "tags" : [
@@ -479,6 +714,536 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/TestSendResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services" : {
+      "get" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "list_1",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ServiceResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "create",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ServiceCreateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ServiceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/staff-links" : {
+      "get" : {
+        "tags" : [
+          "service-staff-controller"
+        ],
+        "operationId" : "list_2",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ServiceStaffView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "service-staff-controller"
+        ],
+        "operationId" : "create_1",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ServiceStaffCreateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ServiceStaffCreatedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/day-line/walk-in" : {
+      "post" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "walkIn",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WalkInRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DayLineView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/day-line/tickets/{ticketCode}/present" : {
+      "post" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "present",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/day-line/tickets/{ticketCode}/no-show" : {
+      "post" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "noShow",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/day-line/tickets/{ticketCode}/finish" : {
+      "post" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "finish",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/day-line/tickets/{ticketCode}/call" : {
+      "post" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "call",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/day-line/tickets/{ticketCode}/arrive" : {
+      "post" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "arrive",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/day-line/requests/{requestId}/reject" : {
+      "post" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "rejectRequest",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "requestId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/day-line/requests/{requestId}/accept" : {
+      "post" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "acceptRequest",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "requestId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/day-line/next" : {
+      "post" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "next",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NextResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{id}/requirements" : {
+      "get" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "requirements",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ServiceRequirementResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "addRequirement",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ServiceRequirementRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ServiceRequirementResponse"
                 }
               }
             }
@@ -616,6 +1381,203 @@
         }
       }
     },
+    "/api/v1/resources" : {
+      "get" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "list_3",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ResourceView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "create_2",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ResourceCreateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResourceView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/resources/{id}/unavailability" : {
+      "get" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "unavailability",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ResourceUnavailabilityView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "addUnavailability",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UnavailabilityRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResourceUnavailabilityView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/resources/{id}/availability" : {
+      "get" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "availability",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ResourceAvailabilityView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "addAvailability",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AvailabilityRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResourceAvailabilityView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/prospects" : {
       "post" : {
         "tags" : [
@@ -651,7 +1613,7 @@
         "tags" : [
           "org-controller"
         ],
-        "operationId" : "create",
+        "operationId" : "create_3",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -809,12 +1771,336 @@
         }
       }
     },
+    "/api/v1/line/{token}/walk-in" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "walkIn_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WalkInRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DayLineView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/tickets/{ticketCode}/present" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "present_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/tickets/{ticketCode}/no-show" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "noShow_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/tickets/{ticketCode}/finish" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "finish_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/tickets/{ticketCode}/call" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "call_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/tickets/{ticketCode}/arrive" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "arrive_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/requests/{requestId}/reject" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "rejectRequest_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "requestId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/requests/{requestId}/accept" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "acceptRequest_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "requestId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/next" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "next_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NextResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/events" : {
       "get" : {
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "list",
+        "operationId" : "list_4",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -835,7 +2121,7 @@
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "create_1",
+        "operationId" : "create_4",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -927,7 +2213,7 @@
         "tags" : [
           "validator-controller"
         ],
-        "operationId" : "list_1",
+        "operationId" : "list_5",
         "parameters" : [
           {
             "name" : "eventId",
@@ -959,7 +2245,7 @@
         "tags" : [
           "validator-controller"
         ],
-        "operationId" : "create_2",
+        "operationId" : "create_5",
         "parameters" : [
           {
             "name" : "eventId",
@@ -1040,7 +2326,7 @@
         "tags" : [
           "ticket-type-controller"
         ],
-        "operationId" : "list_2",
+        "operationId" : "list_6",
         "parameters" : [
           {
             "name" : "eventId",
@@ -1072,7 +2358,7 @@
         "tags" : [
           "ticket-type-controller"
         ],
-        "operationId" : "create_3",
+        "operationId" : "create_6",
         "parameters" : [
           {
             "name" : "eventId",
@@ -1537,7 +2823,7 @@
         "tags" : [
           "booking-controller"
         ],
-        "operationId" : "create_4",
+        "operationId" : "create_7",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1604,6 +2890,36 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PaymentDeclarationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/subscription/request" : {
+      "post" : {
+        "tags" : [
+          "subscription-controller"
+        ],
+        "operationId" : "request_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SubscriptionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ManualPaymentInstructions"
                 }
               }
             }
@@ -1968,6 +3284,46 @@
         }
       }
     },
+    "/api/v1/appointments/{token}/book" : {
+      "post" : {
+        "tags" : [
+          "appointment-public-controller"
+        ],
+        "operationId" : "book",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AppointmentBookingRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AppointmentBookingView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/whatsapp/content-override" : {
       "get" : {
         "tags" : [
@@ -2021,7 +3377,7 @@
         "tags" : [
           "admin-trial-controller"
         ],
-        "operationId" : "list_3",
+        "operationId" : "list_7",
         "parameters" : [
           {
             "name" : "status",
@@ -2342,6 +3698,60 @@
         }
       }
     },
+    "/api/v1/admin/diagnostics/error" : {
+      "post" : {
+        "tags" : [
+          "admin-diagnostics-controller"
+        ],
+        "operationId" : "triggerError",
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/bookings/{id}/refund" : {
+      "post" : {
+        "tags" : [
+          "admin-booking-controller"
+        ],
+        "operationId" : "refund",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RefundBookingRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminBookingRefundView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/bookings/{id}/cancel" : {
       "post" : {
         "tags" : [
@@ -2510,7 +3920,7 @@
         "tags" : [
           "admin-agreement-controller"
         ],
-        "operationId" : "list_4",
+        "operationId" : "list_8",
         "parameters" : [
           {
             "name" : "status",
@@ -2578,7 +3988,7 @@
         "tags" : [
           "admin-agreement-controller"
         ],
-        "operationId" : "create_5",
+        "operationId" : "create_8",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2678,6 +4088,146 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/AgreementView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{id}" : {
+      "get" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "get_3",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ServiceResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "update_4",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ServiceUpdateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ServiceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/resources/{id}" : {
+      "get" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "get_4",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResourceView"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "update_5",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ResourceUpdateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResourceView"
                 }
               }
             }
@@ -2785,6 +4335,29 @@
         }
       }
     },
+    "/api/v1/settings/templates" : {
+      "get" : {
+        "tags" : [
+          "templates-controller"
+        ],
+        "operationId" : "list_9",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/TemplateSummary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/settings/providers" : {
       "get" : {
         "tags" : [
@@ -2805,12 +4378,124 @@
         }
       }
     },
+    "/api/v1/services/{serviceId}/day-line" : {
+      "get" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "view",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "date",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DayLineView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{serviceId}/day-line/requests" : {
+      "get" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "pendingRequests",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "date",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PendingAppointmentRequest"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/services/{id}/booking-link" : {
+      "get" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "bookingLink",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BookingLinkResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/rsvp/{token}" : {
       "get" : {
         "tags" : [
           "rsvp-controller"
         ],
-        "operationId" : "view",
+        "operationId" : "view_1",
         "parameters" : [
           {
             "name" : "token",
@@ -2835,6 +4520,55 @@
         }
       }
     },
+    "/api/v1/resources/{id}/free" : {
+      "get" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "free",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "from",
+            "in" : "query",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "date-time"
+            }
+          },
+          {
+            "name" : "to",
+            "in" : "query",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "date-time"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FreeSlotResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/members" : {
       "get" : {
         "tags" : [
@@ -2850,6 +4584,85 @@
                   "type" : "array",
                   "items" : {
                     "$ref" : "#/components/schemas/MemberView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}" : {
+      "get" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "view_2",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "date",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DayLineView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/requests" : {
+      "get" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "pendingRequests_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "date",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PendingAppointmentRequest"
                   }
                 }
               }
@@ -2951,7 +4764,7 @@
         "tags" : [
           "guest-controller"
         ],
-        "operationId" : "list_5",
+        "operationId" : "list_10",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3009,7 +4822,7 @@
         "tags" : [
           "dashboard-controller"
         ],
-        "operationId" : "get_3",
+        "operationId" : "get_5",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3186,7 +4999,7 @@
         "tags" : [
           "analytics-controller"
         ],
-        "operationId" : "get_4",
+        "operationId" : "get_6",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3506,6 +5319,26 @@
         }
       }
     },
+    "/api/v1/billing/subscription" : {
+      "get" : {
+        "tags" : [
+          "subscription-controller"
+        ],
+        "operationId" : "view_3",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SubscriptionView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/billing/payments" : {
       "get" : {
         "tags" : [
@@ -3565,7 +5398,7 @@
         "tags" : [
           "invoice-controller"
         ],
-        "operationId" : "list_6",
+        "operationId" : "list_11",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -3588,7 +5421,7 @@
         "tags" : [
           "invoice-controller"
         ],
-        "operationId" : "get_5",
+        "operationId" : "get_7",
         "parameters" : [
           {
             "name" : "invoiceId",
@@ -3671,7 +5504,7 @@
         "tags" : [
           "member-invitation-accept-controller"
         ],
-        "operationId" : "preview",
+        "operationId" : "preview_1",
         "parameters" : [
           {
             "name" : "token",
@@ -3692,6 +5525,111 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/appointments/{token}" : {
+      "get" : {
+        "tags" : [
+          "appointment-public-controller"
+        ],
+        "operationId" : "view_4",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "date",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AppointmentServiceView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/appointments/{token}/booking/{bookingToken}" : {
+      "get" : {
+        "tags" : [
+          "appointment-public-controller"
+        ],
+        "operationId" : "status_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "bookingToken",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AppointmentStatusView"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [
+          "appointment-public-controller"
+        ],
+        "operationId" : "cancel_2",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "bookingToken",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
           }
         }
       }
@@ -3724,7 +5662,7 @@
         "tags" : [
           "admin-tenant-controller"
         ],
-        "operationId" : "list_7",
+        "operationId" : "list_12",
         "parameters" : [
           {
             "name" : "query",
@@ -3774,7 +5712,7 @@
         "tags" : [
           "admin-prospect-lead-controller"
         ],
-        "operationId" : "list_8",
+        "operationId" : "list_13",
         "parameters" : [
           {
             "name" : "status",
@@ -3807,7 +5745,7 @@
         "tags" : [
           "admin-payment-controller"
         ],
-        "operationId" : "list_9",
+        "operationId" : "list_14",
         "parameters" : [
           {
             "name" : "status",
@@ -3877,7 +5815,7 @@
         "tags" : [
           "admin-booking-controller"
         ],
-        "operationId" : "list_10",
+        "operationId" : "list_15",
         "parameters" : [
           {
             "name" : "status",
@@ -3930,7 +5868,7 @@
         "tags" : [
           "admin-booking-payment-controller"
         ],
-        "operationId" : "list_11",
+        "operationId" : "list_16",
         "parameters" : [
           {
             "name" : "status",
@@ -4003,7 +5941,7 @@
         "tags" : [
           "admin-audit-controller"
         ],
-        "operationId" : "list_12",
+        "operationId" : "list_17",
         "parameters" : [
           {
             "name" : "action",
@@ -4078,6 +6016,138 @@
         }
       }
     },
+    "/api/v1/services/{serviceId}/staff-links/{staffId}" : {
+      "delete" : {
+        "tags" : [
+          "service-staff-controller"
+        ],
+        "operationId" : "revoke_1",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "staffId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/services/{id}/requirements/{requirementId}" : {
+      "delete" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "removeRequirement",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "requirementId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/resources/{id}/unavailability/{unavailabilityId}" : {
+      "delete" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "removeUnavailability",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "unavailabilityId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/resources/{id}/availability/{availabilityId}" : {
+      "delete" : {
+        "tags" : [
+          "resource-controller"
+        ],
+        "operationId" : "removeAvailability",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "availabilityId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    },
     "/api/v1/members/{userId}" : {
       "delete" : {
         "tags" : [
@@ -4107,7 +6177,7 @@
         "tags" : [
           "member-controller"
         ],
-        "operationId" : "revoke_1",
+        "operationId" : "revoke_2",
         "parameters" : [
           {
             "name" : "invitationId",
@@ -4162,6 +6232,114 @@
   },
   "components" : {
     "schemas" : {
+      "VocabularyUpdate" : {
+        "type" : "object",
+        "properties" : {
+          "key" : {
+            "type" : "string"
+          },
+          "value" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "VocabularyEntry" : {
+        "type" : "object",
+        "properties" : {
+          "key" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "defaultValue" : {
+            "type" : "string"
+          },
+          "value" : {
+            "type" : "string"
+          },
+          "overridden" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "TemplateUpdate" : {
+        "type" : "object",
+        "properties" : {
+          "channel" : {
+            "type" : "string"
+          },
+          "body" : {
+            "type" : "string"
+          },
+          "active" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "TemplateChannelView" : {
+        "type" : "object",
+        "properties" : {
+          "channel" : {
+            "type" : "string"
+          },
+          "defaultBody" : {
+            "type" : "string"
+          },
+          "body" : {
+            "type" : "string"
+          },
+          "active" : {
+            "type" : "boolean"
+          },
+          "override" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "TemplateDetail" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "channels" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TemplateChannelView"
+            }
+          },
+          "variables" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TemplateVariable"
+            }
+          }
+        }
+      },
+      "TemplateVariable" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "sample" : {
+            "type" : "string"
+          },
+          "required" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "UpdateWhatsAppProviderRequest" : {
         "type" : "object",
         "properties" : {
@@ -4296,6 +6474,168 @@
           "from"
         ]
       },
+      "ServiceConfigUpdate" : {
+        "type" : "object",
+        "properties" : {
+          "confirmationMode" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "enum" : [
+              "INSTANTANEOUS",
+              "ON_REQUEST"
+            ]
+          },
+          "stepMinutes" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "durationMinutes" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "bufferMinutes" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "minHorizonMinutes" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "maxHorizonDays" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "holdMinutes" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
+          },
+          "cancelDeadlineHours" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "noShowToleranceMinutes" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "walkInsAllowed" : {
+            "type" : [
+              "boolean",
+              "null"
+            ]
+          },
+          "reminderChannel" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "enum" : [
+              "WHATSAPP",
+              "NONE"
+            ]
+          },
+          "reminderOffsetsMinutes" : {
+            "type" : [
+              "array",
+              "null"
+            ],
+            "items" : {
+              "type" : "integer",
+              "format" : "int32"
+            }
+          }
+        }
+      },
+      "EffectiveServiceConfig" : {
+        "type" : "object",
+        "properties" : {
+          "confirmationMode" : {
+            "type" : "string",
+            "enum" : [
+              "INSTANTANEOUS",
+              "ON_REQUEST"
+            ]
+          },
+          "stepMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "durationMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "bufferMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "minHorizonMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "maxHorizonDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "holdMinutes" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cancelDeadlineHours" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "noShowToleranceMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "walkInsAllowed" : {
+            "type" : "boolean"
+          },
+          "reminderChannel" : {
+            "type" : "string",
+            "enum" : [
+              "WHATSAPP",
+              "NONE"
+            ]
+          },
+          "reminderOffsetsMinutes" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int32"
+            }
+          },
+          "occupancyMinutes" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
       "ChangeRoleRequest" : {
         "type" : "object",
         "properties" : {
@@ -4426,9 +6766,6 @@
       "EventSettingsDto" : {
         "type" : "object",
         "properties" : {
-          "placementEnabled" : {
-            "type" : "boolean"
-          },
           "transferAllowed" : {
             "type" : "boolean"
           },
@@ -4788,6 +7125,28 @@
           }
         }
       },
+      "TemplatePreviewRequest" : {
+        "type" : "object",
+        "properties" : {
+          "channel" : {
+            "type" : "string"
+          },
+          "body" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "TemplatePreviewResponse" : {
+        "type" : "object",
+        "properties" : {
+          "body" : {
+            "type" : "string"
+          }
+        }
+      },
       "TestSendRequest" : {
         "type" : "object",
         "properties" : {
@@ -4814,6 +7173,255 @@
               "string",
               "null"
             ]
+          }
+        }
+      },
+      "ServiceCreateRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "timezone" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "name",
+          "timezone"
+        ]
+      },
+      "ServiceResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "timezone" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ServiceStaffCreateRequest" : {
+        "type" : "object",
+        "properties" : {
+          "label" : {
+            "type" : "string",
+            "maxLength" : 80,
+            "minLength" : 0
+          }
+        },
+        "required" : [
+          "label"
+        ]
+      },
+      "ServiceStaffCreatedResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "token" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "WalkInRequest" : {
+        "type" : "object",
+        "properties" : {
+          "clientName" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "clientPhone" : {
+            "type" : "string",
+            "maxLength" : 32,
+            "minLength" : 0
+          }
+        },
+        "required" : [
+          "clientName",
+          "clientPhone"
+        ]
+      },
+      "DayLineView" : {
+        "type" : "object",
+        "properties" : {
+          "serviceId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "serviceName" : {
+            "type" : "string"
+          },
+          "timezone" : {
+            "type" : "string"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "entries" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/LineTicket"
+            }
+          }
+        }
+      },
+      "LineTicket" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "ticketCode" : {
+            "type" : "string"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "clientName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "clientPhone" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "startsAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "endsAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "arrivedAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "dayRank" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          }
+        }
+      },
+      "LineActionResult" : {
+        "type" : "object",
+        "properties" : {
+          "outcome" : {
+            "type" : "string",
+            "enum" : [
+              "OK",
+              "NOT_FOUND",
+              "WRONG_STATE"
+            ]
+          },
+          "ticket" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/LineTicket"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          }
+        }
+      },
+      "NextResponse" : {
+        "type" : "object",
+        "properties" : {
+          "ticket" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/LineTicket"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          }
+        }
+      },
+      "ServiceRequirementRequest" : {
+        "type" : "object",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "enum" : [
+              "PERSON",
+              "LOCATION",
+              "EQUIPMENT"
+            ]
+          },
+          "quantity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 100,
+            "minimum" : 1
+          }
+        }
+      },
+      "ServiceRequirementResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "serviceId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [
+              "PERSON",
+              "LOCATION",
+              "EQUIPMENT"
+            ]
+          },
+          "quantity" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },
@@ -4919,6 +7527,144 @@
               "string",
               "null"
             ]
+          }
+        }
+      },
+      "ResourceCreateRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [
+              "PERSON",
+              "LOCATION",
+              "EQUIPMENT"
+            ]
+          },
+          "timezone" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "name",
+          "timezone"
+        ]
+      },
+      "ResourceView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [
+              "PERSON",
+              "LOCATION",
+              "EQUIPMENT"
+            ]
+          },
+          "timezone" : {
+            "type" : "string"
+          },
+          "active" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "UnavailabilityRequest" : {
+        "type" : "object",
+        "properties" : {
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "reason" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "ResourceUnavailabilityView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "resourceId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "reason" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "AvailabilityRequest" : {
+        "type" : "object",
+        "properties" : {
+          "dayOfWeek" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 7,
+            "minimum" : 1
+          },
+          "start" : {
+            "type" : "string"
+          },
+          "end" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ResourceAvailabilityView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "resourceId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "dayOfWeek" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "start" : {
+            "type" : "string"
+          },
+          "end" : {
+            "type" : "string"
           }
         }
       },
@@ -5624,6 +8370,23 @@
           }
         }
       },
+      "SubscriptionRequest" : {
+        "type" : "object",
+        "properties" : {
+          "plan" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "months" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 1
+          }
+        },
+        "required" : [
+          "plan"
+        ]
+      },
       "InvoiceDetail" : {
         "type" : "object",
         "properties" : {
@@ -5900,6 +8663,47 @@
         "required" : [
           "email"
         ]
+      },
+      "AppointmentBookingRequest" : {
+        "type" : "object",
+        "properties" : {
+          "clientName" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "clientPhone" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [
+          "clientName",
+          "clientPhone"
+        ]
+      },
+      "AppointmentBookingView" : {
+        "type" : "object",
+        "properties" : {
+          "bookingToken" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
       },
       "SetContentOverrideRequest" : {
         "type" : "object",
@@ -6204,7 +9008,10 @@
             "type" : "string"
           },
           "eventId" : {
-            "type" : "string",
+            "type" : [
+              "string",
+              "null"
+            ],
             "format" : "uuid"
           },
           "tier" : {
@@ -6243,6 +9050,55 @@
         "required" : [
           "transactionReference"
         ]
+      },
+      "RefundBookingRequest" : {
+        "type" : "object",
+        "properties" : {
+          "amountMinor" : {
+            "type" : "integer",
+            "format" : "int64",
+            "minimum" : 1
+          },
+          "reason" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "reason"
+        ]
+      },
+      "AdminBookingRefundView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "bookingId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "amountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "creditNoteNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "status" : {
+            "type" : "string"
+          }
+        }
       },
       "AdminBookingCancellationView" : {
         "type" : "object",
@@ -6545,6 +9401,38 @@
           "reason"
         ]
       },
+      "ServiceUpdateRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 120,
+            "minLength" : 0
+          }
+        }
+      },
+      "ResourceUpdateRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "active" : {
+            "type" : [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      },
       "SetGuestTicketTypeRequest" : {
         "type" : "object",
         "properties" : {
@@ -6605,6 +9493,109 @@
         "type" : "object",
         "properties" : {
           "excluded" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "TemplateSummary" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "channels" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "ServiceStaffView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "serviceId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "revoked" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "revokedAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          }
+        }
+      },
+      "PendingAppointmentRequest" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "clientName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "clientPhone" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "requestedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "heldUntil" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          }
+        }
+      },
+      "BookingLinkResponse" : {
+        "type" : "object",
+        "properties" : {
+          "token" : {
+            "type" : "string"
+          }
+        }
+      },
+      "FreeSlotResponse" : {
+        "type" : "object",
+        "properties" : {
+          "free" : {
             "type" : "boolean"
           }
         }
@@ -7235,6 +10226,84 @@
           }
         }
       },
+      "MonthOption" : {
+        "type" : "object",
+        "properties" : {
+          "months" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "factorMilli" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "PlanOption" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "maxResources" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "priceMinorPerMonth" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "SubscriptionView" : {
+        "type" : "object",
+        "properties" : {
+          "plan" : {
+            "type" : "string"
+          },
+          "resourcesActive" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "resourcesIncluded" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "overLimit" : {
+            "type" : "boolean"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "startedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "suspensionAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "plans" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PlanOption"
+            }
+          },
+          "months" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MonthOption"
+            }
+          }
+        }
+      },
       "PaymentHistoryItem" : {
         "type" : "object",
         "properties" : {
@@ -7243,7 +10312,10 @@
             "format" : "uuid"
           },
           "eventId" : {
-            "type" : "string",
+            "type" : [
+              "string",
+              "null"
+            ],
             "format" : "uuid"
           },
           "eventName" : {
@@ -7352,6 +10424,71 @@
           },
           "role" : {
             "type" : "string"
+          }
+        }
+      },
+      "AppointmentServiceView" : {
+        "type" : "object",
+        "properties" : {
+          "serviceId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "timezone" : {
+            "type" : "string"
+          },
+          "confirmationMode" : {
+            "type" : "string"
+          },
+          "professionals" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "slots" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AppointmentSlotView"
+            }
+          }
+        }
+      },
+      "AppointmentSlotView" : {
+        "type" : "object",
+        "properties" : {
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "AppointmentStatusView" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "string"
+          },
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "clientName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         }
       },

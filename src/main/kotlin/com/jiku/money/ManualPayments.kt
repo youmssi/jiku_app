@@ -29,7 +29,8 @@ data class PayeeDetails(
 data class AdminPaymentView(
     val id: UUID,
     val tenantId: String,
-    val eventId: UUID,
+    /** Nul pour un renouvellement d'abonnement (JIKU-90). */
+    val eventId: UUID?,
     val tier: String,
     val amountMinor: Long,
     val currency: String,

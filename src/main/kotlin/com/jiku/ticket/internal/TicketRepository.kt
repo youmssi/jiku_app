@@ -1,10 +1,13 @@
 package com.jiku.ticket.internal
 
+import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.time.Instant
+import java.time.LocalDate
 import java.util.UUID
 
 interface TicketRepository : JpaRepository<Ticket, UUID> {
@@ -23,6 +26,14 @@ interface TicketRepository : JpaRepository<Ticket, UUID> {
     ): Long
 
     fun findByEventId(eventId: UUID): List<Ticket>
+
+    /** Billet(s) d'un créneau de service — lecture d'annulation (JIKU-89). */
+    fun findByServiceIdAndStartsAtAndStatusAndKind(
+        serviceId: UUID,
+        startsAt: Instant,
+        status: TicketStatus,
+        kind: TicketKind,
+    ): List<Ticket>
 
     /** Rows of [checkedInBy label, count] for an event's checked-in tickets. */
     @Query(
@@ -68,4 +79,137 @@ interface TicketRepository : JpaRepository<Ticket, UUID> {
         @Param("at") at: Instant,
         @Param("by") by: String,
     ): Int
+
+    /**
+     * La ligne du jour (JIKU-88) : tickets de service dont la journée tombe dans
+     * la fenêtre — créneau pour un rendez-vous, arrivée pour un sans-rendez-vous.
+     * Triés par heure d'affichage : un sans-rendez-vous s'intercale à l'heure de
+     * son arrivée entre les rendez-vous, pas en fin de liste.
+     */
+    @Query(
+        "SELECT t FROM Ticket t WHERE t.serviceId = :serviceId AND t.kind IN :kinds AND " +
+            "((t.kind = com.jiku.ticket.internal.TicketKind.APPOINTMENT AND t.startsAt IS NOT NULL " +
+            "AND t.startsAt >= :from AND t.startsAt < :to) " +
+            "OR (t.kind = com.jiku.ticket.internal.TicketKind.WALK_IN AND t.arrivedAt IS NOT NULL " +
+            "AND t.arrivedAt >= :from AND t.arrivedAt < :to)) " +
+            "ORDER BY CASE WHEN t.kind = com.jiku.ticket.internal.TicketKind.APPOINTMENT " +
+            "THEN t.startsAt ELSE t.arrivedAt END ASC NULLS LAST, t.dayRank ASC NULLS LAST",
+    )
+    fun findServiceDay(
+        @Param("serviceId") serviceId: UUID,
+        @Param("kinds") kinds: Set<TicketKind>,
+        @Param("from") from: Instant,
+        @Param("to") to: Instant,
+    ): List<Ticket>
+
+    /**
+     * Arrivée au comptoir (JIKU-88) : ISSUED → WAITING, horodatée. La garde sur
+     * l'état rend la transition atomique (double scan) : le perdant ne consomme
+     * aucun rang — celui-ci n'est alloué qu'après une transition réussie (voir
+     * [assignDayRank]).
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(
+        "UPDATE Ticket t SET t.status = com.jiku.ticket.internal.TicketStatus.WAITING, " +
+            "t.arrivedAt = :at " +
+            "WHERE t.id = :id AND t.serviceId = :serviceId AND t.status = com.jiku.ticket.internal.TicketStatus.ISSUED",
+    )
+    fun startWait(
+        @Param("id") id: UUID,
+        @Param("serviceId") serviceId: UUID,
+        @Param("at") at: Instant,
+    ): Int
+
+    /**
+     * Pose le rang du jour d'une entrée devenue WAITING par [startWait]. Alloué
+     * dans la même transaction que l'arrivée, le rang est invisible tant que
+     * l'arrivée n'est pas engagée.
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(
+        "UPDATE Ticket t SET t.dayRank = :rank " +
+            "WHERE t.id = :id AND t.status = com.jiku.ticket.internal.TicketStatus.WAITING " +
+            "AND t.dayRank IS NULL",
+    )
+    fun assignDayRank(
+        @Param("id") id: UUID,
+        @Param("rank") rank: Int,
+    ): Int
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(
+        "UPDATE Ticket t SET t.status = com.jiku.ticket.internal.TicketStatus.CALLED " +
+            "WHERE t.id = :id AND t.serviceId = :serviceId AND t.status = com.jiku.ticket.internal.TicketStatus.WAITING",
+    )
+    fun callLine(
+        @Param("id") id: UUID,
+        @Param("serviceId") serviceId: UUID,
+    ): Int
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(
+        "UPDATE Ticket t SET t.status = com.jiku.ticket.internal.TicketStatus.IN_SERVICE " +
+            "WHERE t.id = :id AND t.serviceId = :serviceId AND " +
+            "(t.status = com.jiku.ticket.internal.TicketStatus.CALLED " +
+            "OR t.status = com.jiku.ticket.internal.TicketStatus.NO_SHOW)",
+    )
+    fun presentLine(
+        @Param("id") id: UUID,
+        @Param("serviceId") serviceId: UUID,
+    ): Int
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(
+        "UPDATE Ticket t SET t.status = com.jiku.ticket.internal.TicketStatus.DONE " +
+            "WHERE t.id = :id AND t.serviceId = :serviceId AND t.status = com.jiku.ticket.internal.TicketStatus.IN_SERVICE",
+    )
+    fun finishLine(
+        @Param("id") id: UUID,
+        @Param("serviceId") serviceId: UUID,
+    ): Int
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(
+        "UPDATE Ticket t SET t.status = com.jiku.ticket.internal.TicketStatus.NO_SHOW " +
+            "WHERE t.id = :id AND t.serviceId = :serviceId AND t.status = com.jiku.ticket.internal.TicketStatus.CALLED",
+    )
+    fun noShowLine(
+        @Param("id") id: UUID,
+        @Param("serviceId") serviceId: UUID,
+    ): Int
+}
+
+/**
+ * Compteur de rang par (service, journée locale). Les lectures de l'incrément se
+ * font sous verrou pessimiste ; la création de ligne se fait en propre
+ * transaction par [TicketDayRankAllocator].
+ */
+interface TicketDayCounterRepository : JpaRepository<TicketDayCounter, UUID> {
+    /**
+     * Prend le verrou d'écriture du compteur du service pour la journée, tenu
+     * jusqu'à l'engagement de la transaction d'arrivée. Deux arrivées
+     * concurrentes se mettent donc en file plutôt que de lire le même rang.
+     *
+     * Reste une requête dérivée et non du SQL natif pour que le prédicat
+     * `@TenantId` de Hibernate s'applique — une lecture native trouverait le
+     * compteur d'un autre tenant.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select c from TicketDayCounter c where c.serviceId = :serviceId and c.day = :day")
+    fun findForUpdate(
+        @Param("serviceId") serviceId: UUID,
+        @Param("day") day: LocalDate,
+    ): TicketDayCounter?
+
+    /**
+     * Vérification d'existence sans verrou, utilisée uniquement à la création de
+     * la ligne d'une nouvelle journée. Prendre le verrou ici mettrait en file
+     * chaque arrivée derrière le chemin de création plutôt que derrière
+     * l'incrément. HQL et non SQL natif, pour le prédicat tenant.
+     */
+    @Query("select c from TicketDayCounter c where c.serviceId = :serviceId and c.day = :day")
+    fun findExisting(
+        @Param("serviceId") serviceId: UUID,
+        @Param("day") day: LocalDate,
+    ): TicketDayCounter?
 }

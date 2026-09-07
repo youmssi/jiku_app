@@ -9,6 +9,14 @@ import java.util.UUID
 
 interface EventRepository : JpaRepository<Event, UUID> {
     /**
+     * Les événements avec leurs canaux d'invitation en une passe — la version de
+     * [org.springframework.data.jpa.repository.JpaRepository.findAll] pour la
+     * liste organisateur, qui évite le N+1 de la collection de canaux.
+     */
+    @Query("select distinct e from Event e left join fetch e.invitationChannels")
+    fun findAllWithChannels(): List<Event>
+
+    /**
      * Cross-tenant list of events whose date is before [cutoff], for the retention
      * job. Native SQL deliberately bypasses the Hibernate tenant filter — this is a
      * platform-wide sweep — returning each event's id and owning tenant.
