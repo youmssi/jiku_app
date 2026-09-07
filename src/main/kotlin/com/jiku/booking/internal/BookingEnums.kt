@@ -16,7 +16,6 @@ enum class BookingStatus {
     DRAFT,
     AWAITING_DEPOSIT,
     DEPOSIT_PAID,
-    AWAITING_BALANCE,
     FULLY_PAID,
     CANCELLED,
     REFUNDED,

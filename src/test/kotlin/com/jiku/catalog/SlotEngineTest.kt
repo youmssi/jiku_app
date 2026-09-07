@@ -5,6 +5,8 @@ import com.jiku.catalog.internal.Resource
 import com.jiku.catalog.internal.ResourceAvailabilityRepository
 import com.jiku.catalog.internal.ResourceRepository
 import com.jiku.catalog.internal.Service
+import com.jiku.catalog.internal.ServiceConfigService
+import com.jiku.catalog.internal.ServiceConfigUpdate
 import com.jiku.catalog.internal.ServiceRepository
 import com.jiku.catalog.internal.ServiceRequirement
 import com.jiku.catalog.internal.ServiceRequirementRepository
@@ -51,6 +53,9 @@ class SlotEngineTest {
     @Autowired
     lateinit var availabilities: ResourceAvailabilityRepository
 
+    @Autowired
+    lateinit var configService: ServiceConfigService
+
     @AfterEach
     fun clearContext() = TenantContext.clear()
 
@@ -83,6 +88,7 @@ class SlotEngineTest {
         TenantContext.set(tenant)
         val service = services.save(Service(name = name, timezone = "Africa/Conakry"))
         val serviceId = requireNotNull(service.id)
+        configService.update(serviceId, ServiceConfigUpdate(maxHorizonDays = 365))
         for ((type, quantity) in requirements) {
             this.requirements.save(ServiceRequirement(serviceId = serviceId, type = type, quantity = quantity))
         }

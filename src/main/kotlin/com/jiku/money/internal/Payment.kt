@@ -13,16 +13,18 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * A Mobile Money payment attempt for an event's usage tier (JIKU-33). Recorded on
- * initiation and updated when the provider confirms the outcome server-side; every
- * attempt is retained (with provider reference, amount, currency, timestamps) for
- * reconciliation. Tenant-scoped.
+ * A Mobile Money payment attempt for an event's usage tier (JIKU-33) or for a
+ * prepaid subscription renewal (JIKU-90, kind SUBSCRIPTION). Recorded on
+ * initiation and updated when the provider confirms the outcome server-side;
+ * every attempt is retained (with provider reference, amount, currency,
+ * timestamps) for reconciliation. Tenant-scoped.
  */
 @Entity
 @Table(name = "payment")
 class Payment(
-    @Column(name = "event_id", nullable = false, updatable = false)
-    val eventId: UUID,
+    /** Nul pour un renouvellement d'abonnement (pas d'événement associé, JIKU-90). */
+    @Column(name = "event_id", nullable = true, updatable = false)
+    val eventId: UUID?,
     @Column(name = "tier", nullable = false, updatable = false)
     val tier: String,
     @Column(name = "amount_minor", nullable = false, updatable = false)
@@ -31,6 +33,11 @@ class Payment(
     val currency: String,
     @Column(name = "provider", nullable = false, updatable = false)
     val provider: String,
+    @Column(name = "kind", nullable = false, length = 32)
+    val kind: String = KIND_TIER,
+    /** Mois de prépaiement achetés, pour un renouvellement d'abonnement. */
+    @Column(name = "subscription_months")
+    val subscriptionMonths: Int? = null,
 ) : BaseTenantEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -48,4 +55,9 @@ class Payment(
 
     @Column(name = "updated_at", nullable = false)
     var updatedAt: Instant = Instant.now()
+
+    companion object {
+        const val KIND_TIER = "TIER"
+        const val KIND_SUBSCRIPTION = "SUBSCRIPTION"
+    }
 }

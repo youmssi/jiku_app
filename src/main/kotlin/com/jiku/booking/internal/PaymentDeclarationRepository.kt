@@ -7,6 +7,13 @@ import java.util.UUID
 interface PaymentDeclarationRepository : JpaRepository<PaymentDeclaration, UUID> {
     fun findByBookingIdOrderByDeclaredAtDesc(bookingId: UUID): List<PaymentDeclaration>
 
+    /** L'acompte vérifié le plus récent d'une réservation (JIKU-75). */
+    fun findFirstByBookingIdAndKindAndVerificationStatusOrderByDeclaredAtDesc(
+        bookingId: UUID,
+        kind: PaymentDeclarationKind,
+        status: PaymentVerificationStatus,
+    ): PaymentDeclaration?
+
     fun existsByTransactionReferenceAndVerificationStatusNot(
         transactionReference: String,
         excludedStatus: PaymentVerificationStatus,

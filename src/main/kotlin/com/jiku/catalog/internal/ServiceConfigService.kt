@@ -1,5 +1,6 @@
 package com.jiku.catalog.internal
 
+import com.jiku.shared.ReminderOffsets
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 import org.springframework.stereotype.Service as SpringService
@@ -31,7 +32,9 @@ class ServiceConfigService(
             cancelDeadlineHours = config?.cancelDeadlineHours ?: serviceDefaults.cancelDeadlineHours,
             noShowToleranceMinutes = config?.noShowToleranceMinutes ?: serviceDefaults.noShowToleranceMinutes,
             walkInsAllowed = config?.walkInsAllowed ?: serviceDefaults.walkInsAllowed,
-            paymentMode = config?.paymentMode ?: serviceDefaults.paymentMode,
+            reminderChannel = config?.reminderChannel ?: serviceDefaults.reminderChannel,
+            reminderOffsetsMinutes =
+                ReminderOffsets.parse(config?.reminderOffsetsMinutes) ?: serviceDefaults.reminderOffsetsMinutes,
         )
     }
 
@@ -52,7 +55,17 @@ class ServiceConfigService(
         update.cancelDeadlineHours?.let { config.cancelDeadlineHours = it }
         update.noShowToleranceMinutes?.let { config.noShowToleranceMinutes = it }
         update.walkInsAllowed?.let { config.walkInsAllowed = it }
-        update.paymentMode?.let { config.paymentMode = it }
+        update.reminderChannel?.let { channel ->
+            config.reminderChannel = channel
+            // Activer les rappels WhatsApp sans préciser de décalages applique les
+            // défauts du produit (J-1/H-2) dès la persistance : le balayage des
+            // rappels ne relit alors jamais une valeur nulle pour un canal activé
+            // (JIKU-B2).
+            if (channel == ReminderChannel.WHATSAPP && config.reminderOffsetsMinutes == null) {
+                config.reminderOffsetsMinutes = ReminderOffsets.encode(serviceDefaults.reminderOffsetsMinutes)
+            }
+        }
+        update.reminderOffsetsMinutes?.let { config.reminderOffsetsMinutes = ReminderOffsets.encode(it) }
         configs.save(config)
         return effective(serviceId)
     }

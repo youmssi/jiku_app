@@ -10,6 +10,14 @@ import java.util.UUID
 interface InvoiceRepository : JpaRepository<Invoice, UUID> {
     fun findAllByOrderByIssuedAtDesc(): List<Invoice>
 
+    /**
+     * La liste des factures avec leurs lignes en une passe (anti-N+1). Les lignes
+     * restent EAGER sur l'entité car le détail et le PDF les lisent hors
+     * transaction ; ce join-fetch évite la requête supplémentaire par document.
+     */
+    @Query("select distinct i from Invoice i left join fetch i.lines order by i.issuedAt desc")
+    fun findAllWithLinesOrderByIssuedAtDesc(): List<Invoice>
+
     fun findByPaymentId(paymentId: UUID): Invoice?
 
     fun existsByCorrectedInvoiceId(correctedInvoiceId: UUID): Boolean

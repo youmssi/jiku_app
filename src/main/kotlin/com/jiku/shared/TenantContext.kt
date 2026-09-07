@@ -28,4 +28,26 @@ object TenantContext {
         currentTenant.remove()
         MDC.remove(MdcKeys.TENANT_ID)
     }
+
+    /**
+     * Exécute [block] en tant que [tenantId], puis restaure le contexte précédent.
+     * C'est le support commun des tâches plateforme et des écouteurs qui doivent
+     * agir tour à tour pour plusieurs tenants sans fuir le contexte vers l'appelant.
+     */
+    inline fun <T> withTenant(
+        tenantId: String,
+        block: () -> T,
+    ): T {
+        val previous = get()
+        set(tenantId)
+        return try {
+            block()
+        } finally {
+            if (previous == null) {
+                clear()
+            } else {
+                set(previous)
+            }
+        }
+    }
 }

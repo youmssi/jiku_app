@@ -40,7 +40,41 @@ class UsageService(
         record.updatedAt = Instant.now()
         usageRecords.save(record)
 
-        return record.toAllowance(effectiveAllowance(eventId, record.invitedGuests, record.unlockedAllowance))
+        return buildAllowance(eventId, stats, sent, record.unlockedAllowance)
+    }
+
+    /**
+     * Même position de facturation que [allowance], **sans** écrire le snapshot :
+     * c'est la lecture du tableau de bord organisateur, qui tourne en transaction
+     * read-only et que le polling répète — une écriture là-bas serait une
+     * amplification d'écriture sur une ligne de facturation à chaque rafraîchissement.
+     */
+    @Transactional(readOnly = true)
+    fun readAllowance(eventId: UUID): BillingAllowance {
+        val stats = invitation.guestStats(eventId)
+        val sent = invitation.sentInvitationCounts(eventId)
+        val unlocked = usageRecords.findByEventId(eventId)?.unlockedAllowance ?: properties.freeTierGuests
+        return buildAllowance(eventId, stats, sent, unlocked)
+    }
+
+    private fun buildAllowance(
+        eventId: UUID,
+        stats: com.jiku.invitation.GuestStats,
+        sent: com.jiku.invitation.SentInvitationCounts,
+        unlockedAllowance: Long,
+    ): BillingAllowance {
+        val invited = stats.invited
+        val effective = effectiveAllowance(eventId, invited, unlockedAllowance)
+        return BillingAllowance(
+            invitedGuests = invited,
+            allowance = effective,
+            remaining = (effective - invited).coerceAtLeast(0),
+            withinAllowance = invited <= effective,
+            tier = properties.tierForUsage(invited),
+            guestsImported = stats.total,
+            invitationsSentEmail = sent.email,
+            invitationsSentWhatsapp = sent.whatsapp,
+        )
     }
 
     /**
@@ -108,21 +142,5 @@ class UsageService(
     ): Long {
         val base = if (paidAllowance > properties.freeTierGuests) paidAllowance else tenantQuota.freeCeilingFor(alreadyCommitted)
         return maxOf(base, trialService.liveTrialAllowance(eventId) ?: 0)
-    }
-
-    private fun UsageRecord.toAllowance(effectiveAllowance: Long): BillingAllowance {
-        val remaining = (effectiveAllowance - invitedGuests).coerceAtLeast(0)
-        return BillingAllowance(
-            invitedGuests = invitedGuests,
-            allowance = effectiveAllowance,
-            remaining = remaining,
-            // "Within" means usage has not exceeded the ceiling (exactly at it still
-            // counts as within); whether more can be sent is a separate check.
-            withinAllowance = invitedGuests <= effectiveAllowance,
-            tier = properties.tierForUsage(invitedGuests),
-            guestsImported = guestsImported,
-            invitationsSentEmail = invitationsSentEmail,
-            invitationsSentWhatsapp = invitationsSentWhatsapp,
-        )
     }
 }

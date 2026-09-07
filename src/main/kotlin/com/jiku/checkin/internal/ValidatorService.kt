@@ -1,5 +1,6 @@
 package com.jiku.checkin.internal
 
+import com.jiku.catalog.EventInfo
 import com.jiku.catalog.EventModuleApi
 import com.jiku.shared.TenantContext
 import org.springframework.http.HttpStatus
@@ -27,7 +28,13 @@ class ValidatorService(
         eventId: UUID,
         label: String?,
     ): ValidatorResponse {
-        events.findEvent(eventId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found")
+        val event = events.findEvent(eventId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found")
+        if (event.status != EventInfo.STATUS_PUBLISHED) {
+            throw ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Publish the event before creating door-staff links",
+            )
+        }
         val validator = validators.save(Validator(eventId = eventId, label = resolveLabel(label)))
         return validator.toResponse()
     }

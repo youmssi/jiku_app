@@ -5,6 +5,9 @@ import com.jiku.catalog.ResourceModuleApi
 import com.jiku.catalog.ResourceType
 import com.jiku.catalog.ResourceUnavailabilityView
 import com.jiku.catalog.ResourceView
+import com.jiku.shared.ResourceCountChanged
+import com.jiku.shared.TenantContext
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -25,6 +28,7 @@ class ResourceService(
     private val resources: ResourceRepository,
     private val availabilities: ResourceAvailabilityRepository,
     private val unavailabilities: ResourceUnavailabilityRepository,
+    private val events: ApplicationEventPublisher,
 ) : ResourceModuleApi {
     @Transactional(readOnly = true)
     override fun listResources(): List<ResourceView> = resources.findAll().map { it.toView() }
@@ -39,9 +43,9 @@ class ResourceService(
         timezone: String,
     ): ResourceView {
         validateTimezone(timezone)
-        return resources
-            .save(Resource(name = name.trim(), type = type, timezone = timezone))
-            .toView()
+        val saved = resources.save(Resource(name = name.trim(), type = type, timezone = timezone))
+        publishResourceCount()
+        return saved.toView()
     }
 
     @Transactional
@@ -53,7 +57,9 @@ class ResourceService(
         val resource = requireResource(resourceId)
         name?.takeIf { it.isNotBlank() }?.let { resource.name = it.trim() }
         active?.let { resource.active = it }
-        return resources.save(resource).toView()
+        val saved = resources.save(resource)
+        publishResourceCount()
+        return saved.toView()
     }
 
     @Transactional(readOnly = true)
@@ -146,6 +152,16 @@ class ResourceService(
     }
 
     private fun requireResource(resourceId: UUID): Resource = resources.findById(resourceId).orElseThrow { resourceId.notFound() }
+
+    /**
+     * Annonce le nouveau nombre de ressources actives au module money (JIKU-90) :
+     * la première ressource active matérialise un abonnement, la photo du nombre
+     * est ensuite tenue à jour. Publié dans la transaction de la ressource.
+     */
+    private fun publishResourceCount() {
+        val tenantId = TenantContext.get() ?: return
+        events.publishEvent(ResourceCountChanged(tenantId = tenantId, activeResources = resources.countByActiveTrue()))
+    }
 
     private fun validateTimezone(timezone: String) {
         try {

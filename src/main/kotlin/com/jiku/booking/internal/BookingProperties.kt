@@ -18,6 +18,8 @@ data class BookingProperties(
     val balanceDueDaysBeforeEvent: Long = 7,
     /** IANA timezone used for the pre-filled draft event (JIKU-55). */
     val eventTimezone: String = "Africa/Conakry",
+    /** Pays (ISO 3166-1 alpha-2) des clients — résolution fiscale des avatars (JIKU-75). */
+    val refundCountry: String = "GN",
     val payeeName: String = "",
     val orangeMoneyNumber: String = "",
     val mtnMomoNumber: String = "",

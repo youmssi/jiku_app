@@ -2,7 +2,11 @@ package com.jiku.messaging.internal
 
 import com.jiku.shared.EventCancellationNotice
 import com.jiku.shared.GuestInvitedEvent
+import com.jiku.shared.ReminderDue
 import org.springframework.stereotype.Service
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import java.util.UUID
 
 /** The outcome of attempting to deliver a notification. */
@@ -40,6 +44,42 @@ class NotificationService(
         deliverWithRetry(cancellationSendAction(notice)) { status, attempt, error ->
             record(notice.invitationId, notice.channel, notice.recipient, status, attempt, error)
         }
+
+    /**
+     * Reminder de rendez-vous (JIKU-89), canal WhatsApp uniquement : le parcours
+     * de réservation ne capture que le téléphone. Passe par le même chemin que
+     * l'invitation — classification du contenu, garde-fous de coût, suivi du coût
+     * et journal d'audit — sans contournement. Un rappel non délivré ne remonte
+     * jamais à la réservation.
+     */
+    fun deliverAppointmentReminder(due: ReminderDue): DeliveryOutcome =
+        deliverWithRetry(reminderSendAction(due)) { status, attempt, error ->
+            record(due.reminderId, GuestInvitedEvent.CHANNEL_WHATSAPP, due.clientPhone, status, attempt, error)
+        }
+
+    private fun reminderSendAction(due: ReminderDue): () -> Unit {
+        val whenText =
+            due.startsAt
+                .atZone(ZoneId.of(due.serviceTimezone))
+                .format(REMINDER_WHEN_FORMAT)
+        val text =
+            whatsAppRenderer.renderAppointmentReminder(
+                WhatsAppReminder(
+                    recipientPhone = due.clientPhone,
+                    recipientName = due.clientName.orEmpty(),
+                    appointmentWhen = whenText,
+                    professionalName = due.professionalName,
+                ),
+            )
+        return {
+            val resolved = providers.whatsApp()
+            val category = contentGuard.classify(text)
+            contentGuard.assertAllowed(category)
+            conversationCounter.assertWithinBudget(resolved.tenantOverride)
+            resolved.sender.send(WhatsAppMessage(to = due.clientPhone, body = text))
+            costTracker.record(due.reminderId, null, resolved.tenantOverride, category)
+        }
+    }
 
     private fun deliverWithRetry(
         send: () -> Unit,
@@ -209,5 +249,10 @@ class NotificationService(
                 error = error?.take(500),
             ),
         )
+    }
+
+    companion object {
+        private val REMINDER_WHEN_FORMAT =
+            DateTimeFormatter.ofPattern("EEEE, MMMM d 'at' HH:mm", Locale.ENGLISH)
     }
 }

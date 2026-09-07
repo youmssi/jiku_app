@@ -17,6 +17,13 @@ interface BillingModuleApi {
     fun allowance(eventId: UUID): BillingAllowance
 
     /**
+     * La position de facturation de [eventId] **sans** rafraîchir le snapshot
+     * persisté : la lecture du tableau de bord (polling, transaction read-only)
+     * n'écrit jamais dans une ligne de facturation.
+     */
+    fun readAllowance(eventId: UUID): BillingAllowance
+
+    /**
      * Whether sending to [additionalGuests] more distinct guests would stay within
      * the event's unlocked allowance. Used by the invitation module's paywall
      * (JIKU-34); here it simply reflects the metered allowance.
@@ -114,6 +121,19 @@ interface BillingModuleApi {
         eventId: UUID,
         amountMinor: Long,
     )
+
+    /**
+     * Emits the standalone credit note (avoir, JIKU-75) documenting a booking
+     * deposit refund returned to a customer. The caller has bound the organizer's
+     * tenant; the document numbers against that tenant's fiscal year.
+     */
+    fun issueBookingAvoir(
+        customerName: String,
+        customerCountry: String,
+        amountMinor: Long,
+        currency: String,
+        description: String,
+    ): BookingAvoirDocument
 }
 
 /** One configured fixed-price tier: what it costs and how many guests it unlocks. */

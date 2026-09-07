@@ -11,8 +11,6 @@ import java.time.Instant
  */
 @Embeddable
 class EventSettings(
-    @Column(name = "placement_enabled", nullable = false)
-    var placementEnabled: Boolean = false,
     @Column(name = "transfer_allowed", nullable = false)
     var transferAllowed: Boolean = false,
     @Column(name = "transfer_deadline")

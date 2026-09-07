@@ -20,8 +20,16 @@ data class EventInfo(
     val transferAllowed: Boolean = false,
     /** Instant after which transfers close; null means "until the event itself". */
     val transferDeadline: Instant? = null,
+    /** Channels the organizer enabled on the event (EMAIL/WHATSAPP), enforced at send. */
+    val invitationChannels: Set<InvitationChannel> = emptySet(),
 ) {
     companion object {
+        /** [status] value of a draft event, shared so consumers avoid magic strings. */
+        const val STATUS_DRAFT = "DRAFT"
+
+        /** [status] value of a published event, shared so consumers avoid magic strings. */
+        const val STATUS_PUBLISHED = "PUBLISHED"
+
         /** [status] value of a cancelled event, shared so consumers avoid magic strings. */
         const val STATUS_CANCELLED = "CANCELLED"
     }

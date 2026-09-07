@@ -19,6 +19,13 @@ interface PaymentRepository : JpaRepository<Payment, UUID> {
         status: PaymentStatus,
     ): Payment?
 
+    /** Open manual prepaid-subscription request (JIKU-90), for idempotent re-requests. */
+    fun findFirstByKindAndProviderAndStatusOrderByCreatedAtDesc(
+        kind: String,
+        provider: String,
+        status: PaymentStatus,
+    ): Payment?
+
     /**
      * Platform-admin payments desk (JIKU-41): a deliberately cross-tenant read.
      * Native SQL because the Hibernate discriminator filter scopes every

@@ -149,6 +149,7 @@ class AppointmentPublicControllerTest {
         )
         val service = services.create("Coupe", "Africa/Conakry")
         services.addRequirement(service.id, ResourceType.PERSON, 1)
+        configService.update(service.id, ServiceConfigUpdate(maxHorizonDays = 365))
         val token = linkTokens.issue(service.id, tenant)
         TenantContext.clear()
         return token to service.id

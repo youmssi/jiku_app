@@ -90,4 +90,14 @@ class Ticket(
     /** Nom du professionnel, figé à l'émission (JIKU-87) ; affiché seul sur le billet. */
     @Column(name = "professional_name", length = 120)
     var professionalName: String? = null
+
+    /**
+     * Nom et téléphone du client, figés à l'émission (JIKU-88) : la ligne du jour
+     * se rend au comptoir sans jointure vers l'invité. Nul pour une invitation.
+     */
+    @Column(name = "client_name", length = 120, updatable = false)
+    var clientName: String? = null
+
+    @Column(name = "client_phone", length = 32, updatable = false)
+    var clientPhone: String? = null
 }

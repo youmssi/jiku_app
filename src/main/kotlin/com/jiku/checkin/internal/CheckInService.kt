@@ -94,8 +94,9 @@ class CheckInService(
             throw ResponseStatusException(HttpStatus.GONE, "This event has been cancelled")
         }
         val typesById = events.ticketTypes(eventId).associateBy { it.id }
+        val ticketsByGuest = ticketing.findTicketsByEvent(eventId).associateBy { it.guestId }
         return invitation.searchGuests(eventId, query).map { guest ->
-            val ticket = ticketing.findByGuest(guest.id)
+            val ticket = ticketsByGuest[guest.id]
             val type = ticket?.ticketTypeId?.let { typesById[it] }
             GuestMatch(
                 guestId = guest.id,
