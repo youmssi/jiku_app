@@ -1,11 +1,8 @@
 package com.jiku.catalog.internal
 
-import com.jiku.shared.JwtProperties
+import com.jiku.shared.JwtService
 import io.jsonwebtoken.Claims
-import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.security.Keys
 import java.util.UUID
-import javax.crypto.SecretKey
 import org.springframework.stereotype.Service as SpringService
 
 /**
@@ -16,29 +13,21 @@ import org.springframework.stereotype.Service as SpringService
  */
 @SpringService
 class ServiceLinkTokenService(
-    properties: JwtProperties,
+    private val jwt: JwtService,
 ) {
-    private val key: SecretKey = Keys.hmacShaKeyFor(properties.secret.toByteArray())
-
     fun issue(
         serviceId: UUID,
         tenantId: String,
     ): String =
-        Jwts
-            .builder()
-            .subject(serviceId.toString())
-            .claim(CLAIM_TENANT_ID, tenantId)
-            .claim(CLAIM_TYPE, TOKEN_TYPE)
-            .signWith(key)
-            .compact()
+        jwt.sign(
+            serviceId.toString(),
+            mapOf(
+                CLAIM_TENANT_ID to tenantId,
+                CLAIM_TYPE to TOKEN_TYPE,
+            ),
+        )
 
-    fun parse(token: String): Claims =
-        Jwts
-            .parser()
-            .verifyWith(key)
-            .build()
-            .parseSignedClaims(token)
-            .payload
+    fun parse(token: String): Claims = jwt.parse(token)
 
     companion object {
         const val CLAIM_TENANT_ID = "tenantId"

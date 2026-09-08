@@ -1,12 +1,9 @@
 package com.jiku.invitation.internal
 
-import com.jiku.shared.JwtProperties
+import com.jiku.shared.JwtService
 import io.jsonwebtoken.Claims
-import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.security.Keys
 import org.springframework.stereotype.Service
 import java.util.UUID
-import javax.crypto.SecretKey
 
 /**
  * Issues and verifies the signed, stateless token embedded in a guest's
@@ -15,31 +12,23 @@ import javax.crypto.SecretKey
  */
 @Service
 class InvitationTokenService(
-    properties: JwtProperties,
+    private val jwt: JwtService,
 ) {
-    private val key: SecretKey = Keys.hmacShaKeyFor(properties.secret.toByteArray())
-
     fun issue(
         guestId: UUID,
         eventId: UUID,
         tenantId: String,
     ): String =
-        Jwts
-            .builder()
-            .subject(guestId.toString())
-            .claim(CLAIM_EVENT_ID, eventId.toString())
-            .claim(CLAIM_TENANT_ID, tenantId)
-            .claim(CLAIM_TYPE, TOKEN_TYPE)
-            .signWith(key)
-            .compact()
+        jwt.sign(
+            guestId.toString(),
+            mapOf(
+                CLAIM_EVENT_ID to eventId.toString(),
+                CLAIM_TENANT_ID to tenantId,
+                CLAIM_TYPE to TOKEN_TYPE,
+            ),
+        )
 
-    fun parse(token: String): Claims =
-        Jwts
-            .parser()
-            .verifyWith(key)
-            .build()
-            .parseSignedClaims(token)
-            .payload
+    fun parse(token: String): Claims = jwt.parse(token)
 
     companion object {
         const val CLAIM_EVENT_ID = "eventId"

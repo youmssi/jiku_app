@@ -1,11 +1,8 @@
 package com.jiku.catalog.internal
 
-import com.jiku.shared.JwtProperties
+import com.jiku.shared.JwtService
 import io.jsonwebtoken.Claims
-import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.security.Keys
 import java.util.UUID
-import javax.crypto.SecretKey
 import org.springframework.stereotype.Service as SpringService
 
 /**
@@ -17,32 +14,24 @@ import org.springframework.stereotype.Service as SpringService
  */
 @SpringService
 class DayLineTokenService(
-    properties: JwtProperties,
+    private val jwt: JwtService,
 ) {
-    private val key: SecretKey = Keys.hmacShaKeyFor(properties.secret.toByteArray())
-
     fun issue(
         staffId: UUID,
         serviceId: UUID,
         tenantId: String,
     ): String =
-        Jwts
-            .builder()
-            .subject(staffId.toString())
-            .claim(CLAIM_SERVICE_ID, serviceId.toString())
-            .claim(CLAIM_TENANT_ID, tenantId)
-            .claim(CLAIM_TYPE, TOKEN_TYPE)
-            .signWith(key)
-            .compact()
+        jwt.sign(
+            staffId.toString(),
+            mapOf(
+                CLAIM_SERVICE_ID to serviceId.toString(),
+                CLAIM_TENANT_ID to tenantId,
+                CLAIM_TYPE to TOKEN_TYPE,
+            ),
+        )
 
     fun parse(token: String): Claims {
-        val claims =
-            Jwts
-                .parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .payload
+        val claims = jwt.parse(token)
         require(claims[CLAIM_TYPE] == TOKEN_TYPE) { "Not a day-line token" }
         return claims
     }

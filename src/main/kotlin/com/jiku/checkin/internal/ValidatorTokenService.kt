@@ -1,14 +1,9 @@
 package com.jiku.checkin.internal
 
-import com.jiku.shared.JwtProperties
+import com.jiku.shared.JwtService
 import io.jsonwebtoken.Claims
-import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.security.Keys
 import org.springframework.stereotype.Service
-import java.time.Instant
-import java.util.Date
 import java.util.UUID
-import javax.crypto.SecretKey
 
 /**
  * Issues and verifies the signed token embedded in a validator access link. The
@@ -19,37 +14,26 @@ import javax.crypto.SecretKey
  */
 @Service
 class ValidatorTokenService(
-    jwtProperties: JwtProperties,
+    private val jwt: JwtService,
     private val properties: ValidatorLinkProperties,
 ) {
-    private val key: SecretKey = Keys.hmacShaKeyFor(jwtProperties.secret.toByteArray())
-
     fun issue(
         validatorId: UUID,
         eventId: UUID,
         tenantId: String,
-    ): String {
-        val now = Instant.now()
-        return Jwts
-            .builder()
-            .subject(validatorId.toString())
-            .claim(CLAIM_EVENT_ID, eventId.toString())
-            .claim(CLAIM_TENANT_ID, tenantId)
-            .claim(CLAIM_TYPE, TOKEN_TYPE)
-            .issuedAt(Date.from(now))
-            .expiration(Date.from(now.plus(properties.validity)))
-            .signWith(key)
-            .compact()
-    }
+    ): String =
+        jwt.sign(
+            validatorId.toString(),
+            mapOf(
+                CLAIM_EVENT_ID to eventId.toString(),
+                CLAIM_TENANT_ID to tenantId,
+                CLAIM_TYPE to TOKEN_TYPE,
+            ),
+            properties.validity,
+        )
 
     fun parse(token: String): Claims {
-        val claims =
-            Jwts
-                .parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .payload
+        val claims = jwt.parse(token)
         require(claims[CLAIM_TYPE] == TOKEN_TYPE) { "Not a validator token" }
         return claims
     }
