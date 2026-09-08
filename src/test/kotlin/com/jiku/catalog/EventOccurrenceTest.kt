@@ -9,7 +9,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -95,7 +94,9 @@ class EventOccurrenceTest {
                     post("/api/v1/events")
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"name":"Séminaire","timezone":"Africa/Conakry","startDateTime":"2026-11-02T09:00:00Z","invitationChannels":["EMAIL"]}"""),
+                        .content(
+                            """{"name":"Séminaire","timezone":"Africa/Conakry","startDateTime":"2026-11-02T09:00:00Z","invitationChannels":["EMAIL"]}""",
+                        ),
                 ).andExpect(status().isCreated())
                 .andReturn()
                 .response.contentAsString,
