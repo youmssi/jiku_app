@@ -36,7 +36,11 @@ class AppointmentReminderSweep(
         if (channel != CHANNEL_WHATSAPP) {
             return
         }
-        val offsets = ReminderOffsets.parse(offsetsRaw).orEmpty()
+        // Les décalages du canal sont persistés à l'activation (défauts J-1/H-2 si
+        // non précisés). Une ligne héritée créée avant ce comportement peut encore
+        // porter une valeur nulle : on retombe alors sur les défauts du produit
+        // plutôt que de ne jamais rappeler.
+        val offsets = ReminderOffsets.parse(offsetsRaw).orEmpty().ifEmpty { DEFAULT_OFFSETS }
         for (offsetMinutes in offsets) {
             val until = now.plusSeconds(offsetMinutes * 60L)
             for (ticket in reminders.findRemindableForOffset(serviceId, offsetMinutes, now, until)) {
@@ -63,6 +67,9 @@ class AppointmentReminderSweep(
 
     companion object {
         private val log = org.slf4j.LoggerFactory.getLogger(AppointmentReminderSweep::class.java)
+
+        /** Défauts du produit (J-1 / H-2), appliqués quand un canal activé n'a aucun décalage. */
+        private val DEFAULT_OFFSETS = listOf(1440, 120)
     }
 }
 
