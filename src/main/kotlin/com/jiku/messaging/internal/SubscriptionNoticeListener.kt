@@ -4,32 +4,23 @@ import com.jiku.shared.SubscriptionNotice
 import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 
 /**
  * E-mails d'abonnement à l'organisateur (JIKU-90) : échéance proche (J-7),
- * entrée en grâce, suspension, réactivation. Courrier opérationnel émis par le
- * sender plateforme, comme les avis d'essai — jamais une carte, jamais un
- * identifiant de paiement.
+ * entrée en grâce, suspension, réactivation. Contenu uniquement — la mécanique
+ * d'envoi vit dans [OperationalMailer]. Jamais une carte, jamais un identifiant
+ * de paiement.
  */
 @Component
 class SubscriptionNoticeListener(
-    private val emailSender: EmailSender,
-    private val emailProperties: NotificationEmailProperties,
-    private val templateRenderer: EmailTemplateRenderer,
+    private val mailer: OperationalMailer,
 ) {
     private val log = LoggerFactory.getLogger(SubscriptionNoticeListener::class.java)
 
     @EventListener
     fun onSubscriptionNotice(notice: SubscriptionNotice) {
-        val to = notice.organizerEmail.takeIf { it.isNotBlank() }
-        if (to == null) {
-            log.warn("Subscription {} for tenant {} has no organizer email to notify", notice.kind, notice.tenantId)
-            return
-        }
-        val until = notice.expiresAt?.let { UNTIL_FORMAT.format(it.atZone(ZoneOffset.UTC)) }
-        val suspended = notice.suspensionAt?.let { UNTIL_FORMAT.format(it.atZone(ZoneOffset.UTC)) }
+        val until = notice.expiresAt?.let { formatOperationalInstant(it) }
+        val suspended = notice.suspensionAt?.let { formatOperationalInstant(it) }
 
         val (subject, heading, body) =
             when (notice.kind) {
@@ -66,22 +57,6 @@ class SubscriptionNoticeListener(
                     return
                 }
             }
-        try {
-            emailSender.send(
-                emailProperties.from,
-                EmailMessage(
-                    to = to,
-                    toName = notice.organizerName,
-                    subject = subject,
-                    htmlBody = templateRenderer.renderTrialNotice(notice.organizerName, heading, body),
-                ),
-            )
-        } catch (ex: Exception) {
-            log.error("Failed to send subscription email to {}", to, ex)
-        }
-    }
-
-    private companion object {
-        val UNTIL_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMM uuuu, HH:mm")
+        mailer.sendOperational("subscription", notice.organizerEmail, notice.organizerName, subject, heading, body)
     }
 }

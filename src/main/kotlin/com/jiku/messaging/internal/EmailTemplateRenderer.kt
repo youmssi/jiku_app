@@ -212,5 +212,4 @@ class EmailTemplateRenderer(
     }
 
     private fun load(name: String): String = ClassPathResource("email-templates/$name").inputStream.bufferedReader().use { it.readText() }
-
 }
