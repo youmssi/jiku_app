@@ -216,7 +216,6 @@ class TrialService(
         )
     }
 
-
     private fun TrialGrant.toView(tenantId: String): AdminTrialView =
         AdminTrialView(
             id = requireNotNull(id),

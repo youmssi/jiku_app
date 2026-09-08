@@ -36,5 +36,4 @@ class OpsAlertListener(
             log.error("Failed to send ops alert email", ex)
         }
     }
-
 }
