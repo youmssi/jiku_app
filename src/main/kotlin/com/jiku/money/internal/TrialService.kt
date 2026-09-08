@@ -53,7 +53,7 @@ class TrialService(
         if (!expiresAt.isAfter(Instant.now())) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "The expiry must be in the future")
         }
-        return withTenant(tenantId.toString()) {
+        return TenantContext.withTenant(tenantId.toString()) {
             val view =
                 transactions.execute {
                     if (trials.findFirstByEventIdAndStatusOrderByCreatedAtDesc(eventId, TrialStatus.ACTIVE) != null) {
@@ -81,7 +81,7 @@ class TrialService(
         val tenantId =
             trials.findTenantIdById(trialId)
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Trial not found")
-        return withTenant(tenantId) {
+        return TenantContext.withTenant(tenantId) {
             val view =
                 transactions.execute {
                     val trial = loadActive(trialId)
@@ -126,7 +126,7 @@ class TrialService(
             val trialId = UUID.fromString(row[0].toString())
             val tenantId = row[1].toString()
             try {
-                withTenant(tenantId) {
+                TenantContext.withTenant(tenantId) {
                     val view =
                         transactions.execute {
                             val trial = trials.findById(trialId).orElse(null) ?: return@execute null
@@ -155,7 +155,7 @@ class TrialService(
             val trialId = UUID.fromString(row[0].toString())
             val tenantId = row[1].toString()
             try {
-                withTenant(tenantId) {
+                TenantContext.withTenant(tenantId) {
                     val view =
                         transactions.execute {
                             val trial = trials.findById(trialId).orElse(null) ?: return@execute null
@@ -216,18 +216,6 @@ class TrialService(
         )
     }
 
-    private fun <T> withTenant(
-        tenantId: String,
-        block: () -> T,
-    ): T {
-        val previous = TenantContext.get()
-        TenantContext.set(tenantId)
-        try {
-            return block()
-        } finally {
-            if (previous != null) TenantContext.set(previous) else TenantContext.clear()
-        }
-    }
 
     private fun TrialGrant.toView(tenantId: String): AdminTrialView =
         AdminTrialView(

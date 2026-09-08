@@ -57,7 +57,7 @@ class SenderReputationService(
             // Mirror into the attributed tenant's audit log, so the bounce is
             // visible per-send alongside the original delivery (JIKU-28).
             if (tenantId != null) {
-                withTenant(tenantId) {
+                TenantContext.withTenant(tenantId) {
                     notificationLogs.save(
                         NotificationLog(
                             referenceId = null,
@@ -136,18 +136,6 @@ class SenderReputationService(
             }
         }
 
-    private inline fun withTenant(
-        tenantId: String,
-        block: () -> Unit,
-    ) {
-        val previous = TenantContext.get()
-        TenantContext.set(tenantId)
-        try {
-            block()
-        } finally {
-            if (previous != null) TenantContext.set(previous) else TenantContext.clear()
-        }
-    }
 
     private companion object {
         const val EMAIL_CHANNEL = "EMAIL"

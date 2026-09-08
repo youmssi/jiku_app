@@ -38,16 +38,12 @@ class GuestRetentionJob(
         val cutoff = Instant.now().minus(Duration.ofDays(properties.days))
         var anonymized = 0
         for (candidate in events.eventsPastRetention(cutoff)) {
-            val previous = TenantContext.get()
-            TenantContext.set(candidate.tenantId)
-            try {
+            TenantContext.withTenant(candidate.tenantId) {
                 for (guest in guests.findByEventIdAndPersonalDataErasedFalse(candidate.eventId)) {
                     if (erasureService.eraseGuest(requireNotNull(guest.id), ErasureReason.RETENTION_POLICY)) {
                         anonymized++
                     }
                 }
-            } finally {
-                if (previous != null) TenantContext.set(previous) else TenantContext.clear()
             }
         }
         return anonymized

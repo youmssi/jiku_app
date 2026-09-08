@@ -23,30 +23,14 @@ class SubscriptionExpiryJob(
         val graceEnd = now.minus(properties.grace)
 
         subscriptions.findDueForSuspension(graceEnd).forEach { ref ->
-            withTenant(ref.tenantId) { worker.suspend(ref.subscriptionId) }
+            TenantContext.withTenant(ref.tenantId) { worker.suspend(ref.subscriptionId) }
         }
         subscriptions.findDueForGrace(now).forEach { ref ->
-            withTenant(ref.tenantId) { worker.enterGrace(ref.subscriptionId) }
+            TenantContext.withTenant(ref.tenantId) { worker.enterGrace(ref.subscriptionId) }
         }
         subscriptions.findDueForExpiryNotice(now, now.plus(properties.noticeLead)).forEach { ref ->
-            withTenant(ref.tenantId) { worker.sendExpiryNotice(ref.subscriptionId) }
+            TenantContext.withTenant(ref.tenantId) { worker.sendExpiryNotice(ref.subscriptionId) }
         }
     }
 
-    private fun <T> withTenant(
-        tenantId: String,
-        block: () -> T,
-    ): T {
-        val previous = TenantContext.get()
-        TenantContext.set(tenantId)
-        return try {
-            block()
-        } finally {
-            if (previous == null) {
-                TenantContext.clear()
-            } else {
-                TenantContext.set(previous)
-            }
-        }
-    }
 }
