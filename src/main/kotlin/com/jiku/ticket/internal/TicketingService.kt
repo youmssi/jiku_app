@@ -145,6 +145,9 @@ class TicketingService(
         tickets.checkInCountsByLabel(eventId).associate { row -> (row[0] as String) to (row[1] as Long) }
 
     @Transactional(readOnly = true)
+    override fun checkInInstants(eventId: UUID): List<Instant> = tickets.findCheckedInAtByEventId(eventId)
+
+    @Transactional(readOnly = true)
     override fun serviceLine(
         serviceId: UUID,
         dayStart: Instant,

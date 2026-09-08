@@ -3,6 +3,7 @@ package com.jiku.invitation.internal
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import java.time.Instant
 import java.util.UUID
 
 interface GuestRepository : JpaRepository<Guest, UUID> {
@@ -21,6 +22,12 @@ interface GuestRepository : JpaRepository<Guest, UUID> {
     fun findByEventIdAndPersonalDataErasedFalse(eventId: UUID): List<Guest>
 
     fun countByEventId(eventId: UUID): Long
+
+    /** Dates de création des invités d'un événement (projection pour l'analytique). */
+    @Query("select g.createdAt from Guest g where g.eventId = :eventId order by g.createdAt")
+    fun findCreatedAtByEventId(
+        @Param("eventId") eventId: UUID,
+    ): List<Instant>
 
     /**
      * Guests of an event excluding those superseded by a transfer (JIKU-64), so the

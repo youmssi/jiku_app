@@ -27,6 +27,16 @@ interface TicketRepository : JpaRepository<Ticket, UUID> {
 
     fun findByEventId(eventId: UUID): List<Ticket>
 
+    /** Instants de check-in d'un événement, ordonnés — projection pour l'analytique. */
+    @Query(
+        "select t.checkedInAt from Ticket t where t.eventId = :eventId " +
+            "and t.status = com.jiku.ticket.internal.TicketStatus.CHECKED_IN " +
+            "and t.checkedInAt is not null order by t.checkedInAt",
+    )
+    fun findCheckedInAtByEventId(
+        @Param("eventId") eventId: UUID,
+    ): List<Instant>
+
     /** Billet(s) d'un créneau de service — lecture d'annulation (JIKU-89). */
     fun findByServiceIdAndStartsAtAndStatusAndKind(
         serviceId: UUID,

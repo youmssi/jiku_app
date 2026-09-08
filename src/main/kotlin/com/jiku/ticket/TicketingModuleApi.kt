@@ -81,6 +81,12 @@ interface TicketingModuleApi {
     fun checkInCountsByLabel(eventId: UUID): Map<String, Long>
 
     /**
+     * Instants de check-in d'un événement (projection, sans les entités complètes) —
+     * la matière première de la courbe d'arrivées de l'analytique.
+     */
+    fun checkInInstants(eventId: UUID): List<Instant>
+
+    /**
      * La ligne du jour d'un service (JIKU-88) : les tickets de la journée (par le
      * créneau pour un rendez-vous, par l'arrivée pour un sans-rendez-vous), triés
      * pour l'écran du comptoir. Bornée par [dayStart] (inclus) et [dayEnd] (exclu),

@@ -6,6 +6,7 @@ import com.jiku.invitation.GuestInfo
 import com.jiku.invitation.GuestStats
 import com.jiku.invitation.InvitationModuleApi
 import com.jiku.invitation.SentInvitationCounts
+import java.time.Instant
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -20,6 +21,9 @@ class InvitationModuleApiService(
 
     @Transactional(readOnly = true)
     override fun listGuests(eventId: UUID): List<GuestInfo> = guests.findByEventId(eventId).map { it.toInfo() }
+
+    @Transactional(readOnly = true)
+    override fun guestCreatedAtInstants(eventId: UUID): List<Instant> = guests.findCreatedAtByEventId(eventId)
 
     @Transactional(readOnly = true)
     override fun guestStats(eventId: UUID): GuestStats =
