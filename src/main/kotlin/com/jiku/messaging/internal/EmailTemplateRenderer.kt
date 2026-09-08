@@ -52,24 +52,24 @@ class EmailTemplateRenderer(
     private fun invitationValues(email: InvitationEmail): Map<String, String> =
         mapOf(
             "logoBlock" to logoBlock(email.logoUrl, email.organizerName),
-            "organizerName" to escape(email.organizerName),
-            "guestName" to escape(email.recipientName),
-            "eventName" to escape(email.eventName),
-            "eventWhen" to email.eventWhen?.let { escape(it) }.orEmpty(),
-            "eventLocation" to email.eventLocation?.let { escape(it) }.orEmpty(),
+            "organizerName" to escapeHtml(email.organizerName),
+            "guestName" to escapeHtml(email.recipientName),
+            "eventName" to escapeHtml(email.eventName),
+            "eventWhen" to email.eventWhen?.let { escapeHtml(it) }.orEmpty(),
+            "eventLocation" to email.eventLocation?.let { escapeHtml(it) }.orEmpty(),
             "eventDetails" to details(email.eventWhen, email.eventLocation),
-            "primaryColor" to escape(email.primaryColor),
-            "invitationUrl" to escape(email.invitationUrl),
+            "primaryColor" to escapeHtml(email.primaryColor),
+            "invitationUrl" to escapeHtml(email.invitationUrl),
         )
 
     private fun cancellationValues(email: CancellationEmail): Map<String, String> =
         mapOf(
             "logoBlock" to logoBlock(email.logoUrl, email.organizerName),
-            "organizerName" to escape(email.organizerName),
-            "guestName" to escape(email.recipientName),
-            "eventName" to escape(email.eventName),
-            "eventWhen" to email.eventWhen?.let { escape(it) }.orEmpty(),
-            "eventLocation" to email.eventLocation?.let { escape(it) }.orEmpty(),
+            "organizerName" to escapeHtml(email.organizerName),
+            "guestName" to escapeHtml(email.recipientName),
+            "eventName" to escapeHtml(email.eventName),
+            "eventWhen" to email.eventWhen?.let { escapeHtml(it) }.orEmpty(),
+            "eventLocation" to email.eventLocation?.let { escapeHtml(it) }.orEmpty(),
             "eventDetails" to details(email.eventWhen, email.eventLocation),
         )
 
@@ -78,7 +78,7 @@ class EmailTemplateRenderer(
         organizerName: String,
     ): String =
         if (!logoUrl.isNullOrBlank()) {
-            """<img src="${escape(logoUrl)}" alt="${escape(organizerName)}" """ +
+            """<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(organizerName)}" """ +
                 """height="48" style="margin-bottom:16px;" />"""
         } else {
             ""
@@ -89,35 +89,35 @@ class EmailTemplateRenderer(
         eventLocation: String?,
     ): String =
         buildString {
-            eventWhen?.let { append("""<p style="margin:0 0 4px;color:#555;">📅 ${escape(it)}</p>""") }
-            eventLocation?.let { append("""<p style="margin:0 0 4px;color:#555;">📍 ${escape(it)}</p>""") }
+            eventWhen?.let { append("""<p style="margin:0 0 4px;color:#555;">📅 ${escapeHtml(it)}</p>""") }
+            eventLocation?.let { append("""<p style="margin:0 0 4px;color:#555;">📍 ${escapeHtml(it)}</p>""") }
         }
 
     fun renderManualPaymentRequested(notice: ManualPaymentNotice): String =
         manualRequestedTemplate
-            .replace("{{organizerName}}", escape(notice.organizerName))
-            .replace("{{organizerEmail}}", escape(notice.organizerEmail))
-            .replace("{{tier}}", escape(notice.tier))
-            .replace("{{reference}}", escape(notice.reference))
+            .replace("{{organizerName}}", escapeHtml(notice.organizerName))
+            .replace("{{organizerEmail}}", escapeHtml(notice.organizerEmail))
+            .replace("{{tier}}", escapeHtml(notice.tier))
+            .replace("{{reference}}", escapeHtml(notice.reference))
             .replace("{{amount}}", formatAmount(notice.amountMinor, notice.currency))
             .replace("{{paymentId}}", notice.paymentId.toString())
 
     fun renderManualPaymentConfirmed(notice: ManualPaymentNotice): String =
         manualConfirmedTemplate
-            .replace("{{organizerName}}", escape(notice.organizerName))
-            .replace("{{tier}}", escape(notice.tier))
-            .replace("{{reference}}", escape(notice.reference))
+            .replace("{{organizerName}}", escapeHtml(notice.organizerName))
+            .replace("{{tier}}", escapeHtml(notice.tier))
+            .replace("{{reference}}", escapeHtml(notice.reference))
             .replace("{{amount}}", formatAmount(notice.amountMinor, notice.currency))
 
     fun renderManualPaymentRejected(notice: ManualPaymentNotice): String {
         val reasonBlock =
             notice.note?.takeIf { it.isNotBlank() }?.let {
-                """<p style="margin:0 0 4px;color:#555;">Reason: ${escape(it)}</p>"""
+                """<p style="margin:0 0 4px;color:#555;">Reason: ${escapeHtml(it)}</p>"""
             } ?: ""
         return manualRejectedTemplate
-            .replace("{{organizerName}}", escape(notice.organizerName))
-            .replace("{{tier}}", escape(notice.tier))
-            .replace("{{reference}}", escape(notice.reference))
+            .replace("{{organizerName}}", escapeHtml(notice.organizerName))
+            .replace("{{tier}}", escapeHtml(notice.tier))
+            .replace("{{reference}}", escapeHtml(notice.reference))
             .replace("{{reasonBlock}}", reasonBlock)
     }
 
@@ -127,69 +127,69 @@ class EmailTemplateRenderer(
         body: String,
     ): String =
         trialNoticeTemplate
-            .replace("{{organizerName}}", escape(organizerName))
-            .replace("{{heading}}", escape(heading))
-            .replace("{{body}}", escape(body))
+            .replace("{{organizerName}}", escapeHtml(organizerName))
+            .replace("{{heading}}", escapeHtml(heading))
+            .replace("{{body}}", escapeHtml(body))
 
-    fun renderPasswordReset(actionUrl: String): String = passwordResetTemplate.replace("{{actionUrl}}", escape(actionUrl))
+    fun renderPasswordReset(actionUrl: String): String = passwordResetTemplate.replace("{{actionUrl}}", escapeHtml(actionUrl))
 
-    fun renderVerifyEmail(actionUrl: String): String = verifyEmailTemplate.replace("{{actionUrl}}", escape(actionUrl))
+    fun renderVerifyEmail(actionUrl: String): String = verifyEmailTemplate.replace("{{actionUrl}}", escapeHtml(actionUrl))
 
     fun renderMemberInvitation(notice: MemberInvitationNotice): String =
         memberInvitationTemplate
-            .replace("{{organizationName}}", escape(notice.organizationName))
-            .replace("{{inviterEmail}}", escape(notice.inviterEmail))
-            .replace("{{role}}", escape(notice.role))
-            .replace("{{actionUrl}}", escape(notice.actionUrl))
+            .replace("{{organizationName}}", escapeHtml(notice.organizationName))
+            .replace("{{inviterEmail}}", escapeHtml(notice.inviterEmail))
+            .replace("{{role}}", escapeHtml(notice.role))
+            .replace("{{actionUrl}}", escapeHtml(notice.actionUrl))
 
     fun renderBookingPaymentDeclared(notice: BookingNotice): String =
         bookingPaymentDeclaredTemplate
-            .replace("{{customerName}}", escape(notice.customerName))
-            .replace("{{customerEmail}}", escape(notice.customerEmail))
-            .replace("{{customerPhone}}", escape(notice.customerPhone))
-            .replace("{{kind}}", escape(notice.declarationKind.orEmpty()))
-            .replace("{{reference}}", escape(notice.reference.orEmpty()))
+            .replace("{{customerName}}", escapeHtml(notice.customerName))
+            .replace("{{customerEmail}}", escapeHtml(notice.customerEmail))
+            .replace("{{customerPhone}}", escapeHtml(notice.customerPhone))
+            .replace("{{kind}}", escapeHtml(notice.declarationKind.orEmpty()))
+            .replace("{{reference}}", escapeHtml(notice.reference.orEmpty()))
             .replace("{{amount}}", formatAmount(notice.amountMinor ?: 0, notice.currency))
             .replace("{{bookingId}}", notice.bookingId.toString())
 
     fun renderBookingDuplicateReference(notice: BookingNotice): String =
         bookingDuplicateReferenceTemplate
-            .replace("{{customerName}}", escape(notice.customerName))
-            .replace("{{customerEmail}}", escape(notice.customerEmail))
-            .replace("{{customerPhone}}", escape(notice.customerPhone))
-            .replace("{{reference}}", escape(notice.reference.orEmpty()))
+            .replace("{{customerName}}", escapeHtml(notice.customerName))
+            .replace("{{customerEmail}}", escapeHtml(notice.customerEmail))
+            .replace("{{customerPhone}}", escapeHtml(notice.customerPhone))
+            .replace("{{reference}}", escapeHtml(notice.reference.orEmpty()))
             .replace("{{amount}}", formatAmount(notice.amountMinor ?: 0, notice.currency))
 
     fun renderBookingDepositVerified(notice: BookingNotice): String =
         bookingDepositVerifiedTemplate
-            .replace("{{customerName}}", escape(notice.customerName))
+            .replace("{{customerName}}", escapeHtml(notice.customerName))
             .replace("{{amount}}", formatAmount(notice.amountMinor ?: 0, notice.currency))
-            .replace("{{reference}}", escape(notice.reference.orEmpty()))
+            .replace("{{reference}}", escapeHtml(notice.reference.orEmpty()))
             .replace("{{balanceAmount}}", formatAmount(notice.balanceAmountMinor ?: 0, notice.currency))
-            .replace("{{balanceDueDate}}", escape(notice.balanceDueDate.orEmpty()))
+            .replace("{{balanceDueDate}}", escapeHtml(notice.balanceDueDate.orEmpty()))
 
     fun renderBookingBalanceVerified(notice: BookingNotice): String =
         bookingBalanceVerifiedTemplate
-            .replace("{{customerName}}", escape(notice.customerName))
+            .replace("{{customerName}}", escapeHtml(notice.customerName))
             .replace("{{amount}}", formatAmount(notice.amountMinor ?: 0, notice.currency))
-            .replace("{{reference}}", escape(notice.reference.orEmpty()))
+            .replace("{{reference}}", escapeHtml(notice.reference.orEmpty()))
 
     fun renderBookingPaymentRejected(notice: BookingNotice): String {
         val reasonBlock =
             notice.note?.takeIf { it.isNotBlank() }?.let {
-                """<p style="margin:0 0 4px;color:#555555;">Reason: ${escape(it)}</p>"""
+                """<p style="margin:0 0 4px;color:#555555;">Reason: ${escapeHtml(it)}</p>"""
             } ?: ""
         return bookingPaymentRejectedTemplate
-            .replace("{{customerName}}", escape(notice.customerName))
-            .replace("{{reference}}", escape(notice.reference.orEmpty()))
+            .replace("{{customerName}}", escapeHtml(notice.customerName))
+            .replace("{{reference}}", escapeHtml(notice.reference.orEmpty()))
             .replace("{{reasonBlock}}", reasonBlock)
     }
 
     fun renderBookingRefunded(notice: BookingNotice): String =
         bookingRefundedTemplate
-            .replace("{{customerName}}", escape(notice.customerName))
+            .replace("{{customerName}}", escapeHtml(notice.customerName))
             .replace("{{amount}}", formatAmount(notice.amountMinor ?: 0, notice.currency))
-            .replace("{{reference}}", escape(notice.reference.orEmpty()))
+            .replace("{{reference}}", escapeHtml(notice.reference.orEmpty()))
             .replace("{{bookingId}}", notice.bookingId.toString())
 
     /**
@@ -213,10 +213,4 @@ class EmailTemplateRenderer(
 
     private fun load(name: String): String = ClassPathResource("email-templates/$name").inputStream.bufferedReader().use { it.readText() }
 
-    private fun escape(value: String): String =
-        value
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace("\"", "&quot;")
 }
