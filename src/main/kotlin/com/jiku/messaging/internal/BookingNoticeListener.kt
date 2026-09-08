@@ -9,14 +9,12 @@ import org.springframework.stereotype.Component
  * Emails for the booking deposit flow (JIKU-55): a new payment declaration (or a
  * duplicate transaction reference — the region's documented reused-screenshot
  * fraud pattern) alerts the same sales/ops mailbox the manual payment flow uses;
- * a verification outcome notifies the customer directly. These are operational
- * one-off mails, like [ManualPaymentNoticeListener] — there is no per-guest
- * lifecycle to audit here.
+ * a verification outcome notifies the customer directly. Content only — the
+ * delivery mechanics live in [OperationalMailer].
  */
 @Component
 class BookingNoticeListener(
-    private val emailSender: EmailSender,
-    private val emailProperties: NotificationEmailProperties,
+    private val mailer: OperationalMailer,
     private val salesProperties: NotificationSalesProperties,
     private val templateRenderer: EmailTemplateRenderer,
 ) {
@@ -49,24 +47,19 @@ class BookingNoticeListener(
             )
             return
         }
-        deliver(
-            EmailMessage(
-                to = to,
-                toName = "Sales",
-                subject =
-                    if (duplicate) {
-                        "Duplicate transaction reference on booking ${notice.bookingId}"
-                    } else {
-                        "New booking payment declared — ${notice.customerName}"
-                    },
-                htmlBody =
-                    if (duplicate) {
-                        templateRenderer.renderBookingDuplicateReference(notice)
-                    } else {
-                        templateRenderer.renderBookingPaymentDeclared(notice)
-                    },
-            ),
-        )
+        val subject =
+            if (duplicate) {
+                "Duplicate transaction reference on booking ${notice.bookingId}"
+            } else {
+                "New booking payment declared — ${notice.customerName}"
+            }
+        val htmlBody =
+            if (duplicate) {
+                templateRenderer.renderBookingDuplicateReference(notice)
+            } else {
+                templateRenderer.renderBookingPaymentDeclared(notice)
+            }
+        mailer.sendOperationalHtml("booking", to, "Sales", subject, htmlBody)
     }
 
     private fun notifyCustomer(notice: BookingNotice) {
@@ -75,7 +68,7 @@ class BookingNoticeListener(
             log.warn("Booking {} has no customer email to notify", notice.bookingId)
             return
         }
-        val (subject, body) =
+        val (subject, htmlBody) =
             when (notice.kind) {
                 BookingNotice.KIND_DEPOSIT_VERIFIED ->
                     "Your date is confirmed" to templateRenderer.renderBookingDepositVerified(notice)
@@ -86,16 +79,6 @@ class BookingNoticeListener(
                 else ->
                     "About your payment declaration" to templateRenderer.renderBookingPaymentRejected(notice)
             }
-        deliver(EmailMessage(to = to, toName = notice.customerName, subject = subject, htmlBody = body))
-    }
-
-    private fun deliver(message: EmailMessage) {
-        try {
-            emailSender.send(emailProperties.from, message)
-        } catch (ex: Exception) {
-            // Never let a mail failure roll back the booking state change; the
-            // admin desk remains the source of truth.
-            log.error("Failed to send booking email to {}", message.to, ex)
-        }
+        mailer.sendOperationalHtml("booking", to, notice.customerName, subject, htmlBody)
     }
 }
