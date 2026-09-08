@@ -1,8 +1,6 @@
 package com.jiku.shared.observability
 
 import org.slf4j.LoggerFactory
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -51,6 +49,8 @@ class LoggingErrorTracker : ErrorTracker {
 @Configuration
 @EnableConfigurationProperties(ErrorTrackingProperties::class)
 class ErrorTrackingConfig {
+    private val log = LoggerFactory.getLogger(ErrorTrackingConfig::class.java)
+
     @Bean
     fun personalDataScrubber(): PersonalDataScrubber = PersonalDataScrubber()
 
@@ -58,21 +58,30 @@ class ErrorTrackingConfig {
     fun errorPayloadScrubber(scrubber: PersonalDataScrubber): ErrorPayloadScrubber = ErrorPayloadScrubber(scrubber)
 
     /**
-     * Declared before [loggingErrorTracker] on purpose: bean methods in one
-     * configuration class are processed in declaration order, so the
-     * `@ConditionalOnMissingBean` below sees this bean and stands down whenever a
-     * DSN is configured. With no DSN the property condition fails, nothing is
-     * registered here, and the logging default takes over — which is what keeps a
-     * fresh clone and the test suite free of any provider account.
+     * The tracker follows the DSN: a syntactically usable Sentry URL wires the
+     * Sentry adapter, anything else (blank, or a leftover placeholder such as a
+     * "DSN Sentry" string) falls back to logging. A misconfigured environment
+     * must never prevent the service from starting, and unhandled errors remain
+     * visible in the centralized logs either way.
      */
     @Bean
-    @ConditionalOnProperty(prefix = "error-tracking", name = ["dsn"], matchIfMissing = false)
-    fun sentryErrorTracker(
+    fun errorTracker(
         properties: ErrorTrackingProperties,
-        payloadScrubber: ErrorPayloadScrubber,
-    ): ErrorTracker = SentryErrorTracker(properties, payloadScrubber)
-
-    @Bean
-    @ConditionalOnMissingBean(ErrorTracker::class)
-    fun loggingErrorTracker(): ErrorTracker = LoggingErrorTracker()
+        errorPayloadScrubber: ErrorPayloadScrubber,
+    ): ErrorTracker =
+        if (isUsableErrorDsn(properties.dsn)) {
+            SentryErrorTracker(properties, errorPayloadScrubber)
+        } else {
+            if (properties.dsn.isNotBlank()) {
+                log.warn("Skipping Sentry: the configured DSN is not a usable http(s) URL ({}). Falling back to logging.", properties.dsn)
+            }
+            LoggingErrorTracker()
+        }
 }
+
+/** Un DSN exploitable est une URL http(s) bien formée — rien d'autre ne doit activer Sentry. */
+internal fun isUsableErrorDsn(dsn: String): Boolean =
+    dsn.isNotBlank() &&
+        runCatching { java.net.URI(dsn) }
+            .map { it.scheme == "http" || it.scheme == "https" }
+            .getOrDefault(false)
