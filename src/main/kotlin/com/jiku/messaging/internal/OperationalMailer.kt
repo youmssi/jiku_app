@@ -50,6 +50,31 @@ class OperationalMailer(
             log.error("Failed to send {} email to {}", label, to, ex)
         }
     }
+
+    /**
+     * Envoie un e-mail opérationnel dont le HTML est déjà rendu (squelette commun :
+     * adresse vide, échec silencieux). [label] sert aux logs.
+     */
+    fun sendOperationalHtml(
+        label: String,
+        to: String,
+        toName: String,
+        subject: String,
+        htmlBody: String,
+    ) {
+        if (to.isBlank()) {
+            log.warn("Skipping {} email: no recipient address", label)
+            return
+        }
+        try {
+            emailSender.send(
+                emailProperties.from,
+                EmailMessage(to = to, toName = toName, subject = subject, htmlBody = htmlBody),
+            )
+        } catch (ex: Exception) {
+            log.error("Failed to send {} email to {}", label, to, ex)
+        }
+    }
 }
 
 /** Format d'heure partagé des avis opérationnels, en UTC. */

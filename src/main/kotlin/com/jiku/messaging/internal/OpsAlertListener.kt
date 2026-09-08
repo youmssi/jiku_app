@@ -12,8 +12,7 @@ import org.springframework.stereotype.Component
  */
 @Component
 class OpsAlertListener(
-    private val emailSender: EmailSender,
-    private val emailProperties: NotificationEmailProperties,
+    private val mailer: OperationalMailer,
     private val salesProperties: NotificationSalesProperties,
 ) {
     private val log = LoggerFactory.getLogger(OpsAlertListener::class.java)
@@ -22,18 +21,6 @@ class OpsAlertListener(
     fun onOpsAlert(alert: OpsAlert) {
         log.warn("OPS ALERT: {} — {}", alert.subject, alert.message)
         val to = salesProperties.email.takeIf { it.isNotBlank() } ?: return
-        try {
-            emailSender.send(
-                emailProperties.from,
-                EmailMessage(
-                    to = to,
-                    toName = "Operations",
-                    subject = alert.subject,
-                    htmlBody = "<p>${escapeHtml(alert.message)}</p>",
-                ),
-            )
-        } catch (ex: Exception) {
-            log.error("Failed to send ops alert email", ex)
-        }
+        mailer.sendOperationalHtml("ops-alert", to, "Operations", alert.subject, "<p>${escapeHtml(alert.message)}</p>")
     }
 }
