@@ -29,7 +29,7 @@ class OpsAlertListener(
                     to = to,
                     toName = "Operations",
                     subject = alert.subject,
-                    htmlBody = "<p>${escape(alert.message)}</p>",
+                    htmlBody = "<p>${escapeHtml(alert.message)}</p>",
                 ),
             )
         } catch (ex: Exception) {
@@ -37,9 +37,4 @@ class OpsAlertListener(
         }
     }
 
-    private fun escape(value: String): String =
-        value
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
 }
