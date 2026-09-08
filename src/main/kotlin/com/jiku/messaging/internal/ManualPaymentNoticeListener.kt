@@ -8,15 +8,13 @@ import org.springframework.stereotype.Component
 
 /**
  * Emails for the manual payment flow (JIKU-41): a new activation request goes to
- * the sales mailbox; a confirmation or rejection goes to the organizer. These are
- * operational one-off mails (like the reputation alert), so they use the platform
- * sender directly rather than the guest-notification orchestration — there is no
- * per-guest lifecycle to audit and the admin audit log already records the action.
+ * the sales mailbox; a confirmation or rejection goes to the organizer. Content
+ * only — the delivery mechanics live in [OperationalMailer]; the admin audit log
+ * already records the action.
  */
 @Component
 class ManualPaymentNoticeListener(
-    private val emailSender: EmailSender,
-    private val emailProperties: NotificationEmailProperties,
+    private val mailer: OperationalMailer,
     private val salesProperties: NotificationSalesProperties,
     private val templateRenderer: EmailTemplateRenderer,
 ) {
@@ -40,13 +38,12 @@ class ManualPaymentNoticeListener(
             )
             return
         }
-        deliver(
-            EmailMessage(
-                to = to,
-                toName = "Sales",
-                subject = "New activation request ${notice.reference} — ${notice.organizerName}",
-                htmlBody = templateRenderer.renderManualPaymentRequested(notice),
-            ),
+        mailer.sendOperationalHtml(
+            label = "manual-payment",
+            to = to,
+            toName = "Sales",
+            subject = "New activation request ${notice.reference} — ${notice.organizerName}",
+            htmlBody = templateRenderer.renderManualPaymentRequested(notice),
         )
     }
 
@@ -57,34 +54,23 @@ class ManualPaymentNoticeListener(
             return
         }
         val confirmed = notice.kind == ManualPaymentNotice.KIND_CONFIRMED
-        deliver(
-            EmailMessage(
-                to = to,
-                toName = notice.organizerName,
-                subject =
-                    if (confirmed) {
-                        "Your ${notice.tier} activation is confirmed"
-                    } else {
-                        "About your ${notice.tier} activation request"
-                    },
-                htmlBody =
-                    if (confirmed) {
-                        templateRenderer.renderManualPaymentConfirmed(notice)
-                    } else {
-                        templateRenderer.renderManualPaymentRejected(notice)
-                    },
-            ),
+        mailer.sendOperationalHtml(
+            label = "manual-payment",
+            to = to,
+            toName = notice.organizerName,
+            subject =
+                if (confirmed) {
+                    "Your ${notice.tier} activation is confirmed"
+                } else {
+                    "About your ${notice.tier} activation request"
+                },
+            htmlBody =
+                if (confirmed) {
+                    templateRenderer.renderManualPaymentConfirmed(notice)
+                } else {
+                    templateRenderer.renderManualPaymentRejected(notice)
+                },
         )
-    }
-
-    private fun deliver(message: EmailMessage) {
-        try {
-            emailSender.send(emailProperties.from, message)
-        } catch (ex: Exception) {
-            // Never let a mail failure roll back the payment state change; the
-            // admin desk remains the source of truth.
-            log.error("Failed to send manual payment email to {}", message.to, ex)
-        }
     }
 }
 
