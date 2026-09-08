@@ -42,6 +42,27 @@ class JwtService(
             .parseSignedClaims(token)
             .payload
 
+    /**
+     * Generic signed token for non-session flows (invitation, service link, day
+     * line, validator): one place owns the secret key and the HMAC builder so the
+     * per-flow token services only describe their claims. [ttl] null means no
+     * expiration, which is the deliberate policy for long-lived invitation links.
+     */
+    fun sign(
+        subject: String,
+        claims: Map<String, Any?>,
+        ttl: java.time.Duration? = null,
+    ): String {
+        val now = Instant.now()
+        val builder = Jwts.builder().subject(subject)
+        claims.forEach { (name, value) -> if (value != null) builder.claim(name, value) }
+        builder.issuedAt(Date.from(now))
+        if (ttl != null) {
+            builder.expiration(Date.from(now.plus(ttl)))
+        }
+        return builder.signWith(key).compact()
+    }
+
     private fun build(
         userId: String,
         tenantId: String,
