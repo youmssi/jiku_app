@@ -226,6 +226,12 @@ class RsvpService(
             transferAllowed = canTransfer(guest, event, ticket),
             transferDeadline = event?.transferDeadline,
             transferredTo = guest.transferredToGuestId?.let { recipientName(it) },
+            questions =
+                event?.let { ev ->
+                    events.eventQuestions(ev.id).map { q ->
+                        RsvpQuestion(questionId = q.id, prompt = q.prompt, required = q.required)
+                    }
+                } ?: emptyList(),
         )
     }
 

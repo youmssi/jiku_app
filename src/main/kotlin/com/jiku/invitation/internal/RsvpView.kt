@@ -31,6 +31,15 @@ data class RsvpView(
     val transferDeadline: Instant? = null,
     /** Name of the person this place was handed to, once transferred. */
     val transferredTo: String? = null,
+    /** Questions personnalisées posées au moment de confirmer (JIKU-77). */
+    val questions: List<RsvpQuestion> = emptyList(),
+)
+
+/** Question à répondre lors de la confirmation ; réponse libre attendue. */
+data class RsvpQuestion(
+    val questionId: java.util.UUID,
+    val prompt: String,
+    val required: Boolean,
 )
 
 /**
