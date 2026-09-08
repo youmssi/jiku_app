@@ -32,5 +32,4 @@ class SubscriptionExpiryJob(
             TenantContext.withTenant(ref.tenantId) { worker.sendExpiryNotice(ref.subscriptionId) }
         }
     }
-
 }

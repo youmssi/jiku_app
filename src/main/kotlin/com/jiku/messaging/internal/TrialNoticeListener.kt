@@ -4,30 +4,21 @@ import com.jiku.shared.TrialNotice
 import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 
 /**
  * Organizer emails for the trial lifecycle (JIKU-42): granted, expiring soon,
- * expired, ended early. Operational one-off mails on the platform sender, like
- * the manual payment notices.
+ * expired, ended early. Content only — the delivery mechanics live in
+ * [OperationalMailer].
  */
 @Component
 class TrialNoticeListener(
-    private val emailSender: EmailSender,
-    private val emailProperties: NotificationEmailProperties,
-    private val templateRenderer: EmailTemplateRenderer,
+    private val mailer: OperationalMailer,
 ) {
     private val log = LoggerFactory.getLogger(TrialNoticeListener::class.java)
 
     @EventListener
     fun onTrialNotice(notice: TrialNotice) {
-        val to = notice.organizerEmail.takeIf { it.isNotBlank() }
-        if (to == null) {
-            log.warn("Trial {} has no organizer email to notify", notice.trialId)
-            return
-        }
-        val until = UNTIL_FORMAT.format(notice.expiresAt.atZone(ZoneOffset.UTC))
+        val until = formatOperationalInstant(notice.expiresAt)
         val (subject, heading, body) =
             when (notice.kind) {
                 TrialNotice.KIND_GRANTED ->
@@ -66,22 +57,6 @@ class TrialNoticeListener(
                     return
                 }
             }
-        try {
-            emailSender.send(
-                emailProperties.from,
-                EmailMessage(
-                    to = to,
-                    toName = notice.organizerName,
-                    subject = subject,
-                    htmlBody = templateRenderer.renderTrialNotice(notice.organizerName, heading, body),
-                ),
-            )
-        } catch (ex: Exception) {
-            log.error("Failed to send trial email to {}", to, ex)
-        }
-    }
-
-    private companion object {
-        val UNTIL_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMM uuuu, HH:mm")
+        mailer.sendOperational("trial", notice.organizerEmail, notice.organizerName, subject, heading, body)
     }
 }

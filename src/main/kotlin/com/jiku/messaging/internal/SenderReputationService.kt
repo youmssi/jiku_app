@@ -136,7 +136,6 @@ class SenderReputationService(
             }
         }
 
-
     private companion object {
         const val EMAIL_CHANNEL = "EMAIL"
     }
