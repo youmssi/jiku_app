@@ -30,12 +30,8 @@ class NotificationQueueSweepJob(
         }
         log.info("Retrying {} invitation(s) queued by a delivery-capacity guardrail", queued.size)
         for (ref in queued) {
-            val previous = TenantContext.get()
-            TenantContext.set(ref.tenantId)
-            try {
+            TenantContext.withTenant(ref.tenantId) {
                 worker.process(ref.id)
-            } finally {
-                if (previous != null) TenantContext.set(previous) else TenantContext.clear()
             }
         }
     }
