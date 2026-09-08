@@ -7673,6 +7673,21 @@
           "lastName"
         ]
       },
+      "RsvpQuestion" : {
+        "type" : "object",
+        "properties" : {
+          "questionId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "prompt" : {
+            "type" : "string"
+          },
+          "required" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "RsvpView" : {
         "type" : "object",
         "properties" : {
@@ -7739,6 +7754,12 @@
               "string",
               "null"
             ]
+          },
+          "questions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RsvpQuestion"
+            }
           }
         }
       },

@@ -3,6 +3,7 @@ package com.jiku.catalog.internal
 import com.jiku.catalog.EventInfo
 import com.jiku.catalog.EventModuleApi
 import com.jiku.catalog.InvitationChannel
+import com.jiku.catalog.QuestionInfo
 import com.jiku.catalog.QuorumInfo
 import com.jiku.catalog.RetentionCandidate
 import com.jiku.catalog.TicketTypeInfo
@@ -16,6 +17,7 @@ class EventModuleApiService(
     private val events: EventRepository,
     private val eventService: EventService,
     private val ticketTypes: TicketTypeRepository,
+    private val questions: EventQuestionRepository,
 ) : EventModuleApi {
     @Transactional(readOnly = true)
     override fun findEvent(eventId: UUID): EventInfo? = events.findById(eventId).map { it.toEventInfo() }.orElse(null)
@@ -102,6 +104,16 @@ class EventModuleApiService(
                 colorHex = it.colorHex,
                 maxCapacity = it.maxCapacity,
                 confirmedCount = it.confirmedCount,
+            )
+        }
+
+    @Transactional(readOnly = true)
+    override fun eventQuestions(eventId: UUID): List<QuestionInfo> =
+        questions.findByEventIdOrderByPositionAsc(eventId).map {
+            QuestionInfo(
+                id = requireNotNull(it.id),
+                prompt = it.prompt,
+                required = it.required,
             )
         }
 

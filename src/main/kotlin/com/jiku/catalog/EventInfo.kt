@@ -67,3 +67,13 @@ data class TicketTypeInfo(
     val maxCapacity: Int?,
     val confirmedCount: Int,
 )
+
+/**
+ * Question personnalisée d'un événement (JIKU-77), partagée au-delà du module :
+ * l'invité doit la voir et y répondre au moment de confirmer.
+ */
+data class QuestionInfo(
+    val id: java.util.UUID,
+    val prompt: String,
+    val required: Boolean,
+)
