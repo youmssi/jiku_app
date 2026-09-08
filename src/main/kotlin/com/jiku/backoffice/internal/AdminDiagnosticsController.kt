@@ -40,8 +40,8 @@ class AdminDiagnosticsController {
     @PostMapping("/error")
     fun triggerError(): Nothing =
         throw ErrorPipelineProbeException(
-            "Vérification volontaire de la chaîne de remontée d'erreurs (JIKU-97). " +
-                "Cette exception est délibérée : elle ne signale aucun incident.",
+            "Deliberate verification of the error reporting pipeline (JIKU-97). " +
+                "This exception is intentional; it does not signal an incident.",
         )
 }
 
