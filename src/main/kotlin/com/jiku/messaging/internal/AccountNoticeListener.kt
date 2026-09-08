@@ -7,13 +7,11 @@ import org.springframework.stereotype.Component
 
 /**
  * Account-lifecycle emails (JIKU-49): password reset and email verification.
- * Operational one-off mails like the manual-payment notices, sent through the
- * platform sender directly — there is no per-guest lifecycle to orchestrate.
+ * Content only — the delivery mechanics live in [OperationalMailer].
  */
 @Component
 class AccountNoticeListener(
-    private val emailSender: EmailSender,
-    private val emailProperties: NotificationEmailProperties,
+    private val mailer: OperationalMailer,
     private val templateRenderer: EmailTemplateRenderer,
 ) {
     private val log = LoggerFactory.getLogger(AccountNoticeListener::class.java)
@@ -31,15 +29,6 @@ class AccountNoticeListener(
                     return
                 }
             }
-        try {
-            emailSender.send(
-                emailProperties.from,
-                EmailMessage(to = notice.email, toName = notice.email, subject = subject, htmlBody = body),
-            )
-        } catch (ex: Exception) {
-            // Never let a mail failure surface to the caller — the endpoints must
-            // stay mute about delivery, and the user can simply request again.
-            log.error("Failed to send {} email to {}", notice.kind, notice.email, ex)
-        }
+        mailer.sendOperationalHtml("account", notice.email, notice.email, subject, body)
     }
 }
