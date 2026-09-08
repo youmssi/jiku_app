@@ -17,6 +17,9 @@ interface InvitationModuleApi {
     /** Aggregate guest counts for an event's dashboard. */
     fun guestStats(eventId: UUID): GuestStats
 
+    /** Instants de création des invités d'un événement (projection pour l'analytique). */
+    fun guestCreatedAtInstants(eventId: UUID): List<Instant>
+
     /**
      * Finds guests of [eventId] whose name, email or phone matches [query]
      * (case-insensitive substring). Supports the validator's manual, no-ticket

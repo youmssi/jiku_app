@@ -105,7 +105,7 @@ class ProspectLeadService(
             }
 
         val saved = leads.save(lead)
-        log.info("Prospect rendez-vous enregistré: secteur={} source={}", saved.sector, saved.source ?: "-")
+        log.info("Prospect lead registered: sector={} source={}", saved.sector, saved.source ?: "-")
         return ProspectLeadAck(id = requireNotNull(saved.id))
     }
 
@@ -119,7 +119,7 @@ class ProspectLeadService(
     fun markContacted(id: UUID): ProspectLeadView {
         val lead =
             leads.findById(id).orElseThrow {
-                ResponseStatusException(HttpStatus.NOT_FOUND, "Piste introuvable")
+                ResponseStatusException(HttpStatus.NOT_FOUND, "Lead not found")
             }
         lead.status = ProspectStatus.CONTACTED
         lead.contactedAt = Instant.now()

@@ -31,8 +31,7 @@ class AnalyticsService(
 
         val checkInTimeline =
             ticketing
-                .findTicketsByEvent(eventId)
-                .mapNotNull { it.checkedInAt }
+                .checkInInstants(eventId)
                 .groupingBy { it.atZone(zone).truncatedTo(java.time.temporal.ChronoUnit.HOURS) }
                 .eachCount()
                 .toSortedMap()
@@ -40,8 +39,8 @@ class AnalyticsService(
 
         val guestGrowth =
             invitation
-                .listGuests(eventId)
-                .groupingBy { it.createdAt.atZone(ZoneOffset.UTC).toLocalDate() }
+                .guestCreatedAtInstants(eventId)
+                .groupingBy { it.atZone(ZoneOffset.UTC).toLocalDate() }
                 .eachCount()
                 .toSortedMap()
                 .map { (date, count) -> DateCount(date.format(DATE_LABEL), count.toLong()) }
