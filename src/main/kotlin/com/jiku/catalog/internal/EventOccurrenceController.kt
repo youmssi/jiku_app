@@ -4,6 +4,7 @@ import jakarta.validation.Valid
 import jakarta.validation.constraints.NotNull
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -16,7 +17,6 @@ import org.springframework.web.server.ResponseStatusException
 import java.time.Instant
 import java.util.UUID
 import org.springframework.stereotype.Service as SpringService
-import org.springframework.transaction.annotation.Transactional
 
 /**
  * Occurrences (dates) d'un événement multi-dates (ADR 103). La définition ne se
@@ -70,8 +70,7 @@ class EventOccurrenceService(
     private val events: EventRepository,
 ) {
     @Transactional(readOnly = true)
-    fun list(eventId: UUID): List<EventOccurrenceResponse> =
-        occurrences.findByEventIdOrderByStartsAtAsc(eventId).map { it.toResponse() }
+    fun list(eventId: UUID): List<EventOccurrenceResponse> = occurrences.findByEventIdOrderByStartsAtAsc(eventId).map { it.toResponse() }
 
     @Transactional
     fun create(
@@ -86,10 +85,11 @@ class EventOccurrenceService(
         if (request.capacity != null && request.capacity < 1) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "The occurrence capacity must be positive")
         }
-        val occurrence = EventOccurrence(eventId = eventId, startsAt = request.startsAt).apply {
-            this.endsAt = endsAt
-            this.capacity = request.capacity
-        }
+        val occurrence =
+            EventOccurrence(eventId = eventId, startsAt = request.startsAt).apply {
+                this.endsAt = endsAt
+                this.capacity = request.capacity
+            }
         return occurrences.save(occurrence).toResponse()
     }
 

@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 import org.springframework.stereotype.Service as SpringService
-import org.springframework.transaction.annotation.Transactional
 
 /**
  * Questions personnalisées d'un événement (JIKU-77) : posées à l'invité au moment
@@ -69,8 +69,7 @@ class EventQuestionService(
     private val events: EventRepository,
 ) {
     @Transactional(readOnly = true)
-    fun list(eventId: UUID): List<EventQuestionResponse> =
-        questions.findByEventIdOrderByPositionAsc(eventId).map { it.toResponse() }
+    fun list(eventId: UUID): List<EventQuestionResponse> = questions.findByEventIdOrderByPositionAsc(eventId).map { it.toResponse() }
 
     @Transactional
     fun create(
@@ -78,10 +77,11 @@ class EventQuestionService(
         request: CreateEventQuestionRequest,
     ): EventQuestionResponse {
         requireEvent(eventId)
-        val question = EventQuestion(eventId = eventId, prompt = request.prompt.trim()).apply {
-            required = request.required
-            position = request.position
-        }
+        val question =
+            EventQuestion(eventId = eventId, prompt = request.prompt.trim()).apply {
+                required = request.required
+                position = request.position
+            }
         return questions.save(question).toResponse()
     }
 
