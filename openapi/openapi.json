@@ -2578,6 +2578,79 @@
         }
       }
     },
+    "/api/v1/events/{eventId}/occurrences" : {
+      "get" : {
+        "tags" : [
+          "event-occurrence-controller"
+        ],
+        "operationId" : "list_8",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/EventOccurrenceResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "event-occurrence-controller"
+        ],
+        "operationId" : "create_8",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateEventOccurrenceRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EventOccurrenceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/events/{eventId}/invitations/send" : {
       "post" : {
         "tags" : [
@@ -2896,7 +2969,7 @@
         "tags" : [
           "booking-controller"
         ],
-        "operationId" : "create_8",
+        "operationId" : "create_9",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3450,7 +3523,7 @@
         "tags" : [
           "admin-trial-controller"
         ],
-        "operationId" : "list_8",
+        "operationId" : "list_9",
         "parameters" : [
           {
             "name" : "status",
@@ -3993,7 +4066,7 @@
         "tags" : [
           "admin-agreement-controller"
         ],
-        "operationId" : "list_9",
+        "operationId" : "list_10",
         "parameters" : [
           {
             "name" : "status",
@@ -4061,7 +4134,7 @@
         "tags" : [
           "admin-agreement-controller"
         ],
-        "operationId" : "create_9",
+        "operationId" : "create_10",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4413,7 +4486,7 @@
         "tags" : [
           "templates-controller"
         ],
-        "operationId" : "list_10",
+        "operationId" : "list_11",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -4837,7 +4910,7 @@
         "tags" : [
           "guest-controller"
         ],
-        "operationId" : "list_11",
+        "operationId" : "list_12",
         "parameters" : [
           {
             "name" : "eventId",
@@ -5471,7 +5544,7 @@
         "tags" : [
           "invoice-controller"
         ],
-        "operationId" : "list_12",
+        "operationId" : "list_13",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -5735,7 +5808,7 @@
         "tags" : [
           "admin-tenant-controller"
         ],
-        "operationId" : "list_13",
+        "operationId" : "list_14",
         "parameters" : [
           {
             "name" : "query",
@@ -5785,7 +5858,7 @@
         "tags" : [
           "admin-prospect-lead-controller"
         ],
-        "operationId" : "list_14",
+        "operationId" : "list_15",
         "parameters" : [
           {
             "name" : "status",
@@ -5818,7 +5891,7 @@
         "tags" : [
           "admin-payment-controller"
         ],
-        "operationId" : "list_15",
+        "operationId" : "list_16",
         "parameters" : [
           {
             "name" : "status",
@@ -5888,7 +5961,7 @@
         "tags" : [
           "admin-booking-controller"
         ],
-        "operationId" : "list_16",
+        "operationId" : "list_17",
         "parameters" : [
           {
             "name" : "status",
@@ -5941,7 +6014,7 @@
         "tags" : [
           "admin-booking-payment-controller"
         ],
-        "operationId" : "list_17",
+        "operationId" : "list_18",
         "parameters" : [
           {
             "name" : "status",
@@ -6014,7 +6087,7 @@
         "tags" : [
           "admin-audit-controller"
         ],
-        "operationId" : "list_18",
+        "operationId" : "list_19",
         "parameters" : [
           {
             "name" : "action",
@@ -6287,6 +6360,39 @@
           },
           {
             "name" : "questionId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/occurrences/{occurrenceId}" : {
+      "delete" : {
+        "tags" : [
+          "event-occurrence-controller"
+        ],
+        "operationId" : "delete_2",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "occurrenceId",
             "in" : "path",
             "required" : true,
             "schema" : {
@@ -8209,6 +8315,63 @@
               "string",
               "null"
             ]
+          }
+        }
+      },
+      "CreateEventOccurrenceRequest" : {
+        "type" : "object",
+        "properties" : {
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endsAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "capacity" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          }
+        },
+        "required" : [
+          "startsAt"
+        ]
+      },
+      "EventOccurrenceResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "eventId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endsAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "capacity" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
           }
         }
       },
