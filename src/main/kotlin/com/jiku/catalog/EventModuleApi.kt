@@ -52,6 +52,12 @@ interface EventModuleApi {
     fun ticketTypes(eventId: UUID): List<TicketTypeInfo>
 
     /**
+     * Questions personnalisées d'un événement (JIKU-77), dans leur ordre — lues par
+     * le flux RSVP pour les présenter à l'invité qui confirme.
+     */
+    fun eventQuestions(eventId: UUID): List<QuestionInfo>
+
+    /**
      * Déplace la place d'un invité **déjà confirmé** d'une catégorie à une autre,
      * sans toucher au compteur global : la personne était déjà comptée dans la
      * salle, elle l'est toujours, seule sa catégorie change.
