@@ -44,4 +44,16 @@ interface TenantModuleApi {
         ownerEmail: String,
         ownerFullName: String?,
     ): UUID
+
+    /**
+     * The tenant owning a public username (case-insensitive), or null. Backs the
+     * discoverable organization profile; suspension is the caller's concern.
+     */
+    fun findByUsername(username: String): TenantInfo?
+
+    /** Binds (or clears, with null) the calling tenant's public username. */
+    fun updateUsername(
+        tenantId: UUID,
+        username: String?,
+    ): TenantInfo
 }

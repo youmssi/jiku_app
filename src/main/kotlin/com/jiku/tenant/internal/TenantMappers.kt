@@ -21,6 +21,7 @@ fun Tenant.toTenantInfo(): TenantInfo =
         logoUrl = branding?.logoUrl,
         primaryColor = effectivePrimaryColor(),
         legalIdentity = legalIdentity?.toInfo(),
+        username = username,
     )
 
 /**

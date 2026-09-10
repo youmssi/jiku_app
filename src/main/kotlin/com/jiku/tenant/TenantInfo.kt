@@ -21,6 +21,8 @@ data class TenantInfo(
      * tenants who never need one.
      */
     val legalIdentity: TenantLegalIdentityInfo? = null,
+    /** Identifiant public du profil découvert (null tant que non choisi). */
+    val username: String? = null,
 )
 
 /**
