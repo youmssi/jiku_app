@@ -28,6 +28,7 @@ import java.util.UUID
 class ServiceController(
     private val services: ServiceAdminService,
     private val linkTokens: ServiceLinkTokenService,
+    private val serviceLinkCodes: ServiceLinkCodeService,
     private val config: ServiceConfigService,
 ) {
     @PostMapping
@@ -44,14 +45,15 @@ class ServiceController(
         @PathVariable id: UUID,
     ): ServiceResponse = services.get(id)
 
-    /** Lien signé partageable au client, sans compte (JIKU-87). */
+    /** Lien signé partageable au client, sans compte (JIKU-87) + son code court. */
     @GetMapping("/{id}/booking-link")
     fun bookingLink(
         @PathVariable id: UUID,
     ): BookingLinkResponse {
         services.get(id)
         val tenantId = TenantContext.get() ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "No tenant")
-        return BookingLinkResponse(token = linkTokens.issue(id, tenantId))
+        val link = serviceLinkCodes.forService(id, tenantId)
+        return BookingLinkResponse(token = linkTokens.issue(id, tenantId), shortCode = link.code)
     }
 
     @PatchMapping("/{id}")
