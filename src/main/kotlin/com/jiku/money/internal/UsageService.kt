@@ -22,6 +22,7 @@ class UsageService(
     private val usageRecords: UsageRecordRepository,
     private val invitation: InvitationModuleApi,
     private val properties: BillingProperties,
+    private val platformSettings: PlatformBillingSettingsService,
     private val trialService: TrialService,
     private val tenantQuota: TenantQuotaService,
 ) {
@@ -70,7 +71,7 @@ class UsageService(
             allowance = effective,
             remaining = (effective - invited).coerceAtLeast(0),
             withinAllowance = invited <= effective,
-            tier = properties.tierForUsage(invited),
+            tier = platformSettings.tierForUsage(invited),
             guestsImported = stats.total,
             invitationsSentEmail = sent.email,
             invitationsSentWhatsapp = sent.whatsapp,

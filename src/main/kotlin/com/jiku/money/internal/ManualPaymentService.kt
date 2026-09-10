@@ -2,7 +2,6 @@ package com.jiku.money.internal
 
 import com.jiku.money.AdminPaymentView
 import com.jiku.money.ManualPaymentInstructions
-import com.jiku.money.PayeeDetails
 import com.jiku.shared.ManualPaymentNotice
 import com.jiku.shared.SubscriptionNotice
 import com.jiku.shared.TenantContext
@@ -31,10 +30,9 @@ class ManualPaymentService(
     private val payments: PaymentRepository,
     private val tierUnlockService: TierUnlockService,
     private val billingProperties: BillingProperties,
-    private val subscriptionProperties: SubscriptionProperties,
     private val subscriptionService: SubscriptionService,
     private val subscriptionNotifier: SubscriptionNotifier,
-    private val manualProperties: ManualPaymentProperties,
+    private val platformSettings: PlatformBillingSettingsService,
     private val tenantModuleApi: TenantModuleApi,
     private val usageService: UsageService,
     private val eventPublisher: ApplicationEventPublisher,
@@ -54,7 +52,7 @@ class ManualPaymentService(
         tierName: String,
     ): ManualPaymentInstructions {
         val tier =
-            billingProperties.tiers.firstOrNull { it.name.equals(tierName, ignoreCase = true) }
+            platformSettings.tierByName(tierName)
                 ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown tier: $tierName")
         val tenantId = requireNotNull(TenantContext.get()) { "A manual payment request requires an authenticated tenant" }
 
@@ -103,10 +101,10 @@ class ManualPaymentService(
         months: Int,
     ): ManualPaymentInstructions {
         val plan =
-            subscriptionProperties.planByName(planName)
+            platformSettings.planByName(planName)
                 ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown subscription plan: $planName")
         val amount =
-            subscriptionProperties.priceMinor(plan, months)
+            platformSettings.priceMinor(plan, months)
                 ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported prepaid period: $months months")
         val tenantId = requireNotNull(TenantContext.get()) { "A subscription request requires an authenticated tenant" }
 
@@ -260,13 +258,7 @@ class ManualPaymentService(
             amountMinor = payment.amountMinor,
             currency = payment.currency,
             status = payment.status.name,
-            payee =
-                PayeeDetails(
-                    payeeName = manualProperties.payeeName.takeIf { it.isNotBlank() },
-                    mobileMoneyNumber = manualProperties.mobileMoneyNumber.takeIf { it.isNotBlank() },
-                    mobileMoneyOperator = manualProperties.mobileMoneyOperator.takeIf { it.isNotBlank() },
-                    bankDetails = manualProperties.bankDetails.takeIf { it.isNotBlank() },
-                ),
+            payee = platformSettings.payeeDetails(),
         )
 
     private fun publishNotice(
