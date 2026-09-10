@@ -74,6 +74,15 @@ data class UpdateQuorumRequest(
     val absolute: Int? = null,
 )
 
+/**
+ * Optional body of the cancellation endpoint. Absent or true keeps the default
+ * behaviour (guests are notified); false cancels silently. Tickets are always
+ * invalidated, whatever the flag.
+ */
+data class CancelEventRequest(
+    val notifyGuests: Boolean? = null,
+)
+
 data class QuorumResponse(
     val mode: String,
     val numerator: Int?,

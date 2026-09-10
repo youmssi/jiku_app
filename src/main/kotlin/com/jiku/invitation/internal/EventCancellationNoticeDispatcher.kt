@@ -36,6 +36,11 @@ class EventCancellationNoticeDispatcher(
     @Async("invitationExecutor")
     @TransactionalEventListener
     fun onEventCancelled(cancelled: EventCancelledEvent) {
+        // Cancelling without notifying guests is an organizer choice: tickets are
+        // already invalidated, and no cancellation notice leaves this point.
+        if (!cancelled.notifyGuests) {
+            return
+        }
         val event = events.findEvent(cancelled.eventId) ?: return
         val tenant = tenants.findTenant(UUID.fromString(cancelled.tenantId))
         val guestsById = guests.findByEventId(cancelled.eventId).associateBy { requireNotNull(it.id) }

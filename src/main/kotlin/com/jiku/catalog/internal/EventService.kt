@@ -1,6 +1,7 @@
 package com.jiku.catalog.internal
 
 import com.jiku.shared.EventCancelledEvent
+import com.jiku.shared.EventDeletedEvent
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -12,6 +13,9 @@ import java.util.UUID
 @Service
 class EventService(
     private val events: EventRepository,
+    private val ticketTypes: TicketTypeRepository,
+    private val questions: EventQuestionRepository,
+    private val occurrences: EventOccurrenceRepository,
     private val eventPublisher: ApplicationEventPublisher,
 ) {
     @Transactional
@@ -130,14 +134,19 @@ class EventService(
      * guest notifications fan out only after the commit.
      */
     @Transactional
-    fun cancel(id: UUID): EventResponse {
+    fun cancel(
+        id: UUID,
+        notifyGuests: Boolean = true,
+    ): EventResponse {
         val event = load(id)
         if (event.status != EventStatus.PUBLISHED) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "Only published events can be cancelled")
         }
         event.status = EventStatus.CANCELLED
         events.save(event)
-        eventPublisher.publishEvent(EventCancelledEvent(requireNotNull(event.id), requireNotNull(event.tenantId)))
+        eventPublisher.publishEvent(
+            EventCancelledEvent(requireNotNull(event.id), requireNotNull(event.tenantId), notifyGuests),
+        )
         return event.toResponse()
     }
 
@@ -145,6 +154,29 @@ class EventService(
         events.findById(id).orElseThrow {
             ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found")
         }
+
+    /**
+     * Deletes a draft or cancelled event. A published event must be cancelled
+     * first (409). The [EventDeletedEvent] is consumed synchronously by the
+     * ticketing, invitation and check-in modules inside this same transaction,
+     * so the event and every row that referenced it disappear together — there
+     * is no state where the event is gone but its guests or tickets remain.
+     */
+    @Transactional
+    fun delete(id: UUID) {
+        val event = load(id)
+        if (event.status == EventStatus.PUBLISHED) {
+            throw ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Cancel the event before deleting it",
+            )
+        }
+        eventPublisher.publishEvent(EventDeletedEvent(requireNotNull(event.id), requireNotNull(event.tenantId)))
+        ticketTypes.findByEventIdOrderByPositionAsc(id).let { ticketTypes.deleteAll(it) }
+        questions.findByEventIdOrderByPositionAsc(id).let { questions.deleteAll(it) }
+        occurrences.findByEventIdOrderByStartsAtAsc(id).let { occurrences.deleteAll(it) }
+        events.delete(event)
+    }
 
     private fun requireDraft(event: Event) {
         if (event.status != EventStatus.DRAFT) {

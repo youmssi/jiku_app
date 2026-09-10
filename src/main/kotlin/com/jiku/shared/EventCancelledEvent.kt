@@ -16,4 +16,10 @@ import java.util.UUID
 data class EventCancelledEvent(
     val eventId: UUID,
     val tenantId: String,
+    /**
+     * Whether every invited guest should be emailed/WhatsApped a cancellation
+     * notice. Defaults to true (guests must learn the event is off); organizers
+     * can cancel silently when they opt out. Tickets are invalidated either way.
+     */
+    val notifyGuests: Boolean = true,
 )
