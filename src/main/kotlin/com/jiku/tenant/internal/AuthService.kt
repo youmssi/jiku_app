@@ -181,7 +181,7 @@ class AuthService(
         val tenantNames =
             tenants
                 .findAllById(all.map { UUID.fromString(it.tenantId) })
-                .associate { it.id.toString() to it.name }
+                .associate { it.id.toString() to it.effectiveDisplayName() }
         val activeRole =
             all.firstOrNull { it.tenantId == activeTenantId }?.role?.tokenRole ?: TokenRoles.USER
         return MeResponse(
