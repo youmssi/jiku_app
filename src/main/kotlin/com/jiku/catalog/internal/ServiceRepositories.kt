@@ -16,6 +16,8 @@ interface ServiceRequirementRepository : JpaRepository<ServiceRequirement, UUID>
 interface ServiceReservationRepository : JpaRepository<ServiceReservation, UUID> {
     fun findByBookingTokenHash(tokenHash: String): List<ServiceReservation>
 
+    fun findByServiceId(serviceId: UUID): List<ServiceReservation>
+
     /**
      * Occupations des ressources données sur une fenêtre — le préchargement de la
      * grille du jour (P1) : une confirmation, ou une demande en attente non

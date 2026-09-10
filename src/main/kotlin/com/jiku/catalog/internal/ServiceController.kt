@@ -60,6 +60,12 @@ class ServiceController(
         @Valid @RequestBody request: ServiceUpdateRequest,
     ): ServiceResponse = services.updateName(id, request.name)
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun delete(
+        @PathVariable id: UUID,
+    ) = services.delete(id)
+
     @GetMapping("/{id}/requirements")
     fun requirements(
         @PathVariable id: UUID,
