@@ -45,6 +45,9 @@ interface TicketRepository : JpaRepository<Ticket, UUID> {
         kind: TicketKind,
     ): List<Ticket>
 
+    /** Tous les billets d'un service (JIKU-87/88) — suppression en cascade du service. */
+    fun findByServiceId(serviceId: UUID): List<Ticket>
+
     /** Rows of [checkedInBy label, count] for an event's checked-in tickets. */
     @Query(
         "SELECT t.checkedInBy, COUNT(t) FROM Ticket t " +

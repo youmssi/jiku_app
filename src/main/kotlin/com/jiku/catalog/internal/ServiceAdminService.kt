@@ -1,6 +1,8 @@
 package com.jiku.catalog.internal
 
 import com.jiku.catalog.ResourceType
+import com.jiku.shared.ServiceDeletedEvent
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.transaction.annotation.Transactional
@@ -18,6 +20,10 @@ import org.springframework.stereotype.Service as SpringService
 class ServiceAdminService(
     private val services: ServiceRepository,
     private val requirements: ServiceRequirementRepository,
+    private val reservations: ServiceReservationRepository,
+    private val staffLinks: ServiceStaffRepository,
+    private val configs: ServiceConfigRepository,
+    private val eventPublisher: ApplicationEventPublisher,
 ) {
     @Transactional(readOnly = true)
     fun list(): List<ServiceResponse> = services.findAll().map { it.toResponse() }
@@ -83,6 +89,24 @@ class ServiceAdminService(
             }
         check(row.serviceId == serviceId) { "Requirement does not belong to this service" }
         requirements.delete(row)
+    }
+
+    /**
+     * Deletes a service and everything that belonged to it. The
+     * [ServiceDeletedEvent] is consumed synchronously by the ticketing module
+     * inside this same transaction (its appointment tickets, and through the
+     * FK cascade their reminders, disappear with the service); the catalog rows
+     * (requirements, reservations, staff links, configuration) are removed here.
+     */
+    @Transactional
+    fun delete(serviceId: UUID) {
+        val service = services.findById(serviceId).orElseThrow { notFound(serviceId) }
+        eventPublisher.publishEvent(ServiceDeletedEvent(requireNotNull(service.id), requireNotNull(service.tenantId)))
+        requirements.deleteAll(requirements.findByServiceId(serviceId))
+        reservations.deleteAll(reservations.findByServiceId(serviceId))
+        staffLinks.deleteAll(staffLinks.findAllByServiceId(serviceId))
+        configs.findByServiceId(serviceId)?.let { configs.delete(it) }
+        services.delete(service)
     }
 
     private fun requireExists(serviceId: UUID) {
