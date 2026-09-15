@@ -66,6 +66,12 @@ class SecurityConfig(
                 // Parcours client rendez-vous (JIKU-87) : le client n'a pas de compte,
                 // il est authentifié par le lien de service signé porté dans le chemin.
                 it.requestMatchers("${apiProperties.basePath}/appointments/**").permitAll()
+                // Même parcours par lien court (/r/{code}) : le code remplace le jeton
+                // signé dans l'URL partagée, la vérification reste côté serveur.
+                it.requestMatchers("${apiProperties.basePath}/r/**").permitAll()
+                // Profil public d'organisation : une page découverte par identifiant,
+                // comme une carte de visite. Lecture seule, rien d'identifiant.
+                it.requestMatchers(HttpMethod.GET, "${apiProperties.basePath}/public/orgs/*").permitAll()
                 // Console de ligne du jour du personnel (JIKU-88) : le personnel n'a
                 // pas de compte, il est authentifié par le lien signé du comptoir porté
                 // dans le chemin, comme les validateurs sous /checkin.

@@ -21,6 +21,7 @@ class PaymentService(
     private val tierUnlockService: TierUnlockService,
     private val provider: PaymentProvider,
     private val billingProperties: BillingProperties,
+    private val platformSettings: PlatformBillingSettingsService,
     transactionManager: PlatformTransactionManager,
 ) {
     enum class CallbackOutcome { SUCCEEDED, FAILED, ALREADY_PROCESSED, UNKNOWN, INVALID_SIGNATURE }
@@ -33,7 +34,7 @@ class PaymentService(
         tierName: String,
     ): PaymentInitiationResult {
         val tier =
-            billingProperties.tiers.firstOrNull { it.name.equals(tierName, ignoreCase = true) }
+            platformSettings.tierByName(tierName)
                 ?: throw IllegalArgumentException("Unknown tier: $tierName")
         val tenantId = requireNotNull(TenantContext.get()) { "Payment initiation requires an authenticated tenant" }
 

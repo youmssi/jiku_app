@@ -1,0 +1,76 @@
+package com.jiku.tenant
+
+import com.jiku.TestcontainersConfiguration
+import com.jiku.catalog.internal.Resource
+import com.jiku.catalog.internal.ResourceRepository
+import com.jiku.catalog.internal.ServiceAdminService
+import com.jiku.catalog.internal.ServiceLinkCodeService
+import com.jiku.shared.TenantContext
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
+import org.springframework.context.annotation.Import
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+
+/**
+ * Profil public d'organisation : l'identifiant public ouvre la page découverte
+ * (nom, logo) et liste les services réservables par lien court. Un identifiant
+ * inconnu ou une organisation suspendue restent introuvables.
+ */
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(TestcontainersConfiguration::class)
+class PublicOrgProfileTest {
+    @Autowired
+    lateinit var tenants: TenantModuleApi
+
+    @Autowired
+    lateinit var services: ServiceAdminService
+
+    @Autowired
+    lateinit var resources: ResourceRepository
+
+    @Autowired
+    lateinit var codes: ServiceLinkCodeService
+
+    @Autowired
+    lateinit var mockMvc: MockMvc
+
+    @AfterEach
+    fun clearContext() = TenantContext.clear()
+
+    @Test
+    fun `the public profile lists bookable services with their short links`() {
+        val tenantId = tenants.provisionTenant("Salon Aïcha", "owner@salon.test", "Aïcha")
+        val username = "salon-aicha"
+        tenants.updateUsername(tenantId, username)
+
+        TenantContext.set(tenantId.toString())
+        resources.save(Resource(name = "Coiffeuse", type = com.jiku.catalog.ResourceType.PERSON, timezone = "Africa/Conakry"))
+        val service = services.create("Coloration", "Africa/Conakry")
+        val code = codes.forService(service.id, tenantId.toString()).code
+        TenantContext.clear()
+
+        val profile = tenants.findByUsername(username.uppercase())
+        assertNotNull(profile, "username lookup must be case-insensitive")
+        assertEquals(tenantId, profile.id)
+
+        mockMvc
+            .perform(get("/api/v1/public/orgs/$username"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.organizationName").value("Salon Aïcha"))
+            .andExpect(jsonPath("$.services[0].name").value("Coloration"))
+            .andExpect(jsonPath("$.services[0].shortCode").value(code))
+
+        mockMvc
+            .perform(get("/api/v1/public/orgs/no-such-org"))
+            .andExpect(status().isNotFound())
+    }
+}

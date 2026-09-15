@@ -20,6 +20,8 @@ data class ManualPaymentInstructions(
 
 data class PayeeDetails(
     val payeeName: String?,
+    val contactEmail: String?,
+    val contactPhone: String?,
     val mobileMoneyNumber: String?,
     val mobileMoneyOperator: String?,
     val bankDetails: String?,
@@ -38,4 +40,28 @@ data class AdminPaymentView(
     val reference: String,
     val status: String,
     val createdAt: Instant,
+)
+
+/** Réglages de facturation lus par le bureau admin (bénéficiaire + grilles de prix). */
+data class PlatformBillingSettingsView(
+    val currency: String,
+    val payee: PayeeDetails,
+    val tiers: List<BillingTierOption>,
+    val subscriptionPlans: List<SubscriptionPlanOption>,
+    /** Vrai quand la base remplace la configuration d'environnement. */
+    val managedInDatabase: Boolean,
+)
+
+/** Mise à jour du bureau admin : listes complètes (une soumission remplace tout). */
+data class PlatformBillingSettingsUpdate(
+    val payee: PayeeDetails,
+    val tiers: List<BillingTierOption>,
+    val subscriptionPlans: List<SubscriptionPlanOption>,
+)
+
+/** Une formule d'abonnement telle que le bureau admin la voit. */
+data class SubscriptionPlanOption(
+    val name: String,
+    val maxResources: Long,
+    val priceMinorPerMonth: Long,
 )

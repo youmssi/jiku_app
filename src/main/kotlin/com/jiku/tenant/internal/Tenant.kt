@@ -34,6 +34,14 @@ class Tenant(
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now()
 
+    /**
+     * Identifiant public de l'organisation (profil découvert à
+     * https://…/o/{username}). Facultatif ; unique quand renseigné, insensible à
+     * la casse une fois normalisé.
+     */
+    @Column(name = "username", unique = true)
+    var username: String? = null
+
     // Nullable because Hibernate maps an all-null embeddable to a null reference.
     @Embedded
     var branding: TenantBranding? = null

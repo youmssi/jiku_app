@@ -272,6 +272,36 @@
         }
       }
     },
+    "/api/v1/orgs/username" : {
+      "put" : {
+        "tags" : [
+          "org-controller"
+        ],
+        "operationId" : "updateUsername",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateOrgUsernameRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TenantInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/members/{userId}/role" : {
       "put" : {
         "tags" : [
@@ -429,6 +459,28 @@
             }
           }
         }
+      },
+      "delete" : {
+        "tags" : [
+          "event-controller"
+        ],
+        "operationId" : "delete",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
       }
     },
     "/api/v1/events/{id}/quorum" : {
@@ -525,7 +577,7 @@
         "tags" : [
           "ticket-type-controller"
         ],
-        "operationId" : "delete",
+        "operationId" : "delete_1",
         "parameters" : [
           {
             "name" : "eventId",
@@ -634,6 +686,54 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/WhatsAppPricingInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/billing/settings" : {
+      "get" : {
+        "tags" : [
+          "admin-billing-settings-controller"
+        ],
+        "operationId" : "settings",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PlatformBillingSettingsView"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [
+          "admin-billing-settings-controller"
+        ],
+        "operationId" : "update_4",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PlatformBillingSettingsUpdate"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PlatformBillingSettingsView"
                 }
               }
             }
@@ -1578,6 +1678,46 @@
         }
       }
     },
+    "/api/v1/r/{code}/book" : {
+      "post" : {
+        "tags" : [
+          "short-link-public-controller"
+        ],
+        "operationId" : "book",
+        "parameters" : [
+          {
+            "name" : "code",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AppointmentBookingRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AppointmentBookingView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/prospects" : {
       "post" : {
         "tags" : [
@@ -2194,6 +2334,15 @@
             }
           }
         ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CancelEventRequest"
+              }
+            }
+          }
+        },
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -3435,7 +3584,7 @@
         "tags" : [
           "appointment-public-controller"
         ],
-        "operationId" : "book",
+        "operationId" : "book_1",
         "parameters" : [
           {
             "name" : "token",
@@ -4271,11 +4420,33 @@
           }
         }
       },
+      "delete" : {
+        "tags" : [
+          "service-controller"
+        ],
+        "operationId" : "delete_2",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      },
       "patch" : {
         "tags" : [
           "service-controller"
         ],
-        "operationId" : "update_4",
+        "operationId" : "update_5",
         "parameters" : [
           {
             "name" : "id",
@@ -4345,7 +4516,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "update_5",
+        "operationId" : "update_6",
         "parameters" : [
           {
             "name" : "id",
@@ -4715,6 +4886,161 @@
         }
       }
     },
+    "/api/v1/r/{code}" : {
+      "get" : {
+        "tags" : [
+          "short-link-public-controller"
+        ],
+        "operationId" : "view_2",
+        "parameters" : [
+          {
+            "name" : "code",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "date",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AppointmentServiceView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/r/{code}/booking/{bookingToken}" : {
+      "get" : {
+        "tags" : [
+          "short-link-public-controller"
+        ],
+        "operationId" : "status",
+        "parameters" : [
+          {
+            "name" : "code",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "bookingToken",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AppointmentStatusView"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [
+          "short-link-public-controller"
+        ],
+        "operationId" : "cancel_2",
+        "parameters" : [
+          {
+            "name" : "code",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "bookingToken",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/public/orgs/{username}" : {
+      "get" : {
+        "tags" : [
+          "public-org-controller"
+        ],
+        "operationId" : "profile",
+        "parameters" : [
+          {
+            "name" : "username",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PublicOrgProfileView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/profile" : {
+      "get" : {
+        "tags" : [
+          "org-controller"
+        ],
+        "operationId" : "profile_1",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TenantInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/members" : {
       "get" : {
         "tags" : [
@@ -4743,7 +5069,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "view_2",
+        "operationId" : "view_3",
         "parameters" : [
           {
             "name" : "token",
@@ -5310,7 +5636,7 @@
         "tags" : [
           "booking-controller"
         ],
-        "operationId" : "status",
+        "operationId" : "status_1",
         "parameters" : [
           {
             "name" : "id",
@@ -5470,7 +5796,7 @@
         "tags" : [
           "subscription-controller"
         ],
-        "operationId" : "view_3",
+        "operationId" : "view_4",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -5680,7 +6006,7 @@
         "tags" : [
           "appointment-public-controller"
         ],
-        "operationId" : "view_4",
+        "operationId" : "view_5",
         "parameters" : [
           {
             "name" : "token",
@@ -5718,7 +6044,7 @@
         "tags" : [
           "appointment-public-controller"
         ],
-        "operationId" : "status_1",
+        "operationId" : "status_2",
         "parameters" : [
           {
             "name" : "token",
@@ -5754,7 +6080,7 @@
         "tags" : [
           "appointment-public-controller"
         ],
-        "operationId" : "cancel_2",
+        "operationId" : "cancel_3",
         "parameters" : [
           {
             "name" : "token",
@@ -6347,7 +6673,7 @@
         "tags" : [
           "event-question-controller"
         ],
-        "operationId" : "delete_1",
+        "operationId" : "delete_3",
         "parameters" : [
           {
             "name" : "eventId",
@@ -6380,7 +6706,7 @@
         "tags" : [
           "event-occurrence-controller"
         ],
-        "operationId" : "delete_2",
+        "operationId" : "delete_4",
         "parameters" : [
           {
             "name" : "eventId",
@@ -6845,6 +7171,96 @@
           "occupancyMinutes" : {
             "type" : "integer",
             "format" : "int64"
+          }
+        }
+      },
+      "UpdateOrgUsernameRequest" : {
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string",
+            "maxLength" : 32,
+            "minLength" : 3,
+            "pattern" : "^[a-z0-9-]+$"
+          }
+        }
+      },
+      "TenantInfo" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "contactEmail" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "displayName" : {
+            "type" : "string"
+          },
+          "logoUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "primaryColor" : {
+            "type" : "string"
+          },
+          "legalIdentity" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/TenantLegalIdentityInfo"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          },
+          "username" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "TenantLegalIdentityInfo" : {
+        "type" : "object",
+        "properties" : {
+          "legalName" : {
+            "type" : "string"
+          },
+          "registrationNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "taxIdentifier" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "addressLine" : {
+            "type" : "string"
+          },
+          "city" : {
+            "type" : "string"
+          },
+          "country" : {
+            "type" : "string"
           }
         }
       },
@@ -7334,6 +7750,125 @@
           "costUsdMinor" : {
             "type" : "integer",
             "format" : "int64"
+          }
+        }
+      },
+      "BillingTierOption" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "maxGuests" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "priceMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "PayeeDetails" : {
+        "type" : "object",
+        "properties" : {
+          "payeeName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "contactEmail" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "contactPhone" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "mobileMoneyNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "mobileMoneyOperator" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "bankDetails" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "PlatformBillingSettingsUpdate" : {
+        "type" : "object",
+        "properties" : {
+          "payee" : {
+            "$ref" : "#/components/schemas/PayeeDetails"
+          },
+          "tiers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BillingTierOption"
+            }
+          },
+          "subscriptionPlans" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SubscriptionPlanOption"
+            }
+          }
+        }
+      },
+      "SubscriptionPlanOption" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "maxResources" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "priceMinorPerMonth" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "PlatformBillingSettingsView" : {
+        "type" : "object",
+        "properties" : {
+          "currency" : {
+            "type" : "string"
+          },
+          "payee" : {
+            "$ref" : "#/components/schemas/PayeeDetails"
+          },
+          "tiers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BillingTierOption"
+            }
+          },
+          "subscriptionPlans" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SubscriptionPlanOption"
+            }
+          },
+          "managedInDatabase" : {
+            "type" : "boolean"
           }
         }
       },
@@ -7901,6 +8436,47 @@
           }
         }
       },
+      "AppointmentBookingRequest" : {
+        "type" : "object",
+        "properties" : {
+          "clientName" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "clientPhone" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [
+          "clientName",
+          "clientPhone"
+        ]
+      },
+      "AppointmentBookingView" : {
+        "type" : "object",
+        "properties" : {
+          "bookingToken" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
       "ProspectLeadRequest" : {
         "type" : "object",
         "properties" : {
@@ -8140,6 +8716,17 @@
           "timezone"
         ]
       },
+      "CancelEventRequest" : {
+        "type" : "object",
+        "properties" : {
+          "notifyGuests" : {
+            "type" : [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      },
       "CreateValidatorRequest" : {
         "type" : "object",
         "properties" : {
@@ -8307,35 +8894,6 @@
           },
           "payee" : {
             "$ref" : "#/components/schemas/PayeeDetails"
-          }
-        }
-      },
-      "PayeeDetails" : {
-        "type" : "object",
-        "properties" : {
-          "payeeName" : {
-            "type" : [
-              "string",
-              "null"
-            ]
-          },
-          "mobileMoneyNumber" : {
-            "type" : [
-              "string",
-              "null"
-            ]
-          },
-          "mobileMoneyOperator" : {
-            "type" : [
-              "string",
-              "null"
-            ]
-          },
-          "bankDetails" : {
-            "type" : [
-              "string",
-              "null"
-            ]
           }
         }
       },
@@ -8997,47 +9555,6 @@
           "email"
         ]
       },
-      "AppointmentBookingRequest" : {
-        "type" : "object",
-        "properties" : {
-          "clientName" : {
-            "type" : "string",
-            "maxLength" : 120,
-            "minLength" : 0
-          },
-          "clientPhone" : {
-            "type" : "string",
-            "minLength" : 1
-          },
-          "startsAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          }
-        },
-        "required" : [
-          "clientName",
-          "clientPhone"
-        ]
-      },
-      "AppointmentBookingView" : {
-        "type" : "object",
-        "properties" : {
-          "bookingToken" : {
-            "type" : "string"
-          },
-          "status" : {
-            "type" : "string"
-          },
-          "startsAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "endsAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          }
-        }
-      },
       "SetContentOverrideRequest" : {
         "type" : "object",
         "properties" : {
@@ -9179,79 +9696,6 @@
         "required" : [
           "note"
         ]
-      },
-      "TenantInfo" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "contactEmail" : {
-            "type" : "string"
-          },
-          "status" : {
-            "type" : "string"
-          },
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "displayName" : {
-            "type" : "string"
-          },
-          "logoUrl" : {
-            "type" : [
-              "string",
-              "null"
-            ]
-          },
-          "primaryColor" : {
-            "type" : "string"
-          },
-          "legalIdentity" : {
-            "oneOf" : [
-              {
-                "$ref" : "#/components/schemas/TenantLegalIdentityInfo"
-              },
-              {
-                "type" : "null"
-              }
-            ]
-          }
-        }
-      },
-      "TenantLegalIdentityInfo" : {
-        "type" : "object",
-        "properties" : {
-          "legalName" : {
-            "type" : "string"
-          },
-          "registrationNumber" : {
-            "type" : [
-              "string",
-              "null"
-            ]
-          },
-          "taxIdentifier" : {
-            "type" : [
-              "string",
-              "null"
-            ]
-          },
-          "addressLine" : {
-            "type" : "string"
-          },
-          "city" : {
-            "type" : "string"
-          },
-          "country" : {
-            "type" : "string"
-          }
-        }
       },
       "ProspectLeadView" : {
         "type" : "object",
@@ -9922,6 +10366,9 @@
         "properties" : {
           "token" : {
             "type" : "string"
+          },
+          "shortCode" : {
+            "type" : "string"
           }
         }
       },
@@ -9930,6 +10377,109 @@
         "properties" : {
           "free" : {
             "type" : "boolean"
+          }
+        }
+      },
+      "AppointmentServiceView" : {
+        "type" : "object",
+        "properties" : {
+          "serviceId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "timezone" : {
+            "type" : "string"
+          },
+          "confirmationMode" : {
+            "type" : "string"
+          },
+          "professionals" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "slots" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AppointmentSlotView"
+            }
+          }
+        }
+      },
+      "AppointmentSlotView" : {
+        "type" : "object",
+        "properties" : {
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "AppointmentStatusView" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "string"
+          },
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "clientName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "PublicOrgProfileView" : {
+        "type" : "object",
+        "properties" : {
+          "organizationName" : {
+            "type" : "string"
+          },
+          "logoUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "primaryColor" : {
+            "type" : "string"
+          },
+          "services" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PublicOrgServiceView"
+            }
+          }
+        }
+      },
+      "PublicOrgServiceView" : {
+        "type" : "object",
+        "properties" : {
+          "serviceId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "shortCode" : {
+            "type" : "string"
           }
         }
       },
@@ -10760,71 +11310,6 @@
           }
         }
       },
-      "AppointmentServiceView" : {
-        "type" : "object",
-        "properties" : {
-          "serviceId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "timezone" : {
-            "type" : "string"
-          },
-          "confirmationMode" : {
-            "type" : "string"
-          },
-          "professionals" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "slots" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/AppointmentSlotView"
-            }
-          }
-        }
-      },
-      "AppointmentSlotView" : {
-        "type" : "object",
-        "properties" : {
-          "startsAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "endsAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          }
-        }
-      },
-      "AppointmentStatusView" : {
-        "type" : "object",
-        "properties" : {
-          "status" : {
-            "type" : "string"
-          },
-          "startsAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "endsAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "clientName" : {
-            "type" : [
-              "string",
-              "null"
-            ]
-          }
-        }
-      },
       "TenantDirectoryEntry" : {
         "type" : "object",
         "properties" : {
@@ -10962,22 +11447,6 @@
             "items" : {
               "$ref" : "#/components/schemas/BillingTierOption"
             }
-          }
-        }
-      },
-      "BillingTierOption" : {
-        "type" : "object",
-        "properties" : {
-          "name" : {
-            "type" : "string"
-          },
-          "maxGuests" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "priceMinor" : {
-            "type" : "integer",
-            "format" : "int64"
           }
         }
       },

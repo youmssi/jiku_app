@@ -18,4 +18,6 @@ interface TenantRepository : JpaRepository<Tenant, UUID> {
         query: String,
         pageable: Pageable,
     ): Page<Tenant>
+
+    fun findByUsernameIgnoreCase(username: String): Tenant?
 }

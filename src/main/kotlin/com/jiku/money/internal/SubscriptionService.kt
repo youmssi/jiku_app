@@ -24,6 +24,7 @@ import java.util.UUID
 class SubscriptionService(
     private val subscriptions: SubscriptionRepository,
     private val properties: SubscriptionProperties,
+    private val platformSettings: PlatformBillingSettingsService,
     private val tenantModuleApi: TenantModuleApi,
     private val notifier: SubscriptionNotifier,
 ) {
@@ -42,7 +43,7 @@ class SubscriptionService(
             startedAt = row.startedAt,
             expiresAt = row.expiresAt,
             suspensionAt = graceEnd,
-            plans = properties.plans.map { PlanOption(it.name, it.maxResources, it.priceMinorPerMonth) },
+            plans = platformSettings.plans().map { PlanOption(it.name, it.maxResources, it.priceMinorPerMonth) },
             months = properties.periods.map { MonthOption(it.months, it.factorMilli) },
         )
     }
@@ -61,7 +62,7 @@ class SubscriptionService(
             if (activeResources <= 0) {
                 return
             }
-            val plan = properties.planForResources(activeResources)
+            val plan = platformSettings.planForResources(activeResources)
             subscriptions.save(
                 Subscription(
                     plan = plan.name,
@@ -89,7 +90,7 @@ class SubscriptionService(
         months: Int,
     ) {
         val plan =
-            properties.planByName(planName)
+            platformSettings.planByName(planName)
                 ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown subscription plan: $planName")
         if (properties.period(months) == null) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported prepaid period: $months months")

@@ -112,6 +112,18 @@ interface BillingModuleApi {
     )
 
     /**
+     * Réglages de facturation complets (bénéficiaire + grilles de prix) tels que
+     * le bureau admin les voit et les modifie. Lecture et écriture sont ici,
+     * derrière l'API du module — le back-office ne touche jamais aux tables.
+     */
+    fun adminBillingSettings(): PlatformBillingSettingsView
+
+    fun adminUpdateBillingSettings(
+        update: PlatformBillingSettingsUpdate,
+        updatedBy: String?,
+    ): PlatformBillingSettingsView
+
+    /**
      * Records [amountMinor] already paid toward [eventId] outside the normal
      * payment flow (JIKU-57) — a booking deposit or balance — so it is netted
      * off the price the next tier upgrade actually charges, instead of the
