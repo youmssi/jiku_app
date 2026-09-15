@@ -6,6 +6,8 @@ import com.jiku.money.BillingAllowance
 import com.jiku.money.BillingModuleApi
 import com.jiku.money.BillingTierOption
 import com.jiku.money.BookingAvoirDocument
+import com.jiku.money.PlatformBillingSettingsUpdate
+import com.jiku.money.PlatformBillingSettingsView
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.UUID
@@ -22,6 +24,7 @@ class BillingModuleApiService(
     private val trialService: TrialService,
     private val tierUnlockService: TierUnlockService,
     private val invoiceService: InvoiceService,
+    private val platformSettings: PlatformBillingSettingsService,
     private val properties: BillingProperties,
 ) : BillingModuleApi {
     override fun recordPrepayment(
@@ -72,7 +75,7 @@ class BillingModuleApiService(
         reason: String,
     ): AdminTrialView = trialService.endEarly(trialId, reason)
 
-    override fun tierForGuestCount(guestCount: Long): String = properties.tierForUsage(guestCount)
+    override fun tierForGuestCount(guestCount: Long): String = platformSettings.tierForUsage(guestCount)
 
     override fun priceForTier(
         tierName: String,
@@ -81,14 +84,21 @@ class BillingModuleApiService(
         if (tierName == BillingProperties.FREE_TIER) {
             0
         } else {
-            properties.tiers.firstOrNull { it.name == tierName }?.priceMinor
+            platformSettings.tierByName(tierName)?.priceMinor
                 ?: properties.custom.priceGnf(guestCount)
         }
 
     override fun currency(): String = properties.currency
 
     override fun tierOptions(): List<BillingTierOption> =
-        properties.tiers.map { BillingTierOption(name = it.name, maxGuests = it.maxGuests, priceMinor = it.priceMinor) }
+        platformSettings.tiers().map { BillingTierOption(name = it.name, maxGuests = it.maxGuests, priceMinor = it.priceMinor) }
+
+    override fun adminBillingSettings(): PlatformBillingSettingsView = platformSettings.view()
+
+    override fun adminUpdateBillingSettings(
+        update: PlatformBillingSettingsUpdate,
+        updatedBy: String?,
+    ): PlatformBillingSettingsView = platformSettings.update(update, updatedBy)
 
     override fun unlockTier(
         eventId: UUID,

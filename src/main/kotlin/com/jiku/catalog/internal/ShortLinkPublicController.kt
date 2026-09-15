@@ -13,42 +13,40 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 /**
- * Entrée publique du parcours client rendez-vous (JIKU-87), sans compte. Le lien
- * de service signé porte le tenant et le service ; il est résolu par
- * [AppointmentPublicService] (suspension et type vérifiés), le contexte tenant
- * est lié le temps de la requête, puis le client consulte le service et ses
- * créneaux, réserve, et consulte ou annule sa réservation par son jeton.
+ * Entrée publique par lien court (/r/{code}) : même parcours que
+ * /appointments/{token}, mais l'URL partagée tient sur une ligne. Le code est
+ * résolu en base par [AppointmentPublicService], exactement comme le jeton signé.
  */
 @RestController
-@RequestMapping("/appointments")
-class AppointmentPublicController(
+@RequestMapping("/r")
+class ShortLinkPublicController(
     private val appointments: AppointmentPublicService,
 ) {
-    @GetMapping("/{token}")
+    @GetMapping("/{code}")
     fun view(
-        @PathVariable token: String,
+        @PathVariable code: String,
         @RequestParam(required = false) date: String?,
-    ): AppointmentServiceView = appointments.viewByToken(token, date)
+    ): AppointmentServiceView = appointments.viewByCode(code, date)
 
-    @PostMapping("/{token}/book")
+    @PostMapping("/{code}/book")
     @ResponseStatus(HttpStatus.CREATED)
     fun book(
-        @PathVariable token: String,
+        @PathVariable code: String,
         @Valid @RequestBody request: AppointmentBookingRequest,
-    ): AppointmentBookingView = appointments.bookByToken(token, request)
+    ): AppointmentBookingView = appointments.bookByCode(code, request)
 
-    @GetMapping("/{token}/booking/{bookingToken}")
+    @GetMapping("/{code}/booking/{bookingToken}")
     fun status(
-        @PathVariable token: String,
+        @PathVariable code: String,
         @PathVariable bookingToken: String,
-    ): AppointmentStatusView = appointments.statusByToken(token, bookingToken)
+    ): AppointmentStatusView = appointments.statusByCode(code, bookingToken)
 
-    @DeleteMapping("/{token}/booking/{bookingToken}")
+    @DeleteMapping("/{code}/booking/{bookingToken}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun cancel(
-        @PathVariable token: String,
+        @PathVariable code: String,
         @PathVariable bookingToken: String,
     ) {
-        appointments.cancelByToken(token, bookingToken)
+        appointments.cancelByCode(code, bookingToken)
     }
 }

@@ -36,4 +36,6 @@ data class ServiceRequirementResponse(
 
 data class BookingLinkResponse(
     val token: String,
+    /** Code court stable partagé sur https://…/r/<code> ; le jeton reste pour la rétrocompatibilité. */
+    val shortCode: String,
 )

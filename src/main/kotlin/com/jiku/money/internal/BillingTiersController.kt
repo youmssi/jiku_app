@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController
 @PreAuthorize("hasRole('ORGANIZER')")
 class BillingTiersController(
     private val properties: BillingProperties,
+    private val platformSettings: PlatformBillingSettingsService,
 ) {
     @GetMapping
     fun tiers(): TierCatalog =
@@ -22,7 +23,7 @@ class BillingTiersController(
             currency = properties.currency,
             freeTierGuests = properties.freeTierGuests,
             tiers =
-                properties.tiers.map {
+                platformSettings.tiers().map {
                     TierOption(name = it.name, maxGuests = it.maxGuests, priceMinor = it.priceMinor)
                 },
             custom =

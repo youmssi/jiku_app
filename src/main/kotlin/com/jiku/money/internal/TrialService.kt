@@ -27,6 +27,7 @@ class TrialService(
     private val payments: PaymentRepository,
     private val billingProperties: BillingProperties,
     private val trialProperties: TrialProperties,
+    private val platformSettings: PlatformBillingSettingsService,
     private val tenantModuleApi: TenantModuleApi,
     private val eventPublisher: ApplicationEventPublisher,
     transactionManager: PlatformTransactionManager,
@@ -48,7 +49,7 @@ class TrialService(
         expiresAt: Instant,
     ): AdminTrialView {
         val tier =
-            billingProperties.tiers.firstOrNull { it.name.equals(tierName, ignoreCase = true) }
+            platformSettings.tierByName(tierName)
                 ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown tier: $tierName")
         if (!expiresAt.isAfter(Instant.now())) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "The expiry must be in the future")

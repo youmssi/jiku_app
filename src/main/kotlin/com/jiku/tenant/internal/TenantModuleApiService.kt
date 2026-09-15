@@ -92,6 +92,35 @@ class TenantModuleApiService(
         return requireNotNull(tenant.id)
     }
 
+    @Transactional(readOnly = true)
+    override fun findByUsername(username: String): TenantInfo? = tenants.findByUsernameIgnoreCase(username.trim())?.toTenantInfo()
+
+    @Transactional
+    override fun updateUsername(
+        tenantId: UUID,
+        username: String?,
+    ): TenantInfo {
+        val normalized = username?.trim()?.lowercase()?.takeIf { it.isNotBlank() }
+        if (normalized != null) {
+            val existing = tenants.findByUsernameIgnoreCase(normalized)
+            if (existing != null && existing.id != tenantId) {
+                throw org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.CONFLICT,
+                    "This username is already taken",
+                )
+            }
+        }
+        val tenant =
+            tenants.findById(tenantId).orElseThrow {
+                org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.NOT_FOUND,
+                    "Organization not found",
+                )
+            }
+        tenant.username = normalized
+        return tenants.save(tenant).toTenantInfo()
+    }
+
     private companion object {
         const val MAX_PAGE_SIZE = 100
     }

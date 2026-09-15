@@ -14,6 +14,7 @@ import java.util.UUID
 class TierUnlockService(
     private val usageRecords: UsageRecordRepository,
     private val billingProperties: BillingProperties,
+    private val platformSettings: PlatformBillingSettingsService,
 ) {
     /**
      * Raises the event's unlocked allowance to the paid tier (never lowers it).
@@ -24,7 +25,7 @@ class TierUnlockService(
         eventId: UUID,
         tierName: String,
     ) {
-        val tier = billingProperties.tiers.firstOrNull { it.name == tierName } ?: return
+        val tier = platformSettings.tierByName(tierName) ?: return
         val record =
             usageRecords.findByEventId(eventId)
                 ?: UsageRecord(eventId = eventId, unlockedAllowance = billingProperties.freeTierGuests)
