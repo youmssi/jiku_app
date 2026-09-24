@@ -59,7 +59,8 @@ export async function submitRegistration(page: Page, organizer: Organizer): Prom
  * every organizer journey rather than a test of its own.
  */
 export async function verifyEmail(page: Page, organizer: Organizer): Promise<void> {
-    const message = await waitForMessage(organizer.email, { subjectContains: 'Verify' });
+    // Emails follow the organizer's language, so match the subject in either one.
+    const message = await waitForMessage(organizer.email, { subject: /confirm/i });
     const link = extractLink(message, '/verify-email');
     await page.goto(link);
     // Waiting for the confirmation is load-bearing, not cosmetic: the page
