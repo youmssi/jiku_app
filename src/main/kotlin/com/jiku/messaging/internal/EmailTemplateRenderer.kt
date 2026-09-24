@@ -123,12 +123,15 @@ class EmailTemplateRenderer(
         notice: ManualPaymentNotice,
         language: String,
     ): RenderedEmail {
+        val note = notice.note?.takeIf { it.isNotBlank() }
         val reasonBlock =
-            notice.note?.takeIf { it.isNotBlank() }?.let {
+            if (note == null) {
+                ""
+            } else {
                 """<p style="margin:0 0 16px;padding:14px 16px;border-radius:12px;""" +
                     """background:#f6f3ee;color:#4a443c;font-size:14px;">""" +
-                    """<strong>${escapeHtml(catalog.text(language, "label.reason"))}</strong> · ${escapeHtml(it)}</p>"""
-            }.orEmpty()
+                    """<strong>${escapeHtml(catalog.text(language, "label.reason"))}</strong> · ${escapeHtml(note)}</p>"""
+            }
         return renderPlatform(
             "manual-payment-rejected",
             language,

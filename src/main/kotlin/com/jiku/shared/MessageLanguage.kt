@@ -17,11 +17,11 @@ object MessageLanguage {
     val SUPPORTED: Set<String> = setOf(FRENCH, ENGLISH)
 
     /** ISO 3166-1 alpha-2 countries where French is an official or working language of business. */
-    private val FRENCH_SPEAKING =
-        setOf(
-            "BE", "BF", "BI", "BJ", "CA", "CD", "CF", "CG", "CH", "CI", "CM", "DJ", "DZ", "FR", "GA", "GN", "GQ",
-            "HT", "KM", "LU", "MA", "MC", "MG", "ML", "MR", "NE", "RW", "SC", "SN", "TD", "TG", "TN", "VU",
-        )
+    private val FRENCH_SPEAKING: Set<String> =
+        (
+            "BE BF BI BJ CA CD CF CG CH CI CM DJ DZ FR GA GN GQ " +
+                "HT KM LU MA MC MG ML MR NE RW SC SN TD TG TN VU"
+        ).split(' ').toSet()
 
     fun forCountry(country: String?): String = if (country?.uppercase() in FRENCH_SPEAKING) FRENCH else ENGLISH
 
