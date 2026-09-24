@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  */
 @ConfigurationProperties(prefix = "billing.payment")
 data class PaymentProperties(
-    /** Selects the active provider adapter; "sandbox" until a real one is wired in. */
+    /** Name of the adapter that starts new payments, resolved by [PaymentProviderSelector]. */
     val provider: String = "sandbox",
     /** Shared secret used to verify the HMAC signature on provider callbacks. */
     val webhookSecret: String = "local-development-payment-webhook-secret",

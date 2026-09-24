@@ -3255,6 +3255,47 @@
         }
       }
     },
+    "/api/v1/billing/payments/callback/{provider}" : {
+      "post" : {
+        "tags" : [
+          "payment-callback-controller"
+        ],
+        "operationId" : "providerCallback",
+        "parameters" : [
+          {
+            "name" : "provider",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "X-Signature",
+            "in" : "header",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
     "/api/v1/billing/invoices/{invoiceId}/credit-note" : {
       "post" : {
         "tags" : [
@@ -3718,10 +3759,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/AdminTrialView"
-                  }
+                  "$ref" : "#/components/schemas/AdminTrialPage"
                 }
               }
             }
@@ -5143,6 +5181,36 @@
         }
       }
     },
+    "/api/v1/line-codes/{code}" : {
+      "get" : {
+        "tags" : [
+          "line-code-controller"
+        ],
+        "operationId" : "resolve",
+        "parameters" : [
+          {
+            "name" : "code",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineCodeResolution"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/health" : {
       "get" : {
         "tags" : [
@@ -6129,6 +6197,26 @@
         }
       }
     },
+    "/api/v1/admin/trials/stats" : {
+      "get" : {
+        "tags" : [
+          "admin-trial-controller"
+        ],
+        "operationId" : "stats_2",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminTrialStats"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/tenants" : {
       "get" : {
         "tags" : [
@@ -6172,6 +6260,48 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/TenantDirectoryPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/tenants/{id}/events" : {
+      "get" : {
+        "tags" : [
+          "admin-tenant-controller"
+        ],
+        "operationId" : "events",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "query",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/EventSummary"
+                  }
                 }
               }
             }
@@ -7214,6 +7344,12 @@
               "null"
             ]
           },
+          "bannerUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
           "primaryColor" : {
             "type" : "string"
           },
@@ -7705,6 +7841,14 @@
             "maxLength" : 2048,
             "minLength" : 0
           },
+          "bannerUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 2048,
+            "minLength" : 0
+          },
           "primaryColor" : {
             "type" : [
               "string",
@@ -7721,6 +7865,12 @@
             "type" : "string"
           },
           "logoUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "bannerUrl" : {
             "type" : [
               "string",
               "null"
@@ -7981,6 +8131,12 @@
           },
           "token" : {
             "type" : "string"
+          },
+          "code" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           },
           "createdAt" : {
             "type" : "string",
@@ -9643,9 +9799,21 @@
           "tenantId" : {
             "type" : "string"
           },
+          "tenantName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
           "eventId" : {
             "type" : "string",
             "format" : "uuid"
+          },
+          "eventName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           },
           "tier" : {
             "type" : "string"
@@ -10308,6 +10476,12 @@
           "revoked" : {
             "type" : "boolean"
           },
+          "code" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
           "createdAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -10457,6 +10631,12 @@
               "null"
             ]
           },
+          "bannerUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
           "primaryColor" : {
             "type" : "string"
           },
@@ -10479,6 +10659,14 @@
             "type" : "string"
           },
           "shortCode" : {
+            "type" : "string"
+          }
+        }
+      },
+      "LineCodeResolution" : {
+        "type" : "object",
+        "properties" : {
+          "token" : {
             "type" : "string"
           }
         }
@@ -11310,6 +11498,53 @@
           }
         }
       },
+      "AdminTrialPage" : {
+        "type" : "object",
+        "properties" : {
+          "entries" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AdminTrialView"
+            }
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "AdminTrialStats" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "expiringWithin7Days" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "convertedThisMonth" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "conversionRatePercent" : {
+            "type" : [
+              "number",
+              "null"
+            ],
+            "format" : "double"
+          }
+        }
+      },
       "TenantDirectoryEntry" : {
         "type" : "object",
         "properties" : {
@@ -11356,6 +11591,28 @@
           "size" : {
             "type" : "integer",
             "format" : "int32"
+          }
+        }
+      },
+      "EventSummary" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "startDateTime" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "status" : {
+            "type" : "string"
           }
         }
       },

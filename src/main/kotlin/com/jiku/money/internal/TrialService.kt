@@ -147,7 +147,13 @@ class TrialService(
     /** Platform-wide trial funnel snapshot (JIKU-99) for the back-office overview strip. */
     fun adminStats(): AdminTrialStats {
         val now = Instant.now()
-        val monthStart = now.atZone(ZoneOffset.UTC).toLocalDate().withDayOfMonth(1).atStartOfDay(ZoneOffset.UTC).toInstant()
+        val monthStart =
+            now
+                .atZone(ZoneOffset.UTC)
+                .toLocalDate()
+                .withDayOfMonth(1)
+                .atStartOfDay(ZoneOffset.UTC)
+                .toInstant()
         val concluded = trials.countByConcludedStatus().associate { it[0].toString() to (it[1] as Number).toLong() }
         val converted = concluded["CONVERTED"] ?: 0
         val concludedTotal = converted + (concluded["EXPIRED"] ?: 0) + (concluded["ENDED"] ?: 0)
