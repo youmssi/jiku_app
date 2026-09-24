@@ -442,6 +442,9 @@ notification:
     # Sender address for outbound mail. Set per environment; in production the
     # domain must be verified with the configured transport (jiku.mail.transport).
     from: ${MAIL_FROM:no-reply@jiku.app}
+    # Language of the emails the platform team itself receives (activation
+    # requests). Organizers and guests get their organization's language.
+    platform-language: ${NOTIFICATION_PLATFORM_LANGUAGE:fr}
   send:
     # Delivery attempts before a notification is recorded as permanently failed.
     max-attempts: ${NOTIFICATION_MAX_ATTEMPTS:3}

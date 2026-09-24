@@ -7,8 +7,6 @@ import com.jiku.shared.ReminderChannel
 import com.jiku.shared.ReminderDue
 import org.springframework.stereotype.Service
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import java.util.UUID
 
 /** The outcome of attempting to deliver a notification. */
@@ -37,6 +35,7 @@ class NotificationService(
     private val conversationCounter: WhatsAppConversationCounter,
     private val costTracker: WhatsAppCostTracker,
     private val smsSender: SmsSender,
+    private val catalog: MessageCatalog,
 ) {
     fun deliverInvitation(event: GuestInvitedEvent): DeliveryOutcome =
         deliverWithRetry(sendAction(event)) { status, attempt, error ->
@@ -65,7 +64,7 @@ class NotificationService(
             called.ticketId,
             called.clientPhone,
             called.channel,
-            whatsAppRenderer.renderClientCalled(called.clientName.orEmpty(), called.counter),
+            whatsAppRenderer.renderClientCalled(called.clientName.orEmpty(), called.counter, catalog.language(called.tenantId)),
         )
 
     /**
@@ -99,15 +98,18 @@ class NotificationService(
             record(referenceId, channel.name, phone, status, attempt, error)
         }
 
-    private fun reminderText(due: ReminderDue): String =
-        whatsAppRenderer.renderAppointmentReminder(
+    private fun reminderText(due: ReminderDue): String {
+        val language = catalog.language(due.tenantId)
+        return whatsAppRenderer.renderAppointmentReminder(
             WhatsAppReminder(
                 recipientPhone = due.clientPhone,
                 recipientName = due.clientName.orEmpty(),
-                appointmentWhen = due.startsAt.atZone(ZoneId.of(due.serviceTimezone)).format(REMINDER_WHEN_FORMAT),
+                appointmentWhen = catalog.formatDate(language, "date.reminder", due.startsAt, ZoneId.of(due.serviceTimezone)),
                 professionalName = due.professionalName,
             ),
+            language,
         )
+    }
 
     /** One WhatsApp send with its guardrails: content class, conversation budget, cost record. */
     private fun whatsApp(
@@ -174,7 +176,7 @@ class NotificationService(
     private fun sendAction(event: GuestInvitedEvent): () -> Unit =
         when (event.channel) {
             GuestInvitedEvent.CHANNEL_EMAIL -> {
-                val html =
+                val rendered =
                     emailRenderer.renderInvitation(
                         InvitationEmail(
                             recipientEmail = event.recipient,
@@ -187,13 +189,14 @@ class NotificationService(
                             logoUrl = event.logoUrl,
                             invitationUrl = event.invitationUrl,
                         ),
+                        event.language,
                     )
                 val message =
                     EmailMessage(
                         to = event.recipient,
                         toName = event.recipientName,
-                        subject = "You're invited to ${event.eventName}",
-                        htmlBody = html,
+                        subject = rendered.subject,
+                        htmlBody = rendered.html,
                     )
                 email(message)
             }
@@ -209,6 +212,7 @@ class NotificationService(
                             organizerName = event.organizerName,
                             invitationUrl = event.invitationUrl,
                         ),
+                        event.language,
                     )
                 whatsApp(event.recipient, text, event.invitationId, event.eventId)
             }
@@ -219,7 +223,7 @@ class NotificationService(
     private fun cancellationSendAction(notice: EventCancellationNotice): () -> Unit =
         when (notice.channel) {
             GuestInvitedEvent.CHANNEL_EMAIL -> {
-                val html =
+                val rendered =
                     emailRenderer.renderCancellation(
                         CancellationEmail(
                             recipientEmail = notice.recipient,
@@ -228,15 +232,17 @@ class NotificationService(
                             eventWhen = notice.eventWhen,
                             eventLocation = notice.eventLocation,
                             organizerName = notice.organizerName,
+                            primaryColor = notice.primaryColor,
                             logoUrl = notice.logoUrl,
                         ),
+                        notice.language,
                     )
                 val message =
                     EmailMessage(
                         to = notice.recipient,
                         toName = notice.recipientName,
-                        subject = "${notice.eventName} has been cancelled",
-                        htmlBody = html,
+                        subject = rendered.subject,
+                        htmlBody = rendered.html,
                     )
                 email(message)
             }
@@ -251,6 +257,7 @@ class NotificationService(
                             eventWhen = notice.eventWhen,
                             organizerName = notice.organizerName,
                         ),
+                        notice.language,
                     )
                 whatsApp(notice.recipient, text, notice.invitationId, notice.eventId)
             }
@@ -276,10 +283,5 @@ class NotificationService(
                 error = error?.take(500),
             ),
         )
-    }
-
-    companion object {
-        private val REMINDER_WHEN_FORMAT =
-            DateTimeFormatter.ofPattern("EEEE, MMMM d 'at' HH:mm", Locale.ENGLISH)
     }
 }

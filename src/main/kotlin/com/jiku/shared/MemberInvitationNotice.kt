@@ -11,4 +11,6 @@ data class MemberInvitationNotice(
     val inviterEmail: String,
     val role: String,
     val actionUrl: String,
+    /** The inviting organization's language. */
+    val language: String = MessageLanguage.FRENCH,
 )

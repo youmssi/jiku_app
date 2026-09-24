@@ -21,6 +21,6 @@ class OpsAlertListener(
     fun onOpsAlert(alert: OpsAlert) {
         log.warn("OPS ALERT: {} — {}", alert.subject, alert.message)
         val to = salesProperties.email.takeIf { it.isNotBlank() } ?: return
-        mailer.sendOperationalHtml("ops-alert", to, "Operations", alert.subject, "<p>${escapeHtml(alert.message)}</p>")
+        mailer.send("ops-alert", to, "Operations", RenderedEmail(alert.subject, "<p>${escapeHtml(alert.message)}</p>"))
     }
 }

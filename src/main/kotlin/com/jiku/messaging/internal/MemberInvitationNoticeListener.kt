@@ -15,12 +15,6 @@ class MemberInvitationNoticeListener(
 ) {
     @EventListener
     fun onMemberInvitationNotice(notice: MemberInvitationNotice) {
-        mailer.sendOperationalHtml(
-            label = "member-invitation",
-            to = notice.email,
-            toName = notice.email,
-            subject = "You've been invited to join ${notice.organizationName} on Jikū",
-            htmlBody = templateRenderer.renderMemberInvitation(notice),
-        )
+        mailer.send("member-invitation", notice.email, notice.email, templateRenderer.renderMemberInvitation(notice))
     }
 }

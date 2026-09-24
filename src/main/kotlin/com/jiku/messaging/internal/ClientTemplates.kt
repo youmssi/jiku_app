@@ -82,6 +82,7 @@ object ClientTemplates {
                         Variable("eventName", "Event / offer name", "Coupe + soin", required = true),
                         Variable("eventWhen", "Date and time", "Tuesday 3 Nov at 15:00"),
                         Variable("eventLocation", "Location", "Avenue de la République"),
+                        Variable("primaryColor", "Brand color", "#1E293B"),
                         Variable("eventDetails", "Formatted date/location block (advanced)", ""),
                         Variable("logoBlock", "Logo image (advanced)", ""),
                     ),

@@ -26,6 +26,8 @@ data class GuestInvitedEvent(
     val primaryColor: String,
     val logoUrl: String?,
     val invitationUrl: String,
+    /** The organizer's language, which the invitation is written in. */
+    val language: String = MessageLanguage.FRENCH,
 ) {
     companion object {
         const val CHANNEL_EMAIL = "EMAIL"

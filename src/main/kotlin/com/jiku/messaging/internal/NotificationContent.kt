@@ -38,6 +38,7 @@ data class CancellationEmail(
     val eventWhen: String?,
     val eventLocation: String?,
     val organizerName: String,
+    val primaryColor: String,
     val logoUrl: String?,
 )
 

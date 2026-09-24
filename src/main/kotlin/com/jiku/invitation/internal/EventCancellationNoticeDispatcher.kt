@@ -5,14 +5,12 @@ import com.jiku.catalog.InvitationChannel
 import com.jiku.shared.EventCancellationNotice
 import com.jiku.shared.EventCancelledEvent
 import com.jiku.shared.GuestInvitedEvent
+import com.jiku.shared.MessageLanguage
 import com.jiku.tenant.TenantModuleApi
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 import org.springframework.transaction.event.TransactionalEventListener
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 /**
@@ -43,6 +41,7 @@ class EventCancellationNoticeDispatcher(
         }
         val event = events.findEvent(cancelled.eventId) ?: return
         val tenant = tenants.findTenant(UUID.fromString(cancelled.tenantId))
+        val language = MessageLanguage.forCountry(tenant?.country)
         val guestsById = guests.findByEventId(cancelled.eventId).associateBy { requireNotNull(it.id) }
 
         invitations
@@ -67,23 +66,18 @@ class EventCancellationNoticeDispatcher(
                         recipient = recipient,
                         recipientName = "${guest.firstName} ${guest.lastName}",
                         eventName = event.name,
-                        eventWhen = event.startDateTime?.let { formatWhen(it, event.timezone) },
+                        eventWhen = event.startDateTime?.let { MessageLanguage.formatEventStart(it, event.timezone, language) },
                         eventLocation = event.location,
                         organizerName = tenant?.displayName ?: "Your organizer",
                         primaryColor = tenant?.primaryColor ?: DEFAULT_COLOR,
                         logoUrl = tenant?.logoUrl,
+                        language = language,
                     ),
                 )
             }
     }
 
-    private fun formatWhen(
-        instant: Instant,
-        timezone: String,
-    ): String = WHEN_FORMAT.withZone(ZoneId.of(timezone)).format(instant)
-
     private companion object {
         const val DEFAULT_COLOR = "#1E293B"
-        val WHEN_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE, d MMM yyyy 'at' HH:mm")
     }
 }
