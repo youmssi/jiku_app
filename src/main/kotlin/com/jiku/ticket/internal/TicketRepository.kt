@@ -1,5 +1,6 @@
 package com.jiku.ticket.internal
 
+import com.jiku.ticket.TicketPaymentMethod
 import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
@@ -85,7 +86,8 @@ interface TicketRepository : JpaRepository<Ticket, UUID> {
     @Query(
         "UPDATE Ticket t SET t.status = com.jiku.ticket.internal.TicketStatus.CHECKED_IN, " +
             "t.checkedInAt = :at, t.checkedInBy = :by " +
-            "WHERE t.id = :id AND t.status = com.jiku.ticket.internal.TicketStatus.ISSUED",
+            "WHERE t.id = :id AND t.status = com.jiku.ticket.internal.TicketStatus.ISSUED " +
+            "AND t.paymentStatus IN (com.jiku.ticket.TicketPaymentStatus.NOT_REQUIRED, com.jiku.ticket.TicketPaymentStatus.PAID)",
     )
     fun checkIn(
         @Param("id") id: UUID,
@@ -173,7 +175,10 @@ interface TicketRepository : JpaRepository<Ticket, UUID> {
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
-        "UPDATE Ticket t SET t.status = com.jiku.ticket.internal.TicketStatus.DONE " +
+        "UPDATE Ticket t SET t.status = com.jiku.ticket.internal.TicketStatus.DONE, " +
+            // A payment deferred to the end of the service falls due now.
+            "t.paymentStatus = CASE WHEN t.paymentStatus = com.jiku.ticket.TicketPaymentStatus.DUE_AFTER_SERVICE " +
+            "THEN com.jiku.ticket.TicketPaymentStatus.DUE ELSE t.paymentStatus END " +
             "WHERE t.id = :id AND t.serviceId = :serviceId AND t.status = com.jiku.ticket.internal.TicketStatus.IN_SERVICE",
     )
     fun finishLine(
@@ -189,6 +194,23 @@ interface TicketRepository : JpaRepository<Ticket, UUID> {
     fun noShowLine(
         @Param("id") id: UUID,
         @Param("serviceId") serviceId: UUID,
+    ): Int
+
+    /**
+     * Records the payment of a ticket that owes one (JIKU-110). The guard on the
+     * payment status makes it atomic: a second confirmation updates no row.
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(
+        "UPDATE Ticket t SET t.paymentStatus = com.jiku.ticket.TicketPaymentStatus.PAID, " +
+            "t.paidAt = :at, t.paidBy = :by, t.paidWith = :method " +
+            "WHERE t.id = :id AND t.paymentStatus IN (com.jiku.ticket.TicketPaymentStatus.DUE, com.jiku.ticket.TicketPaymentStatus.DUE_AFTER_SERVICE)",
+    )
+    fun markPaid(
+        @Param("id") id: UUID,
+        @Param("at") at: Instant,
+        @Param("by") by: String,
+        @Param("method") method: TicketPaymentMethod,
     ): Int
 }
 

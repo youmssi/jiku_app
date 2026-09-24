@@ -3,7 +3,11 @@ package com.jiku.catalog.internal
 import com.jiku.shared.TenantContext
 import com.jiku.shared.WalkInArrived
 import com.jiku.ticket.LineActionResult
+import com.jiku.ticket.LineOutcome
 import com.jiku.ticket.LineTicket
+import com.jiku.ticket.TicketInfo
+import com.jiku.ticket.TicketPaymentMethod
+import com.jiku.ticket.TicketPaymentOutcome
 import com.jiku.ticket.TicketingModuleApi
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.http.HttpStatus
@@ -88,6 +92,26 @@ class DayLineConsoleService(
         ticketCode: String,
     ): LineActionResult = ticketing.finishByCode(serviceId, ticketCode)
 
+    /**
+     * Records that the client paid the organization (JIKU-110), attributed to
+     * [paidBy]. Only a ticket of this service's line can be marked here.
+     */
+    @Transactional
+    fun markPaid(
+        serviceId: UUID,
+        ticketCode: String,
+        method: TicketPaymentMethod,
+        paidBy: String,
+    ): TicketInfo {
+        ticketing.findByCode(ticketCode)?.takeIf { it.serviceId == serviceId }
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "No line entry with this code on this service")
+        val result = ticketing.markPaidByCode(ticketCode, method, paidBy)
+        if (result.outcome != TicketPaymentOutcome.PAID) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Nothing is owed on this ticket, or it is already paid")
+        }
+        return requireNotNull(result.ticket)
+    }
+
     /** Absent après appel. */
     @Transactional
     fun noShow(
@@ -127,6 +151,7 @@ class DayLineConsoleService(
                 dayStart = start,
                 dayEnd = end,
                 rankDay = day,
+                charge = services.clientCharge(serviceId),
             ),
         )
         return view(serviceId, day)
@@ -151,3 +176,21 @@ class DayLineConsoleService(
         day: LocalDate,
     ): Pair<Instant, Instant> = day.atStartOfDay(zone).toInstant() to day.plusDays(1).atStartOfDay(zone).toInstant()
 }
+
+/**
+ * Turns a line transition's outcome into the reply of both counters, the
+ * organizer's and the staff link's: the entry itself, or a clear refusal.
+ */
+internal fun LineActionResult.orThrow(): LineActionResult =
+    when (outcome) {
+        LineOutcome.OK -> this
+        LineOutcome.NOT_FOUND ->
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "No line entry with this code on this service")
+        LineOutcome.WRONG_STATE ->
+            throw ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "This entry is no longer in the expected state — it may have been handled by another desk",
+            )
+        LineOutcome.PAYMENT_DUE ->
+            throw ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, "The client has not paid yet; record the payment first")
+    }

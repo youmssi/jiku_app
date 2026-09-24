@@ -50,7 +50,8 @@ class RsvpService(
             }
             guest.rsvpStatus = RsvpStatus.CONFIRMED
             guests.save(guest)
-            ticketing.issueTicket(eventId, guestId, guest.ticketTypeId)
+            val charge = guest.ticketTypeId?.let { typeId -> events.ticketTypes(eventId).firstOrNull { it.id == typeId } }?.clientCharge()
+            ticketing.issueTicket(eventId, guestId, guest.ticketTypeId, charge)
         }
         return buildView(guest)
     }
@@ -151,8 +152,7 @@ class RsvpService(
         guests.save(recipient)
         val recipientId = requireNotNull(recipient.id)
 
-        ticketing.cancelByGuest(guestId)
-        ticketing.issueTicket(eventId, recipientId, recipient.ticketTypeId)
+        ticketing.transferTicket(guestId, recipientId)
 
         sender.rsvpStatus = RsvpStatus.TRANSFERRED
         sender.transferredToGuestId = recipientId
@@ -232,6 +232,15 @@ class RsvpService(
                         RsvpQuestion(questionId = q.id, prompt = q.prompt, required = q.required)
                     }
                 } ?: emptyList(),
+            payment =
+                ticket?.amountDueMinor?.let { amount ->
+                    RsvpPayment(
+                        status = ticket.paymentStatus,
+                        amountMinor = amount,
+                        currency = requireNotNull(ticket.amountDueCurrency),
+                        methods = tenant?.paymentMethods,
+                    )
+                },
         )
     }
 

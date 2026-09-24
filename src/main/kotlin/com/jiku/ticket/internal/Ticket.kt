@@ -1,6 +1,9 @@
 package com.jiku.ticket.internal
 
 import com.jiku.shared.BaseTenantEntity
+import com.jiku.shared.ClientCharge
+import com.jiku.ticket.TicketPaymentMethod
+import com.jiku.ticket.TicketPaymentStatus
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -100,4 +103,35 @@ class Ticket(
 
     @Column(name = "client_phone", length = 32, updatable = false)
     var clientPhone: String? = null
+
+    /** Whether the holder owes the organization for this ticket (JIKU-110). */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_status", nullable = false, length = 24)
+    var paymentStatus: TicketPaymentStatus = TicketPaymentStatus.NOT_REQUIRED
+
+    /** Amount owed, fixed at issue: a later price change never rewrites it. Null when free. */
+    @Column(name = "amount_due_minor", updatable = false)
+    var amountDueMinor: Long? = null
+
+    @Column(name = "amount_due_currency", length = 3, updatable = false)
+    var amountDueCurrency: String? = null
+
+    @Column(name = "paid_at")
+    var paidAt: Instant? = null
+
+    /** The operator who confirmed the payment. */
+    @Column(name = "paid_by")
+    var paidBy: String? = null
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "paid_with", length = 16)
+    var paidWith: TicketPaymentMethod? = null
+
+    /** Records what the holder owes; a free ticket (null [charge]) owes nothing. */
+    fun charge(charge: ClientCharge?) {
+        if (charge == null) return
+        amountDueMinor = charge.amountMinor
+        amountDueCurrency = charge.currency
+        paymentStatus = if (charge.dueAfterService) TicketPaymentStatus.DUE_AFTER_SERVICE else TicketPaymentStatus.DUE
+    }
 }

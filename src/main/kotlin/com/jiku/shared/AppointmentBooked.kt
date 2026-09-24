@@ -17,4 +17,6 @@ data class AppointmentBooked(
     val clientPhone: String,
     /** Nom du professionnel à inscrire sur le billet (JIKU-87). */
     val professionalName: String?,
+    /** What the client owes for the service; null when it is free. */
+    val charge: ClientCharge? = null,
 )

@@ -1,5 +1,6 @@
 package com.jiku.ticket.internal
 
+import com.jiku.shared.ClientCharge
 import com.jiku.ticket.AttendanceStats
 import com.jiku.ticket.CheckInOutcome
 import com.jiku.ticket.CheckInResult
@@ -7,6 +8,10 @@ import com.jiku.ticket.LineActionResult
 import com.jiku.ticket.LineOutcome
 import com.jiku.ticket.LineTicket
 import com.jiku.ticket.TicketInfo
+import com.jiku.ticket.TicketPaymentMethod
+import com.jiku.ticket.TicketPaymentOutcome
+import com.jiku.ticket.TicketPaymentResult
+import com.jiku.ticket.TicketPaymentStatus
 import com.jiku.ticket.TicketingModuleApi
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
@@ -30,6 +35,7 @@ class TicketingService(
         eventId: UUID,
         guestId: UUID,
         ticketTypeId: UUID?,
+        charge: ClientCharge?,
     ): TicketInfo {
         val existing = tickets.findByGuestId(guestId)
         if (existing != null) {
@@ -41,7 +47,10 @@ class TicketingService(
         }
         val ticket =
             Ticket(eventId = eventId, guestId = guestId, ticketCode = codeGenerator.generate())
-                .apply { this.ticketTypeId = ticketTypeId }
+                .apply {
+                    this.ticketTypeId = ticketTypeId
+                    charge(charge)
+                }
         tickets.save(ticket)
         return ticket.toInfo()
     }
@@ -55,6 +64,27 @@ class TicketingService(
     }
 
     @Transactional
+    override fun transferTicket(
+        fromGuestId: UUID,
+        toGuestId: UUID,
+    ): TicketInfo {
+        val sender = requireNotNull(tickets.findByGuestId(fromGuestId)) { "Guest $fromGuestId has no ticket to transfer" }
+        sender.status = TicketStatus.CANCELLED
+        tickets.save(sender)
+        val ticket =
+            Ticket(eventId = sender.eventId, guestId = toGuestId, ticketCode = codeGenerator.generate()).apply {
+                ticketTypeId = sender.ticketTypeId
+                paymentStatus = sender.paymentStatus
+                amountDueMinor = sender.amountDueMinor
+                amountDueCurrency = sender.amountDueCurrency
+                paidAt = sender.paidAt
+                paidBy = sender.paidBy
+                paidWith = sender.paidWith
+            }
+        return tickets.save(ticket).toInfo()
+    }
+
+    @Transactional
     override fun issueAppointment(
         guestId: UUID,
         startsAt: Instant,
@@ -63,6 +93,7 @@ class TicketingService(
         professionalName: String?,
         clientName: String,
         clientPhone: String,
+        charge: ClientCharge?,
     ): String {
         val ticket =
             Ticket(eventId = null, guestId = guestId, ticketCode = codeGenerator.generate()).apply {
@@ -73,6 +104,7 @@ class TicketingService(
                 this.professionalName = professionalName
                 this.clientName = clientName
                 this.clientPhone = clientPhone
+                charge(charge)
             }
         tickets.save(ticket)
         return ticket.ticketCode
@@ -114,8 +146,8 @@ class TicketingService(
             )
         }
         val current = tickets.findById(ticketId).get()
-        if (current.status == TicketStatus.CANCELLED) {
-            return CheckInResult(CheckInOutcome.CANCELLED, current.toInfo())
+        if (current.status != TicketStatus.CHECKED_IN) {
+            return CheckInResult(current.refusal(), current.toInfo())
         }
         // Already checked in: the earliest scan owns the record (first-timestamp-wins).
         if (tickets.reassignEarlierCheckIn(ticketId, scannedAt, checkedInBy) == 1) {
@@ -230,7 +262,13 @@ class TicketingService(
     override fun presentByCode(
         serviceId: UUID,
         ticketCode: String,
-    ): LineActionResult = lineStep(serviceId, ticketCode) { id -> tickets.presentLine(id, serviceId) }
+    ): LineActionResult {
+        val ticket = tickets.findByTicketCode(ticketCode)
+        if (ticket != null && ticket.belongsToLineOf(serviceId) && ticket.paymentStatus == TicketPaymentStatus.DUE) {
+            return LineActionResult(LineOutcome.PAYMENT_DUE, ticket.toLine())
+        }
+        return lineStep(serviceId, ticketCode) { id -> tickets.presentLine(id, serviceId) }
+    }
 
     @Transactional
     override fun finishByCode(
@@ -255,6 +293,7 @@ class TicketingService(
         dayStart: Instant,
         dayEnd: Instant,
         rankDay: LocalDate,
+        charge: ClientCharge?,
     ): LineTicket {
         require(arrivedAt >= dayStart && arrivedAt < dayEnd) { "Walk-in arrival falls outside its service day" }
         val rank = allocateDayRank(serviceId, rankDay)
@@ -268,9 +307,27 @@ class TicketingService(
                 status = TicketStatus.WAITING
                 this.arrivedAt = arrivedAt
                 dayRank = rank
+                charge(charge)
             }
         tickets.save(ticket)
         return ticket.toLine()
+    }
+
+    @Transactional
+    override fun markPaidByCode(
+        ticketCode: String,
+        method: TicketPaymentMethod,
+        paidBy: String,
+    ): TicketPaymentResult {
+        val ticket = tickets.findByTicketCode(ticketCode) ?: return TicketPaymentResult(TicketPaymentOutcome.NOT_FOUND)
+        val ticketId = requireNotNull(ticket.id)
+        val outcome =
+            if (tickets.markPaid(ticketId, Instant.now(), paidBy, method) == 1) {
+                TicketPaymentOutcome.PAID
+            } else {
+                TicketPaymentOutcome.NOT_DUE
+            }
+        return TicketPaymentResult(outcome, tickets.findById(ticketId).get().toInfo())
     }
 
     /**
@@ -344,12 +401,7 @@ class TicketingService(
         }
         // The conditional update matched no row: re-read to report why precisely.
         val current = tickets.findById(ticketId).get()
-        val outcome =
-            when (current.status) {
-                TicketStatus.CHECKED_IN -> CheckInOutcome.ALREADY_CHECKED_IN
-                TicketStatus.CANCELLED -> CheckInOutcome.CANCELLED
-                else -> CheckInOutcome.NOT_FOUND
-            }
+        val outcome = current.refusal()
         return CheckInResult(
             outcome = outcome,
             ticket = current.toInfo(),
@@ -377,6 +429,9 @@ private fun Ticket.toLine(): LineTicket =
         endsAt = endsAt,
         arrivedAt = arrivedAt,
         dayRank = dayRank,
+        paymentStatus = paymentStatus,
+        amountDueMinor = amountDueMinor,
+        amountDueCurrency = amountDueCurrency,
     )
 
 private fun Ticket.toCandidate(): LineCandidate =
@@ -391,7 +446,8 @@ private fun Ticket.toCandidate(): LineCandidate =
 private fun Ticket.toInfo(): TicketInfo =
     TicketInfo(
         id = requireNotNull(id),
-        eventId = requireNotNull(eventId),
+        eventId = eventId,
+        serviceId = serviceId,
         guestId = guestId,
         ticketCode = ticketCode,
         status = status.name,
@@ -399,4 +455,16 @@ private fun Ticket.toInfo(): TicketInfo =
         checkedInAt = checkedInAt,
         checkedInBy = checkedInBy,
         ticketTypeId = ticketTypeId,
+        paymentStatus = paymentStatus,
+        amountDueMinor = amountDueMinor,
+        amountDueCurrency = amountDueCurrency,
     )
+
+/** Why a check-in that updated no row was refused. */
+private fun Ticket.refusal(): CheckInOutcome =
+    when {
+        status == TicketStatus.CHECKED_IN -> CheckInOutcome.ALREADY_CHECKED_IN
+        status == TicketStatus.CANCELLED -> CheckInOutcome.CANCELLED
+        paymentStatus == TicketPaymentStatus.DUE -> CheckInOutcome.PAYMENT_DUE
+        else -> CheckInOutcome.NOT_FOUND
+    }

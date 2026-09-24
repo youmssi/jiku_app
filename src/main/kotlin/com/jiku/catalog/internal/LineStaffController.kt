@@ -3,7 +3,8 @@ package com.jiku.catalog.internal
 import com.jiku.shared.TenantAccessGate
 import com.jiku.shared.TenantContext
 import com.jiku.ticket.LineActionResult
-import com.jiku.ticket.LineOutcome
+import com.jiku.ticket.MarkPaidRequest
+import com.jiku.ticket.TicketInfo
 import io.jsonwebtoken.Claims
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -78,47 +79,48 @@ class LineStaffController(
     fun arrive(
         @PathVariable token: String,
         @PathVariable ticketCode: String,
-    ): LineActionResult = withStaff(token) { serviceId -> reply(console.arrive(serviceId, ticketCode)) }
+    ): LineActionResult = withStaff(token) { serviceId -> console.arrive(serviceId, ticketCode).orThrow() }
 
     @PostMapping("/tickets/{ticketCode}/call")
     fun call(
         @PathVariable token: String,
         @PathVariable ticketCode: String,
-    ): LineActionResult = withStaff(token) { serviceId -> reply(console.call(serviceId, ticketCode)) }
+    ): LineActionResult = withStaff(token) { serviceId -> console.call(serviceId, ticketCode).orThrow() }
 
     @PostMapping("/tickets/{ticketCode}/present")
     fun present(
         @PathVariable token: String,
         @PathVariable ticketCode: String,
-    ): LineActionResult = withStaff(token) { serviceId -> reply(console.present(serviceId, ticketCode)) }
+    ): LineActionResult = withStaff(token) { serviceId -> console.present(serviceId, ticketCode).orThrow() }
 
     @PostMapping("/tickets/{ticketCode}/finish")
     fun finish(
         @PathVariable token: String,
         @PathVariable ticketCode: String,
-    ): LineActionResult = withStaff(token) { serviceId -> reply(console.finish(serviceId, ticketCode)) }
+    ): LineActionResult = withStaff(token) { serviceId -> console.finish(serviceId, ticketCode).orThrow() }
 
     @PostMapping("/tickets/{ticketCode}/no-show")
     fun noShow(
         @PathVariable token: String,
         @PathVariable ticketCode: String,
-    ): LineActionResult = withStaff(token) { serviceId -> reply(console.noShow(serviceId, ticketCode)) }
+    ): LineActionResult = withStaff(token) { serviceId -> console.noShow(serviceId, ticketCode).orThrow() }
 
-    private fun reply(result: LineActionResult): LineActionResult =
-        when (result.outcome) {
-            LineOutcome.OK -> result
-            LineOutcome.NOT_FOUND ->
-                throw ResponseStatusException(HttpStatus.NOT_FOUND, "No line entry with this code on this service")
-            LineOutcome.WRONG_STATE ->
-                throw ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "This entry is no longer in the expected state — it may have been handled by another desk",
-                )
-        }
+    @PostMapping("/tickets/{ticketCode}/paid")
+    fun markPaid(
+        @PathVariable token: String,
+        @PathVariable ticketCode: String,
+        @RequestBody request: MarkPaidRequest,
+    ): TicketInfo = withStaffMember(token) { serviceId, label -> console.markPaid(serviceId, ticketCode, request.method, label) }
 
     private fun <T> withStaff(
         token: String,
         block: (UUID) -> T,
+    ): T = withStaffMember(token) { serviceId, _ -> block(serviceId) }
+
+    /** Runs [block] for the staff member behind [token], with their service and label. */
+    private fun <T> withStaffMember(
+        token: String,
+        block: (serviceId: UUID, label: String) -> T,
     ): T {
         val claims = parse(token)
         val tenantId =
@@ -138,7 +140,7 @@ class LineStaffController(
             if (row.revoked || row.serviceId != serviceId) {
                 throw ResponseStatusException(HttpStatus.NOT_FOUND, "This counter link has been revoked")
             }
-            return block(serviceId)
+            return block(serviceId, row.label)
         } catch (ex: IllegalArgumentException) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "This counter link is invalid", ex)
         } finally {

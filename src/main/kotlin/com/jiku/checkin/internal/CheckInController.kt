@@ -1,5 +1,8 @@
 package com.jiku.checkin.internal
 
+import com.jiku.shared.ORGANIZER_OPERATOR_LABEL
+import com.jiku.ticket.MarkPaidRequest
+import com.jiku.ticket.TicketInfo
 import jakarta.validation.Valid
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
@@ -28,13 +31,13 @@ class CheckInController(
     fun scan(
         @PathVariable eventId: UUID,
         @Valid @RequestBody request: ScanRequest,
-    ): CheckInResponse = checkInService.checkInByCode(eventId, request.ticketCode, ORGANIZER_LABEL)
+    ): CheckInResponse = checkInService.checkInByCode(eventId, request.ticketCode, ORGANIZER_OPERATOR_LABEL)
 
     @PostMapping("/manual")
     fun manual(
         @PathVariable eventId: UUID,
         @Valid @RequestBody request: ManualCheckInRequest,
-    ): CheckInResponse = checkInService.checkInByGuest(eventId, request.guestId, ORGANIZER_LABEL)
+    ): CheckInResponse = checkInService.checkInByGuest(eventId, request.guestId, ORGANIZER_OPERATOR_LABEL)
 
     @GetMapping("/search")
     fun search(
@@ -47,7 +50,10 @@ class CheckInController(
         @PathVariable eventId: UUID,
     ): AttendanceResponse = checkInService.stats(eventId)
 
-    private companion object {
-        const val ORGANIZER_LABEL = "Organizer"
-    }
+    @PostMapping("/tickets/{ticketCode}/paid")
+    fun markPaid(
+        @PathVariable eventId: UUID,
+        @PathVariable ticketCode: String,
+        @RequestBody request: MarkPaidRequest,
+    ): TicketInfo = checkInService.markPaid(eventId, ticketCode, request.method, ORGANIZER_OPERATOR_LABEL)
 }

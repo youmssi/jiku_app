@@ -2,6 +2,8 @@ package com.jiku.checkin.internal
 
 import com.jiku.shared.TenantAccessGate
 import com.jiku.shared.TenantContext
+import com.jiku.ticket.MarkPaidRequest
+import com.jiku.ticket.TicketInfo
 import io.jsonwebtoken.Claims
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -51,6 +53,13 @@ class ValidatorCheckInController(
         withValidator(token) { eventId, label ->
             checkInService.checkInByGuest(eventId, request.guestId, label)
         }
+
+    @PostMapping("/tickets/{ticketCode}/paid")
+    fun markPaid(
+        @PathVariable token: String,
+        @PathVariable ticketCode: String,
+        @RequestBody request: MarkPaidRequest,
+    ): TicketInfo = withValidator(token) { eventId, label -> checkInService.markPaid(eventId, ticketCode, request.method, label) }
 
     @GetMapping("/search")
     fun search(

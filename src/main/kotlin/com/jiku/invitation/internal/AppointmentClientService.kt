@@ -25,6 +25,7 @@ class AppointmentClientService(
             professionalName = booking.professionalName,
             clientName = booking.clientName,
             clientPhone = booking.clientPhone,
+            charge = booking.charge,
         )
     }
 
@@ -40,6 +41,7 @@ class AppointmentClientService(
             dayStart = walkIn.dayStart,
             dayEnd = walkIn.dayEnd,
             rankDay = walkIn.rankDay,
+            charge = walkIn.charge,
         )
     }
 

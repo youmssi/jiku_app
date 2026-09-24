@@ -2,10 +2,12 @@ package com.jiku.support
 
 import com.jayway.jsonpath.JsonPath
 import org.springframework.http.MediaType
+import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
@@ -45,6 +47,33 @@ class OrganizerApi(
                 .response.contentAsString,
             "$.id",
         )
+
+    fun publish(
+        token: String,
+        eventId: String,
+    ) {
+        post(token, "/api/v1/events/$eventId/publish", "{}").andExpect(status().isOk())
+    }
+
+    /** Imports one guest into [eventId] and returns their id. */
+    fun importGuest(
+        token: String,
+        eventId: String,
+        firstName: String,
+    ): String {
+        val csv = "firstName,lastName,email,phone\n$firstName,Test,${firstName.lowercase()}-${UUID.randomUUID()}@test.example,"
+        mockMvc
+            .perform(
+                multipart("/api/v1/events/$eventId/guests/import")
+                    .file(MockMultipartFile("file", "guests.csv", "text/csv", csv.toByteArray()))
+                    .header("Authorization", "Bearer $token"),
+            ).andExpect(status().isOk())
+        val guests = get(token, "/api/v1/events/$eventId/guests").andReturn().response.contentAsString
+        return JsonPath.read<List<String>>(guests, "$[?(@.firstName=='$firstName')].id").first()
+    }
+
+    /** The organization the token acts for. */
+    fun tenantId(token: String): String = JsonPath.read(get(token, "/api/v1/auth/me").andReturn().response.contentAsString, "$.tenantId")
 
     fun get(
         token: String,

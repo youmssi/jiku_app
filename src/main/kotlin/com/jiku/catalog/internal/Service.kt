@@ -1,6 +1,7 @@
 package com.jiku.catalog.internal
 
 import com.jiku.shared.BaseTenantEntity
+import com.jiku.shared.ClientCharge
 import jakarta.persistence.Column
 import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
@@ -42,4 +43,8 @@ class Service(
     /** Null exactly when [paymentRule] is [PaymentRule.FREE]. */
     @Embedded
     var price: Price? = null
+
+    /** What a client of this service owes the organization, or null when it is free. */
+    fun clientCharge(): ClientCharge? =
+        price?.let { ClientCharge(it.amountMinor, it.currency, dueAfterService = paymentRule == PaymentRule.AFTER_SERVICE) }
 }

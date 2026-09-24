@@ -1073,6 +1073,55 @@
         }
       }
     },
+    "/api/v1/services/{serviceId}/day-line/tickets/{ticketCode}/paid" : {
+      "post" : {
+        "tags" : [
+          "service-day-line-controller"
+        ],
+        "operationId" : "markPaid",
+        "parameters" : [
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MarkPaidRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TicketInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/services/{serviceId}/day-line/tickets/{ticketCode}/no-show" : {
       "post" : {
         "tags" : [
@@ -2037,6 +2086,54 @@
         }
       }
     },
+    "/api/v1/line/{token}/tickets/{ticketCode}/paid" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "markPaid_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MarkPaidRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TicketInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/line/{token}/tickets/{ticketCode}/no-show" : {
       "post" : {
         "tags" : [
@@ -2956,6 +3053,55 @@
         }
       }
     },
+    "/api/v1/events/{eventId}/checkin/tickets/{ticketCode}/paid" : {
+      "post" : {
+        "tags" : [
+          "check-in-controller"
+        ],
+        "operationId" : "markPaid_2",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MarkPaidRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TicketInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/events/{eventId}/checkin/scan" : {
       "post" : {
         "tags" : [
@@ -3031,6 +3177,54 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CheckInResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/checkin/{token}/tickets/{ticketCode}/paid" : {
+      "post" : {
+        "tags" : [
+          "validator-check-in-controller"
+        ],
+        "operationId" : "markPaid_3",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MarkPaidRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TicketInfo"
                 }
               }
             }
@@ -8444,6 +8638,28 @@
               "null"
             ],
             "format" : "int32"
+          },
+          "paymentStatus" : {
+            "type" : "string",
+            "enum" : [
+              "NOT_REQUIRED",
+              "DUE",
+              "DUE_AFTER_SERVICE",
+              "PAID"
+            ]
+          },
+          "amountDueMinor" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
+          },
+          "amountDueCurrency" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         }
       },
@@ -8455,7 +8671,8 @@
             "enum" : [
               "OK",
               "NOT_FOUND",
-              "WRONG_STATE"
+              "WRONG_STATE",
+              "PAYMENT_DUE"
             ]
           },
           "ticket" : {
@@ -8466,6 +8683,98 @@
               {
                 "type" : "null"
               }
+            ]
+          }
+        }
+      },
+      "MarkPaidRequest" : {
+        "type" : "object",
+        "properties" : {
+          "method" : {
+            "type" : "string",
+            "enum" : [
+              "MOBILE_MONEY",
+              "PAYMENT_LINK",
+              "CASH"
+            ]
+          }
+        }
+      },
+      "TicketInfo" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "eventId" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "uuid"
+          },
+          "serviceId" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "uuid"
+          },
+          "guestId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "ticketCode" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "issuedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "checkedInAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "checkedInBy" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "ticketTypeId" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "uuid"
+          },
+          "paymentStatus" : {
+            "type" : "string",
+            "enum" : [
+              "NOT_REQUIRED",
+              "DUE",
+              "DUE_AFTER_SERVICE",
+              "PAID"
+            ]
+          },
+          "amountDueMinor" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
+          },
+          "amountDueCurrency" : {
+            "type" : [
+              "string",
+              "null"
             ]
           }
         }
@@ -8565,6 +8874,37 @@
           "lastName"
         ]
       },
+      "RsvpPayment" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "string",
+            "enum" : [
+              "NOT_REQUIRED",
+              "DUE",
+              "DUE_AFTER_SERVICE",
+              "PAID"
+            ]
+          },
+          "amountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "methods" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/TenantPaymentMethodsInfo"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          }
+        }
+      },
       "RsvpQuestion" : {
         "type" : "object",
         "properties" : {
@@ -8652,6 +8992,16 @@
             "items" : {
               "$ref" : "#/components/schemas/RsvpQuestion"
             }
+          },
+          "payment" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/RsvpPayment"
+              },
+              {
+                "type" : "null"
+              }
+            ]
           }
         }
       },
@@ -9419,6 +9769,19 @@
             ]
           },
           "ticketTypeColor" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "amountDueMinor" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
+          },
+          "amountDueCurrency" : {
             "type" : [
               "string",
               "null"
@@ -11367,6 +11730,18 @@
             "type" : [
               "string",
               "null"
+            ]
+          },
+          "paymentStatus" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "enum" : [
+              "NOT_REQUIRED",
+              "DUE",
+              "DUE_AFTER_SERVICE",
+              "PAID"
             ]
           }
         }
