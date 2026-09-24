@@ -17,6 +17,7 @@ class TenantModuleApiService(
     private val users: OrganizerUserRepository,
     private val accountTokens: AccountTokenService,
     private val accessGate: TenantAccessGateAdapter,
+    private val markets: MarketProperties,
 ) : TenantModuleApi {
     @Transactional(readOnly = true)
     override fun findTenant(tenantId: UUID): TenantInfo? = tenants.findById(tenantId).map { it.toTenantInfo() }.orElse(null)
@@ -80,7 +81,12 @@ class TenantModuleApiService(
                         it.emailVerified = true
                     },
                 )
-        val tenant = tenants.saveAndFlush(Tenant(name = organizationName, contactEmail = ownerEmail))
+        // A booking customer never names a country: the organization opens in the default market.
+        val market = requireNotNull(markets.marketOf(null))
+        val tenant =
+            tenants.saveAndFlush(
+                Tenant(name = organizationName, contactEmail = ownerEmail, country = market.country, currency = market.currency),
+            )
         memberships.saveAndFlush(
             OrganizerMembership(
                 userId = requireNotNull(user.id),

@@ -24,6 +24,10 @@ data class TenantInfo(
     val legalIdentity: TenantLegalIdentityInfo? = null,
     /** Identifiant public du profil découvert (null tant que non choisi). */
     val username: String? = null,
+    /** ISO 3166-1 alpha-2, fixed at creation. */
+    val country: String,
+    /** ISO 4217 currency of every price the organization sets or pays. */
+    val currency: String,
 )
 
 /**

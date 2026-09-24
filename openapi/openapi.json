@@ -7368,6 +7368,12 @@
               "string",
               "null"
             ]
+          },
+          "country" : {
+            "type" : "string"
+          },
+          "currency" : {
+            "type" : "string"
           }
         }
       },
@@ -8719,6 +8725,14 @@
           "name" : {
             "type" : "string",
             "minLength" : 1
+          },
+          "country" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 2,
+            "minLength" : 2
           }
         },
         "required" : [
@@ -9637,6 +9651,14 @@
             "type" : "string",
             "maxLength" : 2147483647,
             "minLength" : 8
+          },
+          "country" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 2,
+            "minLength" : 2
           }
         },
         "required" : [

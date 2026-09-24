@@ -19,6 +19,7 @@ class AuthService(
     private val jwtService: JwtService,
     private val accountTokens: AccountTokenService,
     private val googleVerifier: GoogleIdentityVerifier,
+    private val markets: MarketProperties,
 ) {
     /**
      * Creates a user account (JIKU-48). With an organization [RegisterRequest.name]
@@ -43,7 +44,7 @@ class AuthService(
                         fullName = request.fullName?.trim()?.takeIf { it.isNotEmpty() },
                     ),
                 )
-            val membership = orgName?.let { createOrganizationFor(user, it) }
+            val membership = orgName?.let { createOrganizationFor(user, it, request.country) }
             accountTokens.sendEmailVerification(user)
             return tokensFor(user, membership)
         } catch (ex: DataIntegrityViolationException) {
@@ -65,7 +66,7 @@ class AuthService(
         if (!user.emailVerified) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "Verify your email address before creating an organization")
         }
-        return tokensFor(user, createOrganizationFor(user, request.name.trim()))
+        return tokensFor(user, createOrganizationFor(user, request.name.trim(), request.country))
     }
 
     @Transactional(readOnly = true)
@@ -204,8 +205,15 @@ class AuthService(
     private fun createOrganizationFor(
         user: OrganizerUser,
         name: String,
+        country: String?,
     ): OrganizerMembership {
-        val tenant = tenants.saveAndFlush(Tenant(name = name, contactEmail = user.email))
+        val market =
+            markets.marketOf(country)
+                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Jikū is not available in ${country?.uppercase()} yet")
+        val tenant =
+            tenants.saveAndFlush(
+                Tenant(name = name, contactEmail = user.email, country = market.country, currency = market.currency),
+            )
         return memberships.saveAndFlush(
             OrganizerMembership(
                 userId = requireNotNull(user.id),

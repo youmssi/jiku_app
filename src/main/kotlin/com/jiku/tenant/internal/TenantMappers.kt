@@ -23,6 +23,8 @@ fun Tenant.toTenantInfo(): TenantInfo =
         primaryColor = effectivePrimaryColor(),
         legalIdentity = legalIdentity?.toInfo(),
         username = username,
+        country = country,
+        currency = currency,
     )
 
 /**
