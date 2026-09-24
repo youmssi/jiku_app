@@ -31,12 +31,13 @@ class GuestService(
     fun list(eventId: UUID): List<GuestResponse> {
         // Une seule lecture des tickets pour toute la liste : la table d'invités
         // se recharge à chaque filtre, et une requête par ligne s'y verrait.
-        val checkedInByGuest =
+        // A cancelled ticket (declined, transferred) no longer belongs to anyone.
+        val ticketByGuest =
             ticketing
                 .findTicketsByEvent(eventId)
-                .filter { it.status == TicketInfo.STATUS_CHECKED_IN }
-                .associate { it.guestId to it.checkedInAt }
-        return guests.findByEventId(eventId).map { it.toResponse(checkedInByGuest[it.id]) }
+                .filter { it.status != TicketInfo.STATUS_CANCELLED }
+                .associateBy { it.guestId }
+        return guests.findByEventId(eventId).map { it.toResponse(ticketByGuest[it.id]) }
     }
 
     /**
@@ -75,7 +76,7 @@ class GuestService(
             guests.findByIdAndEventId(guestId, eventId)
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Guest not found")
         guest.excludedFromInvitations = excluded
-        return guests.save(guest).toResponse()
+        return guests.save(guest).withLiveTicket()
     }
 
     /**
@@ -98,26 +99,34 @@ class GuestService(
         if (ticketTypeId != null && events.ticketTypes(eventId).none { it.id == ticketTypeId }) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown category for this event")
         }
-        if (guest.ticketTypeId == ticketTypeId) return guest.toResponse()
+        if (guest.ticketTypeId == ticketTypeId) return guest.withLiveTicket()
         if (guest.rsvpStatus == RsvpStatus.CONFIRMED &&
             !events.moveTicketTypeSlot(guest.ticketTypeId, ticketTypeId)
         ) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "This category is full")
         }
         guest.ticketTypeId = ticketTypeId
-        return guests.save(guest).toResponse()
+        return guests.save(guest).withLiveTicket()
     }
 
-    private fun Guest.toResponse(checkedInAt: java.time.Instant? = null) =
+    private fun Guest.withLiveTicket(): GuestResponse =
+        toResponse(ticketing.findByGuest(requireNotNull(id))?.takeIf { it.status != TicketInfo.STATUS_CANCELLED })
+
+    private fun Guest.toResponse(ticket: TicketInfo?) =
         GuestResponse(
-            requireNotNull(id),
-            firstName,
-            lastName,
-            email,
-            phoneNumber,
-            excludedFromInvitations,
-            checkedInAt,
-            ticketTypeId,
+            id = requireNotNull(id),
+            firstName = firstName,
+            lastName = lastName,
+            email = email,
+            phoneNumber = phoneNumber,
+            excludedFromInvitations = excludedFromInvitations,
+            checkedInAt = ticket?.takeIf { it.status == TicketInfo.STATUS_CHECKED_IN }?.checkedInAt,
+            ticketTypeId = ticketTypeId,
+            rsvpStatus = rsvpStatus,
+            ticketCode = ticket?.ticketCode,
+            paymentStatus = ticket?.paymentStatus,
+            amountDueMinor = ticket?.amountDueMinor,
+            amountDueCurrency = ticket?.amountDueCurrency,
         )
 
     @Transactional

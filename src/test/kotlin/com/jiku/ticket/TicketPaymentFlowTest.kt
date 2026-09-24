@@ -53,6 +53,8 @@ class TicketPaymentFlowTest {
         api
             .patch(token, "/api/v1/events/$eventId/guests/$guestId/ticket-type", """{"ticketTypeId":"$typeId"}""")
             .andExpect(status().isOk())
+            .andExpect(jsonPath("$.rsvpStatus").value("PENDING"))
+            .andExpect(jsonPath("$.ticketCode").doesNotExist())
 
         val rsvp = invitationTokens.issue(UUID.fromString(guestId), UUID.fromString(eventId), api.tenantId(token))
         val confirmed =
@@ -68,6 +70,14 @@ class TicketPaymentFlowTest {
         val code = JsonPath.read<String>(confirmed, "$.ticketCode")
 
         api
+            .get(token, "/api/v1/events/$eventId/guests")
+            .andExpect(jsonPath("$[0].rsvpStatus").value("CONFIRMED"))
+            .andExpect(jsonPath("$[0].ticketCode").value(code))
+            .andExpect(jsonPath("$[0].paymentStatus").value("DUE"))
+            .andExpect(jsonPath("$[0].amountDueMinor").value(150000))
+            .andExpect(jsonPath("$[0].amountDueCurrency").value("GNF"))
+
+        api
             .post(token, "/api/v1/events/$eventId/checkin/scan", """{"ticketCode":"$code"}""")
             .andExpect(jsonPath("$.outcome").value("PAYMENT_DUE"))
             .andExpect(jsonPath("$.amountDueMinor").value(150000))
@@ -79,10 +89,16 @@ class TicketPaymentFlowTest {
         api
             .post(token, "/api/v1/events/$eventId/checkin/tickets/$code/paid", """{"method":"CASH"}""")
             .andExpect(status().isConflict())
+        api
+            .get(token, "/api/v1/events/$eventId/guests")
+            .andExpect(jsonPath("$[0].paymentStatus").value("PAID"))
 
         api
             .post(token, "/api/v1/events/$eventId/checkin/scan", """{"ticketCode":"$code"}""")
             .andExpect(jsonPath("$.outcome").value("CHECKED_IN"))
+        api
+            .get(token, "/api/v1/events/$eventId/guests")
+            .andExpect(jsonPath("$[0].checkedInAt").exists())
     }
 
     @Test
@@ -100,6 +116,10 @@ class TicketPaymentFlowTest {
                 .response.contentAsString
         val code = JsonPath.read<String>(confirmed, "$.ticketCode")
 
+        api
+            .get(token, "/api/v1/events/$eventId/guests")
+            .andExpect(jsonPath("$[0].rsvpStatus").value("CONFIRMED"))
+            .andExpect(jsonPath("$[0].paymentStatus").value("NOT_REQUIRED"))
         api
             .post(token, "/api/v1/events/$eventId/checkin/tickets/$code/paid", """{"method":"CASH"}""")
             .andExpect(status().isConflict())
