@@ -1,11 +1,11 @@
 package com.jiku.catalog.internal
 
+import com.jiku.shared.RandomCode
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
-import com.jiku.shared.RandomCode
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Service
