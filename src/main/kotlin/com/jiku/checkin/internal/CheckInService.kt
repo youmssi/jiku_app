@@ -8,6 +8,9 @@ import com.jiku.shared.TenantContext
 import com.jiku.tenant.TenantModuleApi
 import com.jiku.ticket.CheckInOutcome
 import com.jiku.ticket.CheckInResult
+import com.jiku.ticket.TicketInfo
+import com.jiku.ticket.TicketPaymentMethod
+import com.jiku.ticket.TicketPaymentOutcome
 import com.jiku.ticket.TicketingModuleApi
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -138,8 +141,31 @@ class CheckInService(
                 checkedInBy = ticket?.checkedInBy,
                 ticketTypeLabel = type?.label,
                 ticketTypeColor = type?.colorHex,
+                paymentStatus = ticket?.paymentStatus,
             )
         }
+    }
+
+    /**
+     * Records that a guest paid the organization for their ticket (JIKU-110),
+     * attributed to [operatorLabel]. Only a ticket of this event can be marked.
+     */
+    fun markPaid(
+        eventId: UUID,
+        ticketCode: String,
+        method: TicketPaymentMethod,
+        operatorLabel: String,
+    ): TicketInfo {
+        if (eventCancelled(eventId)) {
+            throw ResponseStatusException(HttpStatus.GONE, "This event has been cancelled")
+        }
+        ticketing.findByCode(ticketCode)?.takeIf { it.eventId == eventId }
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "No ticket with this code for this event")
+        val result = ticketing.markPaidByCode(ticketCode, method, operatorLabel)
+        if (result.outcome != TicketPaymentOutcome.PAID) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Nothing is owed on this ticket, or it is already paid")
+        }
+        return requireNotNull(result.ticket)
     }
 
     /**
@@ -197,6 +223,8 @@ class CheckInService(
             checkedInBy = result.checkedInBy,
             ticketTypeLabel = type?.label,
             ticketTypeColor = type?.colorHex,
+            amountDueMinor = result.ticket?.takeIf { result.outcome == CheckInOutcome.PAYMENT_DUE }?.amountDueMinor,
+            amountDueCurrency = result.ticket?.takeIf { result.outcome == CheckInOutcome.PAYMENT_DUE }?.amountDueCurrency,
         )
     }
 

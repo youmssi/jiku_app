@@ -1,6 +1,7 @@
 package com.jiku.catalog.internal
 
 import com.jiku.catalog.ResourceType
+import com.jiku.shared.ClientCharge
 import com.jiku.shared.ServiceDeletedEvent
 import com.jiku.shared.TenantCurrency
 import org.springframework.context.ApplicationEventPublisher
@@ -32,6 +33,10 @@ class ServiceAdminService(
 
     @Transactional(readOnly = true)
     fun get(serviceId: UUID): ServiceResponse = services.findById(serviceId).map { it.toResponse() }.orElseThrow { notFound(serviceId) }
+
+    /** What a client of [serviceId] owes the organization, or null when the service is free. */
+    @Transactional(readOnly = true)
+    fun clientCharge(serviceId: UUID): ClientCharge? = services.findById(serviceId).orElseThrow { notFound(serviceId) }.clientCharge()
 
     @Transactional
     fun create(request: ServiceCreateRequest): ServiceResponse {

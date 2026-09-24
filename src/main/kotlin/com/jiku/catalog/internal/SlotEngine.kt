@@ -211,6 +211,7 @@ class SlotEngine(
                     clientName = clientName.trim(),
                     clientPhone = clientPhone.trim(),
                     professionalName = professionalName,
+                    charge = services.findById(serviceId).orElse(null)?.clientCharge(),
                 ),
             )
         }

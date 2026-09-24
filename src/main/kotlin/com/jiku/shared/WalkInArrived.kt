@@ -21,4 +21,6 @@ data class WalkInArrived(
     val dayStart: Instant,
     val dayEnd: Instant,
     val rankDay: LocalDate,
+    /** What the client owes for the service; null when it is free. */
+    val charge: ClientCharge? = null,
 )

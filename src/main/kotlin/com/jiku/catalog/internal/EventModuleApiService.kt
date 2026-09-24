@@ -105,6 +105,8 @@ class EventModuleApiService(
                 colorHex = it.colorHex,
                 maxCapacity = it.maxCapacity,
                 confirmedCount = it.confirmedCount,
+                priceMinor = it.price?.amountMinor,
+                currency = it.price?.currency,
             )
         }
 

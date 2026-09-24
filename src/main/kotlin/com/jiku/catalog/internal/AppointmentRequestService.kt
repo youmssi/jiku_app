@@ -98,6 +98,7 @@ class AppointmentRequestService(
                 clientName = requireNotNull(confirmed.clientName) { "Request without a client name" },
                 clientPhone = requireNotNull(confirmed.clientPhone) { "Request without a client phone" },
                 professionalName = professionalName,
+                charge = services.clientCharge(confirmed.serviceId),
             ),
         )
     }

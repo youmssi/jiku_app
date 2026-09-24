@@ -1,5 +1,6 @@
 package com.jiku.catalog
 
+import com.jiku.shared.ClientCharge
 import java.time.Instant
 import java.util.UUID
 
@@ -78,7 +79,13 @@ data class TicketTypeInfo(
     val colorHex: String,
     val maxCapacity: Int?,
     val confirmedCount: Int,
-)
+    /** Price of a ticket sold in this category (JIKU-108); null when it is free. */
+    val priceMinor: Long? = null,
+    val currency: String? = null,
+) {
+    /** What a guest of this category owes the organization, or null when it is free. */
+    fun clientCharge(): ClientCharge? = priceMinor?.let { ClientCharge(it, requireNotNull(currency)) }
+}
 
 /**
  * Question personnalisée d'un événement (JIKU-77), partagée au-delà du module :

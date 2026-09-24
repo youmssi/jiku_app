@@ -1,5 +1,6 @@
 package com.jiku.checkin.internal
 
+import com.jiku.ticket.TicketPaymentStatus
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import java.time.Instant
@@ -36,6 +37,9 @@ data class CheckInResponse(
      */
     val ticketTypeLabel: String? = null,
     val ticketTypeColor: String? = null,
+    /** On PAYMENT_DUE, what the guest owes the organization before entering (JIKU-110). */
+    val amountDueMinor: Long? = null,
+    val amountDueCurrency: String? = null,
 )
 
 /** A guest matched by the manual search path, enriched with ticket state. */
@@ -82,6 +86,8 @@ data class RosterEntry(
      */
     val ticketTypeLabel: String? = null,
     val ticketTypeColor: String? = null,
+    /** Whether the guest still owes the organization (JIKU-110): offline, the device refuses entry itself. */
+    val paymentStatus: TicketPaymentStatus? = null,
 )
 
 /** A batch of check-ins captured offline, each stamped with its on-device scan time. */
