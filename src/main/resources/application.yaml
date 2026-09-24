@@ -228,6 +228,13 @@ api:
         token-segment: 1
         max-requests: ${RATE_LIMIT_COUNTER_MAX_REQUESTS:120}
         window: ${RATE_LIMIT_COUNTER_WINDOW:PT1M}
+      operator:
+        # Operator console (JIKU-116): the same pace as a door or a counter, since
+        # an operator scans, calls and records payments through the one link.
+        paths: [/operator/**, /operator-codes/**]
+        token-segment: 1
+        max-requests: ${RATE_LIMIT_OPERATOR_MAX_REQUESTS:120}
+        window: ${RATE_LIMIT_OPERATOR_WINDOW:PT1M}
       prospect:
         # Liste d'accès anticipé rendez-vous (JIKU-98). Un professionnel légitime
         # soumet une fois, éventuellement deux s'il se corrige ; au-delà c'est du
@@ -411,15 +418,14 @@ invitation:
   # JIKU-62) are retried.
   queue-sweep-cron: ${INVITATION_QUEUE_SWEEP_CRON:0 */15 * * * *}
 
-checkin:
-  validator-link:
-    # Frontend base URL used to build shareable validator check-in links.
-    app-base-url: ${SERVER_BASE_URL:http://localhost:3000}
-    # How long a freshly issued validator link stays usable; revocation is
-    # immediate and independent of this window.
-    validity: ${CHECKIN_VALIDATOR_LINK_VALIDITY:P30D}
-
 catalog:
+  operator-link:
+    # Frontend base URL used to build shareable operator links (JIKU-116).
+    app-base-url: ${SERVER_BASE_URL:http://localhost:3000}
+    # How long a signed operator link stays usable before it is issued again
+    # from the operator's short code; revocation is immediate and independent
+    # of this window.
+    validity: ${OPERATOR_LINK_VALIDITY:P30D}
   slot:
     # Grille fixe du moteur de créneaux (JIKU-85) : les valeurs par défaut,
     # que la configuration par service (JIKU-86) remplacera service par service.

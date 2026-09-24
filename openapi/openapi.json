@@ -350,6 +350,47 @@
         }
       }
     },
+    "/api/v1/operators/{operatorId}" : {
+      "put" : {
+        "tags" : [
+          "operator-controller"
+        ],
+        "operationId" : "update_1",
+        "parameters" : [
+          {
+            "name" : "operatorId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OperatorRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OperatorView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/members/{userId}/role" : {
       "put" : {
         "tags" : [
@@ -414,7 +455,7 @@
         "tags" : [
           "legal-identity-controller"
         ],
-        "operationId" : "update_1",
+        "operationId" : "update_2",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -473,7 +514,7 @@
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "update_2",
+        "operationId" : "update_3",
         "parameters" : [
           {
             "name" : "id",
@@ -577,7 +618,7 @@
         "tags" : [
           "ticket-type-controller"
         ],
-        "operationId" : "update_3",
+        "operationId" : "update_4",
         "parameters" : [
           {
             "name" : "eventId",
@@ -676,7 +717,7 @@
         "tags" : [
           "branding-controller"
         ],
-        "operationId" : "update_4",
+        "operationId" : "update_5",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -764,7 +805,7 @@
         "tags" : [
           "admin-billing-settings-controller"
         ],
-        "operationId" : "update_5",
+        "operationId" : "update_6",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1931,6 +1972,85 @@
         }
       }
     },
+    "/api/v1/operators" : {
+      "get" : {
+        "tags" : [
+          "operator-controller"
+        ],
+        "operationId" : "team",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OperatorTeamView"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "operator-controller"
+        ],
+        "operationId" : "create_4",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OperatorRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OperatorView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/operators/{operatorId}/revoke" : {
+      "post" : {
+        "tags" : [
+          "operator-controller"
+        ],
+        "operationId" : "revoke",
+        "parameters" : [
+          {
+            "name" : "operatorId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OperatorView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/notifications/email-feedback" : {
       "post" : {
         "tags" : [
@@ -2104,6 +2224,55 @@
         }
       }
     },
+    "/api/v1/operator/{token}/services/{serviceId}/walk-in" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "walkIn_2",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WalkInRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DayLineView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/line/{token}/tickets/{ticketCode}/present" : {
       "post" : {
         "tags" : [
@@ -2125,6 +2294,53 @@
             "required" : true,
             "schema" : {
               "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/operator/{token}/services/{serviceId}/tickets/{ticketCode}/present" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "present_2",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
             }
           }
         ],
@@ -2190,12 +2406,116 @@
         }
       }
     },
-    "/api/v1/line/{token}/tickets/{ticketCode}/no-show" : {
+    "/api/v1/operator/{token}/services/{serviceId}/tickets/{ticketCode}/paid" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "markPaid_2",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MarkPaidRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TicketInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/operator/{token}/services/{serviceId}/tickets/{ticketCode}/no-show" : {
       "post" : {
         "tags" : [
           "line-staff-controller"
         ],
         "operationId" : "noShow_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/tickets/{ticketCode}/no-show" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "noShow_2",
         "parameters" : [
           {
             "name" : "token",
@@ -2266,6 +2586,53 @@
         }
       }
     },
+    "/api/v1/operator/{token}/services/{serviceId}/tickets/{ticketCode}/finish" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "finish_2",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/line/{token}/tickets/{ticketCode}/call" : {
       "post" : {
         "tags" : [
@@ -2295,6 +2662,61 @@
             "required" : false,
             "schema" : {
               "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/operator/{token}/services/{serviceId}/tickets/{ticketCode}/call" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "call_2",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "counter",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
             }
           }
         ],
@@ -2350,12 +2772,100 @@
         }
       }
     },
-    "/api/v1/line/{token}/requests/{requestId}/reject" : {
+    "/api/v1/operator/{token}/services/{serviceId}/tickets/{ticketCode}/arrive" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "arrive_2",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LineActionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/operator/{token}/services/{serviceId}/requests/{requestId}/reject" : {
       "post" : {
         "tags" : [
           "line-staff-controller"
         ],
         "operationId" : "rejectRequest_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "requestId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/requests/{requestId}/reject" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "rejectRequest_2",
         "parameters" : [
           {
             "name" : "token",
@@ -2414,12 +2924,100 @@
         }
       }
     },
-    "/api/v1/line/{token}/next" : {
+    "/api/v1/operator/{token}/services/{serviceId}/requests/{requestId}/accept" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "acceptRequest_2",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "requestId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/operator/{token}/services/{serviceId}/next" : {
       "post" : {
         "tags" : [
           "line-staff-controller"
         ],
         "operationId" : "next_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "counter",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NextResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}/next" : {
+      "post" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "next_2",
         "parameters" : [
           {
             "name" : "token",
@@ -2478,7 +3076,7 @@
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "create_4",
+        "operationId" : "create_5",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2611,7 +3209,7 @@
         "tags" : [
           "validator-controller"
         ],
-        "operationId" : "create_5",
+        "operationId" : "create_6",
         "parameters" : [
           {
             "name" : "eventId",
@@ -2652,7 +3250,7 @@
         "tags" : [
           "validator-controller"
         ],
-        "operationId" : "revoke",
+        "operationId" : "revoke_1",
         "parameters" : [
           {
             "name" : "eventId",
@@ -2724,7 +3322,7 @@
         "tags" : [
           "ticket-type-controller"
         ],
-        "operationId" : "create_6",
+        "operationId" : "create_7",
         "parameters" : [
           {
             "name" : "eventId",
@@ -2797,7 +3395,7 @@
         "tags" : [
           "event-question-controller"
         ],
-        "operationId" : "create_7",
+        "operationId" : "create_8",
         "parameters" : [
           {
             "name" : "eventId",
@@ -2981,7 +3579,7 @@
         "tags" : [
           "event-occurrence-controller"
         ],
-        "operationId" : "create_8",
+        "operationId" : "create_9",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3130,7 +3728,7 @@
         "tags" : [
           "check-in-controller"
         ],
-        "operationId" : "markPaid_2",
+        "operationId" : "markPaid_3",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3259,9 +3857,9 @@
     "/api/v1/checkin/{token}/tickets/{ticketCode}/paid" : {
       "post" : {
         "tags" : [
-          "validator-check-in-controller"
+          "operator-check-in-controller"
         ],
-        "operationId" : "markPaid_3",
+        "operationId" : "markPaid_4",
         "parameters" : [
           {
             "name" : "token",
@@ -3304,10 +3902,67 @@
         }
       }
     },
+    "/api/v1/operator/{token}/events/{eventId}/tickets/{ticketCode}/paid" : {
+      "post" : {
+        "tags" : [
+          "operator-check-in-controller"
+        ],
+        "operationId" : "markPaid_5",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MarkPaidRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TicketInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/checkin/{token}/sync" : {
       "post" : {
         "tags" : [
-          "validator-check-in-controller"
+          "operator-check-in-controller"
         ],
         "operationId" : "sync",
         "parameters" : [
@@ -3347,10 +4002,62 @@
         }
       }
     },
+    "/api/v1/operator/{token}/events/{eventId}/sync" : {
+      "post" : {
+        "tags" : [
+          "operator-check-in-controller"
+        ],
+        "operationId" : "sync_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/SyncResultEntry"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/checkin/{token}/scan" : {
       "post" : {
         "tags" : [
-          "validator-check-in-controller"
+          "operator-check-in-controller"
         ],
         "operationId" : "scan_1",
         "parameters" : [
@@ -3387,12 +4094,110 @@
         }
       }
     },
+    "/api/v1/operator/{token}/events/{eventId}/scan" : {
+      "post" : {
+        "tags" : [
+          "operator-check-in-controller"
+        ],
+        "operationId" : "scan_2",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ScanRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CheckInResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/operator/{token}/events/{eventId}/manual" : {
+      "post" : {
+        "tags" : [
+          "operator-check-in-controller"
+        ],
+        "operationId" : "manual_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ManualCheckInRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CheckInResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/checkin/{token}/manual" : {
       "post" : {
         "tags" : [
-          "validator-check-in-controller"
+          "operator-check-in-controller"
         ],
-        "operationId" : "manual_1",
+        "operationId" : "manual_2",
         "parameters" : [
           {
             "name" : "token",
@@ -4645,7 +5450,7 @@
         "tags" : [
           "admin-agreement-controller"
         ],
-        "operationId" : "create_9",
+        "operationId" : "create_10",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4808,7 +5613,7 @@
         "tags" : [
           "service-controller"
         ],
-        "operationId" : "update_6",
+        "operationId" : "update_7",
         "parameters" : [
           {
             "name" : "id",
@@ -4878,7 +5683,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "update_7",
+        "operationId" : "update_8",
         "parameters" : [
           {
             "name" : "id",
@@ -5441,6 +6246,66 @@
         }
       }
     },
+    "/api/v1/operator/{token}" : {
+      "get" : {
+        "tags" : [
+          "operator-console-controller"
+        ],
+        "operationId" : "console",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OperatorConsoleView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/operator-codes/{code}" : {
+      "get" : {
+        "tags" : [
+          "operator-console-controller"
+        ],
+        "operationId" : "resolve",
+        "parameters" : [
+          {
+            "name" : "code",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OperatorLinkResolution"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/members" : {
       "get" : {
         "tags" : [
@@ -5457,44 +6322,6 @@
                   "items" : {
                     "$ref" : "#/components/schemas/MemberView"
                   }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/line/{token}" : {
-      "get" : {
-        "tags" : [
-          "line-staff-controller"
-        ],
-        "operationId" : "view_3",
-        "parameters" : [
-          {
-            "name" : "token",
-            "in" : "path",
-            "required" : true,
-            "schema" : {
-              "type" : "string"
-            }
-          },
-          {
-            "name" : "date",
-            "in" : "query",
-            "required" : false,
-            "schema" : {
-              "type" : "string"
-            }
-          }
-        ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DayLineView"
                 }
               }
             }
@@ -5543,12 +6370,147 @@
         }
       }
     },
+    "/api/v1/operator/{token}/services/{serviceId}/requests" : {
+      "get" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "pendingRequests_2",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "date",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PendingAppointmentRequest"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/line/{token}" : {
+      "get" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "view_3",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "date",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DayLineView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/operator/{token}/services/{serviceId}" : {
+      "get" : {
+        "tags" : [
+          "line-staff-controller"
+        ],
+        "operationId" : "view_4",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "date",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "serviceId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DayLineView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/line-codes/{code}" : {
       "get" : {
         "tags" : [
           "line-code-controller"
         ],
-        "operationId" : "resolve",
+        "operationId" : "resolve_1",
         "parameters" : [
           {
             "name" : "code",
@@ -5927,12 +6889,12 @@
         }
       }
     },
-    "/api/v1/checkin/{token}" : {
+    "/api/v1/operator/{token}/events/{eventId}/stats" : {
       "get" : {
         "tags" : [
-          "validator-check-in-controller"
+          "operator-check-in-controller"
         ],
-        "operationId" : "context",
+        "operationId" : "stats_1",
         "parameters" : [
           {
             "name" : "token",
@@ -5940,6 +6902,15 @@
             "required" : true,
             "schema" : {
               "type" : "string"
+            }
+          },
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
             }
           }
         ],
@@ -5949,7 +6920,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ValidatorContextResponse"
+                  "$ref" : "#/components/schemas/AttendanceResponse"
                 }
               }
             }
@@ -5960,9 +6931,9 @@
     "/api/v1/checkin/{token}/stats" : {
       "get" : {
         "tags" : [
-          "validator-check-in-controller"
+          "operator-check-in-controller"
         ],
-        "operationId" : "stats_1",
+        "operationId" : "stats_2",
         "parameters" : [
           {
             "name" : "token",
@@ -5987,12 +6958,62 @@
         }
       }
     },
+    "/api/v1/operator/{token}/events/{eventId}/search" : {
+      "get" : {
+        "tags" : [
+          "operator-check-in-controller"
+        ],
+        "operationId" : "search_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "q",
+            "in" : "query",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/GuestMatch"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/checkin/{token}/search" : {
       "get" : {
         "tags" : [
-          "validator-check-in-controller"
+          "operator-check-in-controller"
         ],
-        "operationId" : "search_1",
+        "operationId" : "search_2",
         "parameters" : [
           {
             "name" : "token",
@@ -6031,7 +7052,7 @@
     "/api/v1/checkin/{token}/roster" : {
       "get" : {
         "tags" : [
-          "validator-check-in-controller"
+          "operator-check-in-controller"
         ],
         "operationId" : "roster",
         "parameters" : [
@@ -6054,6 +7075,117 @@
                   "items" : {
                     "$ref" : "#/components/schemas/RosterEntry"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/operator/{token}/events/{eventId}/roster" : {
+      "get" : {
+        "tags" : [
+          "operator-check-in-controller"
+        ],
+        "operationId" : "roster_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RosterEntry"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/checkin/{token}" : {
+      "get" : {
+        "tags" : [
+          "operator-check-in-controller"
+        ],
+        "operationId" : "context",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ValidatorContextResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/operator/{token}/events/{eventId}" : {
+      "get" : {
+        "tags" : [
+          "operator-check-in-controller"
+        ],
+        "operationId" : "context_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ValidatorContextResponse"
                 }
               }
             }
@@ -6195,7 +7327,7 @@
         "tags" : [
           "subscription-controller"
         ],
-        "operationId" : "view_4",
+        "operationId" : "view_5",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -6405,7 +7537,7 @@
         "tags" : [
           "appointment-public-controller"
         ],
-        "operationId" : "view_5",
+        "operationId" : "view_6",
         "parameters" : [
           {
             "name" : "token",
@@ -6571,7 +7703,7 @@
         "tags" : [
           "admin-trial-controller"
         ],
-        "operationId" : "stats_2",
+        "operationId" : "stats_3",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -6992,7 +8124,7 @@
         "tags" : [
           "service-staff-controller"
         ],
-        "operationId" : "revoke_1",
+        "operationId" : "revoke_2",
         "parameters" : [
           {
             "name" : "serviceId",
@@ -7148,7 +8280,7 @@
         "tags" : [
           "member-controller"
         ],
-        "operationId" : "revoke_2",
+        "operationId" : "revoke_3",
         "parameters" : [
           {
             "name" : "invitationId",
@@ -7867,6 +8999,126 @@
           },
           "country" : {
             "type" : "string"
+          }
+        }
+      },
+      "OperatorRequest" : {
+        "type" : "object",
+        "properties" : {
+          "label" : {
+            "type" : "string",
+            "maxLength" : 80,
+            "minLength" : 0
+          },
+          "eventIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            },
+            "uniqueItems" : true
+          },
+          "serviceIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            },
+            "uniqueItems" : true
+          },
+          "actions" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [
+                "CHECK_IN",
+                "QUEUE",
+                "COLLECT"
+              ]
+            },
+            "minItems" : 1,
+            "uniqueItems" : true
+          }
+        },
+        "required" : [
+          "actions",
+          "label"
+        ]
+      },
+      "OperatorScopeItem" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        }
+      },
+      "OperatorView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "link" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "events" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OperatorScopeItem"
+            }
+          },
+          "services" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OperatorScopeItem"
+            }
+          },
+          "actions" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [
+                "CHECK_IN",
+                "QUEUE",
+                "COLLECT"
+              ]
+            },
+            "uniqueItems" : true
+          },
+          "billable" : {
+            "type" : "boolean"
+          },
+          "revoked" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "revokedAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
           }
         }
       },
@@ -9641,7 +10893,7 @@
               "string",
               "null"
             ],
-            "maxLength" : 255,
+            "maxLength" : 80,
             "minLength" : 0
           }
         }
@@ -11368,6 +12620,107 @@
           }
         }
       },
+      "OperatorTeamView" : {
+        "type" : "object",
+        "properties" : {
+          "operators" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OperatorView"
+            }
+          },
+          "billableSeats" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "OperatorConsoleEvent" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "startDateTime" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "timezone" : {
+            "type" : "string"
+          },
+          "location" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "OperatorConsoleService" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "timezone" : {
+            "type" : "string"
+          }
+        }
+      },
+      "OperatorConsoleView" : {
+        "type" : "object",
+        "properties" : {
+          "label" : {
+            "type" : "string"
+          },
+          "actions" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [
+                "CHECK_IN",
+                "QUEUE",
+                "COLLECT"
+              ]
+            },
+            "uniqueItems" : true
+          },
+          "events" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OperatorConsoleEvent"
+            }
+          },
+          "services" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OperatorConsoleService"
+            }
+          }
+        }
+      },
+      "OperatorLinkResolution" : {
+        "type" : "object",
+        "properties" : {
+          "token" : {
+            "type" : "string"
+          }
+        }
+      },
       "LineCodeResolution" : {
         "type" : "object",
         "properties" : {
@@ -11727,56 +13080,6 @@
           }
         }
       },
-      "ValidatorContextResponse" : {
-        "type" : "object",
-        "properties" : {
-          "eventName" : {
-            "type" : "string"
-          },
-          "eventStatus" : {
-            "type" : "string"
-          },
-          "startDateTime" : {
-            "type" : [
-              "string",
-              "null"
-            ],
-            "format" : "date-time"
-          },
-          "timezone" : {
-            "type" : "string"
-          },
-          "eventLocation" : {
-            "type" : [
-              "string",
-              "null"
-            ]
-          },
-          "organizerName" : {
-            "type" : "string"
-          },
-          "primaryColor" : {
-            "type" : "string"
-          },
-          "logoUrl" : {
-            "type" : [
-              "string",
-              "null"
-            ]
-          },
-          "validatorLabel" : {
-            "type" : "string"
-          },
-          "checkedIn" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "confirmed" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        }
-      },
       "RosterEntry" : {
         "type" : "object",
         "properties" : {
@@ -11850,6 +13153,68 @@
               "DUE_AFTER_SERVICE",
               "PAID"
             ]
+          }
+        }
+      },
+      "ValidatorContextResponse" : {
+        "type" : "object",
+        "properties" : {
+          "eventName" : {
+            "type" : "string"
+          },
+          "eventStatus" : {
+            "type" : "string"
+          },
+          "startDateTime" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "timezone" : {
+            "type" : "string"
+          },
+          "eventLocation" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "organizerName" : {
+            "type" : "string"
+          },
+          "primaryColor" : {
+            "type" : "string"
+          },
+          "logoUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "validatorLabel" : {
+            "type" : "string"
+          },
+          "actions" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [
+                "CHECK_IN",
+                "QUEUE",
+                "COLLECT"
+              ]
+            },
+            "uniqueItems" : true
+          },
+          "checkedIn" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "confirmed" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         }
       },

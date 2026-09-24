@@ -1,7 +1,5 @@
 package com.jiku.catalog.internal
 
-import com.jiku.shared.RandomCode
-import com.jiku.shared.TenantContext
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
@@ -13,87 +11,35 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
 /**
- * Liens du personnel vers la console d'un service (JIKU-88) : l'organisateur les
- * crée (le jeton signé n'est montré qu'à la création), les liste et les révoque.
- * Le personnel n'a pas de compte — il consomme la console par `GET /line/{token}`.
+ * Counter links for one service (JIKU-88), now operators that run that service's
+ * line and record payments. The signed token is only shown at creation; the
+ * short code can be shared again at any time. Revoking one revokes the operator.
  */
 @RestController
 @RequestMapping("/services/{serviceId}/staff-links")
 @PreAuthorize("hasRole('ORGANIZER')")
 class ServiceStaffController(
-    private val services: ServiceAdminService,
-    private val staff: ServiceStaffRepository,
-    private val tokens: DayLineTokenService,
+    private val operators: OperatorService,
 ) {
     @GetMapping
     fun list(
         @PathVariable serviceId: UUID,
-    ): List<ServiceStaffView> {
-        services.get(serviceId)
-        return staff.findAllByServiceId(serviceId).map { it.toView() }
-    }
+    ): List<ServiceStaffView> = operators.counterLinks(serviceId)
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun create(
         @PathVariable serviceId: UUID,
         @Valid @RequestBody request: ServiceStaffCreateRequest,
-    ): ServiceStaffCreatedResponse {
-        services.get(serviceId)
-        val tenantId = TenantContext.get() ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "No tenant")
-        val entry = ServiceStaff(serviceId = serviceId, label = request.label.trim())
-        entry.code = generateUniqueCode()
-        val row = staff.save(entry)
-        return ServiceStaffCreatedResponse(
-            id = requireNotNull(row.id),
-            label = row.label,
-            token = tokens.issue(requireNotNull(row.id), serviceId, tenantId),
-            code = row.code,
-            createdAt = row.createdAt,
-        )
-    }
+    ): ServiceStaffCreatedResponse = operators.createCounterLink(serviceId, request.label)
 
     @DeleteMapping("/{staffId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun revoke(
         @PathVariable serviceId: UUID,
         @PathVariable staffId: UUID,
-    ) {
-        services.get(serviceId)
-        val row = staff.findById(staffId).orElseThrow { notFound(staffId) }
-        if (row.serviceId != serviceId) throw notFound(staffId)
-        row.revoke()
-        staff.save(row)
-    }
-
-    private fun notFound(staffId: UUID): ResponseStatusException =
-        ResponseStatusException(HttpStatus.NOT_FOUND, "Staff link not found: $staffId")
-
-    /** A code not yet used is guaranteed by the unique index: retry on the astronomically rare collision. */
-    private fun generateUniqueCode(): String {
-        var code: String
-        do {
-            code = RandomCode.generate(CODE_LENGTH)
-        } while (staff.findRowByCode(code).isNotEmpty())
-        return code
-    }
-
-    private companion object {
-        const val CODE_LENGTH = 10
-    }
+    ) = operators.revokeCounterLink(serviceId, staffId)
 }
-
-private fun ServiceStaff.toView(): ServiceStaffView =
-    ServiceStaffView(
-        id = requireNotNull(id),
-        serviceId = serviceId,
-        label = label,
-        revoked = revoked,
-        code = code,
-        createdAt = createdAt,
-        revokedAt = revokedAt,
-    )

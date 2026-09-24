@@ -23,7 +23,6 @@ class ServiceAdminService(
     private val services: ServiceRepository,
     private val requirements: ServiceRequirementRepository,
     private val reservations: ServiceReservationRepository,
-    private val staffLinks: ServiceStaffRepository,
     private val configs: ServiceConfigRepository,
     private val eventPublisher: ApplicationEventPublisher,
     private val tenantCurrency: TenantCurrency,
@@ -114,7 +113,8 @@ class ServiceAdminService(
      * [ServiceDeletedEvent] is consumed synchronously by the ticketing module
      * inside this same transaction (its appointment tickets, and through the
      * FK cascade their reminders, disappear with the service); the catalog rows
-     * (requirements, reservations, staff links, configuration) are removed here.
+     * (requirements, reservations, configuration) are removed here, and the
+     * service leaves every operator's scope through the FK cascade.
      */
     @Transactional
     fun delete(serviceId: UUID) {
@@ -122,7 +122,6 @@ class ServiceAdminService(
         eventPublisher.publishEvent(ServiceDeletedEvent(requireNotNull(service.id), requireNotNull(service.tenantId)))
         requirements.deleteAll(requirements.findByServiceId(serviceId))
         reservations.deleteAll(reservations.findByServiceId(serviceId))
-        staffLinks.deleteAll(staffLinks.findAllByServiceId(serviceId))
         configs.findByServiceId(serviceId)?.let { configs.delete(it) }
         services.delete(service)
     }

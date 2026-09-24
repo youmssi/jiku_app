@@ -16,10 +16,12 @@ import org.springframework.stereotype.Component
 class EventDemoSeedContributor(
     private val eventService: EventService,
     private val events: EventRepository,
+    private val operators: OperatorRepository,
 ) : DemoSeedContributor {
     override val order = 10
 
     override fun wipe() {
+        operators.deleteAll()
         events.deleteAll()
     }
 

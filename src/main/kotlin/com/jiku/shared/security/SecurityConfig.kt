@@ -80,6 +80,11 @@ class SecurityConfig(
                 // (JIKU-88) — the same unauthenticated entry point as /line itself,
                 // just one hop earlier.
                 it.requestMatchers("${apiProperties.basePath}/line-codes/**").permitAll()
+                // Operator console (JIKU-116): operators have no account and are
+                // authenticated by their signed link in the path, like /checkin and
+                // /line; /operator-codes resolves their short code into that link.
+                it.requestMatchers("${apiProperties.basePath}/operator/**").permitAll()
+                it.requestMatchers("${apiProperties.basePath}/operator-codes/**").permitAll()
                 // Deposit-reservation flow (JIKU-55): a prospect has no account yet, so
                 // every booking endpoint is either fully open or gated by the booking's
                 // own access token (query param) rather than a JWT.

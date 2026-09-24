@@ -1,5 +1,6 @@
 package com.jiku.checkin.internal
 
+import com.jiku.catalog.OperatorAction
 import com.jiku.ticket.TicketPaymentStatus
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
@@ -109,4 +110,26 @@ data class SyncResultEntry(
     val guestName: String?,
     val checkedInAt: Instant?,
     val checkedInBy: String?,
+)
+
+/**
+ * Context shown to an operator opening an event's door: the event being staffed,
+ * the organizer's branding, the operator's label and what they may do there, and
+ * live attendance counters.
+ * Times are UTC instants rendered in [timezone] by the client.
+ */
+data class ValidatorContextResponse(
+    val eventName: String,
+    /** The event's lifecycle status; CANCELLED means check-in is closed for good. */
+    val eventStatus: String,
+    val startDateTime: Instant?,
+    val timezone: String,
+    val eventLocation: String?,
+    val organizerName: String,
+    val primaryColor: String,
+    val logoUrl: String?,
+    val validatorLabel: String,
+    val actions: Set<OperatorAction>,
+    val checkedIn: Long,
+    val confirmed: Long,
 )
