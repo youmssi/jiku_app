@@ -1,7 +1,9 @@
 package com.jiku.tenant.internal
 
 import com.jiku.shared.AccountNotice
+import com.jiku.shared.MessageLanguage
 import org.springframework.context.ApplicationEventPublisher
+import org.springframework.context.i18n.LocaleContextHolder
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -36,7 +38,8 @@ class AccountTokenService(
             AccountNotice(
                 kind = AccountNotice.KIND_PASSWORD_RESET,
                 email = user.email,
-                actionUrl = "${properties.appBaseUrl}/reset-password?token=$raw",
+                actionUrl = localizedLink("/reset-password?token=$raw"),
+                language = requestLanguage(),
             ),
         )
     }
@@ -64,7 +67,8 @@ class AccountTokenService(
             AccountNotice(
                 kind = AccountNotice.KIND_EMAIL_VERIFICATION,
                 email = user.email,
-                actionUrl = "${properties.appBaseUrl}/verify-email?token=$raw",
+                actionUrl = localizedLink("/verify-email?token=$raw"),
+                language = requestLanguage(),
             ),
         )
     }
@@ -84,6 +88,16 @@ class AccountTokenService(
         val user = users.findById(token.userId).orElseThrow { invalidToken() }
         user.emailVerified = true
         users.save(user)
+    }
+
+    /** The language of the browser that asked for this email; French when it says nothing usable. */
+    private fun requestLanguage(): String = MessageLanguage.normalize(LocaleContextHolder.getLocale().toLanguageTag())
+
+    /** French is the web app's unprefixed default; every other language lives under its own prefix. */
+    private fun localizedLink(path: String): String {
+        val language = requestLanguage()
+        val prefix = if (language == MessageLanguage.FRENCH) "" else "/$language"
+        return "${properties.appBaseUrl}$prefix$path"
     }
 
     private fun issue(

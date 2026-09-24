@@ -1,0 +1,1 @@
+Bonjour {{clientName}}, c'est votre tour{{counter}}. Présentez-vous maintenant, s'il vous plaît.

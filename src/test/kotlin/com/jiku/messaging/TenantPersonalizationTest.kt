@@ -7,6 +7,7 @@ import com.jiku.messaging.internal.TenantTemplateRepository
 import com.jiku.messaging.internal.VocabularyUpdate
 import com.jiku.messaging.internal.WhatsAppInvitation
 import com.jiku.messaging.internal.WhatsAppTemplateRenderer
+import com.jiku.shared.MessageLanguage
 import com.jiku.shared.TenantContext
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -54,13 +55,13 @@ class TenantPersonalizationTest {
 
         val invite = invitation()
         TenantContext.set(tenantA)
-        val fromA = whatsappRenderer.renderInvitation(invite)
+        val fromA = whatsappRenderer.renderInvitation(invite, MessageLanguage.ENGLISH)
         assertTrue(fromA.contains("Bienvenue chez Aminata"), "tenant A must use its override")
         assertFalse(fromA.contains("{{guestName}}"))
         TenantContext.clear()
 
         TenantContext.set(tenantB)
-        val fromB = whatsappRenderer.renderInvitation(invite)
+        val fromB = whatsappRenderer.renderInvitation(invite, MessageLanguage.ENGLISH)
         assertFalse(fromB.contains("Bienvenue chez Aminata"), "tenant B must never see A's override")
         assertTrue(fromB.contains("has invited you"), "tenant B keeps the default wording")
         TenantContext.clear()
@@ -81,7 +82,7 @@ class TenantPersonalizationTest {
 
         val invite = invitation()
         TenantContext.set(tenant)
-        val rendered = whatsappRenderer.renderInvitation(invite)
+        val rendered = whatsappRenderer.renderInvitation(invite, MessageLanguage.ENGLISH)
         TenantContext.clear()
 
         assertFalse(rendered.contains("{{nopeToken}}"), "invalid override must not leak its unknown variable")

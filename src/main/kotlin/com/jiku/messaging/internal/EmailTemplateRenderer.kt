@@ -2,138 +2,257 @@ package com.jiku.messaging.internal
 
 import com.jiku.shared.ManualPaymentNotice
 import com.jiku.shared.MemberInvitationNotice
-import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Component
+import java.util.Locale
+
+/** A rendered email: its subject line and HTML document. */
+data class RenderedEmail(
+    val subject: String,
+    val html: String,
+)
 
 /**
- * Renders HTML emails from templates kept in `resources/email-templates/`. Uses
- * simple `{{placeholder}}` substitution with HTML-escaped values; templates are
- * loaded once and cached. Client-facing templates (invitation, cancellation) pass
- * through the per-tenant override resolution (JIKU-91) with fallback to the
- * build's default.
+ * Renders every email from the shared layout and the language's partials kept in
+ * `resources/email-templates/` (see [MessageCatalog]). Client-facing emails
+ * (invitation, cancellation) carry the organizer's name, logo and colour, and
+ * pass through the per-tenant override resolution (JIKU-91) with fallback to the
+ * default document. Platform emails wear Jikū's own mark.
  */
 @Component
 class EmailTemplateRenderer(
     private val clientTemplates: TenantTemplateResolver,
+    private val catalog: MessageCatalog,
 ) {
-    private val invitationTemplate: String by lazy { load("invitation.html") }
-    private val cancellationTemplate: String by lazy { load("event-cancelled.html") }
-    private val manualRequestedTemplate: String by lazy { load("manual-payment-requested.html") }
-    private val manualConfirmedTemplate: String by lazy { load("manual-payment-confirmed.html") }
-    private val manualRejectedTemplate: String by lazy { load("manual-payment-rejected.html") }
-    private val trialNoticeTemplate: String by lazy { load("trial-notice.html") }
-    private val passwordResetTemplate: String by lazy { load("password-reset.html") }
-    private val verifyEmailTemplate: String by lazy { load("verify-email.html") }
-    private val memberInvitationTemplate: String by lazy { load("member-invitation.html") }
+    fun renderInvitation(
+        email: InvitationEmail,
+        language: String,
+    ): RenderedEmail {
+        val values =
+            mapOf(
+                "guestName" to email.recipientName,
+                "organizerName" to email.organizerName,
+                "eventName" to email.eventName,
+                "eventWhen" to email.eventWhen.orEmpty(),
+                "eventLocation" to email.eventLocation.orEmpty(),
+                "primaryColor" to email.primaryColor,
+                "invitationUrl" to email.invitationUrl,
+            )
+        return renderClient(INVITATION, language, values, email.logoUrl, email.organizerName, email.eventWhen, email.eventLocation)
+    }
 
-    fun renderInvitation(email: InvitationEmail): String =
-        clientTemplates.render(
-            ClientTemplates.definition("invitation").let { requireNotNull(it) }.name,
-            ClientTemplates.CHANNEL_EMAIL,
-            invitationTemplate,
-            invitationValues(email),
+    fun renderCancellation(
+        email: CancellationEmail,
+        language: String,
+    ): RenderedEmail {
+        val values =
+            mapOf(
+                "guestName" to email.recipientName,
+                "organizerName" to email.organizerName,
+                "eventName" to email.eventName,
+                "eventWhen" to email.eventWhen.orEmpty(),
+                "eventLocation" to email.eventLocation.orEmpty(),
+                "primaryColor" to email.primaryColor,
+            )
+        return renderClient(CANCELLATION, language, values, email.logoUrl, email.organizerName, email.eventWhen, email.eventLocation)
+    }
+
+    /** The build's default document for a client template, as the tenant's editor shows it. */
+    fun clientDefault(
+        name: String,
+        language: String,
+    ): String = catalog.emailDocument(language, name, FOOTER_CLIENT, "{{organizerName}}")
+
+    /** A sample `eventDetails` block for the template editor's preview. */
+    fun sampleEventDetails(language: String): String = eventDetails(language, "Mardi 3 novembre à 15:00", "Avenue de la République")
+
+    private fun renderClient(
+        name: String,
+        language: String,
+        values: Map<String, String>,
+        logoUrl: String?,
+        organizerName: String,
+        eventWhen: String?,
+        eventLocation: String?,
+    ): RenderedEmail {
+        val html =
+            clientTemplates.render(
+                name,
+                ClientTemplates.CHANNEL_EMAIL,
+                clientDefault(name, language),
+                values.mapValues { escapeHtml(it.value) } +
+                    mapOf(
+                        "logoBlock" to logoBlock(logoUrl, organizerName),
+                        "eventDetails" to eventDetails(language, eventWhen, eventLocation),
+                    ),
+            )
+        return RenderedEmail(catalog.text(language, "$name.subject", values), html)
+    }
+
+    fun renderManualPaymentRequested(
+        notice: ManualPaymentNotice,
+        language: String,
+    ): RenderedEmail =
+        renderPlatform(
+            "manual-payment-requested",
+            language,
+            paymentValues(notice),
+            mapOf(
+                "paymentDetails" to
+                    detailsTable(
+                        listOf(
+                            catalog.text(language, "label.reference") to notice.reference,
+                            catalog.text(language, "label.amount") to formatAmount(notice.amountMinor, notice.currency),
+                            catalog.text(language, "label.contact") to notice.organizerEmail,
+                        ),
+                    ),
+            ),
         )
 
-    fun renderCancellation(email: CancellationEmail): String =
-        clientTemplates.render(
-            ClientTemplates.definition("event-cancelled").let { requireNotNull(it) }.name,
-            ClientTemplates.CHANNEL_EMAIL,
-            cancellationTemplate,
-            cancellationValues(email),
+    fun renderManualPaymentConfirmed(
+        notice: ManualPaymentNotice,
+        language: String,
+    ): RenderedEmail =
+        renderPlatform(
+            "manual-payment-confirmed",
+            language,
+            paymentValues(notice),
+            mapOf("paymentDetails" to paymentDetails(notice, language)),
         )
 
-    private fun invitationValues(email: InvitationEmail): Map<String, String> =
+    fun renderManualPaymentRejected(
+        notice: ManualPaymentNotice,
+        language: String,
+    ): RenderedEmail {
+        val note = notice.note?.takeIf { it.isNotBlank() }
+        val reasonBlock =
+            if (note == null) {
+                ""
+            } else {
+                """<p style="margin:0 0 16px;padding:14px 16px;border-radius:12px;""" +
+                    """background:#f6f3ee;color:#4a443c;font-size:14px;">""" +
+                    """<strong>${escapeHtml(catalog.text(language, "label.reason"))}</strong> · ${escapeHtml(note)}</p>"""
+            }
+        return renderPlatform(
+            "manual-payment-rejected",
+            language,
+            paymentValues(notice),
+            mapOf("paymentDetails" to paymentDetails(notice, language), "reasonBlock" to reasonBlock),
+        )
+    }
+
+    /** A plain organizer notice (trial, subscription): a heading and one paragraph. */
+    fun renderNotice(
+        language: String,
+        recipientName: String,
+        subject: String,
+        heading: String,
+        body: String,
+    ): RenderedEmail =
+        RenderedEmail(
+            subject,
+            renderPlatform("notice", language, mapOf("recipientName" to recipientName, "heading" to heading, "body" to body)).html,
+        )
+
+    fun renderPasswordReset(
+        actionUrl: String,
+        language: String,
+    ): RenderedEmail = renderPlatform("password-reset", language, mapOf("actionUrl" to actionUrl))
+
+    fun renderVerifyEmail(
+        actionUrl: String,
+        language: String,
+    ): RenderedEmail = renderPlatform("verify-email", language, mapOf("actionUrl" to actionUrl))
+
+    fun renderMemberInvitation(notice: MemberInvitationNotice): RenderedEmail =
+        renderPlatform(
+            "member-invitation",
+            notice.language,
+            mapOf(
+                "organizationName" to notice.organizationName,
+                "inviterEmail" to notice.inviterEmail,
+                "role" to (catalog.textOrNull(notice.language, "role.${notice.role}") ?: notice.role.lowercase()),
+                "actionUrl" to notice.actionUrl,
+            ),
+        )
+
+    /**
+     * A platform email: [values] are plain text (escaped here for the HTML, used
+     * as-is in the subject); [blocks] are HTML fragments built by this renderer.
+     */
+    private fun renderPlatform(
+        name: String,
+        language: String,
+        values: Map<String, String>,
+        blocks: Map<String, String> = emptyMap(),
+    ): RenderedEmail {
+        val brand = escapeHtml(catalog.text(language, "brand.platform"))
+        val html =
+            catalog.substitute(
+                catalog.emailDocument(language, name, FOOTER_PLATFORM, brand),
+                values.mapValues { escapeHtml(it.value) } +
+                    blocks +
+                    mapOf("logoBlock" to "", "primaryColor" to PLATFORM_ACCENT),
+            )
+        return RenderedEmail(catalog.textOrNull(language, "$name.subject", values).orEmpty(), html)
+    }
+
+    private fun paymentValues(notice: ManualPaymentNotice): Map<String, String> =
         mapOf(
-            "logoBlock" to logoBlock(email.logoUrl, email.organizerName),
-            "organizerName" to escapeHtml(email.organizerName),
-            "guestName" to escapeHtml(email.recipientName),
-            "eventName" to escapeHtml(email.eventName),
-            "eventWhen" to email.eventWhen?.let { escapeHtml(it) }.orEmpty(),
-            "eventLocation" to email.eventLocation?.let { escapeHtml(it) }.orEmpty(),
-            "eventDetails" to details(email.eventWhen, email.eventLocation),
-            "primaryColor" to escapeHtml(email.primaryColor),
-            "invitationUrl" to escapeHtml(email.invitationUrl),
+            "organizerName" to notice.organizerName,
+            "tier" to notice.tier,
+            "reference" to notice.reference,
         )
 
-    private fun cancellationValues(email: CancellationEmail): Map<String, String> =
-        mapOf(
-            "logoBlock" to logoBlock(email.logoUrl, email.organizerName),
-            "organizerName" to escapeHtml(email.organizerName),
-            "guestName" to escapeHtml(email.recipientName),
-            "eventName" to escapeHtml(email.eventName),
-            "eventWhen" to email.eventWhen?.let { escapeHtml(it) }.orEmpty(),
-            "eventLocation" to email.eventLocation?.let { escapeHtml(it) }.orEmpty(),
-            "eventDetails" to details(email.eventWhen, email.eventLocation),
+    private fun paymentDetails(
+        notice: ManualPaymentNotice,
+        language: String,
+    ): String =
+        detailsTable(
+            listOf(
+                catalog.text(language, "label.tier") to notice.tier,
+                catalog.text(language, "label.reference") to notice.reference,
+                catalog.text(language, "label.amount") to formatAmount(notice.amountMinor, notice.currency),
+            ),
         )
+
+    private fun eventDetails(
+        language: String,
+        eventWhen: String?,
+        eventLocation: String?,
+    ): String =
+        detailsTable(
+            listOfNotNull(
+                eventWhen?.let { catalog.text(language, "label.when") to it },
+                eventLocation?.let { catalog.text(language, "label.where") to it },
+            ),
+        )
+
+    /** Label-over-value rows between hairlines, the way a printed programme reads. */
+    private fun detailsTable(rows: List<Pair<String, String>>): String {
+        if (rows.isEmpty()) {
+            return ""
+        }
+        val cells =
+            rows.joinToString("") { (label, value) ->
+                """<tr><td style="padding:14px 0;border-bottom:1px solid #ebe5da;">""" +
+                    """<span style="display:block;margin:0 0 4px;font:600 11px/1.4 $SANS;""" +
+                    """letter-spacing:0.14em;text-transform:uppercase;color:#8c8377;">${escapeHtml(label)}</span>""" +
+                    """<span style="font:17px/1.5 Georgia,'Times New Roman',serif;color:#1d1a16;">${escapeHtml(value)}</span></td></tr>"""
+            }
+        return """<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" """ +
+            """style="margin:8px 0 8px;border-top:1px solid #ebe5da;">$cells</table>"""
+    }
 
     private fun logoBlock(
         logoUrl: String?,
         organizerName: String,
     ): String =
         if (!logoUrl.isNullOrBlank()) {
-            """<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(organizerName)}" """ +
-                """height="48" style="margin-bottom:16px;" />"""
+            """<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(organizerName)}" height="44" """ +
+                """style="display:block;height:44px;width:auto;margin:0 0 14px;border:0;" />"""
         } else {
             ""
         }
-
-    private fun details(
-        eventWhen: String?,
-        eventLocation: String?,
-    ): String =
-        buildString {
-            eventWhen?.let { append("""<p style="margin:0 0 4px;color:#555;">📅 ${escapeHtml(it)}</p>""") }
-            eventLocation?.let { append("""<p style="margin:0 0 4px;color:#555;">📍 ${escapeHtml(it)}</p>""") }
-        }
-
-    fun renderManualPaymentRequested(notice: ManualPaymentNotice): String =
-        manualRequestedTemplate
-            .replace("{{organizerName}}", escapeHtml(notice.organizerName))
-            .replace("{{organizerEmail}}", escapeHtml(notice.organizerEmail))
-            .replace("{{tier}}", escapeHtml(notice.tier))
-            .replace("{{reference}}", escapeHtml(notice.reference))
-            .replace("{{amount}}", formatAmount(notice.amountMinor, notice.currency))
-            .replace("{{paymentId}}", notice.paymentId.toString())
-
-    fun renderManualPaymentConfirmed(notice: ManualPaymentNotice): String =
-        manualConfirmedTemplate
-            .replace("{{organizerName}}", escapeHtml(notice.organizerName))
-            .replace("{{tier}}", escapeHtml(notice.tier))
-            .replace("{{reference}}", escapeHtml(notice.reference))
-            .replace("{{amount}}", formatAmount(notice.amountMinor, notice.currency))
-
-    fun renderManualPaymentRejected(notice: ManualPaymentNotice): String {
-        val reasonBlock =
-            notice.note?.takeIf { it.isNotBlank() }?.let {
-                """<p style="margin:0 0 4px;color:#555;">Reason: ${escapeHtml(it)}</p>"""
-            } ?: ""
-        return manualRejectedTemplate
-            .replace("{{organizerName}}", escapeHtml(notice.organizerName))
-            .replace("{{tier}}", escapeHtml(notice.tier))
-            .replace("{{reference}}", escapeHtml(notice.reference))
-            .replace("{{reasonBlock}}", reasonBlock)
-    }
-
-    fun renderTrialNotice(
-        organizerName: String,
-        heading: String,
-        body: String,
-    ): String =
-        trialNoticeTemplate
-            .replace("{{organizerName}}", escapeHtml(organizerName))
-            .replace("{{heading}}", escapeHtml(heading))
-            .replace("{{body}}", escapeHtml(body))
-
-    fun renderPasswordReset(actionUrl: String): String = passwordResetTemplate.replace("{{actionUrl}}", escapeHtml(actionUrl))
-
-    fun renderVerifyEmail(actionUrl: String): String = verifyEmailTemplate.replace("{{actionUrl}}", escapeHtml(actionUrl))
-
-    fun renderMemberInvitation(notice: MemberInvitationNotice): String =
-        memberInvitationTemplate
-            .replace("{{organizationName}}", escapeHtml(notice.organizationName))
-            .replace("{{inviterEmail}}", escapeHtml(notice.inviterEmail))
-            .replace("{{role}}", escapeHtml(notice.role))
-            .replace("{{actionUrl}}", escapeHtml(notice.actionUrl))
 
     /**
      * Minor units to a display amount (e.g. 150000 GNF-minor → "150 000 GNF").
@@ -145,14 +264,22 @@ class EmailTemplateRenderer(
         currency: String,
     ): String {
         val major = if (currency.uppercase() in ZERO_DECIMAL_CURRENCIES) amountMinor else amountMinor / 100
-        val grouped = "%,d".format(major).replace(',', ' ')
+        val grouped = String.format(Locale.ROOT, "%,d", major).replace(',', ' ')
         return "$grouped $currency"
     }
 
     private companion object {
+        const val INVITATION = "invitation"
+        const val CANCELLATION = "event-cancelled"
+        const val FOOTER_CLIENT = "footer.client"
+        const val FOOTER_PLATFORM = "footer.platform"
+
+        /** Jikū's ink: the accent band and buttons of the emails the platform sends in its own name. */
+        const val PLATFORM_ACCENT = "#1d1a16"
+
+        const val SANS = "-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
+
         val ZERO_DECIMAL_CURRENCIES =
             setOf("BIF", "CLP", "DJF", "GNF", "JPY", "KMF", "KRW", "MGA", "PYG", "RWF", "UGX", "VND", "VUV", "XAF", "XOF", "XPF")
     }
-
-    private fun load(name: String): String = ClassPathResource("email-templates/$name").inputStream.bufferedReader().use { it.readText() }
 }

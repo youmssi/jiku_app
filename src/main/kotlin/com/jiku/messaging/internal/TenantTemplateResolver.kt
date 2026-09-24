@@ -4,7 +4,6 @@ import com.jiku.shared.OpsAlert
 import com.jiku.shared.TenantContext
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
-import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Component
 
 /**
@@ -75,20 +74,25 @@ class TenantTemplateResolver(
     }
 }
 
-/** Charge un gabarit par défaut depuis les ressources du build. */
-object ClientTemplateDefaults {
-    private val cache = mutableMapOf<String, String>()
-
+/**
+ * Le corps par défaut d'un gabarit client, dans une langue : pour l'e-mail, le
+ * document complet (mise en page + contenu) tel que l'éditeur du tenant le montre.
+ */
+@Component
+class ClientTemplateDefaults(
+    private val catalog: MessageCatalog,
+    private val emailRenderer: EmailTemplateRenderer,
+) {
     fun load(
         name: String,
         channel: String,
+        language: String,
     ): String? {
-        val definition = ClientTemplates.definition(name) ?: return null
-        val file = definition.defaultFile(channel) ?: return null
-        val folder = if (channel == ClientTemplates.CHANNEL_EMAIL) "email-templates" else "whatsapp-templates"
-        val key = "$channel/$file"
-        return cache.getOrPut(key) {
-            ClassPathResource("$folder/$file").inputStream.bufferedReader().use { it.readText() }
+        val file = ClientTemplates.definition(name)?.defaultFile(channel) ?: return null
+        return if (channel == ClientTemplates.CHANNEL_EMAIL) {
+            emailRenderer.clientDefault(name, language)
+        } else {
+            catalog.whatsAppTemplate(language, file)
         }
     }
 }

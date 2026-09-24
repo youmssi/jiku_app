@@ -25,4 +25,6 @@ data class EventCancellationNotice(
     val organizerName: String,
     val primaryColor: String,
     val logoUrl: String?,
+    /** The organizer's language, which the notice is written in. */
+    val language: String = MessageLanguage.FRENCH,
 )

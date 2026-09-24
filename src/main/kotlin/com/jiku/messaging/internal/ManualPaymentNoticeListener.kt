@@ -17,6 +17,8 @@ class ManualPaymentNoticeListener(
     private val mailer: OperationalMailer,
     private val salesProperties: NotificationSalesProperties,
     private val templateRenderer: EmailTemplateRenderer,
+    private val emailProperties: NotificationEmailProperties,
+    private val catalog: MessageCatalog,
 ) {
     private val log = LoggerFactory.getLogger(ManualPaymentNoticeListener::class.java)
 
@@ -38,12 +40,11 @@ class ManualPaymentNoticeListener(
             )
             return
         }
-        mailer.sendOperationalHtml(
-            label = "manual-payment",
-            to = to,
-            toName = "Sales",
-            subject = "New activation request ${notice.reference} — ${notice.organizerName}",
-            htmlBody = templateRenderer.renderManualPaymentRequested(notice),
+        mailer.send(
+            "manual-payment",
+            to,
+            "Sales",
+            templateRenderer.renderManualPaymentRequested(notice, emailProperties.platformLanguage),
         )
     }
 
@@ -53,24 +54,14 @@ class ManualPaymentNoticeListener(
             log.warn("Manual payment {} has no organizer email to notify", notice.reference)
             return
         }
-        val confirmed = notice.kind == ManualPaymentNotice.KIND_CONFIRMED
-        mailer.sendOperationalHtml(
-            label = "manual-payment",
-            to = to,
-            toName = notice.organizerName,
-            subject =
-                if (confirmed) {
-                    "Your ${notice.tier} activation is confirmed"
-                } else {
-                    "About your ${notice.tier} activation request"
-                },
-            htmlBody =
-                if (confirmed) {
-                    templateRenderer.renderManualPaymentConfirmed(notice)
-                } else {
-                    templateRenderer.renderManualPaymentRejected(notice)
-                },
-        )
+        val language = catalog.language(notice.tenantId)
+        val email =
+            if (notice.kind == ManualPaymentNotice.KIND_CONFIRMED) {
+                templateRenderer.renderManualPaymentConfirmed(notice, language)
+            } else {
+                templateRenderer.renderManualPaymentRejected(notice, language)
+            }
+        mailer.send("manual-payment", to, notice.organizerName, email)
     }
 }
 
