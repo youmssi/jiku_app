@@ -11823,6 +11823,46 @@
               "null"
             ],
             "format" : "uuid"
+          },
+          "rsvpStatus" : {
+            "type" : "string",
+            "enum" : [
+              "PENDING",
+              "CONFIRMED",
+              "DECLINED",
+              "TRANSFERRED"
+            ]
+          },
+          "ticketCode" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "paymentStatus" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "enum" : [
+              "NOT_REQUIRED",
+              "DUE",
+              "DUE_AFTER_SERVICE",
+              "PAID"
+            ]
+          },
+          "amountDueMinor" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
+          },
+          "amountDueCurrency" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         }
       },
