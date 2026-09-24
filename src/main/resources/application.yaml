@@ -37,6 +37,16 @@ jiku:
     conversation-safety-threshold: ${WHATSAPP_CONVERSATION_SAFETY_THRESHOLD:220}
     usd-to-gnf-rate: ${WHATSAPP_USD_TO_GNF_RATE:8760}
     marketing-markers: ${WHATSAPP_MARKETING_MARKERS:promo,réduction,solde,gratuit,offre spéciale,cadeau,bon plan,code promo,achetez maintenant}
+  sms:
+    # SMS delivery transport (JIKU-112): log (default — records sends without
+    # delivering) or nimba (Nimba SMS, with the credentials below).
+    transport: ${SMS_TRANSPORT:log}
+    nimba:
+      service-id: ${NIMBA_SMS_SERVICE_ID:}
+      secret-token: ${NIMBA_SMS_SECRET_TOKEN:}
+      # The sender name approved on the Nimba account; case-sensitive.
+      sender-name: ${NIMBA_SMS_SENDER_NAME:}
+      base-url: ${NIMBA_SMS_BASE_URL:https://api.nimbasms.com}
   provider-credentials:
     # Encrypts tenant-provided provider credentials at rest (AES-GCM). Minimum
     # 32 characters; MUST be set to a strong random value outside local — and

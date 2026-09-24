@@ -2,7 +2,6 @@ package com.jiku.catalog
 
 import com.jiku.TestcontainersConfiguration
 import com.jiku.catalog.internal.ConfirmationMode
-import com.jiku.catalog.internal.ReminderChannel
 import com.jiku.catalog.internal.Resource
 import com.jiku.catalog.internal.ResourceAvailability
 import com.jiku.catalog.internal.ResourceAvailabilityRepository
@@ -15,6 +14,7 @@ import com.jiku.catalog.internal.ServiceRequirement
 import com.jiku.catalog.internal.ServiceRequirementRepository
 import com.jiku.catalog.internal.SlotEngine
 import com.jiku.catalog.internal.SlotUnavailableException
+import com.jiku.shared.ReminderChannel
 import com.jiku.shared.TenantContext
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test

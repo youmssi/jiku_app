@@ -4,7 +4,6 @@ import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.catalog.ResourceType
 import com.jiku.catalog.internal.ConfirmationMode
-import com.jiku.catalog.internal.ReminderChannel
 import com.jiku.catalog.internal.Resource
 import com.jiku.catalog.internal.ResourceAvailability
 import com.jiku.catalog.internal.ResourceAvailabilityRepository
@@ -17,6 +16,7 @@ import com.jiku.catalog.internal.SlotEngine
 import com.jiku.messaging.internal.NotificationLog
 import com.jiku.messaging.internal.NotificationLogRepository
 import com.jiku.messaging.internal.WhatsAppMessageCostRepository
+import com.jiku.shared.ReminderChannel
 import com.jiku.shared.TenantContext
 import com.jiku.ticket.internal.AppointmentReminderRepository
 import com.jiku.ticket.internal.AppointmentReminderSweep
