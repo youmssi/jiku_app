@@ -200,8 +200,7 @@ class SlotEngine(
         // matérialisée qu'au moment où l'organisateur la confirme (JIKU-87/88).
         if (outcome.status == ServiceReservationStatus.CONFIRMED) {
             val tenantId = TenantContext.get() ?: throw SlotUnavailableException("No tenant context")
-            val professionalName =
-                resources.findByActiveTrueAndTypeOrderByNameAsc(ResourceType.PERSON).firstOrNull()?.name
+            val professionalName = resources.professionalAmong(outcome.resourceIds)
             events.publishEvent(
                 AppointmentBooked(
                     serviceId = serviceId,
