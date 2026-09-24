@@ -9,6 +9,7 @@ import com.jiku.catalog.internal.ResourceAvailability
 import com.jiku.catalog.internal.ResourceAvailabilityRepository
 import com.jiku.catalog.internal.ResourceRepository
 import com.jiku.catalog.internal.ServiceAdminService
+import com.jiku.catalog.internal.ServiceCreateRequest
 import com.jiku.catalog.internal.ServiceLinkTokenService
 import com.jiku.catalog.internal.ServiceStaff
 import com.jiku.catalog.internal.ServiceStaffRepository
@@ -222,7 +223,7 @@ class LineStaffControllerTest {
                 end = LocalTime.of(13, 0),
             ),
         )
-        val service = services.create("Coupe", "Africa/Conakry")
+        val service = services.create(ServiceCreateRequest(name = "Coupe", timezone = "Africa/Conakry"))
         services.addRequirement(service.id, ResourceType.PERSON, 1)
         return service.id
     }

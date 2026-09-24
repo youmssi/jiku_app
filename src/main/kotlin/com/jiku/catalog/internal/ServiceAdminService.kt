@@ -2,6 +2,7 @@ package com.jiku.catalog.internal
 
 import com.jiku.catalog.ResourceType
 import com.jiku.shared.ServiceDeletedEvent
+import com.jiku.shared.TenantCurrency
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
@@ -24,6 +25,7 @@ class ServiceAdminService(
     private val staffLinks: ServiceStaffRepository,
     private val configs: ServiceConfigRepository,
     private val eventPublisher: ApplicationEventPublisher,
+    private val tenantCurrency: TenantCurrency,
 ) {
     @Transactional(readOnly = true)
     fun list(): List<ServiceResponse> = services.findAll().map { it.toResponse() }
@@ -32,23 +34,34 @@ class ServiceAdminService(
     fun get(serviceId: UUID): ServiceResponse = services.findById(serviceId).map { it.toResponse() }.orElseThrow { notFound(serviceId) }
 
     @Transactional
-    fun create(
-        name: String,
-        timezone: String,
-    ): ServiceResponse {
-        validateTimezone(timezone)
-        return services
-            .save(Service(name = name.trim(), timezone = timezone))
-            .toResponse()
+    fun create(request: ServiceCreateRequest): ServiceResponse {
+        validateTimezone(request.timezone)
+        val service =
+            Service(name = request.name.trim(), timezone = request.timezone).apply {
+                paymentRule = request.paymentRule
+                price = priceFor(request.paymentRule, request.priceMinor, tenantCurrency::ofCurrentTenant)
+            }
+        return services.save(service).toResponse()
     }
 
+    /**
+     * A new price applies to the tickets issued from now on; a ticket already
+     * issued keeps the price it was issued at.
+     */
     @Transactional
-    fun updateName(
+    fun update(
         serviceId: UUID,
-        name: String?,
+        request: ServiceUpdateRequest,
     ): ServiceResponse {
         val service = services.findById(serviceId).orElseThrow { notFound(serviceId) }
-        name?.takeIf { it.isNotBlank() }?.let { service.name = it.trim() }
+        request.name?.takeIf { it.isNotBlank() }?.let { service.name = it.trim() }
+        if (request.paymentRule != null || request.priceMinor != null) {
+            val rule = request.paymentRule ?: service.paymentRule
+            // Switching between paid rules keeps the current amount unless a new one is given.
+            val amount = if (rule == PaymentRule.FREE) request.priceMinor else request.priceMinor ?: service.price?.amountMinor
+            service.price = priceFor(rule, amount, tenantCurrency::ofCurrentTenant)
+            service.paymentRule = rule
+        }
         return services.save(service).toResponse()
     }
 
@@ -125,7 +138,15 @@ class ServiceAdminService(
     }
 }
 
-private fun Service.toResponse(): ServiceResponse = ServiceResponse(id = requireNotNull(id), name = name, timezone = timezone)
+private fun Service.toResponse(): ServiceResponse =
+    ServiceResponse(
+        id = requireNotNull(id),
+        name = name,
+        timezone = timezone,
+        paymentRule = paymentRule,
+        priceMinor = price?.amountMinor,
+        currency = price?.currency,
+    )
 
 private fun ServiceRequirement.toResponse(): ServiceRequirementResponse =
     ServiceRequirementResponse(

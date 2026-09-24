@@ -35,7 +35,7 @@ class ServiceController(
     @ResponseStatus(HttpStatus.CREATED)
     fun create(
         @Valid @RequestBody request: ServiceCreateRequest,
-    ): ServiceResponse = services.create(request.name, request.timezone)
+    ): ServiceResponse = services.create(request)
 
     @GetMapping
     fun list(): List<ServiceResponse> = services.list()
@@ -60,7 +60,7 @@ class ServiceController(
     fun update(
         @PathVariable id: UUID,
         @Valid @RequestBody request: ServiceUpdateRequest,
-    ): ServiceResponse = services.updateName(id, request.name)
+    ): ServiceResponse = services.update(id, request)
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

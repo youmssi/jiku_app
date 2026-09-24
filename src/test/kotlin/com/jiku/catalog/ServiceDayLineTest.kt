@@ -9,6 +9,7 @@ import com.jiku.catalog.internal.ResourceRepository
 import com.jiku.catalog.internal.ServiceAdminService
 import com.jiku.catalog.internal.ServiceConfigService
 import com.jiku.catalog.internal.ServiceConfigUpdate
+import com.jiku.catalog.internal.ServiceCreateRequest
 import com.jiku.catalog.internal.SlotEngine
 import com.jiku.invitation.internal.Guest
 import com.jiku.invitation.internal.GuestRepository
@@ -275,7 +276,7 @@ class ServiceDayLineTest {
                 end = LocalTime.of(13, 0),
             ),
         )
-        val service = services.create("Coupe", "Africa/Conakry")
+        val service = services.create(ServiceCreateRequest(name = "Coupe", timezone = "Africa/Conakry"))
         services.addRequirement(service.id, ResourceType.PERSON, 1)
         // Ces scénarios exercent la mécanique de la ligne du jour, pas le cycle de
         // confirmation : le service est en confirmation immédiate pour que la
