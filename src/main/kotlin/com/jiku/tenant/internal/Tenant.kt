@@ -21,8 +21,14 @@ import java.util.UUID
 class Tenant(
     @Column(name = "name", nullable = false)
     val name: String,
-    @Column(name = "contact_email", nullable = false, unique = true)
+    @Column(name = "contact_email", nullable = false)
     val contactEmail: String,
+    /** ISO 3166-1 alpha-2; fixed at creation (JIKU-107). */
+    @Column(name = "country", nullable = false, updatable = false)
+    val country: String,
+    /** ISO 4217 currency of every price this organization sets or pays. */
+    @Column(name = "currency", nullable = false, updatable = false)
+    val currency: String,
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     var status: TenantStatus = TenantStatus.ACTIVE,

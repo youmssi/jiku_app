@@ -122,6 +122,14 @@ auth:
     client-id: ${GOOGLE_OAUTH_CLIENT_ID:}
     jwks-uri: ${GOOGLE_OAUTH_JWKS_URI:https://www.googleapis.com/oauth2/v3/certs}
 
+tenant:
+  market:
+    # Where organizations can sign up (JIKU-107): comma-separated ISO 3166-1
+    # alpha-2 codes. An organization's currency is its country's, fixed at
+    # creation. The default country applies when a sign-up names none.
+    default-country: ${TENANT_DEFAULT_COUNTRY:GN}
+    supported-countries: ${TENANT_SUPPORTED_COUNTRIES:GN}
+
 jwt:
   # HMAC signing secret (minimum 32 bytes). The default is for local use only;
   # every real environment MUST set JWT_SECRET to a long random value.
