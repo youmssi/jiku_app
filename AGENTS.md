@@ -131,7 +131,10 @@ service.
    `Refs: JIKU-<number>` trailer. Types: `feat`, `fix`, `refactor`, `test`, `docs`,
    `chore`, `perf`, `build`.
 3. **Branching** — One branch per story, `jiku-{number}-{slug}`, created from
-   `develop`. Never commit directly to `main` or `develop`. Squash-merge via PR.
+   an up-to-date `develop`. Never commit directly to `main` or `develop`.
+   Squash-merge via PR, and merge a finished story into `develop` **before**
+   starting the next one — never stack a story on an unmerged one. The full
+   workflow is in `CONTRIBUTING.md`.
 4. **No hardcoded config** — see Environment Variables above.
 5. **No duplicated logic** — centralize shared validation, formatting, or mapping,
    but never at the cost of a module boundary (use an exposed API or `shared`).

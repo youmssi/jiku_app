@@ -44,8 +44,9 @@ context from `AGENTS.md`.
 ### PR & Commit Rules
 
 - Branch naming: `jiku-{number}-{slug}` (e.g. `jiku-13-event-domain-model`)
-- Squash merge only into `develop`
-- PR template from `docs/jiku-mvp-backlog.md` Section 2
+- Squash merge only into `develop`, and merge a finished story before starting the
+  next one (see `CONTRIBUTING.md`)
+- PR description follows `.github/pull_request_template.md`
 - **Never** include AI authorship traces in any artifact (commit, comment, PR, header)
 
 ### When Stuck
