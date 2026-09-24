@@ -68,7 +68,7 @@ class CheckInService(
         if (ticket == null || ticket.eventId != eventId) {
             return notFound()
         }
-        return respond(ticketing.checkInByCode(ticketCode, validatorLabel))
+        return respond(eventId, ticketing.checkInByCode(ticketCode, validatorLabel))
     }
 
     fun checkInByGuest(
@@ -83,7 +83,7 @@ class CheckInService(
         if (guest == null || guest.eventId != eventId) {
             return notFound()
         }
-        return respond(ticketing.checkInByGuest(guestId, validatorLabel))
+        return respond(eventId, ticketing.checkInByGuest(guestId, validatorLabel))
     }
 
     fun search(
@@ -174,9 +174,12 @@ class CheckInService(
         }
     }
 
-    private fun respond(result: CheckInResult): CheckInResponse {
+    private fun respond(
+        eventId: UUID,
+        result: CheckInResult,
+    ): CheckInResponse {
         if (result.outcome == CheckInOutcome.CHECKED_IN) {
-            result.ticket?.let { recordQuorumIfReached(it.eventId) }
+            recordQuorumIfReached(eventId)
         }
         val guestName = result.ticket?.let { invitation.findGuest(it.guestId)?.fullName() }
         // La catégorie vient du billet, pas de l'invité : si l'organisateur a
@@ -184,7 +187,7 @@ class CheckInService(
         // le billet présenté.
         val type =
             result.ticket?.ticketTypeId?.let { typeId ->
-                events.ticketTypes(result.ticket.eventId).firstOrNull { it.id == typeId }
+                events.ticketTypes(eventId).firstOrNull { it.id == typeId }
             }
         return CheckInResponse(
             outcome = result.outcome.name,

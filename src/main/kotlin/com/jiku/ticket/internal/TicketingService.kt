@@ -391,7 +391,7 @@ private fun Ticket.toCandidate(): LineCandidate =
 private fun Ticket.toInfo(): TicketInfo =
     TicketInfo(
         id = requireNotNull(id),
-        eventId = requireNotNull(eventId),
+        eventId = eventId,
         guestId = guestId,
         ticketCode = ticketCode,
         status = status.name,

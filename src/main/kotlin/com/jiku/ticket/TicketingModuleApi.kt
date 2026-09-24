@@ -206,7 +206,8 @@ enum class LineOutcome {
 
 data class TicketInfo(
     val id: UUID,
-    val eventId: UUID,
+    /** Null for a service ticket (appointment or walk-in), which belongs to no event. */
+    val eventId: UUID?,
     val guestId: UUID,
     val ticketCode: String,
     val status: String,
