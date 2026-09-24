@@ -234,6 +234,12 @@ api:
         paths: [/prospects]
         max-requests: ${RATE_LIMIT_PROSPECT_MAX_REQUESTS:5}
         window: ${RATE_LIMIT_PROSPECT_WINDOW:PT1M}
+      feedback:
+        # Organizer feedback (JIKU-133): a person writes a few messages and
+        # answers a rating prompt now and then; a burst is a script.
+        paths: [/feedback, /feedback/ratings]
+        max-requests: ${RATE_LIMIT_FEEDBACK_MAX_REQUESTS:10}
+        window: ${RATE_LIMIT_FEEDBACK_WINDOW:PT1M}
 
 error-tracking:
   # Unhandled-error reporting (JIKU-70). The DSN is the switch: blank — the default
@@ -381,6 +387,11 @@ billing:
     mobile-money-number: ${BILLING_MANUAL_MOMO_NUMBER:}
     mobile-money-operator: ${BILLING_MANUAL_MOMO_OPERATOR:}
     bank-details: ${BILLING_MANUAL_BANK_DETAILS:}
+feedback:
+  # Minimum gap between two rating prompts for the same organizer (JIKU-133),
+  # so asking never becomes noise.
+  prompt-interval: ${FEEDBACK_PROMPT_INTERVAL:P7D}
+
 compliance:
   retention:
     # Data-retention policy (JIKU-37). Guest personal data is anonymized this many
