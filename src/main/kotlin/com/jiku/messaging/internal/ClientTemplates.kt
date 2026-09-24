@@ -109,6 +109,19 @@ object ClientTemplates {
                 emailFile = null,
                 whatsappFile = "appointment-reminder.txt",
             ),
+            Definition(
+                name = "client-called",
+                label = "Your turn in the line (WhatsApp / SMS)",
+                channels = listOf(CHANNEL_WHATSAPP),
+                emailVariables = null,
+                whatsappVariables =
+                    listOf(
+                        Variable("clientName", "Client name", "Awa Diallo", required = true),
+                        Variable("counter", "Counter to go to", " at counter 4"),
+                    ),
+                emailFile = null,
+                whatsappFile = "client-called.txt",
+            ),
         )
 
     fun definition(name: String): Definition? = definitions.firstOrNull { it.name == name }
