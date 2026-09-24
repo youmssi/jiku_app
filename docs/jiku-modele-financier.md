@@ -68,7 +68,8 @@ utilitaires chacun.
 
 Jikū ne touche pas l'argent des ventes : la commission est un revenu presque
 sans coût direct, à part les 3,5 % payés pour l'encaisser et l'envoi des
-billets. Son taux reste à décider (ADR 104, §9).
+billets. Taux décidé : **3 % du prix de chaque billet**, payé par tranche avant
+la vente (ADR 104, §8).
 
 ## 3. Coûts fixes mensuels
 
@@ -98,7 +99,7 @@ façons de gérer les prix :
 
 | Option | Principe | Avantage | Limite |
 |---|---|---|---|
-| **A. Une grille par monnaie** (recommandée) | Chaque prix est fixé à la main pour chaque monnaie, en montant rond | Prix stables et lisibles pour le client ; aucune surprise de change | Une grille à tenir par pays |
+| **A. Une grille par monnaie** (retenue) | Chaque prix est fixé à la main pour chaque monnaie, en montant rond | Prix stables et lisibles pour le client ; aucune surprise de change | Une grille à tenir par pays |
 | B. Une monnaie de référence convertie | Prix en USD, convertis au taux du jour | Une seule grille | Prix qui bougent chaque jour et montants non ronds |
 | C. GNF seulement au départ | Une seule monnaie tant qu'on reste en Guinée | Rien à construire | Bloque l'ouverture d'un deuxième pays |
 
@@ -115,8 +116,7 @@ Hypothèses (à ajuster) sur la répartition des organisations **payantes** :
   moyen 250 000 GNF ;
 - 40 % utilisent les services : 2 utilisateurs en Teams (100 000 GNF par
   utilisateur et par mois) ;
-- 10 % vendent des billets : 50 M GNF de ventes par an, commission de 3 %
-  (hypothèse de calcul, taux non décidé).
+- 10 % vendent des billets : 50 M GNF de ventes par an, commission de 3 %.
 
 | | 100 organisations | 1 000 organisations |
 |---|---|---|

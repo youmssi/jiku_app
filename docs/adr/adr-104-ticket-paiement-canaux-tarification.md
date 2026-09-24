@@ -1,7 +1,6 @@
 # ADR 104 — Plateforme centrée sur le ticket : file d'attente, paiement, opérateurs, canaux et tarification
 
-**Statut :** accepté pour les décisions produit (§1 à §8) ; les points marqués
-**[À TRANCHER]** restent ouverts (§9).
+**Statut :** accepté ; un seul point reste ouvert (§9, point 5).
 **Date :** 2026-09-24
 **Remplace partiellement :** ADR 81 (la file d'attente passe de « proposée » à
 « dans le produit »).
@@ -218,10 +217,24 @@ Trois lignes, affichées telles quelles sur la page des prix :
    prix par invité au-delà). Le paiement est demandé **au moment de l'action**
    qui dépasse le gratuit. Passer au palier supérieur ne fait payer que la
    différence.
-3. **Tickets payants** (concert, gala payant) : **un pourcentage de ce qui est
-   vendu**, facturé par Jikū à l'organisation (Jikū ne prélève rien à la
-   source, §4). Rien n'est dû si rien n'est vendu. Ces tickets ne comptent pas
-   dans les paliers d'invités.
+3. **Tickets payants** (concert, gala payant) : **3 % du prix de chaque billet
+   vendu**. L'argent des ventes va chez l'organisation (§4) ; la commission est
+   payée à Jikū **avant la vente, par tranche** (voir ci-dessous). Rien n'est dû
+   si rien n'est vendu. Ces tickets ne comptent pas dans les paliers d'invités.
+
+### Commission payée par tranche
+
+- Quand l'organisateur ouvre la vente, Jikū lui demande la commission d'une
+  tranche de billets (par exemple les 50 prochains) : 3 % × prix × taille de
+  la tranche, montant affiché avant le paiement.
+- Chaque billet marqué « payé » consomme une place de la tranche. Quand la
+  tranche est épuisée, la vente se met en pause jusqu'au paiement de la
+  suivante. Jikū n'a donc jamais d'impayé à recouvrer.
+- La part d'une tranche non consommée à la fin de l'événement devient un avoir
+  (le module `money` émet déjà des avoirs), déduit de la prochaine tranche ou du
+  prochain paiement à Jikū. Ce n'est pas un portefeuille : aucun montant ne peut
+  être rechargé librement.
+- La taille de la tranche et le taux sont des paramètres de configuration.
 
 Règles de simplicité :
 
@@ -231,16 +244,24 @@ Règles de simplicité :
 - Tous les prix sont des paramètres de configuration, jamais des valeurs
   écrites dans le code.
 
-## 9. Points ouverts [À TRANCHER]
+## 9. Décisions prises et point encore ouvert
 
-1. **Taux de commission** de Jikū sur les tickets payants.
-2. **Moment où Jikū encaisse cette commission**, puisqu'il ne prélève rien à la
-   source.
-3. **Monnaies** : une grille de prix par monnaie, ou une monnaie de référence
-   convertie.
-4. **Niveaux de paiement proposés au lancement** (§4, circuit 2).
+Décidé le 2026-09-24 :
+
+1. **Commission** : 3 % du prix de chaque billet vendu.
+2. **Paiement de la commission** : avant la vente, par tranche (§8).
+3. **Monnaies** : une grille de prix par monnaie. Chaque prix est fixé à la
+   main, en montant rond. La monnaie d'une organisation est fixée par son pays à
+   l'inscription et ne change plus ; ses factures sont émises dans cette
+   monnaie, avec un équivalent indicatif en USD.
+4. **Moyens de paiement des organisations au lancement** : niveaux 1
+   (coordonnées affichées) et 2 (lien de paiement). Le niveau 3 (compte marchand
+   connecté) vient après le lancement.
+
+Encore ouvert **[À TRANCHER]** :
+
 5. **Services qui encaissent de l'argent** (consultation prépayée) : appliquer
-   aussi le pourcentage, ou l'inclure dans l'abonnement ?
+   aussi la commission, ou l'inclure dans l'abonnement ?
 
 ## Ordre de réalisation
 

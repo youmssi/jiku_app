@@ -87,7 +87,7 @@ l'ordre.
 | 1.2 | app | Adaptateur CinetPay : initiation, vérification de la signature du callback, contrôle du statut auprès du prestataire |
 | 1.3 | web | Écran de paiement unique : montant, boutons Orange Money / MTN / Carte, suivi jusqu'à confirmation |
 | 1.4 | app | Sélecteur de messages : `MessagingProviderResolver` ramené à un choix parmi des adaptateurs enregistrés |
-| 1.5 | app, web | Monnaies : selon la décision prise (ADR 104, §9) |
+| 1.5 | app, web | Monnaies : grille de prix par monnaie, monnaie fixée par le pays de l'organisation, factures dans cette monnaie (ADR 104, §9) |
 
 ### Phase 2 — Les organisations se font payer (niveaux 1 et 2)
 
@@ -126,7 +126,7 @@ l'ordre.
 |---|---|---|
 | 6.1 | app | Commande : quantités par catégorie, jauge atomique (module `allocation`), expiration des commandes non payées |
 | 6.2 | web | Page publique de l'événement et parcours d'achat, paiement aux niveaux 1 et 2 |
-| 6.3 | app, web | Relevé des ventes et facturation de la commission, réglée par le circuit 1 |
+| 6.3 | app, web | Commission de 3 % payée par tranche avant la vente (circuit 1), vente en pause quand la tranche est épuisée, avoir pour la part non consommée |
 
 ### Après le lancement
 
