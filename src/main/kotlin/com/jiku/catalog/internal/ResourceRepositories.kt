@@ -21,6 +21,13 @@ interface ResourceRepository : JpaRepository<Resource, UUID> {
     fun countByActiveTrue(): Long
 }
 
+/**
+ * The professional a booking was actually assigned (JIKU-87): the person among
+ * its reserved resources, or null when the service needs no person.
+ */
+internal fun ResourceRepository.professionalAmong(resourceIds: Collection<UUID>): String? =
+    findAllById(resourceIds).filter { it.type == ResourceType.PERSON }.minByOrNull { it.name }?.name
+
 interface ResourceAvailabilityRepository : JpaRepository<ResourceAvailability, UUID> {
     fun findByResourceId(resourceId: UUID): List<ResourceAvailability>
 
