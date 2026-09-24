@@ -93,6 +93,7 @@ class SecurityConfig(
                 // authenticated by the signature the payment provider verifies, not a
                 // user session.
                 it.requestMatchers("${apiProperties.basePath}/billing/payments/callback").permitAll()
+                it.requestMatchers(HttpMethod.POST, "${apiProperties.basePath}/billing/payments/callback/*").permitAll()
                 it.requestMatchers("/actuator/health/**").permitAll()
                 // Versioned liveness endpoint for external uptime monitors (JIKU-60).
                 it.requestMatchers("${apiProperties.basePath}/health").permitAll()

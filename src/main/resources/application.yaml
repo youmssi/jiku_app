@@ -315,10 +315,12 @@ billing:
     setup-fee-usd-cents: ${BILLING_CUSTOM_SETUP_FEE_USD_CENTS:1500}
     usd-to-gnf-rate: ${BILLING_CUSTOM_USD_TO_GNF_RATE:8760}
   payment:
-    # Mobile Money integration (JIKU-33). The active provider is a wiring choice;
-    # "sandbox" makes the full flow work before a real provider is chosen. The
-    # webhook secret verifies the signature on provider callbacks and MUST be set
-    # to a strong value outside local.
+    # Mobile Money integration (JIKU-33). `provider` names the adapter that starts
+    # new payments (JIKU-105); every registered adapter keeps confirming its own
+    # payments on /billing/payments/callback/{name}. Startup fails if the name
+    # matches no adapter. "sandbox" makes the full flow work locally. The webhook
+    # secret verifies the sandbox callback signature and MUST be set to a strong
+    # value outside local.
     provider: ${PAYMENT_PROVIDER:sandbox}
     webhook-secret: ${PAYMENT_WEBHOOK_SECRET:local-development-payment-webhook-secret}
     sandbox-return-url: ${PAYMENT_SANDBOX_RETURN_URL:http://localhost:3000/billing/return}

@@ -14,17 +14,20 @@ import java.util.UUID
  * unlocked when the provider confirms the payment server-to-server via the
  * signature-verified callback — never on a client-side "success". A failed or
  * timed-out payment leaves the allowance untouched. Callback handling is idempotent.
+ *
+ * The provider comes from [PaymentProviderSelector]: the active one starts a
+ * payment, and a callback only settles a payment started by the same provider.
  */
 @Service
 class PaymentService(
     private val payments: PaymentRepository,
     private val tierUnlockService: TierUnlockService,
-    private val provider: PaymentProvider,
+    private val providers: PaymentProviderSelector,
     private val billingProperties: BillingProperties,
     private val platformSettings: PlatformBillingSettingsService,
     transactionManager: PlatformTransactionManager,
 ) {
-    enum class CallbackOutcome { SUCCEEDED, FAILED, ALREADY_PROCESSED, UNKNOWN, INVALID_SIGNATURE }
+    enum class CallbackOutcome { SUCCEEDED, FAILED, ALREADY_PROCESSED, UNKNOWN, UNKNOWN_PROVIDER, INVALID_SIGNATURE }
 
     private val transactions = TransactionTemplate(transactionManager)
 
@@ -37,6 +40,7 @@ class PaymentService(
             platformSettings.tierByName(tierName)
                 ?: throw IllegalArgumentException("Unknown tier: $tierName")
         val tenantId = requireNotNull(TenantContext.get()) { "Payment initiation requires an authenticated tenant" }
+        val provider = providers.active
 
         val payment =
             payments.save(
@@ -73,10 +77,19 @@ class PaymentService(
         )
     }
 
+    /**
+     * Settles a payment from its provider's callback. [providerName] names the
+     * adapter that must verify it; `null` means the active one, for providers
+     * configured with the historical callback URL that carries no name.
+     */
     fun handleCallback(
+        providerName: String?,
         rawBody: String,
         signature: String?,
     ): CallbackOutcome {
+        val provider =
+            (if (providerName == null) providers.active else providers.byName(providerName))
+                ?: return CallbackOutcome.UNKNOWN_PROVIDER
         val callback = provider.parseCallback(rawBody, signature) ?: return CallbackOutcome.INVALID_SIGNATURE
         val parts = callback.reference.split(":", limit = 2)
         if (parts.size != 2) return CallbackOutcome.UNKNOWN
@@ -90,7 +103,7 @@ class PaymentService(
         val previous = TenantContext.get()
         TenantContext.set(tenantId)
         try {
-            return transactions.execute { confirm(paymentId, callback.succeeded) }
+            return transactions.execute { confirm(paymentId, provider.name, callback.succeeded) }
                 ?: CallbackOutcome.UNKNOWN
         } finally {
             if (previous != null) TenantContext.set(previous) else TenantContext.clear()
@@ -99,9 +112,12 @@ class PaymentService(
 
     private fun confirm(
         paymentId: UUID,
+        providerName: String,
         succeeded: Boolean,
     ): CallbackOutcome {
         val payment = payments.findById(paymentId).orElse(null) ?: return CallbackOutcome.UNKNOWN
+        // A provider can only vouch for the payments it started itself.
+        if (payment.provider != providerName) return CallbackOutcome.UNKNOWN
         if (payment.status != PaymentStatus.PENDING) {
             return CallbackOutcome.ALREADY_PROCESSED
         }
