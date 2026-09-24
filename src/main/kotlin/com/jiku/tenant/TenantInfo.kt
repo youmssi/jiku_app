@@ -28,6 +28,20 @@ data class TenantInfo(
     val country: String,
     /** ISO 4217 currency of every price the organization sets or pays. */
     val currency: String,
+    /** How the organization's clients pay it; null until it configures a method. */
+    val paymentMethods: TenantPaymentMethodsInfo? = null,
+)
+
+/**
+ * The Mobile Money numbers and payment link an organization shows its clients
+ * (JIKU-109). Jikū only displays them; the money goes straight to the organization.
+ */
+data class TenantPaymentMethodsInfo(
+    val payeeName: String?,
+    val orangeMoneyNumber: String?,
+    val mtnMomoNumber: String?,
+    val waveNumber: String?,
+    val paymentLinkUrl: String?,
 )
 
 /**
