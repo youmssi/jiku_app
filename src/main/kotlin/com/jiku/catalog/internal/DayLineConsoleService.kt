@@ -1,5 +1,7 @@
 package com.jiku.catalog.internal
 
+import com.jiku.shared.ClientCalled
+import com.jiku.shared.ReminderChannel
 import com.jiku.shared.TenantContext
 import com.jiku.shared.WalkInArrived
 import com.jiku.ticket.LineActionResult
@@ -61,7 +63,9 @@ class DayLineConsoleService(
     ): LineTicket? {
         val today = today(serviceId)
         val tolerance = config.effective(serviceId).noShowToleranceMinutes.toLong()
-        return ticketing.callNext(serviceId, today.start, today.end, Instant.now(), tolerance, counterLabel(counter))
+        return ticketing
+            .callNext(serviceId, today.start, today.end, Instant.now(), tolerance, counterLabel(counter))
+            ?.also { announceCall(serviceId, it) }
     }
 
     /** Arrivée au comptoir d'un rendez-vous d'aujourd'hui. */
@@ -80,7 +84,10 @@ class DayLineConsoleService(
         serviceId: UUID,
         ticketCode: String,
         counter: String? = null,
-    ): LineActionResult = ticketing.callByCode(serviceId, ticketCode, counterLabel(counter))
+    ): LineActionResult =
+        ticketing.callByCode(serviceId, ticketCode, counterLabel(counter)).also { result ->
+            if (result.outcome == LineOutcome.OK) result.ticket?.let { announceCall(serviceId, it) }
+        }
 
     /** Prise en charge d'une personne appelée. */
     @Transactional
@@ -159,6 +166,27 @@ class DayLineConsoleService(
             ),
         )
         return view(serviceId, day)
+    }
+
+    /** Tells the called client it is their turn, through the service's client channel, if it has one. */
+    private fun announceCall(
+        serviceId: UUID,
+        called: LineTicket,
+    ) {
+        val channel = config.effective(serviceId).reminderChannel
+        val phone = called.clientPhone
+        if (channel == ReminderChannel.NONE || phone == null) return
+        val tenantId = TenantContext.get() ?: return
+        events.publishEvent(
+            ClientCalled(
+                ticketId = called.id,
+                tenantId = tenantId,
+                clientName = called.clientName,
+                clientPhone = phone,
+                counter = called.counter,
+                channel = channel,
+            ),
+        )
     }
 
     /** The counter shown to the called client ("counter 4"); blank means none. */

@@ -1,5 +1,6 @@
 package com.jiku.messaging.internal
 
+import com.jiku.shared.ClientCalled
 import com.jiku.shared.EventCancellationNotice
 import com.jiku.shared.GuestInvitedEvent
 import com.jiku.shared.ReminderChannel
@@ -55,25 +56,47 @@ class NotificationService(
      * WhatsApp ne peut pas délivrer part par SMS (JIKU-112) : un rappel manqué est
      * un client absent. Un rappel non délivré ne remonte jamais à la réservation.
      */
-    fun deliverAppointmentReminder(due: ReminderDue): DeliveryOutcome {
-        val text = reminderText(due)
-        val byWhatsApp = { deliverReminder(due, ReminderChannel.WHATSAPP, whatsApp(due.clientPhone, text, due.reminderId, null)) }
-        val bySms = { deliverReminder(due, ReminderChannel.SMS, sms(due.clientPhone, text)) }
-        return when (due.channel) {
+    fun deliverAppointmentReminder(due: ReminderDue): DeliveryOutcome =
+        deliverToPhone(due.reminderId, due.clientPhone, due.channel, reminderText(due))
+
+    /** "It's your turn" for a client just called in the line (JIKU-114), by the service's channel. */
+    fun deliverClientCalled(called: ClientCalled): DeliveryOutcome =
+        deliverToPhone(
+            called.ticketId,
+            called.clientPhone,
+            called.channel,
+            whatsAppRenderer.renderClientCalled(called.clientName.orEmpty(), called.counter),
+        )
+
+    /**
+     * Sends [text] to a client's phone by [channel]. With WHATSAPP_OR_SMS, an SMS
+     * takes over whenever WhatsApp cannot deliver (JIKU-112): the fallback is
+     * decided here, never by a provider, so a provider switch cannot change it.
+     */
+    private fun deliverToPhone(
+        referenceId: UUID,
+        phone: String,
+        channel: ReminderChannel,
+        text: String,
+    ): DeliveryOutcome {
+        val byWhatsApp = { deliverLogged(referenceId, ReminderChannel.WHATSAPP, phone, whatsApp(phone, text, referenceId, null)) }
+        val bySms = { deliverLogged(referenceId, ReminderChannel.SMS, phone, sms(phone, text)) }
+        return when (channel) {
             ReminderChannel.WHATSAPP -> byWhatsApp()
             ReminderChannel.SMS -> bySms()
             ReminderChannel.WHATSAPP_OR_SMS -> byWhatsApp().takeIf { it.delivered } ?: bySms()
-            ReminderChannel.NONE -> throw IllegalArgumentException("Reminder ${due.reminderId} has no channel")
+            ReminderChannel.NONE -> throw IllegalArgumentException("Message $referenceId has no channel")
         }
     }
 
-    private fun deliverReminder(
-        due: ReminderDue,
+    private fun deliverLogged(
+        referenceId: UUID,
         channel: ReminderChannel,
+        phone: String,
         send: () -> Unit,
     ): DeliveryOutcome =
         deliverWithRetry(send) { status, attempt, error ->
-            record(due.reminderId, channel.name, due.clientPhone, status, attempt, error)
+            record(referenceId, channel.name, phone, status, attempt, error)
         }
 
     private fun reminderText(due: ReminderDue): String =

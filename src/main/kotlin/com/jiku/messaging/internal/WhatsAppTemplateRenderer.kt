@@ -20,6 +20,10 @@ class WhatsAppTemplateRenderer(
         ClassPathResource("whatsapp-templates/event-cancelled.txt").inputStream.bufferedReader().use { it.readText() }
     }
 
+    private val clientCalledTemplate: String by lazy {
+        ClassPathResource("whatsapp-templates/client-called.txt").inputStream.bufferedReader().use { it.readText() }
+    }
+
     private val appointmentReminderTemplate: String by lazy {
         ClassPathResource("whatsapp-templates/appointment-reminder.txt").inputStream.bufferedReader().use { it.readText() }
     }
@@ -68,4 +72,19 @@ class WhatsAppTemplateRenderer(
             ),
         )
     }
+
+    /** "It's your turn" for a waiting client (JIKU-114); also the SMS text. */
+    fun renderClientCalled(
+        clientName: String,
+        counter: String?,
+    ): String =
+        clientTemplates.render(
+            "client-called",
+            ClientTemplates.CHANNEL_WHATSAPP,
+            clientCalledTemplate,
+            mapOf(
+                "clientName" to clientName,
+                "counter" to (counter?.let { " at $it" } ?: ""),
+            ),
+        )
 }
