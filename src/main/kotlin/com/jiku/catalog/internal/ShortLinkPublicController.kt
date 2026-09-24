@@ -35,6 +35,19 @@ class ShortLinkPublicController(
         @Valid @RequestBody request: AppointmentBookingRequest,
     ): AppointmentBookingView = appointments.bookByCode(code, request)
 
+    @PostMapping("/{code}/line")
+    @ResponseStatus(HttpStatus.CREATED)
+    fun takeTicket(
+        @PathVariable code: String,
+        @Valid @RequestBody request: WalkInRequest,
+    ): ClientLineTicketView = appointments.takeTicketByCode(code, request)
+
+    @GetMapping("/{code}/line/{ticketCode}")
+    fun lineTicket(
+        @PathVariable code: String,
+        @PathVariable ticketCode: String,
+    ): ClientLineTicketView = appointments.lineTicketByCode(code, ticketCode)
+
     @GetMapping("/{code}/booking/{bookingToken}")
     fun status(
         @PathVariable code: String,

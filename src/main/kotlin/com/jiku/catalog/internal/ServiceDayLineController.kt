@@ -64,7 +64,8 @@ class ServiceDayLineController(
     @PostMapping("/next")
     fun next(
         @PathVariable serviceId: UUID,
-    ): NextResponse = NextResponse(console.next(serviceId))
+        @RequestParam(required = false) counter: String?,
+    ): NextResponse = NextResponse(console.next(serviceId, counter))
 
     @PostMapping("/walk-in")
     @ResponseStatus(HttpStatus.CREATED)
@@ -83,7 +84,8 @@ class ServiceDayLineController(
     fun call(
         @PathVariable serviceId: UUID,
         @PathVariable ticketCode: String,
-    ): LineActionResult = console.call(serviceId, ticketCode).orThrow()
+        @RequestParam(required = false) counter: String?,
+    ): LineActionResult = console.call(serviceId, ticketCode, counter).orThrow()
 
     @PostMapping("/tickets/{ticketCode}/present")
     fun present(

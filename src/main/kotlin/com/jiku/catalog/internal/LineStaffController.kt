@@ -66,7 +66,8 @@ class LineStaffController(
     @PostMapping("/next")
     fun next(
         @PathVariable token: String,
-    ): NextResponse = withStaff(token) { serviceId -> NextResponse(console.next(serviceId)) }
+        @RequestParam(required = false) counter: String?,
+    ): NextResponse = withStaff(token) { serviceId -> NextResponse(console.next(serviceId, counter)) }
 
     @PostMapping("/walk-in")
     @ResponseStatus(HttpStatus.CREATED)
@@ -85,7 +86,8 @@ class LineStaffController(
     fun call(
         @PathVariable token: String,
         @PathVariable ticketCode: String,
-    ): LineActionResult = withStaff(token) { serviceId -> console.call(serviceId, ticketCode).orThrow() }
+        @RequestParam(required = false) counter: String?,
+    ): LineActionResult = withStaff(token) { serviceId -> console.call(serviceId, ticketCode, counter).orThrow() }
 
     @PostMapping("/tickets/{ticketCode}/present")
     fun present(

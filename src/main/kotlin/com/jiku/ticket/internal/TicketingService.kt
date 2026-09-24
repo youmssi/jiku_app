@@ -196,6 +196,7 @@ class TicketingService(
         dayEnd: Instant,
         now: Instant,
         toleranceMinutes: Long,
+        counter: String?,
     ): LineTicket? {
         // Réclame atomiquement la personne choisie par la règle. Si un autre
         // appareil l'a prise entre la lecture et l'écriture (0 ligne mise à jour),
@@ -210,7 +211,7 @@ class TicketingService(
             val claimed = byId.getValue(next.ticketId)
             // La transition a vidé le contexte : on relit pour rendre la personne
             // telle qu'elle est maintenant (APPELÉ), pas la photo prise avant.
-            if (tickets.callLine(requireNotNull(claimed.id), serviceId) == 1) {
+            if (tickets.callLine(requireNotNull(claimed.id), serviceId, counter) == 1) {
                 return tickets.findById(requireNotNull(claimed.id)).orElse(claimed).toLine()
             }
         }
@@ -256,7 +257,8 @@ class TicketingService(
     override fun callByCode(
         serviceId: UUID,
         ticketCode: String,
-    ): LineActionResult = lineStep(serviceId, ticketCode) { id -> tickets.callLine(id, serviceId) }
+        counter: String?,
+    ): LineActionResult = lineStep(serviceId, ticketCode) { id -> tickets.callLine(id, serviceId, counter) }
 
     @Transactional
     override fun presentByCode(
@@ -432,6 +434,7 @@ private fun Ticket.toLine(): LineTicket =
         paymentStatus = paymentStatus,
         amountDueMinor = amountDueMinor,
         amountDueCurrency = amountDueCurrency,
+        counter = counterLabel,
     )
 
 private fun Ticket.toCandidate(): LineCandidate =

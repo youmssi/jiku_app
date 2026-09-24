@@ -1223,6 +1223,14 @@
             "schema" : {
               "type" : "string"
             }
+          },
+          {
+            "name" : "counter",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
           }
         ],
         "responses" : {
@@ -1358,6 +1366,14 @@
             "schema" : {
               "type" : "string",
               "format" : "uuid"
+            }
+          },
+          {
+            "name" : "counter",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
             }
           }
         ],
@@ -1768,6 +1784,46 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResourceAvailabilityView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/r/{code}/line" : {
+      "post" : {
+        "tags" : [
+          "short-link-public-controller"
+        ],
+        "operationId" : "takeTicket",
+        "parameters" : [
+          {
+            "name" : "code",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WalkInRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ClientLineTicketView"
                 }
               }
             }
@@ -2232,6 +2288,14 @@
             "schema" : {
               "type" : "string"
             }
+          },
+          {
+            "name" : "counter",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
           }
         ],
         "responses" : {
@@ -2361,6 +2425,14 @@
             "name" : "token",
             "in" : "path",
             "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "counter",
+            "in" : "query",
+            "required" : false,
             "schema" : {
               "type" : "string"
             }
@@ -3862,6 +3934,46 @@
         }
       }
     },
+    "/api/v1/appointments/{token}/line" : {
+      "post" : {
+        "tags" : [
+          "appointment-public-controller"
+        ],
+        "operationId" : "takeTicket_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WalkInRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ClientLineTicketView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/appointments/{token}/book" : {
       "post" : {
         "tags" : [
@@ -5204,6 +5316,44 @@
         }
       }
     },
+    "/api/v1/r/{code}/line/{ticketCode}" : {
+      "get" : {
+        "tags" : [
+          "short-link-public-controller"
+        ],
+        "operationId" : "lineTicket",
+        "parameters" : [
+          {
+            "name" : "code",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ClientLineTicketView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/r/{code}/booking/{bookingToken}" : {
       "get" : {
         "tags" : [
@@ -6342,6 +6492,44 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/AppointmentServiceView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/appointments/{token}/line/{ticketCode}" : {
+      "get" : {
+        "tags" : [
+          "appointment-public-controller"
+        ],
+        "operationId" : "lineTicket_1",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "ticketCode",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ClientLineTicketView"
                 }
               }
             }
@@ -8664,6 +8852,12 @@
               "string",
               "null"
             ]
+          },
+          "counter" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         }
       },
@@ -9144,6 +9338,60 @@
           },
           "end" : {
             "type" : "string"
+          }
+        }
+      },
+      "ClientLineTicketView" : {
+        "type" : "object",
+        "properties" : {
+          "ticketCode" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "dayRank" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "peopleAhead" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "estimatedWaitMinutes" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "counter" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "paymentStatus" : {
+            "type" : "string",
+            "enum" : [
+              "NOT_REQUIRED",
+              "DUE",
+              "DUE_AFTER_SERVICE",
+              "PAID"
+            ]
+          },
+          "amountDueMinor" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
+          },
+          "amountDueCurrency" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         }
       },

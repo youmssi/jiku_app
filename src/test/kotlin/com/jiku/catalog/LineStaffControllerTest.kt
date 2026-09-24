@@ -89,7 +89,7 @@ class LineStaffControllerTest {
         assertEquals(1, view.entries.size)
 
         // « Suivant » l'appelle.
-        val next = lineController.next(link)
+        val next = lineController.next(link, counter = null)
         assertEquals(code, next.ticket?.ticketCode)
         assertEquals("CALLED", next.ticket?.status)
 
