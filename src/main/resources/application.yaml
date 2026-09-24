@@ -205,14 +205,6 @@ api:
         paths: [/notifications/email-feedback/**]
         max-requests: ${RATE_LIMIT_EMAIL_FEEDBACK_MAX_REQUESTS:300}
         window: ${RATE_LIMIT_EMAIL_FEEDBACK_WINDOW:PT1M}
-      booking:
-        # Public deposit-reservation flow (JIKU-55): a legitimate prospect quotes
-        # and submits once, then declares one payment; keep scripted abuse slow.
-        # The access token lives in the query string, not the path, so this is
-        # IP-only (no token-segment) unlike rsvp/checkin.
-        paths: [/bookings/**]
-        max-requests: ${RATE_LIMIT_BOOKING_MAX_REQUESTS:20}
-        window: ${RATE_LIMIT_BOOKING_WINDOW:PT1M}
       appointments:
         # Public appointment and queue links (JIKU-87/113), by signed token or
         # short code: a client books, takes a ticket and refreshes their place a
@@ -238,7 +230,7 @@ api:
       prospect:
         # Liste d'accès anticipé rendez-vous (JIKU-98). Un professionnel légitime
         # soumet une fois, éventuellement deux s'il se corrige ; au-delà c'est du
-        # script. Plus serré que booking parce qu'il n'y a aucun jeton à présenter.
+        # script. Serré parce qu'il n'y a aucun jeton à présenter.
         paths: [/prospects]
         max-requests: ${RATE_LIMIT_PROSPECT_MAX_REQUESTS:5}
         window: ${RATE_LIMIT_PROSPECT_WINDOW:PT1M}
@@ -389,14 +381,6 @@ billing:
     mobile-money-number: ${BILLING_MANUAL_MOMO_NUMBER:}
     mobile-money-operator: ${BILLING_MANUAL_MOMO_OPERATOR:}
     bank-details: ${BILLING_MANUAL_BANK_DETAILS:}
-booking:
-  # Follow-up of the deposit reservations opened before JIKU-115 (new ones are
-  # closed): the timezone of the draft event a verified deposit provisions, and
-  # the payee details shown on the payment instructions page.
-  event-timezone: ${BOOKING_EVENT_TIMEZONE:Africa/Conakry}
-  payee-name: ${BOOKING_PAYEE_NAME:}
-  orange-money-number: ${BOOKING_ORANGE_MONEY_NUMBER:}
-  mtn-momo-number: ${BOOKING_MTN_MOMO_NUMBER:}
 compliance:
   retention:
     # Data-retention policy (JIKU-37). Guest personal data is anonymized this many

@@ -1,4 +1,4 @@
-package com.jiku.booking.internal
+package com.jiku.backoffice.internal
 
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Email

@@ -36,23 +36,19 @@ class `com.jiku.JikuApplication` is annotated `@Modulithic`.
 com.jiku
 ├── JikuApplication      # entry point
 ├── tenant               # tenants, organizer identity, white-label config
-├── catalog              # events and event settings
+├── catalog              # events, services, day line, operators
 ├── invitation           # guests, CSV import, invitation sending
-├── ticket               # tickets, QR codes
+├── ticket               # tickets, QR codes, payment status
 ├── checkin              # check-in validation, presence tracking
-├── messaging            # email / WhatsApp orchestration (event-driven)
-├── money                # metering, tiers, payments, invoicing, trials
-├── booking              # deposit-reservation funnel and prospect capture
-├── backoffice           # platform-operator desk
+├── messaging            # email / WhatsApp / SMS orchestration (event-driven)
+├── money                # metering, tiers, payments, invoicing, trials, subscriptions
+├── backoffice           # platform-operator desk, early-access prospect capture
 └── shared               # genuinely cross-cutting code only
 ```
 
-> Module names were aligned with the target architecture in JIKU-100 (V1). Two of
-> them describe where the module is going rather than what it holds today:
-> `catalog` will gain Service, Resource and Availability (JIKU-84/86), and `money`
-> will absorb the booking module's payment policy. Until then, `catalog` holds only
-> events and `money` only platform billing — see
-> `docs/jiku-target-architecture.md`.
+> `catalog` holds events, services, resources and their availability, the day
+> line, and operators (JIKU-116) — everything a ticket can be issued for, plus
+> who works on it. See `docs/jiku-target-architecture.md`.
 
 Modules are **auto-detected**
 from the Kotlin types they contain — a package becomes a module the moment a story

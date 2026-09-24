@@ -14,10 +14,7 @@ import java.util.UUID
 class TenantModuleApiService(
     private val tenants: TenantRepository,
     private val memberships: OrganizerMembershipRepository,
-    private val users: OrganizerUserRepository,
-    private val accountTokens: AccountTokenService,
     private val accessGate: TenantAccessGateAdapter,
-    private val markets: MarketProperties,
 ) : TenantModuleApi {
     @Transactional(readOnly = true)
     override fun findTenant(tenantId: UUID): TenantInfo? = tenants.findById(tenantId).map { it.toTenantInfo() }.orElse(null)
@@ -66,36 +63,6 @@ class TenantModuleApiService(
         // very next request, not after the cache entry ages out.
         accessGate.invalidate(tenantId.toString())
         return saved.toTenantInfo()
-    }
-
-    @Transactional
-    override fun provisionTenant(
-        organizationName: String,
-        ownerEmail: String,
-        ownerFullName: String?,
-    ): UUID {
-        val user =
-            users.findByEmail(ownerEmail)
-                ?: users.saveAndFlush(
-                    OrganizerUser(email = ownerEmail, passwordHash = null, fullName = ownerFullName).also {
-                        it.emailVerified = true
-                    },
-                )
-        // A booking customer never names a country: the organization opens in the default market.
-        val market = requireNotNull(markets.marketOf(null))
-        val tenant =
-            tenants.saveAndFlush(
-                Tenant(name = organizationName, contactEmail = ownerEmail, country = market.country, currency = market.currency),
-            )
-        memberships.saveAndFlush(
-            OrganizerMembership(
-                userId = requireNotNull(user.id),
-                tenantId = requireNotNull(tenant.id).toString(),
-                role = OrganizerRole.OWNER,
-            ),
-        )
-        accountTokens.requestPasswordReset(ownerEmail)
-        return requireNotNull(tenant.id)
     }
 
     @Transactional(readOnly = true)

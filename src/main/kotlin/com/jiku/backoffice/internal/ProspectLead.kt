@@ -1,4 +1,4 @@
-package com.jiku.booking.internal
+package com.jiku.backoffice.internal
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -15,7 +15,7 @@ import java.util.UUID
  * Un professionnel qui s'est déclaré intéressé par la prise de rendez-vous
  * (JIKU-98), avant que le produit n'existe.
  *
- * Volontairement **non** tenant-scopé, pour la même raison que [Booking] : au moment
+ * Volontairement **non** tenant-scopé : au moment
  * où il laisse ses coordonnées, le prospect n'a pas de compte. C'est de la donnée de
  * niveau plateforme, visible uniquement depuis le bureau d'administration.
  *
