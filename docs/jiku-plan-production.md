@@ -17,7 +17,7 @@ bout, sur un hébergement toujours actif, avec de vrais paiements :
 | Inviter, faire confirmer, scanner (y compris hors-ligne) | Organisation, client, opérateur |
 | Prendre rendez-vous, arriver, être servi | Client, opérateur |
 | Prendre un ticket sans rendez-vous, suivre son rang, être appelé | Client, opérateur |
-| Vendre des billets payés sur le compte de l'organisation | Organisation, client |
+| Vendre des billets payés sur le compte de l'organisation, après vérification de l'organisateur | Organisation, client |
 | Payer Jikū (abonnement, événement, commission, SMS) en Mobile Money ou carte | Organisation, équipe Jikū |
 
 Après le lancement : avis après service, agences multiples, domaine
@@ -96,6 +96,9 @@ l'ordre.
 | 2.1 | app | Prix et règle de paiement (Gratuit / Avant / Après service) sur `TicketType` et `Service`, migration additive |
 | 2.2 | app, web | Réglages « moyens de paiement » de l'organisation : coordonnées Mobile Money, lien de paiement |
 | 2.3 | app, web | Statut de paiement du ticket ; action « payé » (ou « payé en espèces ») dans les consoles de scan et de file ; ticket émis seulement après paiement quand la règle est « Avant » |
+| 2.4 | app, web | Paiement du palier d'un événement en une fois, au moment de l'action : retrait de l'acompte de 30 % et de sa grille de remboursement (simulateur, parcours `/reserver`, module `booking`) |
+| 2.5 | app | Plafond d'un service : 10 clients en même temps par ressource au maximum, valeur configurable |
+| 2.6 | web | Refonte du simulateur (référentiel métier, §11) |
 
 ### Phase 3 — SMS et repli
 
@@ -124,6 +127,7 @@ l'ordre.
 
 | Tranche | Dépôt | Contenu |
 |---|---|---|
+| 6.0 | app, web | Vérification des organisateurs : légère (obligatoire avant la première vente) et complète (facultative, badge bleu), validation dans le back-office, mentions de responsabilité sur les pages publiques |
 | 6.1 | app | Commande : quantités par catégorie, jauge atomique (module `allocation`), expiration des commandes non payées |
 | 6.2 | web | Page publique de l'événement et parcours d'achat, paiement aux niveaux 1 et 2 |
 | 6.3 | app, web | Commission de 3 % payée par tranche avant la vente (circuit 1), vente en pause quand la tranche est épuisée, avoir pour la part non consommée |

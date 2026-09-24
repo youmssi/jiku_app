@@ -1,6 +1,6 @@
 # ADR 104 — Plateforme centrée sur le ticket : file d'attente, paiement, opérateurs, canaux et tarification
 
-**Statut :** accepté. Points encore ouverts : `docs/jiku-referentiel-metier.md`, §9.
+**Statut :** accepté. Décisions complémentaires et propositions encore à confirmer : `docs/jiku-referentiel-metier.md`, §10.
 **Date :** 2026-09-24
 **Remplace partiellement :** ADR 81 (la file d'attente passe de « proposée » à
 « dans le produit »).
@@ -265,7 +265,9 @@ Décidé le 2026-09-24 :
    clinique qui vend les billets d'une conférence paie la commission sur ces
    billets. Les règles complètes sont dans `docs/jiku-referentiel-metier.md`.
 
-Les points encore ouverts sont suivis dans le référentiel métier, §9.
+Les décisions complémentaires (frontière service / événement, fin de l'acompte,
+utilisateurs payants, vérification des organisateurs) sont dans le référentiel
+métier, §10.
 
 ## Ordre de réalisation
 

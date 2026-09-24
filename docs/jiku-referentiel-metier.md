@@ -1,8 +1,8 @@
 # Jikū — Référentiel métier
 
 **Date :** 2026-09-24
-**Statut :** référence produit. Les points marqués **[À VALIDER]** attendent une
-décision (§9). Tout le reste est décidé.
+**Statut :** référence produit. Seules les propositions par défaut du §10
+attendent une confirmation ; tout le reste est décidé.
 **Références :** ADR 104 (décisions), `docs/jiku-modele-financier.md` (chiffres).
 
 Ce document décrit ce que fait Jikū, sans jargon technique. Si un comportement
@@ -50,8 +50,11 @@ billets vendus).
 | Comment le client obtient son ticket ? | Il le prend : rendez-vous ou file d'attente | Il est invité, ou il achète son billet |
 | Exemples | Consultation, guichet, salon de coiffure, restaurant, piscine sur créneau | Mariage, gala, concert, conférence, formation d'un jour |
 
-Cas limite : une séance collective récurrente (cours de sport, visite guidée
-quotidienne). Voir **[À VALIDER]** §9, point 1.
+**Règle de frontière, vérifiée par le logiciel :** un service sert au plus
+**10 clients en même temps par ressource** (valeur configurable). Au-delà, ce
+n'est plus un service mais un événement, et ses billets vendus paient la
+commission de 3 %. Un cours de sport de 8 personnes reste un service ; une
+soirée de 300 personnes chaque vendredi est un événement récurrent.
 
 ## 4. Les cinq usages d'un ticket
 
@@ -117,13 +120,17 @@ lancement.
 
 | Ce qui est payé | Quand | Montant |
 |---|---|---|
-| **Abonnement Services** | Chaque mois (ou chaque année) | Par utilisateur, selon l'offre (Solo gratuit, Teams, Organisation, Entreprise) |
-| **Palier d'un événement à invités** | Au moment où l'action dépasse la part gratuite (importer ou inviter au-delà) | Prix du palier ; passer au palier supérieur ne fait payer que la différence |
+| **Abonnement Services** | Chaque mois (ou chaque année) | Par utilisateur qui rend le service, selon l'offre (Solo gratuit, Teams, Organisation, Entreprise) |
+| **Palier d'un événement à invités** | En une fois, au moment où l'action dépasse la part gratuite (importer ou inviter au-delà). Pas d'acompte, pas de solde | Prix du palier ; passer au palier supérieur ne fait payer que la différence |
 | **Tranche de commission** | Avant de vendre, puis à chaque tranche épuisée | 3 % × prix du billet × taille de la tranche |
 | **SMS** | Au moment de l'envoi | Prix exact affiché avant d'envoyer |
 
 Moyens de paiement proposés à l'organisation, dans cet ordre : Orange Money,
 MTN MoMo, carte, puis Wave.
+
+**Qui compte comme utilisateur payant :** seules les personnes qui rendent le
+service (médecin, agent de guichet, coiffeur, serveur). Les administrateurs,
+les contrôleurs qui scannent à l'entrée et les livreurs sont gratuits.
 
 ## 7. La commission par tranche
 
@@ -155,17 +162,41 @@ portefeuille à gérer.
 | **Famille** | Mariage, 250 invités | Palier Bronze : 150 000 GNF |
 | **Organisateur de concert** | 1 000 billets à 50 000 GNF | 3 % : 1 500 000 GNF si tout est vendu, payés par tranches |
 
-## 9. Points à valider [À VALIDER]
+## 9. Confiance et responsabilité
 
-1. **Frontière service / événement** pour les séances collectives
-   récurrentes : sans règle, un organisateur de concert pourrait déclarer ses
-   soirées comme un « service » pour échapper aux 3 %.
-2. **Paiement d'un événement à invités** : le simulateur et le module
-   `booking` font aujourd'hui réserver la date avec 30 % d'acompte (solde 7
-   jours avant, remboursement selon la date d'annulation). L'ADR 104 prévoit au
-   contraire un paiement au moment de l'action. Un seul des deux doit rester.
-3. **Qui compte comme utilisateur payant** dans l'abonnement Services.
-4. **Vérification des organisateurs** avant qu'ils vendent des billets.
+L'argent des ventes va chez l'organisation, mais c'est sur une page Jikū que
+l'acheteur paie. Pour protéger l'acheteur et la plateforme :
+
+| Niveau | Condition | Ce qui s'affiche sur les pages publiques de l'organisation |
+|---|---|---|
+| **Vérification légère** | Obligatoire avant la première vente de billets : pièce d'identité et numéro de téléphone vérifiés, validés par l'équipe Jikū dans le back-office | Un avertissement visible avant tout paiement : « Vérifiez l'identité de l'organisateur avant de payer. Le paiement va directement à l'organisateur ; Jikū ne l'encaisse pas. » |
+| **Vérification complète** | Facultative : documents d'entreprise ou identité complète, validés par l'équipe Jikū | Un **badge bleu « Organisation vérifiée »** qui certifie que la page appartient à cette organisation |
+
+Partage des responsabilités, rappelé sur chaque page publique qui présente un
+paiement et écrit dans les conditions d'utilisation :
+
+- **L'organisation** répond des dommages causés par son usage de Jikū (faux
+  événement, prestation non rendue, remboursement de ses clients).
+- **Jikū** répond des dommages causés par la plateforme elle-même (défaut
+  technique, indisponibilité, erreur de traitement).
+
+La rédaction exacte de ces mentions et des conditions d'utilisation doit être
+relue par un juriste avant le lancement.
+
+Les invitations et les services n'exigent aucune vérification.
+
+## 10. Décisions prises et propositions par défaut
+
+Décidé le 2026-09-24 :
+
+1. **Frontière service / événement** : 10 clients en même temps par ressource
+   au maximum pour un service (§3).
+2. **Paiement d'un événement à invités** : en une fois, au moment de l'action.
+   L'acompte de 30 % du simulateur et du module `booking` disparaît pour ce cas,
+   avec sa grille de remboursement.
+3. **Utilisateurs payants** : seulement ceux qui rendent le service (§6).
+4. **Vérification** : légère et obligatoire avant de vendre, complète et
+   facultative avec badge bleu (§9).
 
 Propositions par défaut, à confirmer :
 
@@ -181,7 +212,7 @@ Propositions par défaut, à confirmer :
 9. **Traitement comptable des tranches** (facture d'acompte puis facture de
    clôture) : à confirmer avec le comptable.
 
-## 10. Ce que doit montrer le simulateur
+## 11. Ce que doit montrer le simulateur
 
 Le simulateur actuel a deux onglets : « Événement (invitations) » et
 « Rendez-vous (abonnement) ». Il ne parle ni des billets vendus, ni de la file
@@ -206,5 +237,7 @@ Proposition :
    §8.
 4. **Le SMS en option**, avec son prix unitaire, dans chaque onglet.
 
-La refonte du simulateur ne commence qu'après validation du §9, point 2,
-puisque le texte sur l'acompte en dépend.
+5. **Plus d'acompte ni de grille de remboursement** dans l'onglet des
+   invitations : le prix du palier se paie en une fois, au moment de l'action.
+6. **Dans l'onglet « Je vends des billets »**, une ligne sur la vérification
+   obligatoire avant la première vente et le badge bleu.
