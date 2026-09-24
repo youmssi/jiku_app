@@ -43,8 +43,8 @@ class JwtService(
             .payload
 
     /**
-     * Generic signed token for non-session flows (invitation, service link, day
-     * line, validator): one place owns the secret key and the HMAC builder so the
+     * Generic signed token for non-session flows (invitation, service link,
+     * operator link): one place owns the secret key and the HMAC builder so the
      * per-flow token services only describe their claims. [ttl] null means no
      * expiration, which is the deliberate policy for long-lived invitation links.
      */

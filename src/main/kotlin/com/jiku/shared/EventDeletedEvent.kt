@@ -10,8 +10,9 @@ import java.util.UUID
  * event and its data disappear together rather than leaving orphans behind:
  *
  * - the ticketing module removes every ticket of the event;
- * - the invitation module removes every invitation and guest of the event;
- * - the check-in module removes every validator link of the event.
+ * - the invitation module removes every invitation and guest of the event.
+ *
+ * Operators lose the event from their scope through the FK cascade.
  */
 data class EventDeletedEvent(
     val eventId: UUID,

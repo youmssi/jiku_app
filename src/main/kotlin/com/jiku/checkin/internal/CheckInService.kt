@@ -2,6 +2,7 @@ package com.jiku.checkin.internal
 
 import com.jiku.catalog.EventInfo
 import com.jiku.catalog.EventModuleApi
+import com.jiku.catalog.OperatorAction
 import com.jiku.invitation.GuestInfo
 import com.jiku.invitation.InvitationModuleApi
 import com.jiku.shared.TenantContext
@@ -34,12 +35,13 @@ class CheckInService(
     private val log = org.slf4j.LoggerFactory.getLogger(CheckInService::class.java)
 
     /**
-     * Branding and live attendance context for the validator opening [validatorLabel]'s
-     * link against [eventId]. The tenant is already bound by the caller.
+     * Branding and live attendance context for the operator [operatorLabel] opening
+     * [eventId]'s door, allowed [actions] there. The tenant is already bound by the caller.
      */
     fun context(
         eventId: UUID,
-        validatorLabel: String,
+        operatorLabel: String,
+        actions: Set<OperatorAction>,
     ): ValidatorContextResponse {
         val event = events.findEvent(eventId)
         val tenant = TenantContext.get()?.let { tenants.findTenant(UUID.fromString(it)) }
@@ -53,7 +55,8 @@ class CheckInService(
             organizerName = tenant?.displayName ?: "Your organizer",
             primaryColor = tenant?.primaryColor ?: "#1E293B",
             logoUrl = tenant?.logoUrl,
-            validatorLabel = validatorLabel,
+            validatorLabel = operatorLabel,
+            actions = actions,
             checkedIn = stats.checkedIn,
             confirmed = stats.confirmed,
         )

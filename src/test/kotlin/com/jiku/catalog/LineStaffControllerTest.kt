@@ -1,9 +1,9 @@
 package com.jiku.catalog
 
 import com.jiku.TestcontainersConfiguration
-import com.jiku.catalog.internal.DayLineTokenService
 import com.jiku.catalog.internal.LineCodeController
 import com.jiku.catalog.internal.LineStaffController
+import com.jiku.catalog.internal.OperatorService
 import com.jiku.catalog.internal.Resource
 import com.jiku.catalog.internal.ResourceAvailability
 import com.jiku.catalog.internal.ResourceAvailabilityRepository
@@ -11,8 +11,6 @@ import com.jiku.catalog.internal.ResourceRepository
 import com.jiku.catalog.internal.ServiceAdminService
 import com.jiku.catalog.internal.ServiceCreateRequest
 import com.jiku.catalog.internal.ServiceLinkTokenService
-import com.jiku.catalog.internal.ServiceStaff
-import com.jiku.catalog.internal.ServiceStaffRepository
 import com.jiku.invitation.internal.Guest
 import com.jiku.invitation.internal.GuestRepository
 import com.jiku.shared.TenantContext
@@ -33,9 +31,9 @@ import kotlin.test.assertEquals
 import kotlin.test.fail
 
 /**
- * Le lien du personnel vers la console d'un service (JIKU-88), même patron que le
- * lien validateurs : jeton signé + ligne révocable tenant-scopée. Un lien du
- * personnel ne sert que son service ; un code d'un autre service ou d'un autre
+ * Le lien du personnel vers la console d'un service (JIKU-88), désormais un
+ * opérateur (JIKU-116) : jeton signé + opérateur révocable tenant-scopé. Un lien
+ * du personnel ne sert que son service ; un code d'un autre service ou d'un autre
  * tenant est refusé ; un lien révoqué ne résout plus.
  */
 @SpringBootTest
@@ -57,13 +55,10 @@ class LineStaffControllerTest {
     lateinit var availabilities: ResourceAvailabilityRepository
 
     @Autowired
-    lateinit var staff: ServiceStaffRepository
+    lateinit var operators: OperatorService
 
     @Autowired
     lateinit var guests: GuestRepository
-
-    @Autowired
-    lateinit var tokens: DayLineTokenService
 
     @Autowired
     lateinit var bookingTokens: ServiceLinkTokenService
@@ -94,8 +89,8 @@ class LineStaffControllerTest {
         assertEquals("CALLED", next.ticket?.status)
 
         // Révocation : le lien ne sert plus rien.
-        revokeStaffLink(link)
-        expectNotFound { lineController.view(link) }
+        revokeStaffLink(serviceId)
+        expectStatus(HttpStatus.FORBIDDEN) { lineController.view(link) }
     }
 
     @Test
@@ -131,8 +126,8 @@ class LineStaffControllerTest {
     fun `a staff link's short code resolves to a working token and stops resolving once revoked`() {
         TenantContext.set("line-staff-a")
         val serviceId = serviceWithMorning()
-        val code = "TEST${UUID.randomUUID().toString().take(6).uppercase()}"
-        val row = staff.save(ServiceStaff(serviceId = serviceId, label = "Comptoir A").apply { this.code = code })
+        val created = operators.createCounterLink(serviceId, "Comptoir A")
+        val code = requireNotNull(created.code)
         TenantContext.clear()
 
         // The code is a public entry point: no tenant needs to be bound to resolve it.
@@ -145,9 +140,7 @@ class LineStaffControllerTest {
 
         // Once revoked, the code stops resolving even though the row still exists.
         TenantContext.set("line-staff-a")
-        val toRevoke = staff.findById(requireNotNull(row.id)).orElseThrow()
-        toRevoke.revoke()
-        staff.save(toRevoke)
+        operators.revokeCounterLink(serviceId, created.id)
         TenantContext.clear()
         expectNotFound { lineCodeController.resolve(code) }
     }
@@ -155,21 +148,12 @@ class LineStaffControllerTest {
     private fun issueStaffLink(
         serviceId: UUID,
         label: String,
-    ): String {
-        val row = staff.save(ServiceStaff(serviceId = serviceId, label = label))
-        return tokens.issue(requireNotNull(row.id), serviceId, "line-staff-a")
-    }
+    ): String = operators.createCounterLink(serviceId, label).token
 
-    private fun revokeStaffLink(token: String) {
-        val id = UUID.fromString(tokens.parse(token).subject)
+    /** The console clears the tenant after each request, so bind it again as the organizer. */
+    private fun revokeStaffLink(serviceId: UUID) {
         TenantContext.set("line-staff-a")
-        try {
-            val row = staff.findById(id).orElseThrow()
-            row.revoke()
-            staff.save(row)
-        } finally {
-            TenantContext.clear()
-        }
+        operators.revokeCounterLink(serviceId, operators.counterLinks(serviceId).single().id)
     }
 
     private fun createWalkIn(
@@ -195,12 +179,17 @@ class LineStaffControllerTest {
             ).ticketCode
     }
 
-    private fun expectNotFound(block: () -> Any?) {
+    private fun expectNotFound(block: () -> Any?) = expectStatus(HttpStatus.NOT_FOUND, block)
+
+    private fun expectStatus(
+        status: HttpStatus,
+        block: () -> Any?,
+    ) {
         try {
             block()
-            fail("Une réponse introuvable était attendue")
+            fail("Une réponse $status était attendue")
         } catch (ex: ResponseStatusException) {
-            assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
+            assertEquals(status, ex.statusCode)
         }
     }
 
