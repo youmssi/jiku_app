@@ -1,6 +1,6 @@
 # ADR 104 — Plateforme centrée sur le ticket : file d'attente, paiement, opérateurs, canaux et tarification
 
-**Statut :** accepté. Décisions complémentaires et propositions encore à confirmer : `docs/jiku-referentiel-metier.md`, §10.
+**Statut :** accepté. Décisions complémentaires : `docs/jiku-referentiel-metier.md`, §10.
 **Date :** 2026-09-24
 **Remplace partiellement :** ADR 81 (la file d'attente passe de « proposée » à
 « dans le produit »).

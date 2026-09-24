@@ -1,8 +1,7 @@
 # Jikū — Référentiel métier
 
 **Date :** 2026-09-24
-**Statut :** référence produit. Seules les propositions par défaut du §10
-attendent une confirmation ; tout le reste est décidé.
+**Statut :** référence produit, entièrement décidée.
 **Références :** ADR 104 (décisions), `docs/jiku-modele-financier.md` (chiffres).
 
 Ce document décrit ce que fait Jikū, sans jargon technique. Si un comportement
@@ -50,11 +49,54 @@ billets vendus).
 | Comment le client obtient son ticket ? | Il le prend : rendez-vous ou file d'attente | Il est invité, ou il achète son billet |
 | Exemples | Consultation, guichet, salon de coiffure, restaurant, piscine sur créneau | Mariage, gala, concert, conférence, formation d'un jour |
 
-**Règle de frontière, vérifiée par le logiciel :** un service sert au plus
-**10 clients en même temps par ressource** (valeur configurable). Au-delà, ce
-n'est plus un service mais un événement, et ses billets vendus paient la
-commission de 3 %. Un cours de sport de 8 personnes reste un service ; une
-soirée de 300 personnes chaque vendredi est un événement récurrent.
+### Ce qui est commun
+
+Le même moteur sert les deux : un ticket signé avec son QR, le même scan, les
+mêmes règles de paiement du client, les mêmes canaux d'envoi. Dans le code,
+c'est la même entité `Ticket` ; seul son parent change (`Service` ou `Event`).
+
+### Pourquoi la facturation diffère
+
+Un service est un outil de travail quotidien pour chaque professionnel : Jikū
+le facture **par personne qui sert, chaque mois**. Un événement est une
+opération ponctuelle dont le coût grandit avec le public (messages, contrôle à
+la porte) : Jikū le facture **à l'événement**. La facturation suit une vraie
+différence de métier, pas un quota.
+
+### Ce qui ne fait jamais la différence
+
+Le nombre de services, le nombre de personnes qui travaillent, le nombre de
+clients servis dans la journée : **aucune limite**. Une banque de 100 agents et
+50 services, qui reçoit 2 000 clients par jour, reste entièrement en service,
+couverte par son abonnement.
+
+**Un service ne paie jamais de commission**, quel que soit son volume.
+
+### La seule zone grise : la séance collective
+
+Un créneau où une même ressource reçoit plusieurs clients à la fois (cours de
+sport, visite guidée). Sans limite, une salle de 500 places déclarée en
+« service » chaque vendredi permettrait de vendre des billets de concert avec
+l'offre gratuite.
+
+**Règle :** le nombre de clients servis en même temps, dans un même créneau,
+par une même ressource dépend de l'offre :
+
+| Offre | Clients en même temps par ressource et par créneau |
+|---|---|
+| Solo | 1 |
+| Teams | jusqu'à 10 |
+| Organisation | jusqu'à 30 |
+| Entreprise | sur devis |
+
+Un groupe plus grand passe par une offre supérieure, **jamais par une
+commission**. Au-delà de la limite de toutes les offres, le logiciel refuse et
+propose de créer un événement ; il ne prélève rien. Ces limites sont des
+paramètres de configuration.
+
+Aujourd'hui, le code n'accepte qu'un client par ressource et par créneau
+(contrainte `uq_reservation_resource_start`) : les séances collectives sont une
+évolution à construire.
 
 ## 4. Les cinq usages d'un ticket
 
@@ -189,8 +231,9 @@ Les invitations et les services n'exigent aucune vérification.
 
 Décidé le 2026-09-24 :
 
-1. **Frontière service / événement** : 10 clients en même temps par ressource
-   au maximum pour un service (§3).
+1. **Frontière service / événement** : aucune limite de services, de personnel
+   ni de clients par jour ; seules les séances collectives sont plafonnées, selon
+   l'offre, jamais par une commission (§3).
 2. **Paiement d'un événement à invités** : en une fois, au moment de l'action.
    L'acompte de 30 % du simulateur et du module `booking` disparaît pour ce cas,
    avec sa grille de remboursement.
@@ -198,7 +241,7 @@ Décidé le 2026-09-24 :
 4. **Vérification** : légère et obligatoire avant de vendre, complète et
    facultative avec badge bleu (§9).
 
-Propositions par défaut, à confirmer :
+Acceptées le 2026-09-24 :
 
 5. **Paiement à l'entrée d'un événement** (réservé en ligne, payé à la porte) :
    hors lancement.

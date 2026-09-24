@@ -97,7 +97,7 @@ l'ordre.
 | 2.2 | app, web | Réglages « moyens de paiement » de l'organisation : coordonnées Mobile Money, lien de paiement |
 | 2.3 | app, web | Statut de paiement du ticket ; action « payé » (ou « payé en espèces ») dans les consoles de scan et de file ; ticket émis seulement après paiement quand la règle est « Avant » |
 | 2.4 | app, web | Paiement du palier d'un événement en une fois, au moment de l'action : retrait de l'acompte de 30 % et de sa grille de remboursement (simulateur, parcours `/reserver`, module `booking`) |
-| 2.5 | app | Plafond d'un service : 10 clients en même temps par ressource au maximum, valeur configurable |
+| 2.5 | app, web | Séances collectives : plusieurs clients par ressource et par créneau, plafond selon l'offre (Solo 1, Teams 10, Organisation 30, Entreprise sur devis), proposition de créer un événement au-delà |
 | 2.6 | web | Refonte du simulateur (référentiel métier, §11) |
 
 ### Phase 3 — SMS et repli
