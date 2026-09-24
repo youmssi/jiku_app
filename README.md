@@ -122,7 +122,8 @@ deliberately does not cover.
 
 ## Engineering rules
 
-See `AGENTS.md` (and `CLAUDE.md`) in this directory for the full set of rules every
+`CONTRIBUTING.md` is the workflow from story to merge. See `AGENTS.md` (and
+`CLAUDE.md`) in this directory for the full set of rules every
 contributor — human or AI — must follow: module boundaries, Conventional Commits,
 no hardcoded configuration, and the no-AI-authorship-trace rule. These are not
 optional.
