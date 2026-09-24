@@ -1,5 +1,7 @@
 package com.jiku.catalog.internal
 
+import com.jiku.shared.ReminderChannel
+
 /**
  * Options effectives d'un service (JIKU-86) : la valeur renseignée dans
  * service_config si elle existe, sinon le défaut de configuration. Le moteur et

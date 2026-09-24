@@ -1,5 +1,6 @@
 package com.jiku.ticket.internal
 
+import com.jiku.shared.ReminderChannel
 import com.jiku.shared.ReminderDue
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
@@ -28,6 +29,7 @@ class AppointmentReminderClaims(
         offsetMinutes: Int,
         tenantId: String,
         serviceTimezone: String,
+        channel: ReminderChannel,
     ): Boolean {
         val ticketId = ticket.id ?: return false
         val startsAt = ticket.startsAt ?: return false
@@ -40,7 +42,7 @@ class AppointmentReminderClaims(
                 serviceId = requireNotNull(ticket.serviceId),
                 offsetMinutes = offsetMinutes,
                 dueAt = startsAt.minusSeconds(offsetMinutes * 60L),
-                channel = CHANNEL_WHATSAPP,
+                channel = channel.name,
             )
         reminders.save(row)
         events.publishEvent(row.due(ticket, tenantId, serviceTimezone))
@@ -77,8 +79,8 @@ class AppointmentReminderClaims(
             startsAt = requireNotNull(ticket.startsAt),
             professionalName = ticket.professionalName,
             serviceTimezone = serviceTimezone,
+            channel = ReminderChannel.valueOf(channel),
         )
 }
 
-private const val CHANNEL_WHATSAPP = "WHATSAPP"
 private const val DEFAULT_TIMEZONE = "UTC"

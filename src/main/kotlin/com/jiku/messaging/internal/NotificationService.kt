@@ -2,6 +2,7 @@ package com.jiku.messaging.internal
 
 import com.jiku.shared.EventCancellationNotice
 import com.jiku.shared.GuestInvitedEvent
+import com.jiku.shared.ReminderChannel
 import com.jiku.shared.ReminderDue
 import org.springframework.stereotype.Service
 import java.time.ZoneId
@@ -34,6 +35,7 @@ class NotificationService(
     private val contentGuard: WhatsAppContentGuard,
     private val conversationCounter: WhatsAppConversationCounter,
     private val costTracker: WhatsAppCostTracker,
+    private val smsSender: SmsSender,
 ) {
     fun deliverInvitation(event: GuestInvitedEvent): DeliveryOutcome =
         deliverWithRetry(sendAction(event)) { status, attempt, error ->
@@ -46,40 +48,70 @@ class NotificationService(
         }
 
     /**
-     * Reminder de rendez-vous (JIKU-89), canal WhatsApp uniquement : le parcours
-     * de réservation ne capture que le téléphone. Passe par le même chemin que
-     * l'invitation — classification du contenu, garde-fous de coût, suivi du coût
-     * et journal d'audit — sans contournement. Un rappel non délivré ne remonte
-     * jamais à la réservation.
+     * Reminder de rendez-vous (JIKU-89), par le canal choisi pour le service :
+     * le parcours de réservation ne capture que le téléphone. WhatsApp passe par le
+     * même chemin que l'invitation — classification du contenu, garde-fous de
+     * coût, suivi du coût et journal d'audit. Avec WHATSAPP_OR_SMS, un rappel que
+     * WhatsApp ne peut pas délivrer part par SMS (JIKU-112) : un rappel manqué est
+     * un client absent. Un rappel non délivré ne remonte jamais à la réservation.
      */
-    fun deliverAppointmentReminder(due: ReminderDue): DeliveryOutcome =
-        deliverWithRetry(reminderSendAction(due)) { status, attempt, error ->
-            record(due.reminderId, GuestInvitedEvent.CHANNEL_WHATSAPP, due.clientPhone, status, attempt, error)
+    fun deliverAppointmentReminder(due: ReminderDue): DeliveryOutcome {
+        val text = reminderText(due)
+        val byWhatsApp = { deliverReminder(due, ReminderChannel.WHATSAPP, whatsApp(due.clientPhone, text, due.reminderId, null)) }
+        val bySms = { deliverReminder(due, ReminderChannel.SMS, sms(due.clientPhone, text)) }
+        return when (due.channel) {
+            ReminderChannel.WHATSAPP -> byWhatsApp()
+            ReminderChannel.SMS -> bySms()
+            ReminderChannel.WHATSAPP_OR_SMS -> byWhatsApp().takeIf { it.delivered } ?: bySms()
+            ReminderChannel.NONE -> throw IllegalArgumentException("Reminder ${due.reminderId} has no channel")
+        }
+    }
+
+    private fun deliverReminder(
+        due: ReminderDue,
+        channel: ReminderChannel,
+        send: () -> Unit,
+    ): DeliveryOutcome =
+        deliverWithRetry(send) { status, attempt, error ->
+            record(due.reminderId, channel.name, due.clientPhone, status, attempt, error)
         }
 
-    private fun reminderSendAction(due: ReminderDue): () -> Unit {
-        val whenText =
-            due.startsAt
-                .atZone(ZoneId.of(due.serviceTimezone))
-                .format(REMINDER_WHEN_FORMAT)
-        val text =
-            whatsAppRenderer.renderAppointmentReminder(
-                WhatsAppReminder(
-                    recipientPhone = due.clientPhone,
-                    recipientName = due.clientName.orEmpty(),
-                    appointmentWhen = whenText,
-                    professionalName = due.professionalName,
-                ),
-            )
-        return {
+    private fun reminderText(due: ReminderDue): String =
+        whatsAppRenderer.renderAppointmentReminder(
+            WhatsAppReminder(
+                recipientPhone = due.clientPhone,
+                recipientName = due.clientName.orEmpty(),
+                appointmentWhen = due.startsAt.atZone(ZoneId.of(due.serviceTimezone)).format(REMINDER_WHEN_FORMAT),
+                professionalName = due.professionalName,
+            ),
+        )
+
+    /** One WhatsApp send with its guardrails: content class, conversation budget, cost record. */
+    private fun whatsApp(
+        to: String,
+        text: String,
+        referenceId: UUID,
+        eventId: UUID?,
+    ): () -> Unit =
+        {
             val resolved = providers.whatsApp()
             val category = contentGuard.classify(text)
             contentGuard.assertAllowed(category)
             conversationCounter.assertWithinBudget(resolved.tenantOverride)
-            resolved.sender.send(WhatsAppMessage(to = due.clientPhone, body = text))
-            costTracker.record(due.reminderId, null, resolved.tenantOverride, category)
+            resolved.sender.send(WhatsAppMessage(to = to, body = text))
+            costTracker.record(referenceId, eventId, resolved.tenantOverride, category)
         }
-    }
+
+    private fun email(message: EmailMessage): () -> Unit =
+        {
+            val resolved = providers.email()
+            resolved.sender.send(resolved.from, message)
+        }
+
+    private fun sms(
+        to: String,
+        text: String,
+    ): () -> Unit = { smsSender.send(SmsMessage(to = to, body = text)) }
 
     private fun deliverWithRetry(
         send: () -> Unit,
@@ -140,12 +172,7 @@ class NotificationService(
                         subject = "You're invited to ${event.eventName}",
                         htmlBody = html,
                     )
-                (
-                    {
-                        val resolved = providers.email()
-                        resolved.sender.send(resolved.from, message)
-                    }
-                )
+                email(message)
             }
 
             GuestInvitedEvent.CHANNEL_WHATSAPP -> {
@@ -160,16 +187,7 @@ class NotificationService(
                             invitationUrl = event.invitationUrl,
                         ),
                     )
-                (
-                    {
-                        val resolved = providers.whatsApp()
-                        val category = contentGuard.classify(text)
-                        contentGuard.assertAllowed(category)
-                        conversationCounter.assertWithinBudget(resolved.tenantOverride)
-                        resolved.sender.send(WhatsAppMessage(to = event.recipient, body = text))
-                        costTracker.record(event.invitationId, event.eventId, resolved.tenantOverride, category)
-                    }
-                )
+                whatsApp(event.recipient, text, event.invitationId, event.eventId)
             }
 
             else -> throw IllegalArgumentException("Unsupported channel: ${event.channel}")
@@ -197,12 +215,7 @@ class NotificationService(
                         subject = "${notice.eventName} has been cancelled",
                         htmlBody = html,
                     )
-                (
-                    {
-                        val resolved = providers.email()
-                        resolved.sender.send(resolved.from, message)
-                    }
-                )
+                email(message)
             }
 
             GuestInvitedEvent.CHANNEL_WHATSAPP -> {
@@ -216,16 +229,7 @@ class NotificationService(
                             organizerName = notice.organizerName,
                         ),
                     )
-                (
-                    {
-                        val resolved = providers.whatsApp()
-                        val category = contentGuard.classify(text)
-                        contentGuard.assertAllowed(category)
-                        conversationCounter.assertWithinBudget(resolved.tenantOverride)
-                        resolved.sender.send(WhatsAppMessage(to = notice.recipient, body = text))
-                        costTracker.record(notice.invitationId, notice.eventId, resolved.tenantOverride, category)
-                    }
-                )
+                whatsApp(notice.recipient, text, notice.invitationId, notice.eventId)
             }
 
             else -> throw IllegalArgumentException("Unsupported channel: ${notice.channel}")

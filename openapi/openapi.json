@@ -7547,6 +7547,8 @@
             ],
             "enum" : [
               "WHATSAPP",
+              "SMS",
+              "WHATSAPP_OR_SMS",
               "NONE"
             ]
           },
@@ -7611,6 +7613,8 @@
             "type" : "string",
             "enum" : [
               "WHATSAPP",
+              "SMS",
+              "WHATSAPP_OR_SMS",
               "NONE"
             ]
           },

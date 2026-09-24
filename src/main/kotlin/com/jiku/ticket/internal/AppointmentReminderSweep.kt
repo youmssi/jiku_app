@@ -1,5 +1,6 @@
 package com.jiku.ticket.internal
 
+import com.jiku.shared.ReminderChannel
 import com.jiku.shared.ReminderOffsets
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
@@ -33,7 +34,8 @@ class AppointmentReminderSweep(
         serviceTimezone: String,
         now: Instant = Instant.now(),
     ) {
-        if (channel != CHANNEL_WHATSAPP) {
+        val reminderChannel = ReminderChannel.entries.firstOrNull { it.name == channel }
+        if (reminderChannel == null || reminderChannel == ReminderChannel.NONE) {
             return
         }
         // Les décalages du canal sont persistés à l'activation (défauts J-1/H-2 si
@@ -50,7 +52,7 @@ class AppointmentReminderSweep(
                     continue
                 }
                 try {
-                    claims.claim(ticket, offsetMinutes, tenantId, serviceTimezone)
+                    claims.claim(ticket, offsetMinutes, tenantId, serviceTimezone, reminderChannel)
                 } catch (ex: DataIntegrityViolationException) {
                     // Une autre instance a réservé (billet, décalage) entre la
                     // vérification et l'insertion : sa transaction REQUIRES_NEW est
@@ -72,5 +74,3 @@ class AppointmentReminderSweep(
         private val DEFAULT_OFFSETS = listOf(1440, 120)
     }
 }
-
-private const val CHANNEL_WHATSAPP = "WHATSAPP"
