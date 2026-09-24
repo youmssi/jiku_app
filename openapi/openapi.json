@@ -202,6 +202,54 @@
         }
       }
     },
+    "/api/v1/settings/payment-methods" : {
+      "get" : {
+        "tags" : [
+          "payment-methods-controller"
+        ],
+        "operationId" : "get",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TenantPaymentMethodsInfo"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [
+          "payment-methods-controller"
+        ],
+        "operationId" : "update",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdatePaymentMethodsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TenantPaymentMethodsInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/services/{id}/configuration" : {
       "get" : {
         "tags" : [
@@ -348,7 +396,7 @@
         "tags" : [
           "legal-identity-controller"
         ],
-        "operationId" : "get",
+        "operationId" : "get_1",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -366,7 +414,7 @@
         "tags" : [
           "legal-identity-controller"
         ],
-        "operationId" : "update",
+        "operationId" : "update_1",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -396,7 +444,7 @@
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "get_1",
+        "operationId" : "get_2",
         "parameters" : [
           {
             "name" : "id",
@@ -425,7 +473,7 @@
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "update_1",
+        "operationId" : "update_2",
         "parameters" : [
           {
             "name" : "id",
@@ -529,7 +577,7 @@
         "tags" : [
           "ticket-type-controller"
         ],
-        "operationId" : "update_2",
+        "operationId" : "update_3",
         "parameters" : [
           {
             "name" : "eventId",
@@ -610,7 +658,7 @@
         "tags" : [
           "branding-controller"
         ],
-        "operationId" : "get_2",
+        "operationId" : "get_3",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -628,7 +676,7 @@
         "tags" : [
           "branding-controller"
         ],
-        "operationId" : "update_3",
+        "operationId" : "update_4",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -716,7 +764,7 @@
         "tags" : [
           "admin-billing-settings-controller"
         ],
-        "operationId" : "update_4",
+        "operationId" : "update_5",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4433,7 +4481,7 @@
         "tags" : [
           "service-controller"
         ],
-        "operationId" : "get_3",
+        "operationId" : "get_4",
         "parameters" : [
           {
             "name" : "id",
@@ -4484,7 +4532,7 @@
         "tags" : [
           "service-controller"
         ],
-        "operationId" : "update_5",
+        "operationId" : "update_6",
         "parameters" : [
           {
             "name" : "id",
@@ -4525,7 +4573,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "get_4",
+        "operationId" : "get_5",
         "parameters" : [
           {
             "name" : "id",
@@ -4554,7 +4602,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "update_6",
+        "operationId" : "update_7",
         "parameters" : [
           {
             "name" : "id",
@@ -5362,7 +5410,7 @@
         "tags" : [
           "dashboard-controller"
         ],
-        "operationId" : "get_5",
+        "operationId" : "get_6",
         "parameters" : [
           {
             "name" : "eventId",
@@ -5539,7 +5587,7 @@
         "tags" : [
           "analytics-controller"
         ],
-        "operationId" : "get_6",
+        "operationId" : "get_7",
         "parameters" : [
           {
             "name" : "eventId",
@@ -5961,7 +6009,7 @@
         "tags" : [
           "invoice-controller"
         ],
-        "operationId" : "get_7",
+        "operationId" : "get_8",
         "parameters" : [
           {
             "name" : "invoiceId",
@@ -7142,6 +7190,87 @@
           "from"
         ]
       },
+      "UpdatePaymentMethodsRequest" : {
+        "type" : "object",
+        "properties" : {
+          "payeeName" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "orangeMoneyNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 32,
+            "minLength" : 0
+          },
+          "mtnMomoNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 32,
+            "minLength" : 0
+          },
+          "waveNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 32,
+            "minLength" : 0
+          },
+          "paymentLinkUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 500,
+            "minLength" : 0,
+            "pattern" : "^(https://\\S+)?$"
+          }
+        }
+      },
+      "TenantPaymentMethodsInfo" : {
+        "type" : "object",
+        "properties" : {
+          "payeeName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "orangeMoneyNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "mtnMomoNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "waveNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "paymentLinkUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
       "ServiceConfigUpdate" : {
         "type" : "object",
         "properties" : {
@@ -7374,6 +7503,16 @@
           },
           "currency" : {
             "type" : "string"
+          },
+          "paymentMethods" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/TenantPaymentMethodsInfo"
+              },
+              {
+                "type" : "null"
+              }
+            ]
           }
         }
       },

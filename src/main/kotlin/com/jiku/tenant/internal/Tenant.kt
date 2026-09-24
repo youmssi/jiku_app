@@ -56,6 +56,10 @@ class Tenant(
     @Embedded
     var legalIdentity: TenantLegalIdentity? = null
 
+    /** How the organization's clients pay it (JIKU-109); null until configured. */
+    @Embedded
+    var paymentMethods: TenantPaymentMethods? = null
+
     fun ensureBranding(): TenantBranding = branding ?: TenantBranding().also { branding = it }
 
     fun ensureLegalIdentity(): TenantLegalIdentity = legalIdentity ?: TenantLegalIdentity().also { legalIdentity = it }
