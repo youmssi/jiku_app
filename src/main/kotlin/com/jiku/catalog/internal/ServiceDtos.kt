@@ -10,16 +10,26 @@ import java.util.UUID
 data class ServiceCreateRequest(
     @field:NotBlank @field:Size(max = 120) val name: String,
     @field:NotBlank val timezone: String,
+    val paymentRule: PaymentRule = PaymentRule.FREE,
+    /** Required unless the service is free; in the organization's currency. */
+    val priceMinor: Long? = null,
 )
 
+/** Absent fields stay unchanged; the payment rule and price change together. */
 data class ServiceUpdateRequest(
     @field:Size(max = 120) val name: String? = null,
+    val paymentRule: PaymentRule? = null,
+    val priceMinor: Long? = null,
 )
 
 data class ServiceResponse(
     val id: UUID,
     val name: String,
     val timezone: String,
+    val paymentRule: PaymentRule,
+    /** Null for a free service. */
+    val priceMinor: Long?,
+    val currency: String?,
 )
 
 data class ServiceRequirementRequest(

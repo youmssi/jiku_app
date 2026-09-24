@@ -10,6 +10,7 @@ import com.jiku.catalog.internal.ResourceRepository
 import com.jiku.catalog.internal.ServiceAdminService
 import com.jiku.catalog.internal.ServiceConfigService
 import com.jiku.catalog.internal.ServiceConfigUpdate
+import com.jiku.catalog.internal.ServiceCreateRequest
 import com.jiku.catalog.internal.ServiceLinkTokenService
 import com.jiku.shared.TenantContext
 import org.junit.jupiter.api.AfterEach
@@ -147,7 +148,7 @@ class AppointmentPublicControllerTest {
                 end = LocalTime.of(13, 0),
             ),
         )
-        val service = services.create("Coupe", "Africa/Conakry")
+        val service = services.create(ServiceCreateRequest(name = "Coupe", timezone = "Africa/Conakry"))
         services.addRequirement(service.id, ResourceType.PERSON, 1)
         configService.update(service.id, ServiceConfigUpdate(maxHorizonDays = 365))
         val token = linkTokens.issue(service.id, tenant)

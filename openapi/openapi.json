@@ -7792,6 +7792,13 @@
           "position" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "priceMinor" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
           }
         },
         "required" : [
@@ -7825,6 +7832,19 @@
           "position" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "priceMinor" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
+          },
+          "currency" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         }
       },
@@ -8090,6 +8110,21 @@
           "timezone" : {
             "type" : "string",
             "minLength" : 1
+          },
+          "paymentRule" : {
+            "type" : "string",
+            "enum" : [
+              "FREE",
+              "BEFORE",
+              "AFTER_SERVICE"
+            ]
+          },
+          "priceMinor" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
           }
         },
         "required" : [
@@ -8109,6 +8144,27 @@
           },
           "timezone" : {
             "type" : "string"
+          },
+          "paymentRule" : {
+            "type" : "string",
+            "enum" : [
+              "FREE",
+              "BEFORE",
+              "AFTER_SERVICE"
+            ]
+          },
+          "priceMinor" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
+          },
+          "currency" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         }
       },
@@ -10378,6 +10434,24 @@
             ],
             "maxLength" : 120,
             "minLength" : 0
+          },
+          "paymentRule" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "enum" : [
+              "FREE",
+              "BEFORE",
+              "AFTER_SERVICE"
+            ]
+          },
+          "priceMinor" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
           }
         }
       },

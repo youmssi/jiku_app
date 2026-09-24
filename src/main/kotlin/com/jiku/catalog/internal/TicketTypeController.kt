@@ -1,5 +1,6 @@
 package com.jiku.catalog.internal
 
+import com.jiku.shared.TenantCurrency
 import com.jiku.shared.TicketTypeUsageGate
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -60,6 +61,7 @@ class TicketTypeService(
     private val types: TicketTypeRepository,
     private val events: EventRepository,
     private val guests: TicketTypeUsageGate,
+    private val tenantCurrency: TenantCurrency,
 ) {
     @Transactional(readOnly = true)
     fun list(eventId: UUID): List<TicketTypeResponse> = types.findByEventIdOrderByPositionAsc(eventId).map { it.toResponse() }
@@ -74,6 +76,7 @@ class TicketTypeService(
             TicketType(eventId = eventId, label = request.label.trim(), colorHex = request.colorHex).apply {
                 maxCapacity = request.maxCapacity
                 position = request.position
+                price = request.priceMinor?.let { Price(it, tenantCurrency.ofCurrentTenant()) }
             }
         return types.save(type).toResponse()
     }
@@ -83,6 +86,9 @@ class TicketTypeService(
      * corrige parfois une erreur de saisie après des confirmations. Le compteur
      * n'est pas touché : refuser d'autres entrées est le bon comportement,
      * réécrire l'histoire ne l'est pas.
+     *
+     * Le prix, lui, est figé dès qu'un billet est confirmé : un même billet ne
+     * peut pas avoir coûté deux montants différents selon la date d'achat.
      */
     @Transactional
     fun update(
@@ -91,6 +97,10 @@ class TicketTypeService(
         request: UpsertTicketTypeRequest,
     ): TicketTypeResponse {
         val type = load(eventId, typeId)
+        if (type.confirmedCount > 0 && type.price?.amountMinor != request.priceMinor) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "The price of a category cannot change once tickets are confirmed")
+        }
+        type.price = request.priceMinor?.let { Price(it, tenantCurrency.ofCurrentTenant()) }
         type.label = request.label.trim()
         type.colorHex = request.colorHex
         type.maxCapacity = request.maxCapacity
@@ -140,5 +150,7 @@ class TicketTypeService(
             maxCapacity = maxCapacity,
             confirmedCount = confirmedCount,
             position = position,
+            priceMinor = price?.amountMinor,
+            currency = price?.currency,
         )
 }

@@ -109,6 +109,9 @@ data class UpsertTicketTypeRequest(
     )
     val colorHex: String = "#1E293B",
     val position: Int = 0,
+    /** Price of a ticket sold, in the organization's currency; absent for a free category. */
+    @field:Positive
+    val priceMinor: Long? = null,
 )
 
 data class TicketTypeResponse(
@@ -118,4 +121,7 @@ data class TicketTypeResponse(
     val maxCapacity: Int?,
     val confirmedCount: Int,
     val position: Int,
+    /** Null for a free category. */
+    val priceMinor: Long?,
+    val currency: String?,
 )

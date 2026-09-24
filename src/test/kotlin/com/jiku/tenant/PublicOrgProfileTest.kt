@@ -4,6 +4,7 @@ import com.jiku.TestcontainersConfiguration
 import com.jiku.catalog.internal.Resource
 import com.jiku.catalog.internal.ResourceRepository
 import com.jiku.catalog.internal.ServiceAdminService
+import com.jiku.catalog.internal.ServiceCreateRequest
 import com.jiku.catalog.internal.ServiceLinkCodeService
 import com.jiku.shared.TenantContext
 import org.junit.jupiter.api.AfterEach
@@ -54,7 +55,7 @@ class PublicOrgProfileTest {
 
         TenantContext.set(tenantId.toString())
         resources.save(Resource(name = "Coiffeuse", type = com.jiku.catalog.ResourceType.PERSON, timezone = "Africa/Conakry"))
-        val service = services.create("Coloration", "Africa/Conakry")
+        val service = services.create(ServiceCreateRequest(name = "Coloration", timezone = "Africa/Conakry"))
         val code = codes.forService(service.id, tenantId.toString()).code
         TenantContext.clear()
 
