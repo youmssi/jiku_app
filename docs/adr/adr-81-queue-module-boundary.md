@@ -4,6 +4,10 @@
 **Story:** JIKU-81 (unscheduled)
 **Reference:** `docs/jiku-queue-management-evaluation.md`
 
+> **Mise à jour (2026-09-24).** La file d'attente fait désormais partie du
+> produit : voir ADR 104. Le raisonnement ci-dessous sur la frontière de module
+> reste une référence pour la tranche « ticket anonyme ».
+
 > **Note de renommage (JIKU-100, 2026-09-02).** Le corps de cette décision cite
 > `ticketing.internal.Ticket` et `event.internal.Event`. Ces paquets s'appellent
 > désormais `ticket` et `catalog`. Le texte n'est pas réécrit — un ADR consigne une
