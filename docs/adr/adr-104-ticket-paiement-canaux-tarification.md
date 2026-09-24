@@ -1,7 +1,7 @@
 # ADR 104 — Plateforme centrée sur le ticket : file d'attente, paiement, opérateurs, canaux et tarification
 
-**Statut :** accepté pour les décisions produit (§1 à §7) ; les points marqués
-**[À TRANCHER]** restent ouverts (§8).
+**Statut :** accepté pour les décisions produit (§1 à §8) ; les points marqués
+**[À TRANCHER]** restent ouverts (§9).
 **Date :** 2026-09-24
 **Remplace partiellement :** ADR 81 (la file d'attente passe de « proposée » à
 « dans le produit »).
@@ -72,27 +72,38 @@ suffisent :
 |---|---|---|
 | **Gratuit** | Jamais | Invitation, retrait bancaire |
 | **Avant** | Pas de ticket sans paiement confirmé | Concert, consultation prépayée |
-| **Après service** | Le scan « terminé » envoie la demande de paiement sur le téléphone du client | Restaurant, prestation facturée |
+| **Après service** | Au scan « terminé », Jikū présente au client les moyens de paiement de l'organisation | Restaurant, prestation facturée |
 
-L'opérateur peut aussi marquer « payé en espèces » : c'est la réalité du
-terrain et cela évite de bloquer un passage.
+La confirmation du paiement dépend de ce que l'organisation a configuré (§4) :
+automatique si son compte marchand est connecté, sinon manuelle (l'opérateur
+marque « payé », y compris « payé en espèces »).
 
 Plus tard : « avant usage » (ticket émis mais scan refusé tant que ce n'est pas
 payé) et « externe » (le système de la banque confirme lui-même).
 
-## 4. Deux circuits d'argent, jamais mélangés
+## 4. Jikū n'encaisse jamais l'argent de ses clients
 
-1. **L'organisation paie Jikū** : abonnement, prix d'un événement, commission.
-2. **Le client paie l'organisation** : prix de son ticket.
+**Décision :** Jikū ne perçoit que **ses propres revenus** (abonnements, prix
+des événements, commission). L'argent que les clients finaux paient aux
+organisations **va directement chez l'organisation**. Jikū ne détient, ne
+reverse et ne rembourse jamais de fonds pour le compte d'un tiers.
 
-Les deux circuits utilisent la même interface technique (`PaymentProvider`,
-déjà présente dans `money`) mais des comptes, des écritures et des factures
-distincts.
+Raisons : le risque juridique (encaissement pour compte de tiers, soumis à
+agrément) et le risque opérationnel (litiges, remboursements, fraude) sont trop
+élevés pour la plateforme. Cette décision supprime aussi toute la logique de
+reversement.
 
-### Parcours « Jikū se fait payer » (circuit 1)
+### Deux circuits, jamais mélangés
+
+1. **L'organisation paie Jikū.** Jikū encaisse sur son propre compte
+   agrégateur.
+2. **Le client paie l'organisation.** Jikū se contente d'afficher les moyens de
+   paiement de l'organisation ou de rediriger vers son compte.
+
+### Circuit 1 — Jikū se fait payer
 
 1. L'organisateur fait une action payante (importer au-delà du gratuit,
-   souscrire, envoyer des SMS).
+   souscrire, envoyer des SMS, régler sa commission).
 2. Jikū affiche le montant exact et les boutons : Orange Money, MTN MoMo,
    Carte, Wave.
 3. Le client confirme sur son téléphone. La confirmation du prestataire
@@ -100,54 +111,75 @@ distincts.
 4. En secours, la déclaration de paiement manuel vérifiée par l'équipe Jikū
    (déjà en place) reste disponible.
 
-### Parcours « l'organisation se fait payer » (circuit 2)
+### Circuit 2 — l'organisation se fait payer
 
-**Oui, c'est possible pour les clients de Jikū.** Deux modèles :
+L'organisation choisit un des trois niveaux, du plus simple au plus automatisé :
 
-| | **A. Jikū encaisse pour l'organisation** (par défaut) | **B. Compte marchand de l'organisation** |
-|---|---|---|
-| Pour qui | Particuliers, petits organisateurs, restaurants | Banques, cliniques, grands comptes |
-| Argent du client | Arrive sur le compte agrégateur de Jikū | Arrive directement chez l'organisation |
-| Commission Jikū | Retenue à la source avant reversement | Facturée à l'organisation (mensuel) |
-| Reversement | Automatique, après le délai de règlement de l'agrégateur | Aucun, l'argent est déjà chez elle |
-| Configuration | Aucune : un numéro Mobile Money pour recevoir | Ses propres clés, comme les réglages e-mail/WhatsApp actuels |
+| Niveau | Ce que l'organisation saisit | Ce que voit le client | Qui confirme le paiement |
+|---|---|---|---|
+| **1. Coordonnées affichées** | Ses numéros Orange Money / MTN / Wave, nom du bénéficiaire | Les coordonnées et le montant à payer | L'organisateur ou l'opérateur (« payé ») |
+| **2. Lien de paiement** | Le lien de paiement de son propre compte (CinetPay, Wave…) | Un bouton « Payer » qui ouvre ce lien | L'organisateur ou l'opérateur (« payé ») |
+| **3. Compte marchand connecté** | Les clés de son propre compte marchand (encaissement seulement) | Les boutons Orange Money / MTN / Carte / Wave | Automatique : le prestataire confirme, le ticket est émis |
 
-Parcours client final (concert, modèle A) : page de l'événement → choix du
-billet → paiement Orange Money / MTN / carte / Wave → confirmation → billet
-signé envoyé par WhatsApp, SMS ou e-mail. L'organisateur voit ses ventes en
-direct. Il reçoit le montant moins la commission sur son numéro Mobile Money,
-après l'événement ou sur demande.
+Au niveau 3, l'argent arrive directement sur le compte de l'organisation : Jikū
+appelle le prestataire **avec les clés de l'organisation** et reçoit seulement
+la confirmation. Les clés sont chiffrées au repos, comme les réglages
+e-mail et WhatsApp actuels. Jikū ne demande jamais de clés donnant accès aux
+transferts sortants.
 
-Parcours client final (restaurant, règle « après service ») : réservation à
-distance → ticket → arrivée et scan → commande servie → l'opérateur appuie sur
-« terminer » → demande de paiement sur le téléphone du client, ou « payé en
-espèces ».
+Parcours client final, concert au niveau 3 : page de l'événement → choix du
+billet → paiement sur le compte de l'organisateur → confirmation → billet signé
+envoyé par WhatsApp, SMS ou e-mail.
 
-## 5. Prestataires de paiement
+Parcours client final, restaurant au niveau 1 : réservation → ticket → arrivée
+et scan → commande servie → l'opérateur appuie sur « terminer » → le client voit
+les numéros de paiement du restaurant, paie, l'opérateur marque « payé ».
+
+## 5. Principe du sélecteur : Jikū ne connaît aucun prestataire
+
+Le code métier ne connaît que **des capacités** : « encaisser un montant »,
+« envoyer un message par tel canal ». Il ne connaît ni CinetPay, ni Wave, ni
+Nimba, ni Resend.
+
+```
+Code métier ──► Capacité (port) ──► Sélecteur ──► Adaptateur A | B | C
+                 « encaisser »        choisit        CinetPay, Wave, K-PAY…
+                 « envoyer SMS »      lequel         Nimba, Sent.dm…
+```
+
+- **Adaptateur** : une classe par prestataire, qui traduit la capacité vers son
+  API. Ajouter un prestataire = ajouter un adaptateur et sa configuration, sans
+  toucher au code métier.
+- **Sélecteur** : choisit l'adaptateur à utiliser, dans cet ordre :
+  1. le prestataire configuré par l'organisation (son compte, niveau 3, ou ses
+     propres clés e-mail / WhatsApp / SMS) ;
+  2. sinon le prestataire de la plateforme, fixé par configuration ;
+  3. sinon le suivant dans l'ordre de repli configuré.
+- Changer de prestataire est un **changement de configuration**, jamais de
+  code métier.
+
+État actuel : l'interface de paiement (`PaymentProvider`) respecte déjà ce
+principe mais n'accepte qu'un seul prestataire à la fois. Le choix des
+prestataires e-mail et WhatsApp (`MessagingProviderResolver`) construit
+lui-même les adaptateurs Resend et Meta : il faudra le ramener à un simple
+sélecteur appuyé sur un registre d'adaptateurs.
+
+## 6. Prestataires de paiement (circuit 1 et niveau 3)
 
 Ordre retenu : **Mobile Money d'abord, carte ensuite, Wave en troisième**.
 
-| Rang | Prestataire | Rôle | Pourquoi |
-|---|---|---|---|
-| 1 | **CinetPay** | Agrégateur principal | Couvre la Guinée en GNF (Orange Money GN, MTN MoMo GN), la carte, et offre une API de transfert pour les reversements. Une seule intégration apporte les rangs « Mobile Money » et « carte » |
-| 2 | **Wave** (intégration directe) | Troisième moyen | Lancé en Guinée en mars 2026, frais bas. À brancher en direct si CinetPay ne le propose pas en Guinée |
-| 3 | **K-PAY** | Agrégateur de secours et d'expansion | 12 pays, Mobile Money, carte, encaissement et reversement. La couverture de la Guinée reste à confirmer |
+| Rang | Prestataire | Pourquoi |
+|---|---|---|
+| 1 | **CinetPay** | Couvre la Guinée en GNF (Orange Money GN, MTN MoMo GN) et la carte : une seule intégration apporte les deux premiers moyens de paiement. Présent dans plusieurs pays d'Afrique francophone |
+| 2 | **Wave** (en direct) | Lancé en Guinée en mars 2026, frais bas. À brancher en direct si CinetPay ne le propose pas en Guinée |
+| 3 | **K-PAY** | Secours et expansion (12 pays). Couverture de la Guinée à confirmer |
 
-Le client ne voit jamais le nom de l'agrégateur, seulement « Orange Money »,
-« MTN », « Carte », « Wave ». Changer d'agrégateur est une décision de
-configuration, pas une modification du parcours.
+Le client ne voit jamais le nom de l'agrégateur. Pour les estimations, on
+retient le **taux public brut de CinetPay, 3,5 % par transaction**, sans remise
+négociée (taux affiché pour la Côte d'Ivoire ; celui de la Guinée est à
+confirmer).
 
-Point d'attention : CinetPay applique par défaut un délai de règlement (huit
-jours) avant que les fonds soient disponibles. Le délai de reversement promis
-aux organisateurs (modèle A) doit en tenir compte.
-
-## 6. Canaux de communication
-
-Même principe que le paiement : le code métier dit « envoyer ce message par ce
-canal », un adaptateur choisit le prestataire. Le mécanisme existe déjà pour
-l'e-mail et WhatsApp (`MessagingProviderResolver`, `TenantProviderSettings`) :
-prestataire de la plateforme par défaut, prestataire propre à l'organisation
-s'il est configuré.
+## 7. Canaux de communication
 
 | Canal | Prestataire | État |
 |---|---|---|
@@ -157,20 +189,23 @@ s'il est configuré.
 | Multicanal | Sent.dm | Plus tard, pour l'expansion hors Guinée |
 | — | Twilio | Non retenu : coût et contraintes d'expéditeur en Guinée |
 
-Pourquoi le SMS en premier : la file d'attente (« vous êtes le prochain ») doit
-toucher les clients sans données mobiles ni WhatsApp. Nimba SMS est basé en
-Guinée, relié directement à Orange, MTN et Cellcom, et gère un nom
-d'expéditeur.
+Pourquoi le SMS en premier : la file d'attente doit toucher les clients sans
+données mobiles ni WhatsApp. Nimba SMS est basé en Guinée et relié directement à
+Orange, MTN et Cellcom.
 
-Règle de repli gérée par Jikū, pas par un prestataire : **WhatsApp, puis SMS si
-WhatsApp échoue**, l'e-mail restant le canal des documents (factures, billets
-PDF). Garder cette règle chez nous permet de changer de prestataire sans
-changer le comportement.
+Règle de repli gérée par le sélecteur, pas par un prestataire : **WhatsApp,
+puis SMS si WhatsApp échoue**. L'e-mail reste le canal des documents (factures,
+billets PDF).
+
+Le suivi du rang dans la file se fait **d'abord sur la page du ticket, en
+direct**, sans coût d'envoi. Un message n'est envoyé qu'aux moments utiles
+(« vous êtes le prochain »), car un SMS coûte environ trois fois un message
+WhatsApp utilitaire.
 
 Pour un rendez-vous qui n'est pas physique, le ticket reste la preuve et porte
-un lien de visio au lieu d'un QR. Les canaux ne sont que des options d'envoi.
+un lien de visio au lieu d'un QR.
 
-## 7. Tarification
+## 8. Tarification
 
 Trois lignes, affichées telles quelles sur la page des prix :
 
@@ -184,47 +219,45 @@ Trois lignes, affichées telles quelles sur la page des prix :
    qui dépasse le gratuit. Passer au palier supérieur ne fait payer que la
    différence.
 3. **Tickets payants** (concert, gala payant) : **un pourcentage de ce qui est
-   vendu**. Rien n'est dû si rien n'est vendu. Ces tickets ne comptent pas dans
-   les paliers d'invités : une seule règle s'applique à chaque ticket.
+   vendu**, facturé par Jikū à l'organisation (Jikū ne prélève rien à la
+   source, §4). Rien n'est dû si rien n'est vendu. Ces tickets ne comptent pas
+   dans les paliers d'invités.
 
 Règles de simplicité :
 
 - Le prix de l'invitation inclut l'e-mail et WhatsApp. Le **SMS est une option
-  affichée avec son prix exact au moment de l'envoi** (« Envoyer aussi par SMS :
-  N GNF »), car c'est le seul canal dont le coût varie fortement.
+  affichée avec son prix exact au moment de l'envoi**.
 - Pas de portefeuille à recharger, pas de crédits prépayés.
-- Le pourcentage sur les ventes est **un seul chiffre tout compris** (frais de
-  l'agrégateur inclus). L'organisateur n'a pas à additionner des frais.
+- Tous les prix sont des paramètres de configuration, jamais des valeurs
+  écrites dans le code.
 
-## 8. Points ouverts [À TRANCHER]
+## 9. Points ouverts [À TRANCHER]
 
-1. **Taux de commission** sur les tickets payants : il doit couvrir le coût de
-   l'agrégateur plus une marge. À fixer après négociation avec CinetPay. Ce taux
-   sera un paramètre de configuration, jamais une valeur écrite dans le code.
-2. **Modèle A (Jikū encaisse pour l'organisation)** : vérifier auprès de
-   l'agrégateur et du régulateur (BCRG) le cadre de l'encaissement pour compte
-   de tiers avant d'ouvrir ce modèle. Tant que ce n'est pas validé, seul le
-   modèle B est proposé.
-3. **Services qui encaissent de l'argent** (consultation prépayée) : appliquer
+1. **Taux de commission** de Jikū sur les tickets payants.
+2. **Moment où Jikū encaisse cette commission**, puisqu'il ne prélève rien à la
+   source.
+3. **Monnaies** : une grille de prix par monnaie, ou une monnaie de référence
+   convertie.
+4. **Niveaux de paiement proposés au lancement** (§4, circuit 2).
+5. **Services qui encaissent de l'argent** (consultation prépayée) : appliquer
    aussi le pourcentage, ou l'inclure dans l'abonnement ?
-4. **Délai de reversement** promis aux organisateurs (après l'événement, sous N
-   jours, ou sur demande).
 
 ## Ordre de réalisation
 
-1. Règle de paiement sur le ticket et intégration CinetPay (Mobile Money et
-   carte), d'abord pour le circuit 1, puis le circuit 2.
-2. Canal SMS (Nimba SMS) et règle de repli WhatsApp → SMS.
-3. Opérateur avec périmètre (services, lieux, actions).
-4. Vente publique de billets (commande, prix, codes promo) avec commission.
-5. Wave en direct.
-6. Ensuite : avis après service, agences multiples, domaine personnalisé,
-   questionnaire d'orientation, écran d'appel.
+Le détail (tranches, dépôts, critères de fin) est dans
+`docs/jiku-plan-production.md`.
+
+1. Sélecteur de prestataires et intégration CinetPay pour le circuit 1.
+2. Règle de paiement sur le ticket et niveaux 1 et 2 du circuit 2.
+3. Canal SMS (Nimba SMS) et règle de repli WhatsApp → SMS.
+4. Opérateur avec périmètre (services, lieux, actions).
+5. File d'attente complète (ticket pris par le client, suivi du rang en direct).
+6. Vente publique de billets et facturation de la commission.
+7. Niveau 3 du circuit 2 (compte marchand connecté), puis Wave en direct.
 
 ## Non-objectifs
 
-- Pas de synchronisation d'agendas Google ou Outlook (point fort de cal.com,
-  hors de notre marché de départ).
-- Pas de Stripe Connect (point fort de Hi.Events, remplacé ici par un agrégateur
-  Mobile Money).
+- Aucun encaissement, reversement ou remboursement pour le compte d'un tiers.
+- Pas de synchronisation d'agendas Google ou Outlook.
+- Pas de Stripe Connect.
 - Pas de second abonnement pour les événements.
