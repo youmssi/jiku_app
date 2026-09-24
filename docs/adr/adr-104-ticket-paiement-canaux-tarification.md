@@ -1,6 +1,6 @@
 # ADR 104 — Plateforme centrée sur le ticket : file d'attente, paiement, opérateurs, canaux et tarification
 
-**Statut :** accepté ; un seul point reste ouvert (§9, point 5).
+**Statut :** accepté. Points encore ouverts : `docs/jiku-referentiel-metier.md`, §9.
 **Date :** 2026-09-24
 **Remplace partiellement :** ADR 81 (la file d'attente passe de « proposée » à
 « dans le produit »).
@@ -225,15 +225,16 @@ Trois lignes, affichées telles quelles sur la page des prix :
 ### Commission payée par tranche
 
 - Quand l'organisateur ouvre la vente, Jikū lui demande la commission d'une
-  tranche de billets (par exemple les 50 prochains) : 3 % × prix × taille de
-  la tranche, montant affiché avant le paiement.
+  tranche de billets (par défaut les 50 prochains, jamais plus que les places
+  restantes) : 3 % × prix × taille de la tranche, montant affiché avant le
+  paiement.
 - Chaque billet marqué « payé » consomme une place de la tranche. Quand la
   tranche est épuisée, la vente se met en pause jusqu'au paiement de la
   suivante. Jikū n'a donc jamais d'impayé à recouvrer.
-- La part d'une tranche non consommée à la fin de l'événement devient un avoir
-  (le module `money` émet déjà des avoirs), déduit de la prochaine tranche ou du
-  prochain paiement à Jikū. Ce n'est pas un portefeuille : aucun montant ne peut
-  être rechargé librement.
+- La part d'une tranche non consommée à la fin de l'événement est **reportée
+  automatiquement** sur les prochaines ventes ou le prochain paiement de
+  l'organisation à Jikū, pendant 12 mois. Elle n'est pas remboursée en argent
+  et ne peut pas être rechargée : ce n'est pas un portefeuille.
 - La taille de la tranche et le taux sont des paramètres de configuration.
 
 Règles de simplicité :
@@ -258,10 +259,13 @@ Décidé le 2026-09-24 :
    (coordonnées affichées) et 2 (lien de paiement). Le niveau 3 (compte marchand
    connecté) vient après le lancement.
 
-Encore ouvert **[À TRANCHER]** :
+5. **Services qui encaissent de l'argent** (consultation prépayée) : aucune
+   commission, l'abonnement couvre tout. La facturation suit ce à quoi le
+   ticket appartient (service ou événement), jamais le type d'organisation : une
+   clinique qui vend les billets d'une conférence paie la commission sur ces
+   billets. Les règles complètes sont dans `docs/jiku-referentiel-metier.md`.
 
-5. **Services qui encaissent de l'argent** (consultation prépayée) : appliquer
-   aussi la commission, ou l'inclure dans l'abonnement ?
+Les points encore ouverts sont suivis dans le référentiel métier, §9.
 
 ## Ordre de réalisation
 
