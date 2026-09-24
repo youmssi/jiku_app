@@ -5,6 +5,7 @@ import com.jiku.TestcontainersConfiguration
 import com.jiku.backoffice.internal.PlatformAdmin
 import com.jiku.backoffice.internal.PlatformAdminRepository
 import com.jiku.booking.internal.BookingRefundRepository
+import com.jiku.booking.internal.BookingRepository
 import com.jiku.money.internal.DocumentType
 import com.jiku.money.internal.InvoiceRepository
 import com.jiku.shared.TenantContext
@@ -49,12 +50,13 @@ class BookingRefundTest {
     @Autowired
     lateinit var invoices: InvoiceRepository
 
+    @Autowired
+    lateinit var bookings: BookingRepository
+
     @Test
     fun `a partial refund is recorded against the deposit, produces a credit note and is audited`() {
         val email = "refund-${UUID.randomUUID()}@test.example"
-        val creation = createBooking(email = email)
-        val bookingId = JsonPath.read<String>(creation, "$.id")
-        val accessToken = JsonPath.read<String>(creation, "$.accessToken")
+        val (bookingId, accessToken) = bookings.openBooking(email = email, eventDate = LocalDate.now().plusDays(90))
 
         // Acompte déclaré puis vérifié → tenant + événement provisionnés.
         val declaration =
@@ -145,8 +147,12 @@ class BookingRefundTest {
 
     @Test
     fun `a refund requires a reason`() {
-        val creation = createBooking(email = "reason-${UUID.randomUUID()}@test.example")
-        val bookingId = JsonPath.read<String>(creation, "$.id")
+        val bookingId =
+            bookings
+                .openBooking(
+                    email = "reason-${UUID.randomUUID()}@test.example",
+                    eventDate = LocalDate.now().plusDays(90),
+                ).id
         val adminToken = adminLogin()
         mockMvc
             .perform(post("/api/v1/admin/bookings/$bookingId/cancel").header("Authorization", "Bearer $adminToken"))
@@ -158,23 +164,6 @@ class BookingRefundTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"amountMinor":1000,"reason":"   "}"""),
             ).andExpect(status().isBadRequest())
-    }
-
-    private fun createBooking(email: String): String {
-        val eventDate = LocalDate.now().plusDays(90)
-        return mockMvc
-            .perform(
-                post("/api/v1/bookings")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(
-                        """
-                        {"customerName":"Test Customer","customerPhone":"+224600000000","customerEmail":"$email",
-                         "eventType":"MARIAGE","eventDate":"$eventDate","guestCountEstimate":150}
-                        """.trimIndent(),
-                    ),
-            ).andExpect(status().isCreated())
-            .andReturn()
-            .response.contentAsString
     }
 
     private fun adminLogin(): String {

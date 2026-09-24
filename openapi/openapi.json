@@ -3427,36 +3427,6 @@
         }
       }
     },
-    "/api/v1/bookings" : {
-      "post" : {
-        "tags" : [
-          "booking-controller"
-        ],
-        "operationId" : "create_9",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CreateBookingRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Created",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/BookingCreationResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/bookings/{id}/payment-declarations" : {
       "post" : {
         "tags" : [
@@ -4675,7 +4645,7 @@
         "tags" : [
           "admin-agreement-controller"
         ],
-        "operationId" : "create_10",
+        "operationId" : "create_9",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -6162,37 +6132,6 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/BookingPayeeDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/bookings/quote" : {
-      "get" : {
-        "tags" : [
-          "booking-controller"
-        ],
-        "operationId" : "quote",
-        "parameters" : [
-          {
-            "name" : "guestCountEstimate",
-            "in" : "query",
-            "required" : true,
-            "schema" : {
-              "type" : "integer",
-              "format" : "int64"
-            }
-          }
-        ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/BookingQuote"
                 }
               }
             }
@@ -10107,90 +10046,6 @@
           }
         }
       },
-      "CreateBookingRequest" : {
-        "type" : "object",
-        "properties" : {
-          "customerName" : {
-            "type" : "string",
-            "minLength" : 1
-          },
-          "customerPhone" : {
-            "type" : "string",
-            "minLength" : 1
-          },
-          "customerEmail" : {
-            "type" : "string",
-            "format" : "email",
-            "minLength" : 1
-          },
-          "eventType" : {
-            "type" : "string",
-            "enum" : [
-              "MARIAGE",
-              "BAPTEME",
-              "SALLE",
-              "SEMINAIRE",
-              "AUTRE"
-            ]
-          },
-          "eventDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "guestCountEstimate" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "acquisitionSource" : {
-            "type" : [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "required" : [
-          "customerEmail",
-          "customerName",
-          "customerPhone"
-        ]
-      },
-      "BookingCreationResult" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "accessToken" : {
-            "type" : "string"
-          },
-          "tier" : {
-            "type" : "string"
-          },
-          "currency" : {
-            "type" : "string"
-          },
-          "totalAmountMinor" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "depositAmountMinor" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "balanceAmountMinor" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "balanceDueDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "status" : {
-            "type" : "string"
-          }
-        }
-      },
       "DeclarePaymentRequest" : {
         "type" : "object",
         "properties" : {
@@ -12070,29 +11925,6 @@
               "string",
               "null"
             ]
-          }
-        }
-      },
-      "BookingQuote" : {
-        "type" : "object",
-        "properties" : {
-          "tier" : {
-            "type" : "string"
-          },
-          "currency" : {
-            "type" : "string"
-          },
-          "totalAmountMinor" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "depositAmountMinor" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "balanceAmountMinor" : {
-            "type" : "integer",
-            "format" : "int64"
           }
         }
       },

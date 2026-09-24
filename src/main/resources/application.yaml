@@ -383,12 +383,9 @@ billing:
     mobile-money-operator: ${BILLING_MANUAL_MOMO_OPERATOR:}
     bank-details: ${BILLING_MANUAL_BANK_DETAILS:}
 booking:
-  # Deposit-reservation flow (JIKU-55): the deposit percentage, when the balance
-  # falls due, and the payee details shown on the payment instructions page —
-  # a distinct product surface from billing.manual above, even though the
-  # underlying Mobile Money accounts may be the same.
-  deposit-rate: ${BOOKING_DEPOSIT_RATE:0.30}
-  balance-due-days-before-event: ${BOOKING_BALANCE_DUE_DAYS:7}
+  # Follow-up of the deposit reservations opened before JIKU-115 (new ones are
+  # closed): the timezone of the draft event a verified deposit provisions, and
+  # the payee details shown on the payment instructions page.
   event-timezone: ${BOOKING_EVENT_TIMEZONE:Africa/Conakry}
   payee-name: ${BOOKING_PAYEE_NAME:}
   orange-money-number: ${BOOKING_ORANGE_MONEY_NUMBER:}
