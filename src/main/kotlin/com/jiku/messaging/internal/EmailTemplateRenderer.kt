@@ -1,6 +1,5 @@
 package com.jiku.messaging.internal
 
-import com.jiku.shared.BookingNotice
 import com.jiku.shared.ManualPaymentNotice
 import com.jiku.shared.MemberInvitationNotice
 import org.springframework.core.io.ClassPathResource
@@ -26,12 +25,6 @@ class EmailTemplateRenderer(
     private val passwordResetTemplate: String by lazy { load("password-reset.html") }
     private val verifyEmailTemplate: String by lazy { load("verify-email.html") }
     private val memberInvitationTemplate: String by lazy { load("member-invitation.html") }
-    private val bookingPaymentDeclaredTemplate: String by lazy { load("booking-payment-declared.html") }
-    private val bookingDuplicateReferenceTemplate: String by lazy { load("booking-duplicate-reference.html") }
-    private val bookingDepositVerifiedTemplate: String by lazy { load("booking-deposit-verified.html") }
-    private val bookingBalanceVerifiedTemplate: String by lazy { load("booking-balance-verified.html") }
-    private val bookingPaymentRejectedTemplate: String by lazy { load("booking-payment-rejected.html") }
-    private val bookingRefundedTemplate: String by lazy { load("booking-refunded.html") }
 
     fun renderInvitation(email: InvitationEmail): String =
         clientTemplates.render(
@@ -141,56 +134,6 @@ class EmailTemplateRenderer(
             .replace("{{inviterEmail}}", escapeHtml(notice.inviterEmail))
             .replace("{{role}}", escapeHtml(notice.role))
             .replace("{{actionUrl}}", escapeHtml(notice.actionUrl))
-
-    fun renderBookingPaymentDeclared(notice: BookingNotice): String =
-        bookingPaymentDeclaredTemplate
-            .replace("{{customerName}}", escapeHtml(notice.customerName))
-            .replace("{{customerEmail}}", escapeHtml(notice.customerEmail))
-            .replace("{{customerPhone}}", escapeHtml(notice.customerPhone))
-            .replace("{{kind}}", escapeHtml(notice.declarationKind.orEmpty()))
-            .replace("{{reference}}", escapeHtml(notice.reference.orEmpty()))
-            .replace("{{amount}}", formatAmount(notice.amountMinor ?: 0, notice.currency))
-            .replace("{{bookingId}}", notice.bookingId.toString())
-
-    fun renderBookingDuplicateReference(notice: BookingNotice): String =
-        bookingDuplicateReferenceTemplate
-            .replace("{{customerName}}", escapeHtml(notice.customerName))
-            .replace("{{customerEmail}}", escapeHtml(notice.customerEmail))
-            .replace("{{customerPhone}}", escapeHtml(notice.customerPhone))
-            .replace("{{reference}}", escapeHtml(notice.reference.orEmpty()))
-            .replace("{{amount}}", formatAmount(notice.amountMinor ?: 0, notice.currency))
-
-    fun renderBookingDepositVerified(notice: BookingNotice): String =
-        bookingDepositVerifiedTemplate
-            .replace("{{customerName}}", escapeHtml(notice.customerName))
-            .replace("{{amount}}", formatAmount(notice.amountMinor ?: 0, notice.currency))
-            .replace("{{reference}}", escapeHtml(notice.reference.orEmpty()))
-            .replace("{{balanceAmount}}", formatAmount(notice.balanceAmountMinor ?: 0, notice.currency))
-            .replace("{{balanceDueDate}}", escapeHtml(notice.balanceDueDate.orEmpty()))
-
-    fun renderBookingBalanceVerified(notice: BookingNotice): String =
-        bookingBalanceVerifiedTemplate
-            .replace("{{customerName}}", escapeHtml(notice.customerName))
-            .replace("{{amount}}", formatAmount(notice.amountMinor ?: 0, notice.currency))
-            .replace("{{reference}}", escapeHtml(notice.reference.orEmpty()))
-
-    fun renderBookingPaymentRejected(notice: BookingNotice): String {
-        val reasonBlock =
-            notice.note?.takeIf { it.isNotBlank() }?.let {
-                """<p style="margin:0 0 4px;color:#555555;">Reason: ${escapeHtml(it)}</p>"""
-            } ?: ""
-        return bookingPaymentRejectedTemplate
-            .replace("{{customerName}}", escapeHtml(notice.customerName))
-            .replace("{{reference}}", escapeHtml(notice.reference.orEmpty()))
-            .replace("{{reasonBlock}}", reasonBlock)
-    }
-
-    fun renderBookingRefunded(notice: BookingNotice): String =
-        bookingRefundedTemplate
-            .replace("{{customerName}}", escapeHtml(notice.customerName))
-            .replace("{{amount}}", formatAmount(notice.amountMinor ?: 0, notice.currency))
-            .replace("{{reference}}", escapeHtml(notice.reference.orEmpty()))
-            .replace("{{bookingId}}", notice.bookingId.toString())
 
     /**
      * Minor units to a display amount (e.g. 150000 GNF-minor → "150 000 GNF").

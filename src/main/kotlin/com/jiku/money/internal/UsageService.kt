@@ -78,45 +78,6 @@ class UsageService(
         )
     }
 
-    /**
-     * Adds [amountMinor] to [eventId]'s prepaid credit (JIKU-57) — a booking
-     * deposit or balance already paid outside the normal payment flow, to be
-     * netted off the next manual payment request rather than charged twice.
-     */
-    @Transactional
-    fun recordPrepayment(
-        eventId: UUID,
-        amountMinor: Long,
-    ) {
-        if (amountMinor <= 0) return
-        val record =
-            usageRecords.findByEventId(eventId)
-                ?: UsageRecord(eventId = eventId, unlockedAllowance = properties.freeTierGuests)
-        record.prepaidAmountMinor += amountMinor
-        record.updatedAt = Instant.now()
-        usageRecords.save(record)
-    }
-
-    /**
-     * Spends up to [tierPriceMinor] of [eventId]'s prepaid credit and returns
-     * the discounted price to actually charge (JIKU-57). The credit is zeroed
-     * the moment it is applied — a booking's deposit is meant to offset the
-     * *next* upgrade this event needs, not every future one.
-     */
-    @Transactional
-    fun applyPrepaymentDiscount(
-        eventId: UUID,
-        tierPriceMinor: Long,
-    ): Long {
-        val record = usageRecords.findByEventId(eventId) ?: return tierPriceMinor
-        val discount = minOf(record.prepaidAmountMinor, tierPriceMinor)
-        if (discount <= 0) return tierPriceMinor
-        record.prepaidAmountMinor -= discount
-        record.updatedAt = Instant.now()
-        usageRecords.save(record)
-        return tierPriceMinor - discount
-    }
-
     @Transactional(readOnly = true)
     fun canInvite(
         eventId: UUID,

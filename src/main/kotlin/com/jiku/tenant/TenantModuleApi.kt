@@ -31,21 +31,6 @@ interface TenantModuleApi {
     ): TenantInfo?
 
     /**
-     * Provisions a brand-new tenant and owner account for a customer who has not
-     * registered yet (JIKU-55: booking deposit verification). Reuses the
-     * existing account if [ownerEmail] already has one — a repeat customer gets
-     * a second organization rather than a duplicate identity. Creates the OWNER
-     * membership and emails an account-access link through the same
-     * password-reset flow "forgot password" uses, so no new email template is
-     * needed for a first login. Returns the new tenant's id.
-     */
-    fun provisionTenant(
-        organizationName: String,
-        ownerEmail: String,
-        ownerFullName: String?,
-    ): UUID
-
-    /**
      * The tenant owning a public username (case-insensitive), or null. Backs the
      * discoverable organization profile; suspension is the caller's concern.
      */

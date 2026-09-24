@@ -1,4 +1,4 @@
-package com.jiku.booking
+package com.jiku.backoffice
 
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration

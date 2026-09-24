@@ -7,7 +7,6 @@ import com.jiku.money.AdminTrialView
 import com.jiku.money.BillingAllowance
 import com.jiku.money.BillingModuleApi
 import com.jiku.money.BillingTierOption
-import com.jiku.money.BookingAvoirDocument
 import com.jiku.money.PlatformBillingSettingsUpdate
 import com.jiku.money.PlatformBillingSettingsView
 import org.springframework.stereotype.Service
@@ -29,11 +28,6 @@ class BillingModuleApiService(
     private val platformSettings: PlatformBillingSettingsService,
     private val properties: BillingProperties,
 ) : BillingModuleApi {
-    override fun recordPrepayment(
-        eventId: UUID,
-        amountMinor: Long,
-    ) = usageService.recordPrepayment(eventId, amountMinor)
-
     override fun allowance(eventId: UUID): BillingAllowance = usageService.allowance(eventId)
 
     override fun readAllowance(eventId: UUID): BillingAllowance = usageService.readAllowance(eventId)
@@ -90,17 +84,4 @@ class BillingModuleApiService(
         update: PlatformBillingSettingsUpdate,
         updatedBy: String?,
     ): PlatformBillingSettingsView = platformSettings.update(update, updatedBy)
-
-    override fun unlockTier(
-        eventId: UUID,
-        tierName: String,
-    ) = tierUnlockService.unlock(eventId, tierName)
-
-    override fun issueBookingAvoir(
-        customerName: String,
-        customerCountry: String,
-        amountMinor: Long,
-        currency: String,
-        description: String,
-    ): BookingAvoirDocument = invoiceService.issueBookingAvoir(customerName, customerCountry, amountMinor, currency, description)
 }

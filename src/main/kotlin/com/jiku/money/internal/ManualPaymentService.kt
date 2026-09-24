@@ -34,7 +34,6 @@ class ManualPaymentService(
     private val subscriptionNotifier: SubscriptionNotifier,
     private val platformSettings: PlatformBillingSettingsService,
     private val tenantModuleApi: TenantModuleApi,
-    private val usageService: UsageService,
     private val eventPublisher: ApplicationEventPublisher,
     transactionManager: PlatformTransactionManager,
 ) {
@@ -67,16 +66,12 @@ class ManualPaymentService(
             return instructionsFor(existing)
         }
 
-        // Nets off any deposit/balance already paid toward this event outside this
-        // flow (JIKU-57 — a booking that grew past its estimated tier), so an
-        // organizer never pays twice for the same guests.
-        val discountedAmountMinor = usageService.applyPrepaymentDiscount(eventId, tier.priceMinor)
         val payment =
             payments.save(
                 Payment(
                     eventId = eventId,
                     tier = tier.name,
-                    amountMinor = discountedAmountMinor,
+                    amountMinor = tier.priceMinor,
                     currency = billingProperties.currency,
                     provider = PROVIDER_MANUAL,
                 ),

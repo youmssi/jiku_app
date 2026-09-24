@@ -98,19 +98,6 @@ interface EventModuleApi {
     fun markQuorumReached(eventId: UUID)
 
     /**
-     * Creates a draft event pre-filled from a verified booking (JIKU-55), under
-     * the tenant bound in the current [com.jiku.shared.TenantContext]. Returns
-     * the new event's id. The organizer completes and publishes it themselves —
-     * this only spares them a blank starting point.
-     */
-    fun createDraftEvent(
-        name: String,
-        timezone: String,
-        startDateTime: Instant?,
-        invitationChannels: Set<InvitationChannel>,
-    ): UUID
-
-    /**
      * Events under [tenantId] whose name matches [query] (case-insensitive
      * substring; all events when blank or null), newest-scheduled first. Powers
      * the back-office trial grant form's event picker (JIKU-42) — deliberately

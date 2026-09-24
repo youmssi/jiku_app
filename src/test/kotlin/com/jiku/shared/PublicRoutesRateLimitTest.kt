@@ -34,7 +34,6 @@ class PublicRoutesRateLimitTest {
                 "/line-codes/ABC123",
                 "/rsvp/some-token/confirm",
                 "/checkin/some-token/scan",
-                "/bookings",
                 "/prospects",
             )
         for (path in publicWrites) {

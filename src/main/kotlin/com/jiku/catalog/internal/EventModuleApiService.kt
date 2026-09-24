@@ -3,7 +3,6 @@ package com.jiku.catalog.internal
 import com.jiku.catalog.EventInfo
 import com.jiku.catalog.EventModuleApi
 import com.jiku.catalog.EventSummary
-import com.jiku.catalog.InvitationChannel
 import com.jiku.catalog.QuestionInfo
 import com.jiku.catalog.QuorumInfo
 import com.jiku.catalog.RetentionCandidate
@@ -144,23 +143,6 @@ class EventModuleApiService(
     override fun markQuorumReached(eventId: UUID) {
         events.markQuorumReached(eventId, Instant.now())
     }
-
-    @Transactional
-    override fun createDraftEvent(
-        name: String,
-        timezone: String,
-        startDateTime: Instant?,
-        invitationChannels: Set<InvitationChannel>,
-    ): UUID =
-        eventService
-            .create(
-                CreateEventRequest(
-                    name = name,
-                    timezone = timezone,
-                    startDateTime = startDateTime,
-                    invitationChannels = invitationChannels,
-                ),
-            ).id
 
     @Transactional(readOnly = true)
     override fun adminSearchEvents(

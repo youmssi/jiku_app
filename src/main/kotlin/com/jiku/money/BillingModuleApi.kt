@@ -92,16 +92,6 @@ interface BillingModuleApi {
     fun tierOptions(): List<BillingTierOption>
 
     /**
-     * Unlocks [tierName] for [eventId] — the same effect a payment confirmation
-     * has (never lowers an existing allowance). Used when a booking's (JIKU-55)
-     * verified deposit already paid for a tier on a freshly provisioned event.
-     */
-    fun unlockTier(
-        eventId: UUID,
-        tierName: String,
-    )
-
-    /**
      * Réglages de facturation complets (bénéficiaire + grilles de prix) tels que
      * le bureau admin les voit et les modifie. Lecture et écriture sont ici,
      * derrière l'API du module — le back-office ne touche jamais aux tables.
@@ -112,30 +102,6 @@ interface BillingModuleApi {
         update: PlatformBillingSettingsUpdate,
         updatedBy: String?,
     ): PlatformBillingSettingsView
-
-    /**
-     * Records [amountMinor] already paid toward [eventId] outside the normal
-     * payment flow (JIKU-57) — a booking deposit or balance — so it is netted
-     * off the price the next tier upgrade actually charges, instead of the
-     * organizer paying for the same guests twice.
-     */
-    fun recordPrepayment(
-        eventId: UUID,
-        amountMinor: Long,
-    )
-
-    /**
-     * Emits the standalone credit note (avoir, JIKU-75) documenting a booking
-     * deposit refund returned to a customer. The caller has bound the organizer's
-     * tenant; the document numbers against that tenant's fiscal year.
-     */
-    fun issueBookingAvoir(
-        customerName: String,
-        customerCountry: String,
-        amountMinor: Long,
-        currency: String,
-        description: String,
-    ): BookingAvoirDocument
 }
 
 /** One configured fixed-price tier: what it costs and how many guests it unlocks. */

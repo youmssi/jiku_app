@@ -4232,55 +4232,6 @@
         }
       }
     },
-    "/api/v1/bookings/{id}/payment-declarations" : {
-      "post" : {
-        "tags" : [
-          "booking-controller"
-        ],
-        "operationId" : "declarePayment",
-        "parameters" : [
-          {
-            "name" : "id",
-            "in" : "path",
-            "required" : true,
-            "schema" : {
-              "type" : "string",
-              "format" : "uuid"
-            }
-          },
-          {
-            "name" : "token",
-            "in" : "query",
-            "required" : true,
-            "schema" : {
-              "type" : "string"
-            }
-          }
-        ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/DeclarePaymentRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Created",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PaymentDeclarationResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/billing/subscription/request" : {
       "post" : {
         "tags" : [
@@ -5173,150 +5124,6 @@
         }
       }
     },
-    "/api/v1/admin/bookings/{id}/refund" : {
-      "post" : {
-        "tags" : [
-          "admin-booking-controller"
-        ],
-        "operationId" : "refund",
-        "parameters" : [
-          {
-            "name" : "id",
-            "in" : "path",
-            "required" : true,
-            "schema" : {
-              "type" : "string",
-              "format" : "uuid"
-            }
-          }
-        ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/RefundBookingRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/AdminBookingRefundView"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/admin/bookings/{id}/cancel" : {
-      "post" : {
-        "tags" : [
-          "admin-booking-controller"
-        ],
-        "operationId" : "cancel_1",
-        "parameters" : [
-          {
-            "name" : "id",
-            "in" : "path",
-            "required" : true,
-            "schema" : {
-              "type" : "string",
-              "format" : "uuid"
-            }
-          }
-        ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/AdminBookingCancellationView"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/admin/booking-payments/{id}/verify" : {
-      "post" : {
-        "tags" : [
-          "admin-booking-payment-controller"
-        ],
-        "operationId" : "verify",
-        "parameters" : [
-          {
-            "name" : "id",
-            "in" : "path",
-            "required" : true,
-            "schema" : {
-              "type" : "string",
-              "format" : "uuid"
-            }
-          }
-        ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/AdminPaymentDeclarationView"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/admin/booking-payments/{id}/reject" : {
-      "post" : {
-        "tags" : [
-          "admin-booking-payment-controller"
-        ],
-        "operationId" : "reject_1",
-        "parameters" : [
-          {
-            "name" : "id",
-            "in" : "path",
-            "required" : true,
-            "schema" : {
-              "type" : "string",
-              "format" : "uuid"
-            }
-          }
-        ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/RejectDeclarationRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/AdminPaymentDeclarationView"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/admin/auth/refresh" : {
       "post" : {
         "tags" : [
@@ -6170,7 +5977,7 @@
         "tags" : [
           "short-link-public-controller"
         ],
-        "operationId" : "cancel_2",
+        "operationId" : "cancel_1",
         "parameters" : [
           {
             "name" : "code",
@@ -7193,84 +7000,6 @@
         }
       }
     },
-    "/api/v1/bookings/{id}" : {
-      "get" : {
-        "tags" : [
-          "booking-controller"
-        ],
-        "operationId" : "status_1",
-        "parameters" : [
-          {
-            "name" : "id",
-            "in" : "path",
-            "required" : true,
-            "schema" : {
-              "type" : "string",
-              "format" : "uuid"
-            }
-          },
-          {
-            "name" : "token",
-            "in" : "query",
-            "required" : true,
-            "schema" : {
-              "type" : "string"
-            }
-          }
-        ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/BookingStatusView"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/bookings/{id}/payee" : {
-      "get" : {
-        "tags" : [
-          "booking-controller"
-        ],
-        "operationId" : "payee",
-        "parameters" : [
-          {
-            "name" : "id",
-            "in" : "path",
-            "required" : true,
-            "schema" : {
-              "type" : "string",
-              "format" : "uuid"
-            }
-          },
-          {
-            "name" : "token",
-            "in" : "query",
-            "required" : true,
-            "schema" : {
-              "type" : "string"
-            }
-          }
-        ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/BookingPayeeDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/billing/tiers" : {
       "get" : {
         "tags" : [
@@ -7613,7 +7342,7 @@
         "tags" : [
           "appointment-public-controller"
         ],
-        "operationId" : "status_2",
+        "operationId" : "status_1",
         "parameters" : [
           {
             "name" : "token",
@@ -7649,7 +7378,7 @@
         "tags" : [
           "appointment-public-controller"
         ],
-        "operationId" : "cancel_3",
+        "operationId" : "cancel_2",
         "parameters" : [
           {
             "name" : "token",
@@ -7913,112 +7642,6 @@
         }
       }
     },
-    "/api/v1/admin/bookings" : {
-      "get" : {
-        "tags" : [
-          "admin-booking-controller"
-        ],
-        "operationId" : "list_17",
-        "parameters" : [
-          {
-            "name" : "status",
-            "in" : "query",
-            "required" : false,
-            "schema" : {
-              "type" : "string"
-            }
-          },
-          {
-            "name" : "page",
-            "in" : "query",
-            "required" : false,
-            "schema" : {
-              "type" : "integer",
-              "format" : "int32",
-              "default" : 0
-            }
-          },
-          {
-            "name" : "size",
-            "in" : "query",
-            "required" : false,
-            "schema" : {
-              "type" : "integer",
-              "format" : "int32",
-              "default" : 20
-            }
-          }
-        ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/AdminBookingView"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/admin/booking-payments" : {
-      "get" : {
-        "tags" : [
-          "admin-booking-payment-controller"
-        ],
-        "operationId" : "list_18",
-        "parameters" : [
-          {
-            "name" : "status",
-            "in" : "query",
-            "required" : false,
-            "schema" : {
-              "type" : "string"
-            }
-          },
-          {
-            "name" : "page",
-            "in" : "query",
-            "required" : false,
-            "schema" : {
-              "type" : "integer",
-              "format" : "int32",
-              "default" : 0
-            }
-          },
-          {
-            "name" : "size",
-            "in" : "query",
-            "required" : false,
-            "schema" : {
-              "type" : "integer",
-              "format" : "int32",
-              "default" : 20
-            }
-          }
-        ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/AdminPaymentDeclarationView"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/admin/billing/tiers" : {
       "get" : {
         "tags" : [
@@ -8044,7 +7667,7 @@
         "tags" : [
           "admin-audit-controller"
         ],
-        "operationId" : "list_19",
+        "operationId" : "list_17",
         "parameters" : [
           {
             "name" : "action",
@@ -11298,56 +10921,6 @@
           }
         }
       },
-      "DeclarePaymentRequest" : {
-        "type" : "object",
-        "properties" : {
-          "amountMinor" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "kind" : {
-            "type" : "string",
-            "enum" : [
-              "DEPOSIT",
-              "BALANCE"
-            ]
-          },
-          "operator" : {
-            "type" : "string",
-            "enum" : [
-              "ORANGE_MONEY",
-              "MTN_MOMO"
-            ]
-          },
-          "transactionReference" : {
-            "type" : "string",
-            "minLength" : 1
-          }
-        },
-        "required" : [
-          "transactionReference"
-        ]
-      },
-      "PaymentDeclarationResult" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "bookingId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "verificationStatus" : {
-            "type" : "string"
-          },
-          "declaredAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          }
-        }
-      },
       "SubscriptionRequest" : {
         "type" : "object",
         "properties" : {
@@ -11933,144 +11506,6 @@
         },
         "required" : [
           "transactionReference"
-        ]
-      },
-      "RefundBookingRequest" : {
-        "type" : "object",
-        "properties" : {
-          "amountMinor" : {
-            "type" : "integer",
-            "format" : "int64",
-            "minimum" : 1
-          },
-          "reason" : {
-            "type" : "string",
-            "minLength" : 1
-          }
-        },
-        "required" : [
-          "reason"
-        ]
-      },
-      "AdminBookingRefundView" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "bookingId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "amountMinor" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "currency" : {
-            "type" : "string"
-          },
-          "reason" : {
-            "type" : "string"
-          },
-          "creditNoteNumber" : {
-            "type" : [
-              "string",
-              "null"
-            ]
-          },
-          "status" : {
-            "type" : "string"
-          }
-        }
-      },
-      "AdminBookingCancellationView" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "status" : {
-            "type" : "string"
-          },
-          "refundAmountMinor" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "currency" : {
-            "type" : "string"
-          }
-        }
-      },
-      "AdminPaymentDeclarationView" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "bookingId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "customerName" : {
-            "type" : "string"
-          },
-          "amountMinor" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "currency" : {
-            "type" : "string"
-          },
-          "kind" : {
-            "type" : "string"
-          },
-          "operator" : {
-            "type" : "string"
-          },
-          "transactionReference" : {
-            "type" : "string"
-          },
-          "declaredAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "verificationStatus" : {
-            "type" : "string"
-          },
-          "verifiedBy" : {
-            "type" : [
-              "string",
-              "null"
-            ]
-          },
-          "verifiedAt" : {
-            "type" : [
-              "string",
-              "null"
-            ],
-            "format" : "date-time"
-          },
-          "rejectionReason" : {
-            "type" : [
-              "string",
-              "null"
-            ]
-          }
-        }
-      },
-      "RejectDeclarationRequest" : {
-        "type" : "object",
-        "properties" : {
-          "reason" : {
-            "type" : "string",
-            "minLength" : 1
-          }
-        },
-        "required" : [
-          "reason"
         ]
       },
       "AdminRefreshRequest" : {
@@ -13218,81 +12653,6 @@
           }
         }
       },
-      "BookingStatusView" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "customerName" : {
-            "type" : "string"
-          },
-          "eventType" : {
-            "type" : "string"
-          },
-          "eventDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "guestCountEstimate" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "tier" : {
-            "type" : "string"
-          },
-          "currency" : {
-            "type" : "string"
-          },
-          "totalAmountMinor" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "depositAmountMinor" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "balanceAmountMinor" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "balanceDueDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "status" : {
-            "type" : "string"
-          },
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          }
-        }
-      },
-      "BookingPayeeDetails" : {
-        "type" : "object",
-        "properties" : {
-          "payeeName" : {
-            "type" : [
-              "string",
-              "null"
-            ]
-          },
-          "orangeMoneyNumber" : {
-            "type" : [
-              "string",
-              "null"
-            ]
-          },
-          "mtnMomoNumber" : {
-            "type" : [
-              "string",
-              "null"
-            ]
-          }
-        }
-      },
       "CustomTierOption" : {
         "type" : "object",
         "properties" : {
@@ -13672,83 +13032,6 @@
           },
           "status" : {
             "type" : "string"
-          }
-        }
-      },
-      "AdminBookingView" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "customerName" : {
-            "type" : "string"
-          },
-          "customerPhone" : {
-            "type" : "string"
-          },
-          "customerEmail" : {
-            "type" : "string"
-          },
-          "eventType" : {
-            "type" : "string"
-          },
-          "eventDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "guestCountEstimate" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "tier" : {
-            "type" : "string"
-          },
-          "currency" : {
-            "type" : "string"
-          },
-          "totalAmountMinor" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "depositAmountMinor" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "balanceAmountMinor" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "balanceDueDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "status" : {
-            "type" : "string"
-          },
-          "tenantId" : {
-            "type" : [
-              "string",
-              "null"
-            ]
-          },
-          "eventId" : {
-            "type" : [
-              "string",
-              "null"
-            ],
-            "format" : "uuid"
-          },
-          "acquisitionSource" : {
-            "type" : [
-              "string",
-              "null"
-            ]
-          },
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time"
           }
         }
       },
