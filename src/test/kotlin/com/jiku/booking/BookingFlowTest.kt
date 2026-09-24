@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.backoffice.internal.PlatformAdmin
 import com.jiku.backoffice.internal.PlatformAdminRepository
+import com.jiku.booking.internal.BookingRepository
 import com.jiku.catalog.internal.EventRepository
 import com.jiku.money.internal.UsageRecordRepository
 import com.jiku.shared.TenantContext
@@ -27,13 +28,12 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 /**
- * JIKU-55 end to end: quoting and creating a reservation, declaring a Mobile
- * Money deposit, an admin verifying it — which must provision a tenant, an
- * owner account, and a pre-filled draft event with the reserved tier already
- * unlocked — a duplicate transaction reference being flagged rather than
- * silently accepted, a zero-deposit FREE-tier booking provisioning
- * immediately with no payment step, and cancellation computing the correct
- * refund.
+ * JIKU-55, for the deposit reservations still open since JIKU-115 closed new
+ * ones: declaring a Mobile Money deposit, an admin verifying it — which must
+ * provision a tenant, an owner account, and a pre-filled draft event with the
+ * reserved tier already unlocked — a duplicate transaction reference being
+ * flagged rather than silently accepted, and cancellation computing the
+ * correct refund.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -57,22 +57,20 @@ class BookingFlowTest {
     @Autowired
     lateinit var usageRecords: UsageRecordRepository
 
+    @Autowired
+    lateinit var bookings: BookingRepository
+
     @Test
     fun `a verified deposit provisions a tenant, an account and a pre-filled event with the tier unlocked`() {
         val email = "bride-${UUID.randomUUID()}@test.example"
-        val creation = createBooking(email = email, guestCount = 150)
-        val bookingId = JsonPath.read<String>(creation, "$.id")
-        val accessToken = JsonPath.read<String>(creation, "$.accessToken")
-        assertEquals("BRONZE", JsonPath.read<String>(creation, "$.tier"))
-        assertEquals(150_000, JsonPath.read<Int>(creation, "$.totalAmountMinor"))
-        assertEquals(45_000, JsonPath.read<Int>(creation, "$.depositAmountMinor"))
-        assertEquals("AWAITING_DEPOSIT", JsonPath.read<String>(creation, "$.status"))
+        val (bookingId, accessToken) = bookings.openBooking(email = email)
 
         // The status page resolves by token, and rejects a wrong one.
         mockMvc
             .perform(get("/api/v1/bookings/$bookingId").param("token", accessToken))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.tier").value("BRONZE"))
+            .andExpect(jsonPath("$.status").value("AWAITING_DEPOSIT"))
         mockMvc
             .perform(get("/api/v1/bookings/$bookingId").param("token", "wrong-token"))
             .andExpect(status().isNotFound())
@@ -143,9 +141,7 @@ class BookingFlowTest {
     @Test
     fun `a reused transaction reference is flagged duplicate and alerts admin, not silently accepted`() {
         val reference = "OM-DUP-${UUID.randomUUID()}"
-        val first = createBooking(email = "first-${UUID.randomUUID()}@test.example", guestCount = 150)
-        val firstId = JsonPath.read<String>(first, "$.id")
-        val firstToken = JsonPath.read<String>(first, "$.accessToken")
+        val (firstId, firstToken) = bookings.openBooking(email = "first-${UUID.randomUUID()}@test.example")
         mockMvc
             .perform(
                 post("/api/v1/bookings/$firstId/payment-declarations")
@@ -155,9 +151,7 @@ class BookingFlowTest {
             ).andExpect(status().isCreated())
             .andExpect(jsonPath("$.verificationStatus").value("PENDING"))
 
-        val second = createBooking(email = "second-${UUID.randomUUID()}@test.example", guestCount = 150)
-        val secondId = JsonPath.read<String>(second, "$.id")
-        val secondToken = JsonPath.read<String>(second, "$.accessToken")
+        val (secondId, secondToken) = bookings.openBooking(email = "second-${UUID.randomUUID()}@test.example")
         mockMvc
             .perform(
                 post("/api/v1/bookings/$secondId/payment-declarations")
@@ -169,22 +163,13 @@ class BookingFlowTest {
     }
 
     @Test
-    fun `a FREE-tier booking has no deposit and provisions immediately`() {
-        val email = "free-${UUID.randomUUID()}@test.example"
-        val creation = createBooking(email = email, guestCount = 40)
-        assertEquals("FREE", JsonPath.read<String>(creation, "$.tier"))
-        assertEquals(0, JsonPath.read<Int>(creation, "$.totalAmountMinor"))
-        assertEquals(0, JsonPath.read<Int>(creation, "$.depositAmountMinor"))
-        assertEquals("DEPOSIT_PAID", JsonPath.read<String>(creation, "$.status"))
-        val user = users.findByEmail(email)
-        assertNotNull(user)
-    }
-
-    @Test
     fun `cancelling a booking computes the refund due under the sliding scale`() {
-        val creation =
-            createBooking(email = "cancel-${UUID.randomUUID()}@test.example", guestCount = 150, eventDate = LocalDate.now().plusDays(90))
-        val bookingId = JsonPath.read<String>(creation, "$.id")
+        val bookingId =
+            bookings
+                .openBooking(
+                    email = "cancel-${UUID.randomUUID()}@test.example",
+                    eventDate = LocalDate.now().plusDays(90),
+                ).id
         val adminToken = adminLogin()
         mockMvc
             .perform(post("/api/v1/admin/bookings/$bookingId/cancel").header("Authorization", "Bearer $adminToken"))
@@ -192,25 +177,6 @@ class BookingFlowTest {
             .andExpect(jsonPath("$.status").value("CANCELLED"))
             .andExpect(jsonPath("$.refundAmountMinor").value(45_000))
     }
-
-    private fun createBooking(
-        email: String,
-        guestCount: Int,
-        eventDate: LocalDate = LocalDate.now().plusYears(1),
-    ): String =
-        mockMvc
-            .perform(
-                post("/api/v1/bookings")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(
-                        """
-                        {"customerName":"Test Customer","customerPhone":"+224600000000","customerEmail":"$email",
-                         "eventType":"MARIAGE","eventDate":"$eventDate","guestCountEstimate":$guestCount}
-                        """.trimIndent(),
-                    ),
-            ).andExpect(status().isCreated())
-            .andReturn()
-            .response.contentAsString
 
     private fun <T> withTenant(
         tenantId: String,

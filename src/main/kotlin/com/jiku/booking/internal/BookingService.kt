@@ -19,8 +19,6 @@ import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionTemplate
 import org.springframework.web.server.ResponseStatusException
-import java.math.BigDecimal
-import java.math.RoundingMode
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -47,74 +45,6 @@ class BookingService(
     transactionManager: PlatformTransactionManager,
 ) {
     private val transactions = TransactionTemplate(transactionManager)
-
-    /** Live tier/deposit preview as a prospect types their guest count — no row is written. */
-    fun quote(guestCountEstimate: Long): BookingQuote {
-        val tier = billing.tierForGuestCount(guestCountEstimate)
-        if (tier == CUSTOM_TIER) {
-            throw ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "For estimates beyond 1,000 guests, contact our sales team directly for a custom quote.",
-            )
-        }
-        val totalAmountMinor = billing.priceForTier(tier, guestCountEstimate)
-        val depositAmountMinor = roundedShare(totalAmountMinor, properties.depositRate)
-        return BookingQuote(
-            tier = tier,
-            currency = billing.currency(),
-            totalAmountMinor = totalAmountMinor,
-            depositAmountMinor = depositAmountMinor,
-            balanceAmountMinor = totalAmountMinor - depositAmountMinor,
-        )
-    }
-
-    /**
-     * Deliberately not `@Transactional`. A zero-deposit (FREE-tier) booking
-     * provisions its tenant immediately, and that provisioning must open a
-     * transaction only *after* [TenantContext] is rebound — an ambient
-     * transaction opened by a method-level annotation here would already have a
-     * Hibernate session bound to no tenant by the time provisioning runs (same
-     * reasoning as `ManualPaymentService.resolve`, which makes the same choice).
-     */
-    fun create(request: CreateBookingRequest): BookingCreationResult {
-        val quoted = quote(request.guestCountEstimate)
-        val tier = quoted.tier
-        val totalAmountMinor = quoted.totalAmountMinor
-        val depositAmountMinor = quoted.depositAmountMinor
-        val rawToken = BookingTokens.generate()
-
-        val bookingId =
-            transactions.execute {
-                val booking =
-                    Booking(
-                        customerName = request.customerName.trim(),
-                        customerPhone = request.customerPhone.trim(),
-                        customerEmail = request.customerEmail.trim().lowercase(),
-                        eventType = request.eventType,
-                        eventDate = request.eventDate,
-                        guestCountEstimate = request.guestCountEstimate,
-                        tier = tier,
-                        totalAmountMinor = totalAmountMinor,
-                        depositRate = properties.depositRate,
-                        depositAmountMinor = depositAmountMinor,
-                        balanceAmountMinor = totalAmountMinor - depositAmountMinor,
-                        balanceDueDate = request.eventDate.minusDays(properties.balanceDueDaysBeforeEvent),
-                        accessTokenHash = BookingTokens.hash(rawToken),
-                    )
-                booking.acquisitionSource = request.acquisitionSource?.trim()?.takeIf { it.isNotBlank() }
-                if (depositAmountMinor <= 0) {
-                    booking.status = BookingStatus.DEPOSIT_PAID
-                }
-                bookings.save(booking)
-                requireNotNull(booking.id)
-            }
-        val id = requireNotNull(bookingId)
-        if (depositAmountMinor <= 0) {
-            provisionOrganizerAccount(id)
-        }
-        val saved = requireNotNull(transactions.execute { bookings.findById(id).orElseThrow() })
-        return saved.toCreationResult(rawToken, billing.currency())
-    }
 
     @Transactional(readOnly = true)
     fun findByToken(
@@ -522,11 +452,6 @@ class BookingService(
         return booking
     }
 
-    private fun roundedShare(
-        amountMinor: Long,
-        rate: BigDecimal,
-    ): Long = BigDecimal(amountMinor).multiply(rate).setScale(0, RoundingMode.HALF_UP).toLong()
-
     private data class VerificationOutcome(
         val declaration: PaymentDeclaration,
         val booking: Booking,
@@ -534,7 +459,6 @@ class BookingService(
     )
 
     private companion object {
-        const val CUSTOM_TIER = "CUSTOM"
         const val MAX_PAGE_SIZE = 100
     }
 }

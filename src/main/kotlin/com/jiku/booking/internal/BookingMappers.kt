@@ -3,21 +3,6 @@ package com.jiku.booking.internal
 import com.jiku.booking.AdminBookingView
 import com.jiku.booking.AdminPaymentDeclarationView
 
-fun Booking.toCreationResult(
-    accessToken: String,
-    currency: String,
-) = BookingCreationResult(
-    id = requireNotNull(id),
-    accessToken = accessToken,
-    tier = tier,
-    currency = currency,
-    totalAmountMinor = totalAmountMinor,
-    depositAmountMinor = depositAmountMinor,
-    balanceAmountMinor = balanceAmountMinor,
-    balanceDueDate = balanceDueDate,
-    status = status.name,
-)
-
 fun Booking.toStatusView(currency: String) =
     BookingStatusView(
         id = requireNotNull(id),

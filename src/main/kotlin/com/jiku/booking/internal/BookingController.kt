@@ -13,9 +13,11 @@ import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
 /**
- * The public-facing deposit-reservation flow (JIKU-55): no organizer session
- * exists yet, so every endpoint here is either fully open (creating a booking)
- * or gated by the booking's own access token rather than a JWT.
+ * Follow-up of the deposit reservations opened before JIKU-115: status, payee
+ * details and payment declarations, each gated by the booking's own access
+ * token. New reservations are closed: an event's tier is now paid in one go at
+ * the moment of the action (ADR 104, referentiel metier §10). This controller
+ * goes once the last open reservation is closed.
  */
 @RestController
 @RequestMapping("/bookings")
@@ -23,17 +25,6 @@ class BookingController(
     private val bookingService: BookingService,
     private val properties: BookingProperties,
 ) {
-    @GetMapping("/quote")
-    fun quote(
-        @RequestParam guestCountEstimate: Long,
-    ): BookingQuote = bookingService.quote(guestCountEstimate)
-
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    fun create(
-        @Valid @RequestBody request: CreateBookingRequest,
-    ): BookingCreationResult = bookingService.create(request)
-
     @GetMapping("/{id}")
     fun status(
         @PathVariable id: UUID,

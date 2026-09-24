@@ -79,19 +79,6 @@ class BillingModuleApiService(
         reason: String,
     ): AdminTrialView = trialService.endEarly(trialId, reason)
 
-    override fun tierForGuestCount(guestCount: Long): String = platformSettings.tierForUsage(guestCount)
-
-    override fun priceForTier(
-        tierName: String,
-        guestCount: Long,
-    ): Long =
-        if (tierName == BillingProperties.FREE_TIER) {
-            0
-        } else {
-            platformSettings.tierByName(tierName)?.priceMinor
-                ?: properties.custom.priceGnf(guestCount)
-        }
-
     override fun currency(): String = properties.currency
 
     override fun tierOptions(): List<BillingTierOption> =

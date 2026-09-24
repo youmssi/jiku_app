@@ -80,19 +80,6 @@ interface BillingModuleApi {
         reason: String,
     ): AdminTrialView
 
-    /** The tier name (JIKU-53 grid) that [guestCount] invited guests falls into. */
-    fun tierForGuestCount(guestCount: Long): String
-
-    /**
-     * The full price for [tierName] given [guestCount] guests: the fixed tier
-     * price, or the CUSTOM formula for usage beyond the last fixed tier. Used by
-     * the booking flow (JIKU-55) to quote a reservation before any tenant exists.
-     */
-    fun priceForTier(
-        tierName: String,
-        guestCount: Long,
-    ): Long
-
     /** The platform's pricing currency (JIKU-53: GNF). */
     fun currency(): String
 
