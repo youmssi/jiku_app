@@ -54,7 +54,7 @@ data class ServiceStaffCreateRequest(
 
 /**
  * Lien du personnel venant d'être créé. [code] est le lien court partageable
- * (`/ligne/{code}`, JIKU-88) — résolu à chaque usage en un jeton signé frais,
+ * (`/line/{code}`, JIKU-88) — résolu à chaque usage en un jeton signé frais,
  * il peut être recopié à tout moment ; [token] n'est montré qu'ici.
  */
 data class ServiceStaffCreatedResponse(

@@ -94,7 +94,7 @@ test('serves a booked appointment and a walk-in client on the same day', async (
     await bookToday(token, service.serviceId, 'Fatou Camara', '+224611111111');
 
     // The organizer opens the day-line console of the service.
-    await page.goto(`/services/${service.serviceId}/ligne`);
+    await page.goto(`/services/${service.serviceId}/line`);
     await expect(page.getByRole('heading', { name: 'Ligne du jour' })).toBeVisible();
     await expect(page.getByText('Coupe').first()).toBeVisible();
 
