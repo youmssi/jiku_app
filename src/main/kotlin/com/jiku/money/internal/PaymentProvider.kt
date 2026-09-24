@@ -23,9 +23,11 @@ interface PaymentProvider {
 
     /**
      * Verifies an inbound provider callback and extracts its outcome. Returns
-     * `null` when the payload cannot be trusted (bad or missing signature), so the
-     * webhook can reject it. Never unlocks anything itself — that is the service's
-     * job once this confirms authenticity.
+     * `null` when the payload cannot be trusted (bad or missing signature, or a
+     * transaction the provider does not know), so the webhook can reject it.
+     * Throws [PaymentProviderException] when the provider cannot be reached to
+     * verify it. Never unlocks anything itself — that is the service's job once
+     * this confirms authenticity.
      */
     fun parseCallback(
         rawBody: String,
@@ -53,9 +55,28 @@ data class PaymentInstruction(
     val value: String,
 )
 
+/** Where a payment stands according to its provider. */
+enum class PaymentOutcome {
+    SUCCEEDED,
+    FAILED,
+
+    /** Not final yet (e.g. the payer has not validated on their phone): nothing changes. */
+    PENDING,
+}
+
 data class PaymentCallback(
     /** The reference we supplied at initiation (tenant + payment id). */
     val reference: String,
     val providerReference: String,
-    val succeeded: Boolean,
+    val outcome: PaymentOutcome,
+    /** Amount the provider reports as paid, in minor units, when it reports one. */
+    val amountMinor: Long? = null,
+    /** Currency the provider reports, when it reports one. */
+    val currency: String? = null,
 )
+
+/** The provider refused a request or could not be reached. */
+class PaymentProviderException(
+    message: String,
+    cause: Throwable? = null,
+) : RuntimeException(message, cause)

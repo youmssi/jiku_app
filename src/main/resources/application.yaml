@@ -324,6 +324,17 @@ billing:
     provider: ${PAYMENT_PROVIDER:sandbox}
     webhook-secret: ${PAYMENT_WEBHOOK_SECRET:local-development-payment-webhook-secret}
     sandbox-return-url: ${PAYMENT_SANDBOX_RETURN_URL:http://localhost:3000/billing/return}
+    # CinetPay (JIKU-106): Orange Money, MTN MoMo and card. The adapter exists only
+    # when CINETPAY_SITE_ID is set; the other fields are then required. Select it
+    # with PAYMENT_PROVIDER=cinetpay. CINETPAY_NOTIFY_URL is this API's public
+    # /api/v1/billing/payments/callback/cinetpay.
+    cinetpay:
+      api-key: ${CINETPAY_API_KEY:}
+      site-id: ${CINETPAY_SITE_ID:}
+      base-url: ${CINETPAY_BASE_URL:https://api-checkout.cinetpay.com}
+      notify-url: ${CINETPAY_NOTIFY_URL:}
+      return-url: ${CINETPAY_RETURN_URL:}
+      channels: ${CINETPAY_CHANNELS:ALL}
   trial:
     # Trial sweep (JIKU-42): cron for the expiry/notice job and how far before
     # expiry the organizer's heads-up email goes out.

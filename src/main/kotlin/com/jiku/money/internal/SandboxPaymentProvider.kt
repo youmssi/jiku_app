@@ -41,7 +41,14 @@ class SandboxPaymentProvider(
         return PaymentCallback(
             reference = reference,
             providerReference = node.get("providerReference")?.asString() ?: "",
-            succeeded = (node.get("status")?.asString() ?: "") == "SUCCEEDED",
+            outcome =
+                when (node.get("status")?.asString()) {
+                    "SUCCEEDED" -> PaymentOutcome.SUCCEEDED
+                    "PENDING" -> PaymentOutcome.PENDING
+                    else -> PaymentOutcome.FAILED
+                },
+            amountMinor = node.get("amount")?.asLong(),
+            currency = node.get("currency")?.asString(),
         )
     }
 

@@ -6,6 +6,7 @@ import com.jiku.money.internal.PaymentCallback
 import com.jiku.money.internal.PaymentInitiation
 import com.jiku.money.internal.PaymentInitiationRequest
 import com.jiku.money.internal.PaymentInstruction
+import com.jiku.money.internal.PaymentOutcome
 import com.jiku.money.internal.PaymentProvider
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -17,6 +18,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -27,10 +29,13 @@ import javax.crypto.spec.SecretKeySpec
  * JIKU-105: each provider confirms payments on its own callback URL, and a
  * provider can only settle the payments it started — a second adapter that
  * verifies its own callback still cannot unlock a tier paid through another one.
+ *
+ * JIKU-106: a payment still awaiting the payer stays open, and a payment reported
+ * for another amount or currency never unlocks the tier.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import(TestcontainersConfiguration::class, PaymentProviderRoutingTest.SecondProviderConfig::class)
+@Import(TestcontainersConfiguration::class, PaymentCallbackTest.SecondProviderConfig::class)
 @TestPropertySource(
     properties = [
         "billing.free-tier-guests=100",
@@ -38,7 +43,7 @@ import javax.crypto.spec.SecretKeySpec
         "billing.payment.webhook-secret=test-routing-secret",
     ],
 )
-class PaymentProviderRoutingTest {
+class PaymentCallbackTest {
     /** A second adapter that trusts any callback carrying its fixed signature. */
     class SecondProvider : PaymentProvider {
         override val name: String = "second"
@@ -57,7 +62,7 @@ class PaymentProviderRoutingTest {
             return PaymentCallback(
                 reference = JsonPath.read(rawBody, "$.reference"),
                 providerReference = "SECOND-x",
-                succeeded = true,
+                outcome = PaymentOutcome.SUCCEEDED,
             )
         }
     }
@@ -77,16 +82,36 @@ class PaymentProviderRoutingTest {
         val eventId = createPublishedEvent(token)
         val reference = "${tenantId(token)}:${initiateBronze(token, eventId)}"
 
-        val body = callbackBody(reference)
-        mockMvc
-            .perform(
-                post("/api/v1/billing/payments/callback/sandbox")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .header("X-Signature", sign(body))
-                    .content(body),
-            ).andExpect(status().isOk())
+        sendSandboxCallback(callbackBody(reference)).andExpect(status().isOk())
 
         assert(allowance(token, eventId) == 300)
+    }
+
+    @Test
+    fun `a pending notification leaves the payment open until the final one`() {
+        val token = register()
+        val eventId = createPublishedEvent(token)
+        val reference = "${tenantId(token)}:${initiateBronze(token, eventId)}"
+
+        sendSandboxCallback(callbackBody(reference, status = "PENDING")).andExpect(status().isOk())
+        assert(allowance(token, eventId) == 100)
+
+        sendSandboxCallback(callbackBody(reference)).andExpect(status().isOk())
+        assert(allowance(token, eventId) == 300)
+    }
+
+    @Test
+    fun `a payment reported for another amount does not unlock the tier`() {
+        val token = register()
+        val eventId = createPublishedEvent(token)
+        val reference = "${tenantId(token)}:${initiateBronze(token, eventId)}"
+
+        sendSandboxCallback(callbackBody(reference, extra = ""","amount":100,"currency":"GNF"""")).andExpect(status().isOk())
+        assert(allowance(token, eventId) == 100)
+
+        // The payment is closed as failed: a later correct report cannot reopen it.
+        sendSandboxCallback(callbackBody(reference)).andExpect(status().isOk())
+        assert(allowance(token, eventId) == 100)
     }
 
     @Test
@@ -144,8 +169,19 @@ class PaymentProviderRoutingTest {
         return JsonPath.read(body, "$.paymentId")
     }
 
-    private fun callbackBody(reference: String): String =
-        """{"reference":"$reference","providerReference":"SANDBOX-x","status":"SUCCEEDED"}"""
+    private fun sendSandboxCallback(body: String): ResultActions =
+        mockMvc.perform(
+            post("/api/v1/billing/payments/callback/sandbox")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("X-Signature", sign(body))
+                .content(body),
+        )
+
+    private fun callbackBody(
+        reference: String,
+        status: String = "SUCCEEDED",
+        extra: String = "",
+    ): String = """{"reference":"$reference","providerReference":"SANDBOX-x","status":"$status"$extra}"""
 
     private fun sign(body: String): String {
         val mac = Mac.getInstance("HmacSHA256")
