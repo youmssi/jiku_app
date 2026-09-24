@@ -1,6 +1,7 @@
 package com.jiku.money.internal
 
 import com.jiku.shared.TenantContext
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.Transactional
@@ -27,8 +28,18 @@ class PaymentService(
     private val platformSettings: PlatformBillingSettingsService,
     transactionManager: PlatformTransactionManager,
 ) {
-    enum class CallbackOutcome { SUCCEEDED, FAILED, ALREADY_PROCESSED, UNKNOWN, UNKNOWN_PROVIDER, INVALID_SIGNATURE }
+    enum class CallbackOutcome {
+        SUCCEEDED,
+        FAILED,
+        PENDING,
+        ALREADY_PROCESSED,
+        UNKNOWN,
+        UNKNOWN_PROVIDER,
+        INVALID_SIGNATURE,
+        PROVIDER_UNAVAILABLE,
+    }
 
+    private val log = LoggerFactory.getLogger(PaymentService::class.java)
     private val transactions = TransactionTemplate(transactionManager)
 
     @Transactional
@@ -90,45 +101,65 @@ class PaymentService(
         val provider =
             (if (providerName == null) providers.active else providers.byName(providerName))
                 ?: return CallbackOutcome.UNKNOWN_PROVIDER
-        val callback = provider.parseCallback(rawBody, signature) ?: return CallbackOutcome.INVALID_SIGNATURE
+        val callback =
+            try {
+                provider.parseCallback(rawBody, signature)
+            } catch (ex: PaymentProviderException) {
+                log.warn("Payment provider {} could not verify a callback: {}", provider.name, ex.message)
+                return CallbackOutcome.PROVIDER_UNAVAILABLE
+            } ?: return CallbackOutcome.INVALID_SIGNATURE
         val parts = callback.reference.split(":", limit = 2)
         if (parts.size != 2) return CallbackOutcome.UNKNOWN
         val tenantId = parts[0]
         val paymentId = runCatching { UUID.fromString(parts[1]) }.getOrNull() ?: return CallbackOutcome.UNKNOWN
 
         // The webhook is unauthenticated, so bind the tenant carried in the
-        // (signature-verified) reference BEFORE the transaction opens — the tenant
-        // filter is resolved when the Hibernate session starts, so binding it after
-        // would scope the reads to the wrong (unresolved) tenant.
-        val previous = TenantContext.get()
-        TenantContext.set(tenantId)
-        try {
-            return transactions.execute { confirm(paymentId, provider.name, callback.succeeded) }
-                ?: CallbackOutcome.UNKNOWN
-        } finally {
-            if (previous != null) TenantContext.set(previous) else TenantContext.clear()
+        // (verified) reference BEFORE the transaction opens — the tenant filter is
+        // resolved when the Hibernate session starts, so binding it after would
+        // scope the reads to the wrong (unresolved) tenant.
+        return TenantContext.withTenant(tenantId) {
+            transactions.execute { confirm(paymentId, provider.name, callback) } ?: CallbackOutcome.UNKNOWN
         }
     }
 
     private fun confirm(
         paymentId: UUID,
         providerName: String,
-        succeeded: Boolean,
+        callback: PaymentCallback,
     ): CallbackOutcome {
         val payment = payments.findById(paymentId).orElse(null) ?: return CallbackOutcome.UNKNOWN
         // A provider can only vouch for the payments it started itself.
         if (payment.provider != providerName) return CallbackOutcome.UNKNOWN
-        if (payment.status != PaymentStatus.PENDING) {
-            return CallbackOutcome.ALREADY_PROCESSED
-        }
+        if (payment.status != PaymentStatus.PENDING) return CallbackOutcome.ALREADY_PROCESSED
+        if (callback.outcome == PaymentOutcome.PENDING) return CallbackOutcome.PENDING
+
+        val succeeded = callback.outcome == PaymentOutcome.SUCCEEDED && paidInFull(payment, callback)
         payment.status = if (succeeded) PaymentStatus.SUCCEEDED else PaymentStatus.FAILED
         payment.updatedAt = Instant.now()
         payments.save(payment)
-        if (succeeded) {
-            tierUnlockService.unlock(requireNotNull(payment.eventId) { "A provider payment always references an event" }, payment.tier)
-            return CallbackOutcome.SUCCEEDED
+        if (!succeeded) return CallbackOutcome.FAILED
+        tierUnlockService.unlock(requireNotNull(payment.eventId) { "A provider payment always references an event" }, payment.tier)
+        return CallbackOutcome.SUCCEEDED
+    }
+
+    /** A provider that reports what was paid must report exactly what was asked. */
+    private fun paidInFull(
+        payment: Payment,
+        callback: PaymentCallback,
+    ): Boolean {
+        val amountMatches = callback.amountMinor == null || callback.amountMinor == payment.amountMinor
+        val currencyMatches = callback.currency == null || callback.currency.equals(payment.currency, ignoreCase = true)
+        if (!amountMatches || !currencyMatches) {
+            log.warn(
+                "Payment {} reported as {} {} instead of {} {}; not unlocking",
+                payment.id,
+                callback.amountMinor,
+                callback.currency,
+                payment.amountMinor,
+                payment.currency,
+            )
         }
-        return CallbackOutcome.FAILED
+        return amountMatches && currencyMatches
     }
 }
 

@@ -40,6 +40,8 @@ class PaymentCallbackController(
     private fun respond(outcome: PaymentService.CallbackOutcome): ResponseEntity<Void> =
         when (outcome) {
             PaymentService.CallbackOutcome.INVALID_SIGNATURE -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
+            // The provider retries a notification it could not deliver.
+            PaymentService.CallbackOutcome.PROVIDER_UNAVAILABLE -> ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build()
             PaymentService.CallbackOutcome.UNKNOWN,
             PaymentService.CallbackOutcome.UNKNOWN_PROVIDER,
             -> ResponseEntity.notFound().build()
