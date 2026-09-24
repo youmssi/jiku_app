@@ -127,6 +127,10 @@ class Ticket(
     @Column(name = "paid_with", length = 16)
     var paidWith: TicketPaymentMethod? = null
 
+    /** The counter the client was called to (JIKU-113); null until called. */
+    @Column(name = "counter_label", length = 40)
+    var counterLabel: String? = null
+
     /** Records what the holder owes; a free ticket (null [charge]) owes nothing. */
     fun charge(charge: ClientCharge?) {
         if (charge == null) return

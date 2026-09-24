@@ -55,10 +55,13 @@ class DayLineConsoleService(
 
     /** Appelle la personne suivante sur la ligne d'aujourd'hui (règle §4.1). */
     @Transactional
-    fun next(serviceId: UUID): LineTicket? {
+    fun next(
+        serviceId: UUID,
+        counter: String? = null,
+    ): LineTicket? {
         val today = today(serviceId)
         val tolerance = config.effective(serviceId).noShowToleranceMinutes.toLong()
-        return ticketing.callNext(serviceId, today.start, today.end, Instant.now(), tolerance)
+        return ticketing.callNext(serviceId, today.start, today.end, Instant.now(), tolerance, counterLabel(counter))
     }
 
     /** Arrivée au comptoir d'un rendez-vous d'aujourd'hui. */
@@ -76,7 +79,8 @@ class DayLineConsoleService(
     fun call(
         serviceId: UUID,
         ticketCode: String,
-    ): LineActionResult = ticketing.callByCode(serviceId, ticketCode)
+        counter: String? = null,
+    ): LineActionResult = ticketing.callByCode(serviceId, ticketCode, counterLabel(counter))
 
     /** Prise en charge d'une personne appelée. */
     @Transactional
@@ -157,6 +161,15 @@ class DayLineConsoleService(
         return view(serviceId, day)
     }
 
+    /** The counter shown to the called client ("counter 4"); blank means none. */
+    private fun counterLabel(counter: String?): String? {
+        val label = counter?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        if (label.length > MAX_COUNTER_LENGTH) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "A counter name is at most $MAX_COUNTER_LENGTH characters")
+        }
+        return label
+    }
+
     private fun today(serviceId: UUID): DayWindow {
         val service = services.get(serviceId)
         val zone = ZoneId.of(service.timezone)
@@ -176,6 +189,8 @@ class DayLineConsoleService(
         day: LocalDate,
     ): Pair<Instant, Instant> = day.atStartOfDay(zone).toInstant() to day.plusDays(1).atStartOfDay(zone).toInstant()
 }
+
+private const val MAX_COUNTER_LENGTH = 40
 
 /**
  * Turns a line transition's outcome into the reply of both counters, the

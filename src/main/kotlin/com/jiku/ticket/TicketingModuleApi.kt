@@ -125,6 +125,7 @@ interface TicketingModuleApi {
         dayEnd: Instant,
         now: Instant,
         toleranceMinutes: Long,
+        counter: String? = null,
     ): LineTicket?
 
     /**
@@ -146,6 +147,7 @@ interface TicketingModuleApi {
     fun callByCode(
         serviceId: UUID,
         ticketCode: String,
+        counter: String? = null,
     ): LineActionResult
 
     /** Prise en charge : APPELÉ (ou ABSENT rappelé) → EN_COURS. */
@@ -251,6 +253,8 @@ data class LineTicket(
     val paymentStatus: TicketPaymentStatus = TicketPaymentStatus.NOT_REQUIRED,
     val amountDueMinor: Long? = null,
     val amountDueCurrency: String? = null,
+    /** The counter the client was called to, once called (JIKU-113). */
+    val counter: String? = null,
 )
 
 data class LineActionResult(

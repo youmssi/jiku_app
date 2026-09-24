@@ -153,12 +153,13 @@ interface TicketRepository : JpaRepository<Ticket, UUID> {
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
-        "UPDATE Ticket t SET t.status = com.jiku.ticket.internal.TicketStatus.CALLED " +
+        "UPDATE Ticket t SET t.status = com.jiku.ticket.internal.TicketStatus.CALLED, t.counterLabel = :counter " +
             "WHERE t.id = :id AND t.serviceId = :serviceId AND t.status = com.jiku.ticket.internal.TicketStatus.WAITING",
     )
     fun callLine(
         @Param("id") id: UUID,
         @Param("serviceId") serviceId: UUID,
+        @Param("counter") counter: String?,
     ): Int
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)

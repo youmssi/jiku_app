@@ -37,6 +37,19 @@ class AppointmentPublicController(
         @Valid @RequestBody request: AppointmentBookingRequest,
     ): AppointmentBookingView = appointments.bookByToken(token, request)
 
+    @PostMapping("/{token}/line")
+    @ResponseStatus(HttpStatus.CREATED)
+    fun takeTicket(
+        @PathVariable token: String,
+        @Valid @RequestBody request: WalkInRequest,
+    ): ClientLineTicketView = appointments.takeTicketByToken(token, request)
+
+    @GetMapping("/{token}/line/{ticketCode}")
+    fun lineTicket(
+        @PathVariable token: String,
+        @PathVariable ticketCode: String,
+    ): ClientLineTicketView = appointments.lineTicketByToken(token, ticketCode)
+
     @GetMapping("/{token}/booking/{bookingToken}")
     fun status(
         @PathVariable token: String,

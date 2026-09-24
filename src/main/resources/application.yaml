@@ -213,6 +213,21 @@ api:
         paths: [/bookings/**]
         max-requests: ${RATE_LIMIT_BOOKING_MAX_REQUESTS:20}
         window: ${RATE_LIMIT_BOOKING_WINDOW:PT1M}
+      appointments:
+        # Public appointment and queue links (JIKU-87/113), by signed token or
+        # short code: a client books, takes a ticket and refreshes their place a
+        # few times a minute. Unthrottled, a script could hoard every slot.
+        paths: [/appointments/**, /r/**]
+        token-segment: 1
+        max-requests: ${RATE_LIMIT_APPOINTMENTS_MAX_REQUESTS:60}
+        window: ${RATE_LIMIT_APPOINTMENTS_WINDOW:PT1M}
+      counter:
+        # Counter staff links (JIKU-88): a busy desk calls, serves and records
+        # payments every few seconds, like a validator at the door.
+        paths: [/line/**, /line-codes/**]
+        token-segment: 1
+        max-requests: ${RATE_LIMIT_COUNTER_MAX_REQUESTS:120}
+        window: ${RATE_LIMIT_COUNTER_WINDOW:PT1M}
       prospect:
         # Liste d'accès anticipé rendez-vous (JIKU-98). Un professionnel légitime
         # soumet une fois, éventuellement deux s'il se corrige ; au-delà c'est du
