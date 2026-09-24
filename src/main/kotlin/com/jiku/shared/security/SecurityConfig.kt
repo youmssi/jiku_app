@@ -76,6 +76,10 @@ class SecurityConfig(
                 // pas de compte, il est authentifié par le lien signé du comptoir porté
                 // dans le chemin, comme les validateurs sous /checkin.
                 it.requestMatchers("${apiProperties.basePath}/line/**").permitAll()
+                // Resolves a counter link's short code into a fresh signed token
+                // (JIKU-88) — the same unauthenticated entry point as /line itself,
+                // just one hop earlier.
+                it.requestMatchers("${apiProperties.basePath}/line-codes/**").permitAll()
                 // Deposit-reservation flow (JIKU-55): a prospect has no account yet, so
                 // every booking endpoint is either fully open or gated by the booking's
                 // own access token (query param) rather than a JWT.

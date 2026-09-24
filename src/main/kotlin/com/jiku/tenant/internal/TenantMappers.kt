@@ -19,6 +19,7 @@ fun Tenant.toTenantInfo(): TenantInfo =
         createdAt = createdAt,
         displayName = effectiveDisplayName(),
         logoUrl = branding?.logoUrl,
+        bannerUrl = branding?.bannerUrl,
         primaryColor = effectivePrimaryColor(),
         legalIdentity = legalIdentity?.toInfo(),
         username = username,
@@ -47,5 +48,6 @@ fun Tenant.toBrandingResponse(): BrandingResponse =
     BrandingResponse(
         displayName = effectiveDisplayName(),
         logoUrl = branding?.logoUrl,
+        bannerUrl = branding?.bannerUrl,
         primaryColor = effectivePrimaryColor(),
     )

@@ -31,6 +31,10 @@ class ServiceStaff(
     @Column(name = "revoked", nullable = false)
     var revoked: Boolean = false
 
+    /** Short shareable code (JIKU-88); null for links created before it existed. */
+    @Column(name = "code", length = 10)
+    var code: String? = null
+
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now()
 

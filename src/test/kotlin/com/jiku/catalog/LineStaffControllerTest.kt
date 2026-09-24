@@ -2,6 +2,7 @@ package com.jiku.catalog
 
 import com.jiku.TestcontainersConfiguration
 import com.jiku.catalog.internal.DayLineTokenService
+import com.jiku.catalog.internal.LineCodeController
 import com.jiku.catalog.internal.LineStaffController
 import com.jiku.catalog.internal.Resource
 import com.jiku.catalog.internal.ResourceAvailability
@@ -41,6 +42,9 @@ import kotlin.test.fail
 class LineStaffControllerTest {
     @Autowired
     lateinit var lineController: LineStaffController
+
+    @Autowired
+    lateinit var lineCodeController: LineCodeController
 
     @Autowired
     lateinit var services: ServiceAdminService
@@ -120,6 +124,31 @@ class LineStaffControllerTest {
         val serviceLink = bookingTokens.issue(serviceId, "line-staff-a")
 
         expectNotFound { lineController.view(serviceLink) }
+    }
+
+    @Test
+    fun `a staff link's short code resolves to a working token and stops resolving once revoked`() {
+        TenantContext.set("line-staff-a")
+        val serviceId = serviceWithMorning()
+        val code = "TEST${UUID.randomUUID().toString().take(6).uppercase()}"
+        val row = staff.save(ServiceStaff(serviceId = serviceId, label = "Comptoir A").apply { this.code = code })
+        TenantContext.clear()
+
+        // The code is a public entry point: no tenant needs to be bound to resolve it.
+        val resolution = lineCodeController.resolve(code)
+        val view = lineController.view(resolution.token)
+        assertEquals("Coupe", view.serviceName)
+
+        // An unknown code never resolves.
+        expectNotFound { lineCodeController.resolve("UNKNOWNCODE") }
+
+        // Once revoked, the code stops resolving even though the row still exists.
+        TenantContext.set("line-staff-a")
+        val toRevoke = staff.findById(requireNotNull(row.id)).orElseThrow()
+        toRevoke.revoke()
+        staff.save(toRevoke)
+        TenantContext.clear()
+        expectNotFound { lineCodeController.resolve(code) }
     }
 
     private fun issueStaffLink(

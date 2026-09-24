@@ -5,10 +5,10 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import com.jiku.shared.RandomCode
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Service
-import java.security.SecureRandom
 import java.time.Instant
 import java.util.UUID
 
@@ -48,8 +48,6 @@ interface ServiceLinkRepository : JpaRepository<ServiceLink, UUID> {
 class ServiceLinkCodeService(
     private val links: ServiceLinkRepository,
 ) {
-    private val random = SecureRandom()
-
     fun forService(
         serviceId: UUID,
         tenantId: String,
@@ -67,13 +65,12 @@ class ServiceLinkCodeService(
         // réessaie jusqu'à succès (collision astronomiquement rare).
         var code: String
         do {
-            code = (1..CODE_LENGTH).map { ALPHABET[random.nextInt(ALPHABET.length)] }.joinToString("")
+            code = RandomCode.generate(CODE_LENGTH)
         } while (links.findByCode(code) != null)
         return links.save(ServiceLink(code = code, tenantId = tenantId, serviceId = serviceId))
     }
 
     companion object {
         const val CODE_LENGTH = 10
-        const val ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
     }
 }

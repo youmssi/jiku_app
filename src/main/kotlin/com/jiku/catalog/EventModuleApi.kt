@@ -109,4 +109,25 @@ interface EventModuleApi {
         startDateTime: Instant?,
         invitationChannels: Set<InvitationChannel>,
     ): UUID
+
+    /**
+     * Events under [tenantId] whose name matches [query] (case-insensitive
+     * substring; all events when blank or null), newest-scheduled first. Powers
+     * the back-office trial grant form's event picker (JIKU-42) — deliberately
+     * cross-tenant like [eventsPastRetention], since the admin selects an event
+     * before any tenant context is bound.
+     */
+    fun adminSearchEvents(
+        tenantId: UUID,
+        query: String?,
+        limit: Int,
+    ): List<EventSummary>
+
+    /**
+     * Names for [eventIds], regardless of tenant — the back-office trial desk
+     * (JIKU-42) resolves many trials' events across tenants in one call instead
+     * of one cross-tenant lookup per row. Ids with no matching event are simply
+     * absent from the result.
+     */
+    fun adminEventNames(eventIds: Collection<UUID>): Map<UUID, String>
 }

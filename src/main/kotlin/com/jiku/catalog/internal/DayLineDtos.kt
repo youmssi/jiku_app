@@ -52,11 +52,16 @@ data class ServiceStaffCreateRequest(
     @field:NotBlank @field:Size(max = 80) val label: String,
 )
 
-/** Lien du personnel venant d'être créé : le jeton n'est montré qu'ici. */
+/**
+ * Lien du personnel venant d'être créé. [code] est le lien court partageable
+ * (`/ligne/{code}`, JIKU-88) — résolu à chaque usage en un jeton signé frais,
+ * il peut être recopié à tout moment ; [token] n'est montré qu'ici.
+ */
 data class ServiceStaffCreatedResponse(
     val id: UUID,
     val label: String,
     val token: String,
+    val code: String?,
     val createdAt: Instant,
 )
 
@@ -66,6 +71,7 @@ data class ServiceStaffView(
     val serviceId: UUID,
     val label: String,
     val revoked: Boolean,
+    val code: String?,
     val createdAt: Instant,
     val revokedAt: Instant?,
 )

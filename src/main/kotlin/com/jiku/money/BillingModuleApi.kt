@@ -61,7 +61,10 @@ interface BillingModuleApi {
         tenantId: UUID?,
         page: Int,
         size: Int,
-    ): List<AdminTrialView>
+    ): AdminTrialPage
+
+    /** Platform-wide trial funnel snapshot (JIKU-99) for the back-office overview strip. */
+    fun adminTrialStats(): AdminTrialStats
 
     /** Grants a time-boxed trial of a paid tier to one event. */
     fun adminGrantTrial(

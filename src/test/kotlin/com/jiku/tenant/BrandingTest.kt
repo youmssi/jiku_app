@@ -39,7 +39,7 @@ class BrandingTest {
                     .header("Authorization", "Bearer $token")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(
-                        """{"displayName":"Acme Live","logoUrl":"https://cdn.acme.test/logo.png","primaryColor":"#FF5722"}""",
+                        """{"displayName":"Acme Live","logoUrl":"https://cdn.acme.test/logo.png","bannerUrl":"https://cdn.acme.test/banner.png","primaryColor":"#FF5722"}""",
                     ),
             ).andExpect(status().isOk())
             .andExpect(jsonPath("$.displayName").value("Acme Live"))
@@ -49,6 +49,7 @@ class BrandingTest {
             .perform(get("/api/v1/branding").header("Authorization", "Bearer $token"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.logoUrl").value("https://cdn.acme.test/logo.png"))
+            .andExpect(jsonPath("$.bannerUrl").value("https://cdn.acme.test/banner.png"))
             .andExpect(jsonPath("$.primaryColor").value("#FF5722"))
 
         // An invalid color is rejected.

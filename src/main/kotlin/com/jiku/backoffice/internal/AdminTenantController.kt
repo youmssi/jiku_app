@@ -1,5 +1,7 @@
 package com.jiku.backoffice.internal
 
+import com.jiku.catalog.EventModuleApi
+import com.jiku.catalog.EventSummary
 import com.jiku.tenant.TenantDirectoryPage
 import com.jiku.tenant.TenantInfo
 import com.jiku.tenant.TenantModuleApi
@@ -27,6 +29,7 @@ import java.util.UUID
 @PreAuthorize("hasRole('PLATFORM_ADMIN')")
 class AdminTenantController(
     private val tenantModuleApi: TenantModuleApi,
+    private val eventModuleApi: EventModuleApi,
     private val auditService: AdminAuditService,
 ) {
     @GetMapping
@@ -35,6 +38,13 @@ class AdminTenantController(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
     ): TenantDirectoryPage = tenantModuleApi.searchTenants(query, page, size)
+
+    /** Search-as-you-type event picker for the trial grant form (JIKU-99), scoped to one organization. */
+    @GetMapping("/{id}/events")
+    fun events(
+        @PathVariable id: UUID,
+        @RequestParam(required = false) query: String?,
+    ): List<EventSummary> = eventModuleApi.adminSearchEvents(id, query, limit = 20)
 
     @PostMapping("/{id}/suspend")
     fun suspend(

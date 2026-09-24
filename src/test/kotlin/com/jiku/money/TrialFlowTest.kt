@@ -9,6 +9,8 @@ import com.jiku.money.internal.TrialService
 import com.jiku.money.internal.TrialStatus
 import com.jiku.shared.TenantContext
 import org.assertj.core.api.Assertions.assertThat
+import org.hamcrest.Matchers.greaterThanOrEqualTo
+import org.hamcrest.Matchers.hasItem
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -73,6 +75,29 @@ class TrialFlowTest {
         val trialId = JsonPath.read<String>(trial, "$.id")
 
         assert(allowance(token, eventId) == 300)
+
+        // The admin listing resolves the tenant and event names (JIKU-99), and the
+        // page envelope reports the true total, not just this page's row count.
+        mockMvc
+            .perform(get("/api/v1/admin/trials").header("Authorization", "Bearer $adminToken"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.total", greaterThanOrEqualTo(1)))
+            .andExpect(jsonPath("$.entries[?(@.id=='$trialId')].tenantName", hasItem("Trial Org")))
+            .andExpect(jsonPath("$.entries[?(@.id=='$trialId')].eventName", hasItem("Trial Event")))
+
+        mockMvc
+            .perform(get("/api/v1/admin/trials/stats").header("Authorization", "Bearer $adminToken"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.active", greaterThanOrEqualTo(1)))
+
+        // The event picker behind the grant form's combobox is scoped to the tenant.
+        mockMvc
+            .perform(
+                get("/api/v1/admin/tenants/$tenantId/events")
+                    .param("query", "Trial")
+                    .header("Authorization", "Bearer $adminToken"),
+            ).andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].name").value("Trial Event"))
 
         // A second active trial for the same event is refused.
         mockMvc

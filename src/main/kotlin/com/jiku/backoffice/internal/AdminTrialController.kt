@@ -1,5 +1,7 @@
 package com.jiku.backoffice.internal
 
+import com.jiku.money.AdminTrialPage
+import com.jiku.money.AdminTrialStats
 import com.jiku.money.AdminTrialView
 import com.jiku.money.BillingModuleApi
 import jakarta.validation.Valid
@@ -33,7 +35,10 @@ class AdminTrialController(
         @RequestParam(required = false) tenantId: UUID?,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
-    ): List<AdminTrialView> = billingModuleApi.adminListTrials(status, tenantId, page, size)
+    ): AdminTrialPage = billingModuleApi.adminListTrials(status, tenantId, page, size)
+
+    @GetMapping("/stats")
+    fun stats(): AdminTrialStats = billingModuleApi.adminTrialStats()
 
     @PostMapping
     fun grant(

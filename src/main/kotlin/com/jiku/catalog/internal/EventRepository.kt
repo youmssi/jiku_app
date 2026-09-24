@@ -68,4 +68,39 @@ interface EventRepository : JpaRepository<Event, UUID> {
     fun releaseSlot(
         @Param("id") id: UUID,
     ): Int
+
+    /**
+     * Cross-tenant event search for the back-office trial desk (JIKU-42), scoped
+     * to one tenant at a time. Native SQL bypasses the Hibernate tenant filter
+     * deliberately — the same exception as [findEventsPastRetention] — since the
+     * caller has no tenant bound in [com.jiku.shared.TenantContext] yet.
+     */
+    @Query(
+        nativeQuery = true,
+        value = """
+            SELECT CAST(id AS VARCHAR) AS id, name, start_date_time, status
+            FROM event
+            WHERE tenant_id = :tenantId
+              AND (:query IS NULL OR LOWER(name) LIKE LOWER(CONCAT('%', :query, '%')))
+            ORDER BY COALESCE(start_date_time, created_at) DESC
+            LIMIT :limit
+        """,
+    )
+    fun adminSearchByTenant(
+        @Param("tenantId") tenantId: String,
+        @Param("query") query: String?,
+        @Param("limit") limit: Int,
+    ): List<Array<Any>>
+
+    /**
+     * Cross-tenant batch name lookup for the back-office trial desk (JIKU-42):
+     * resolves many events' names in one round trip instead of one per row.
+     */
+    @Query(
+        nativeQuery = true,
+        value = "SELECT CAST(id AS VARCHAR) AS id, name FROM event WHERE id IN (:ids)",
+    )
+    fun findNamesByIds(
+        @Param("ids") ids: Collection<UUID>,
+    ): List<Array<Any>>
 }

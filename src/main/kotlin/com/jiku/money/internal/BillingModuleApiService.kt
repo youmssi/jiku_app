@@ -1,6 +1,8 @@
 package com.jiku.money.internal
 
 import com.jiku.money.AdminPaymentView
+import com.jiku.money.AdminTrialPage
+import com.jiku.money.AdminTrialStats
 import com.jiku.money.AdminTrialView
 import com.jiku.money.BillingAllowance
 import com.jiku.money.BillingModuleApi
@@ -61,7 +63,9 @@ class BillingModuleApiService(
         tenantId: UUID?,
         page: Int,
         size: Int,
-    ): List<AdminTrialView> = trialService.adminList(status, tenantId, page, size)
+    ): AdminTrialPage = trialService.adminList(status, tenantId, page, size)
+
+    override fun adminTrialStats(): AdminTrialStats = trialService.adminStats()
 
     override fun adminGrantTrial(
         tenantId: UUID,

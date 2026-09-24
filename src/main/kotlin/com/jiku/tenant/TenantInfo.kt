@@ -14,6 +14,7 @@ data class TenantInfo(
     val createdAt: Instant,
     val displayName: String,
     val logoUrl: String?,
+    val bannerUrl: String?,
     val primaryColor: String,
     /**
      * Present only once the organization has supplied it. The billing module reads

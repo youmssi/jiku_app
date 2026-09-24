@@ -1,5 +1,6 @@
 package com.jiku.catalog.internal
 
+import com.jiku.shared.RandomCode
 import com.jiku.shared.TenantContext
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -44,11 +45,14 @@ class ServiceStaffController(
     ): ServiceStaffCreatedResponse {
         services.get(serviceId)
         val tenantId = TenantContext.get() ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "No tenant")
-        val row = staff.save(ServiceStaff(serviceId = serviceId, label = request.label.trim()))
+        val entry = ServiceStaff(serviceId = serviceId, label = request.label.trim())
+        entry.code = generateUniqueCode()
+        val row = staff.save(entry)
         return ServiceStaffCreatedResponse(
             id = requireNotNull(row.id),
             label = row.label,
             token = tokens.issue(requireNotNull(row.id), serviceId, tenantId),
+            code = row.code,
             createdAt = row.createdAt,
         )
     }
@@ -68,6 +72,19 @@ class ServiceStaffController(
 
     private fun notFound(staffId: UUID): ResponseStatusException =
         ResponseStatusException(HttpStatus.NOT_FOUND, "Staff link not found: $staffId")
+
+    /** A code not yet used is guaranteed by the unique index: retry on the astronomically rare collision. */
+    private fun generateUniqueCode(): String {
+        var code: String
+        do {
+            code = RandomCode.generate(CODE_LENGTH)
+        } while (staff.findRowByCode(code).isNotEmpty())
+        return code
+    }
+
+    private companion object {
+        const val CODE_LENGTH = 10
+    }
 }
 
 private fun ServiceStaff.toView(): ServiceStaffView =
@@ -76,6 +93,7 @@ private fun ServiceStaff.toView(): ServiceStaffView =
         serviceId = serviceId,
         label = label,
         revoked = revoked,
+        code = code,
         createdAt = createdAt,
         revokedAt = revokedAt,
     )

@@ -35,6 +35,7 @@ class PublicOrgController(
         return PublicOrgProfileView(
             organizationName = tenant.displayName,
             logoUrl = tenant.logoUrl,
+            bannerUrl = tenant.bannerUrl,
             primaryColor = tenant.primaryColor,
             services =
                 services.publicServiceLinks(tenant.id).map {
@@ -47,6 +48,7 @@ class PublicOrgController(
 data class PublicOrgProfileView(
     val organizationName: String,
     val logoUrl: String?,
+    val bannerUrl: String?,
     val primaryColor: String,
     val services: List<PublicOrgServiceView>,
 )

@@ -42,6 +42,18 @@ data class RetentionCandidate(
 )
 
 /**
+ * Minimal cross-tenant event listing for the back-office (JIKU-42's trial desk):
+ * enough to label an event in a picker or a table without exposing the full
+ * [EventInfo] shape to callers outside the event's own tenant.
+ */
+data class EventSummary(
+    val id: UUID,
+    val name: String,
+    val startDateTime: Instant?,
+    val status: String,
+)
+
+/**
  * État du quorum d'un événement (JIKU-94), partagé au-delà du module.
  *
  * [reached] reflète l'instant présent ; [reachedAt] est la date de la **première**
