@@ -38,6 +38,9 @@ class Payment(
     /** Mois de prépaiement achetés, pour un renouvellement d'abonnement. */
     @Column(name = "subscription_months")
     val subscriptionMonths: Int? = null,
+    /** Guests a payment adds or settles: an Organizer Pack block, or the guests owed a renewal pays for. */
+    @Column(name = "guests", updatable = false)
+    val guests: Long? = null,
     /** The tier was paid with the interactive WhatsApp surcharge (ADR 105). */
     @Column(name = "interactive", nullable = false, updatable = false)
     val interactive: Boolean = false,
@@ -62,5 +65,7 @@ class Payment(
     companion object {
         const val KIND_TIER = "TIER"
         const val KIND_SUBSCRIPTION = "SUBSCRIPTION"
+        const val KIND_PACK = "PACK"
+        const val KIND_PACK_EXTRA = "PACK_EXTRA"
     }
 }

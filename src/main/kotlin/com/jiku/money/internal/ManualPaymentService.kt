@@ -32,6 +32,7 @@ class ManualPaymentService(
     private val eventPricing: EventPricing,
     private val subscriptionService: SubscriptionService,
     private val subscriptionNotifier: SubscriptionNotifier,
+    private val organizerPack: OrganizerPackService,
     private val platformSettings: PlatformBillingSettingsService,
     private val tenantModuleApi: TenantModuleApi,
     private val eventPublisher: ApplicationEventPublisher,
@@ -141,6 +142,55 @@ class ManualPaymentService(
         return instructionsFor(payment)
     }
 
+    /**
+     * A request to pay for [months] of Organizer Pack (ADR 105), with the guests
+     * still owed from an event day included. Same manual circuit as a
+     * subscription; an open request at the same price is handed back.
+     */
+    @Transactional
+    fun requestPack(months: Int): ManualPaymentInstructions {
+        val quote = organizerPack.quote(months)
+        return requestTenantPayment(Payment.KIND_PACK, PACK_TIER, quote, months, quote.owedGuests)
+    }
+
+    /** A request to buy [blocks] blocks of extra guests for the pack's current month (ADR 105). */
+    @Transactional
+    fun requestPackExtra(blocks: Int): ManualPaymentInstructions {
+        val quote = organizerPack.quoteExtra(blocks)
+        return requestTenantPayment(Payment.KIND_PACK_EXTRA, PACK_TIER, quote, null, quote.guests)
+    }
+
+    private fun requestTenantPayment(
+        kind: String,
+        tier: String,
+        quote: PackQuote,
+        months: Int?,
+        guests: Long,
+    ): ManualPaymentInstructions {
+        requireNotNull(TenantContext.get()) { "A payment request requires an authenticated tenant" }
+        val existing = payments.findFirstByKindAndProviderAndStatusOrderByCreatedAtDesc(kind, PROVIDER_MANUAL, PaymentStatus.PENDING)
+        if (existing != null && existing.amountMinor == quote.amountMinor && existing.subscriptionMonths == months) {
+            return instructionsFor(existing)
+        }
+        val payment =
+            payments.save(
+                Payment(
+                    eventId = null,
+                    tier = tier,
+                    amountMinor = quote.amountMinor,
+                    currency = quote.currency,
+                    provider = PROVIDER_MANUAL,
+                    kind = kind,
+                    subscriptionMonths = months,
+                    guests = guests,
+                ),
+            )
+        payment.providerReference = generateReference()
+        payment.updatedAt = Instant.now()
+        payments.save(payment)
+        return instructionsFor(payment)
+    }
+
     /** The organizer's open (or latest) manual payment for an event, if any. */
     @Transactional(readOnly = true)
     fun currentInstructions(eventId: UUID): ManualPaymentInstructions? {
@@ -205,7 +255,7 @@ class ManualPaymentService(
         val previous = TenantContext.get()
         TenantContext.set(tenantId)
         try {
-            var subscriptionKind = false
+            var tenantKind = false
             val view =
                 transactions.execute {
                     val payment =
@@ -220,22 +270,28 @@ class ManualPaymentService(
                     payment.status = if (succeeded) PaymentStatus.SUCCEEDED else PaymentStatus.FAILED
                     payment.updatedAt = Instant.now()
                     payments.save(payment)
+                    // Only an event tier has an event to notify about; a
+                    // subscription publishes its own notice (REACTIVATED).
+                    tenantKind = payment.kind != Payment.KIND_TIER
                     if (succeeded) {
-                        if (payment.kind == Payment.KIND_SUBSCRIPTION) {
-                            // Le prépaiement (ré)active et prolonge l'abonnement et
-                            // publie son propre avis (SubscriptionNotice.REACTIVATED).
-                            subscriptionKind = true
-                            subscriptionService.confirmSubscriptionPayment(
-                                payment.tier,
-                                requireNotNull(payment.subscriptionMonths),
-                            )
-                        } else {
-                            tierUnlockService.unlock(requireNotNull(payment.eventId), payment.tier, payment.interactive)
+                        when (payment.kind) {
+                            Payment.KIND_SUBSCRIPTION ->
+                                subscriptionService.confirmSubscriptionPayment(
+                                    payment.tier,
+                                    requireNotNull(payment.subscriptionMonths),
+                                )
+
+                            Payment.KIND_PACK ->
+                                organizerPack.confirmPack(requireNotNull(payment.subscriptionMonths), payment.guests ?: 0)
+
+                            Payment.KIND_PACK_EXTRA -> organizerPack.confirmExtra(payment.guests ?: 0)
+
+                            else -> tierUnlockService.unlock(requireNotNull(payment.eventId), payment.tier, payment.interactive)
                         }
                     }
                     payment.toAdminView()
                 }
-            if (!subscriptionKind) {
+            if (!tenantKind) {
                 val kind = if (succeeded) ManualPaymentNotice.KIND_CONFIRMED else ManualPaymentNotice.KIND_REJECTED
                 publishNoticeFromView(requireNotNull(view), tenantId, kind, note)
             }
@@ -315,6 +371,7 @@ class ManualPaymentService(
 
     companion object {
         const val PROVIDER_MANUAL = "manual"
+        private const val PACK_TIER = "PACK"
         private const val ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
         private const val MAX_PAGE_SIZE = 100
     }

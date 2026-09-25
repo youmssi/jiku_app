@@ -22,12 +22,16 @@ class EventPricing(
     private val usageRecords: UsageRecordRepository,
     private val billingCurrency: TenantBillingCurrency,
     private val events: EventModuleApi,
+    private val organizerPack: OrganizerPackService,
 ) {
     @Transactional(readOnly = true)
     fun upgradeQuote(
         eventId: UUID,
         tier: BillingProperties.Tier,
     ): EventQuote {
+        if (organizerPack.isActive()) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "The Organizer Pack already covers this event")
+        }
         val currency = billingCurrency.current()
         val record = usageRecords.findByEventId(eventId)
         val unlocked = record?.unlockedAllowance ?: properties.freeTierGuests
