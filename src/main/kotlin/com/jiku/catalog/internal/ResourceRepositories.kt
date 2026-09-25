@@ -18,7 +18,7 @@ interface ResourceRepository : JpaRepository<Resource, UUID> {
     fun findByActiveTrueAndTypeInOrderByNameAsc(types: Collection<ResourceType>): List<Resource>
 
     /** Nombre de ressources actives du tenant courant (JIKU-90). */
-    fun countByActiveTrue(): Long
+    fun countByActiveTrueAndType(type: ResourceType): Long
 }
 
 /**

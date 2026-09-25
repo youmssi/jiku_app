@@ -59,9 +59,21 @@ data class PlatformBillingSettingsUpdate(
     val subscriptionPlans: List<SubscriptionPlanOption>,
 )
 
-/** Une formule d'abonnement telle que le bureau admin la voit. */
+/** A services plan as the admin desk edits it (ADR 105): prices in GNF, FCFA and USD. */
 data class SubscriptionPlanOption(
     val name: String,
-    val maxResources: Long,
-    val priceMinorPerMonth: Long,
-)
+    val includedPeople: Long,
+    /** Null when the plan has no people cap. */
+    val maxPeople: Long?,
+    val monthly: PriceList,
+    /** Null when the plan takes no one beyond [includedPeople]. */
+    val extraPerson: PriceList?,
+) {
+    /** Kept for /v1 clients written before ADR 105; read [maxPeople] and [includedPeople]. */
+    @Deprecated("Use maxPeople and includedPeople")
+    val maxResources: Long get() = maxPeople ?: includedPeople
+
+    /** Kept for /v1 clients written before ADR 105: the GNF monthly price. */
+    @Deprecated("Use monthly")
+    val priceMinorPerMonth: Long get() = monthly.gnf
+}

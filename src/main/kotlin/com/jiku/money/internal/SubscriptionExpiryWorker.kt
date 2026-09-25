@@ -44,14 +44,15 @@ class SubscriptionExpiryWorker(
         if (row.status != SubscriptionStatus.ACTIVE) {
             return
         }
+        val expiresAt = row.expiresAt ?: return
         row.status = SubscriptionStatus.GRACE
         row.updatedAt = Instant.now()
         notifier.send(
             kind = SubscriptionNotice.KIND_GRACE_STARTED,
             tenantId = requireNotNull(row.tenantId),
             plan = row.plan,
-            expiresAt = row.expiresAt,
-            suspensionAt = row.expiresAt.plus(properties.grace),
+            expiresAt = expiresAt,
+            suspensionAt = expiresAt.plus(properties.grace),
         )
     }
 
@@ -63,7 +64,8 @@ class SubscriptionExpiryWorker(
             return
         }
         val tenantId = requireNotNull(row.tenantId)
-        val suspensionAt = row.expiresAt.plus(properties.grace)
+        val expiresAt = row.expiresAt ?: return
+        val suspensionAt = expiresAt.plus(properties.grace)
         row.status = SubscriptionStatus.EXPIRED
         row.updatedAt = Instant.now()
         tenantModuleApi.setTenantSuspended(UUID.fromString(tenantId), true)
@@ -71,7 +73,7 @@ class SubscriptionExpiryWorker(
             kind = SubscriptionNotice.KIND_EXPIRED,
             tenantId = tenantId,
             plan = row.plan,
-            expiresAt = row.expiresAt,
+            expiresAt = expiresAt,
             suspensionAt = suspensionAt,
         )
     }

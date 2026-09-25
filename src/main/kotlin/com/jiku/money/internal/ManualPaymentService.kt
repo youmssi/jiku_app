@@ -98,9 +98,7 @@ class ManualPaymentService(
         val plan =
             platformSettings.planByName(planName)
                 ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown subscription plan: $planName")
-        val amount =
-            platformSettings.priceMinor(plan, months)
-                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported prepaid period: $months months")
+        val quote = subscriptionService.quote(plan, months)
         val tenantId = requireNotNull(TenantContext.get()) { "A subscription request requires an authenticated tenant" }
 
         val existing =
@@ -118,8 +116,8 @@ class ManualPaymentService(
                 Payment(
                     eventId = null,
                     tier = plan.name,
-                    amountMinor = amount,
-                    currency = billingProperties.currency,
+                    amountMinor = quote.amountMinor,
+                    currency = quote.currency,
                     provider = PROVIDER_MANUAL,
                     kind = Payment.KIND_SUBSCRIPTION,
                     subscriptionMonths = months,
@@ -134,8 +132,8 @@ class ManualPaymentService(
             tenantId = tenantId,
             plan = plan.name,
             months = months,
-            amountMinor = amount,
-            currency = billingProperties.currency,
+            amountMinor = quote.amountMinor,
+            currency = quote.currency,
             reference = payment.providerReference,
         )
         return instructionsFor(payment)
