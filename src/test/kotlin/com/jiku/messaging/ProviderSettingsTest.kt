@@ -2,6 +2,11 @@ package com.jiku.messaging
 
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
+import com.jiku.messaging.internal.MessagingProviderResolver
+import com.jiku.money.internal.OwnWhatsAppNumberService
+import com.jiku.money.internal.WhatsAppNumberAddonRepository
+import com.jiku.shared.TenantContext
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -15,6 +20,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.time.Instant
+import kotlin.test.assertEquals
 
 /**
  * Organizer-facing tenant provider settings (JIKU-44): masked reads, encrypted
@@ -22,7 +29,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
  * The `/test` endpoint's live-delivery path is exercised only for the
  * unconfigured (platform-default, log transport) case — a configured tenant
  * provider would need a real outbound call to Resend/Meta, which these tests
- * do not perform.
+ * do not perform. An organization's own WhatsApp number needs an offer that
+ * includes it (ADR 105).
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -30,6 +38,20 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 class ProviderSettingsTest {
     @Autowired
     lateinit var mockMvc: MockMvc
+
+    @Autowired
+    lateinit var ownNumber: OwnWhatsAppNumberService
+
+    @Autowired
+    lateinit var addons: WhatsAppNumberAddonRepository
+
+    @Autowired
+    lateinit var resolver: MessagingProviderResolver
+
+    @AfterEach
+    fun clearTenant() {
+        TenantContext.clear()
+    }
 
     @Test
     fun `overview defaults to the platform provider for a fresh tenant`() {
@@ -68,25 +90,59 @@ class ProviderSettingsTest {
     }
 
     @Test
-    fun `saving a whatsapp provider masks the access token and persists template fields`() {
+    fun `saving a whatsapp provider needs an offer with the own number, masks the token and keeps template fields`() {
         val token = register("Wa Org", "wa@acme.test")
+        val body =
+            """{"accessToken":"EAAxxxxxxxx9999","phoneNumberId":"123456789012345",""" +
+                """"templateName":"event_invitation","templateLanguage":"fr"}"""
+        saveWhatsApp(token, body).andExpect(status().isPaymentRequired())
 
-        mockMvc
-            .perform(
-                put("/api/v1/settings/providers/whatsapp")
-                    .header("Authorization", "Bearer $token")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(
-                        """{"accessToken":"EAAxxxxxxxx9999","phoneNumberId":"123456789012345",""" +
-                            """"templateName":"event_invitation","templateLanguage":"fr"}""",
-                    ),
-            ).andExpect(status().isOk())
+        val tenantId = tenantId(token)
+        TenantContext.set(tenantId)
+        ownNumber.confirm(1)
+        TenantContext.clear()
+
+        saveWhatsApp(token, body)
+            .andExpect(status().isOk())
             .andExpect(jsonPath("$.whatsapp.configured").value(true))
+            .andExpect(jsonPath("$.whatsapp.allowed").value(true))
             .andExpect(jsonPath("$.whatsapp.provider").value("META_CLOUD"))
             .andExpect(jsonPath("$.whatsapp.phoneNumberId").value("123456789012345"))
             .andExpect(jsonPath("$.whatsapp.accessTokenMasked").value("••••9999"))
             .andExpect(jsonPath("$.whatsapp.templateName").value("event_invitation"))
+        TenantContext.set(tenantId)
+        assertEquals(true, resolver.whatsApp().tenantOverride)
+
+        addons.findFirstByOrderByExpiresAtDesc()!!.let {
+            it.expiresAt = Instant.now().minusSeconds(60)
+            addons.saveAndFlush(it)
+        }
+        assertEquals(false, resolver.whatsApp().tenantOverride, "a lapsed add-on sends through the platform number")
+        TenantContext.clear()
+        mockMvc
+            .perform(get("/api/v1/settings/providers").header("Authorization", "Bearer $token"))
+            .andExpect(jsonPath("$.whatsapp.configured").value(true))
+            .andExpect(jsonPath("$.whatsapp.allowed").value(false))
     }
+
+    private fun saveWhatsApp(
+        token: String,
+        body: String,
+    ) = mockMvc.perform(
+        put("/api/v1/settings/providers/whatsapp")
+            .header("Authorization", "Bearer $token")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body),
+    )
+
+    private fun tenantId(token: String): String =
+        JsonPath.read(
+            mockMvc
+                .perform(get("/api/v1/auth/me").header("Authorization", "Bearer $token"))
+                .andReturn()
+                .response.contentAsString,
+            "$.tenantId",
+        )
 
     @Test
     fun `removing a configured provider reverts the tenant to the platform default`() {

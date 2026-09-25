@@ -135,16 +135,20 @@ class NotificationService(
      * coût, suivi du coût et journal d'audit. Avec WHATSAPP_OR_SMS, un rappel que
      * WhatsApp ne peut pas délivrer part par SMS (JIKU-112) : un rappel manqué est
      * un client absent. Un rappel non délivré ne remonte jamais à la réservation.
+     * Envoyé depuis le numéro de l'organisation, Meta le lui facture : il ne
+     * compte pas dans les rappels mensuels d'une offre gratuite (ADR 105).
      */
-    fun deliverAppointmentReminder(due: ReminderDue): DeliveryOutcome =
-        deliverToPhone(
+    fun deliverAppointmentReminder(due: ReminderDue): DeliveryOutcome {
+        val ownNumber = providers.whatsApp().tenantOverride
+        return deliverToPhone(
             due.reminderId,
             due.clientPhone,
             due.channel,
             reminderText(due),
-            whatsAppAllowed = reminderAllowance.canSendWhatsAppReminder(due.tenantId),
-            onWhatsAppSent = { reminderAllowance.recordWhatsAppReminder(due.tenantId) },
+            whatsAppAllowed = ownNumber || reminderAllowance.canSendWhatsAppReminder(due.tenantId),
+            onWhatsAppSent = { if (!ownNumber) reminderAllowance.recordWhatsAppReminder(due.tenantId) },
         )
+    }
 
     /** "It's your turn" for a client just called in the line (JIKU-114), by the service's channel. */
     fun deliverClientCalled(called: ClientCalled): DeliveryOutcome =

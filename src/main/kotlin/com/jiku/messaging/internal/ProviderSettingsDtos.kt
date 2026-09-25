@@ -51,6 +51,12 @@ data class WhatsAppProviderView(
     val accessTokenMasked: String? = null,
     val templateName: String? = null,
     val templateLanguage: String? = null,
+    /**
+     * Whether the organization's offer includes its own number (ADR 105).
+     * Saved credentials are used only while it does; otherwise sends go
+     * through the platform number.
+     */
+    val allowed: Boolean = false,
 )
 
 data class ProviderSettingsResponse(

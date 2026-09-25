@@ -67,5 +67,6 @@ class Payment(
         const val KIND_SUBSCRIPTION = "SUBSCRIPTION"
         const val KIND_PACK = "PACK"
         const val KIND_PACK_EXTRA = "PACK_EXTRA"
+        const val KIND_WHATSAPP_NUMBER = "WHATSAPP_NUMBER"
     }
 }

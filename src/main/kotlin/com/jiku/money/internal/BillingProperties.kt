@@ -37,7 +37,18 @@ data class BillingProperties(
     val interactivePerGuest: PriceList = PriceList(150, 10, 2),
     /** The Organizer Pack (ADR 105), for planners, agencies and venues. */
     val pack: Pack = Pack(),
+    /** Sending from the organization's own WhatsApp number (ADR 105). */
+    val ownWhatsAppNumber: OwnWhatsAppNumber = OwnWhatsAppNumber(),
 ) {
+    /**
+     * The own-number add-on's monthly price; the plans in [includedPlans] and
+     * an active Organizer Pack include it.
+     */
+    data class OwnWhatsAppNumber(
+        val monthly: PriceList = PriceList(100_000, 7_000, 1_200),
+        val includedPlans: List<String> = listOf("Organisation"),
+    )
+
     /**
      * A monthly price for [includedGuests] guests a month across every event,
      * all delivery modes included. More guests are bought ahead in blocks of

@@ -76,12 +76,13 @@ class BillingHistoryController(
         }
     }
 
-    /** What a payment was for: its event, the subscription, or the Organizer Pack (ADR 105). */
+    /** What a payment was for: its event, the subscription, the Organizer Pack or the own-number add-on (ADR 105). */
     private fun label(payment: Payment): String =
         when (payment.kind) {
             Payment.KIND_SUBSCRIPTION -> "${payment.tier} subscription"
             Payment.KIND_PACK -> "Organizer Pack (${payment.subscriptionMonths} months)"
             Payment.KIND_PACK_EXTRA -> "Organizer Pack: ${payment.guests} extra guests"
+            Payment.KIND_WHATSAPP_NUMBER -> "Own WhatsApp number (${payment.subscriptionMonths} months)"
             else -> payment.eventId?.let { events.findEvent(it)?.name } ?: "Event"
         }
 
