@@ -35,7 +35,7 @@ class WhatsAppWebhookController(
     private val log = LoggerFactory.getLogger(WhatsAppWebhookController::class.java)
 
     @GetMapping(produces = [MediaType.TEXT_PLAIN_VALUE])
-    fun verify(
+    fun verifySubscription(
         @RequestParam("hub.mode", required = false) mode: String?,
         @RequestParam("hub.verify_token", required = false) token: String?,
         @RequestParam("hub.challenge", required = false) challenge: String?,
@@ -53,7 +53,7 @@ class WhatsAppWebhookController(
     }
 
     @PostMapping
-    fun receive(
+    fun receiveMessages(
         @RequestHeader(name = "X-Hub-Signature-256", required = false) signature: String?,
         @RequestBody rawBody: String,
     ) {
