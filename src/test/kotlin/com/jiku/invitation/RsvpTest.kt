@@ -43,6 +43,8 @@ class RsvpTest {
             .perform(get("/api/v1/rsvp/$token1"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("PENDING"))
+            .andExpect(jsonPath("$.eventStart").value("2026-12-01T18:00:00Z"))
+            .andExpect(jsonPath("$.eventTimezone").value("Africa/Abidjan"))
 
         mockMvc
             .perform(post("/api/v1/rsvp/$token1/confirm"))

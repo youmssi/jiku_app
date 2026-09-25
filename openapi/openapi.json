@@ -10239,6 +10239,32 @@
                 "type" : "null"
               }
             ]
+          },
+          "eventStart" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "eventEnd" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "eventTimezone" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "categoryName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         }
       },

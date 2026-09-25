@@ -244,6 +244,10 @@ class RsvpService(
                         methods = tenant?.paymentMethods,
                     )
                 },
+            eventStart = event?.startDateTime,
+            eventEnd = event?.endDateTime,
+            eventTimezone = event?.timezone,
+            categoryName = guest.ticketTypeId?.let { typeId -> events.ticketTypes(eventId).firstOrNull { it.id == typeId }?.label },
         )
     }
 
