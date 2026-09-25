@@ -90,6 +90,9 @@ class SecurityConfig(
                 // consultation passe par /admin/prospects, qui exige PLATFORM_ADMIN.
                 it.requestMatchers(HttpMethod.POST, "${apiProperties.basePath}/prospects").permitAll()
                 it.requestMatchers("${apiProperties.basePath}/notifications/email-feedback/**").permitAll()
+                // WhatsApp Cloud API webhook (JIKU-143): the caller is Meta,
+                // authenticated by its signature over the body, not a session.
+                it.requestMatchers("${apiProperties.basePath}/whatsapp/webhook").permitAll()
                 // Mobile Money provider payment callback: the caller is the provider,
                 // authenticated by the signature the payment provider verifies, not a
                 // user session.

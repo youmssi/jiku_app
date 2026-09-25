@@ -33,6 +33,17 @@ jiku:
       # (only reaches recipients inside the 24h customer-service window).
       template-name: ${WHATSAPP_META_TEMPLATE_NAME:}
       template-language: ${WHATSAPP_META_TEMPLATE_LANGUAGE:fr}
+      # Interactive WhatsApp (JIKU-143): an approved template with two
+      # quick-reply buttons (accept, decline) and one with an image header (the
+      # ticket's QR code). Blank sends session messages instead, which only reach
+      # recipients inside the 24h window.
+      buttons-template-name: ${WHATSAPP_META_BUTTONS_TEMPLATE_NAME:}
+      image-template-name: ${WHATSAPP_META_IMAGE_TEMPLATE_NAME:}
+      # Inbound webhook (<api>/whatsapp/webhook): the app secret verifies each
+      # call's signature and the verify token answers Meta's registration check.
+      # Blank refuses every call.
+      app-secret: ${WHATSAPP_META_APP_SECRET:}
+      verify-token: ${WHATSAPP_META_VERIFY_TOKEN:}
     # Cost/quota/category guardrails (JIKU-61).
     conversation-safety-threshold: ${WHATSAPP_CONVERSATION_SAFETY_THRESHOLD:220}
     usd-to-gnf-rate: ${WHATSAPP_USD_TO_GNF_RATE:8760}
@@ -398,6 +409,8 @@ invitation:
   send:
     # Frontend base URL used to build guest invitation links.
     app-base-url: ${SERVER_BASE_URL:http://localhost:3000}
+    # This API's public URL: WhatsApp fetches the ticket's QR image from it (JIKU-143).
+    api-public-url: ${API_PUBLIC_URL:http://localhost:8080}
   # How often QUEUED invitations (withheld by a delivery-capacity guardrail —
   # the WhatsApp conversation window, JIKU-61, or the email routing quota,
   # JIKU-62) are retried.

@@ -830,6 +830,83 @@
         }
       }
     },
+    "/api/v1/whatsapp/webhook" : {
+      "get" : {
+        "tags" : [
+          "whats-app-webhook-controller"
+        ],
+        "operationId" : "verifySubscription",
+        "parameters" : [
+          {
+            "name" : "hub.mode",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "hub.verify_token",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "hub.challenge",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "whats-app-webhook-controller"
+        ],
+        "operationId" : "receiveMessages",
+        "parameters" : [
+          {
+            "name" : "X-Hub-Signature-256",
+            "in" : "header",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
     "/api/v1/settings/templates/{name}/preview" : {
       "post" : {
         "tags" : [
@@ -5912,6 +5989,37 @@
         }
       }
     },
+    "/api/v1/rsvp/{token}/qr.png" : {
+      "get" : {
+        "tags" : [
+          "rsvp-controller"
+        ],
+        "operationId" : "qrCode",
+        "parameters" : [
+          {
+            "name" : "token",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "image/png" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/resources/{id}/free" : {
       "get" : {
         "tags" : [
@@ -9124,7 +9232,8 @@
             "type" : "string",
             "enum" : [
               "LINK",
-              "DIRECT_TICKET"
+              "DIRECT_TICKET",
+              "INTERACTIVE"
             ]
           }
         }

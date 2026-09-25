@@ -3,12 +3,20 @@ package com.jiku.messaging.internal
 import com.jiku.shared.ClientCalled
 import com.jiku.shared.EventCancellationNotice
 import com.jiku.shared.GuestInvitedEvent
+import com.jiku.shared.MessageLanguage
 import com.jiku.shared.ReminderChannel
 import com.jiku.shared.ReminderDue
 import com.jiku.shared.TicketConfirmedNotice
 import org.springframework.stereotype.Service
 import java.time.ZoneId
 import java.util.UUID
+
+/** An invitation sent by WhatsApp that the guest may answer in the chat (JIKU-143). */
+data class WhatsAppThreadStart(
+    val invitationId: UUID,
+    val tenantId: String,
+    val language: String,
+)
 
 /** The outcome of attempting to deliver a notification. */
 data class DeliveryOutcome(
@@ -37,6 +45,8 @@ class NotificationService(
     private val costTracker: WhatsAppCostTracker,
     private val smsSender: SmsSender,
     private val catalog: MessageCatalog,
+    private val threads: WhatsAppThreadRepository,
+    private val optOuts: WhatsAppOptOutRepository,
 ) {
     fun deliverInvitation(event: GuestInvitedEvent): DeliveryOutcome =
         deliverWithRetry(sendAction(event)) { status, attempt, error ->
@@ -49,13 +59,43 @@ class NotificationService(
         }
 
     /**
-     * A confirmed guest's ticket by email (JIKU-129), with a calendar invite
-     * attached when the event has a date. Logged against the guest.
+     * A confirmed guest's ticket (JIKU-129): by email with a calendar invite
+     * attached when the event has a date, or in the guest's WhatsApp chat with
+     * its QR code when they answered there (JIKU-143). Logged against the guest.
      */
-    fun deliverTicketConfirmation(notice: TicketConfirmedNotice): DeliveryOutcome =
-        deliverWithRetry(ticketEmail(notice)) { status, attempt, error ->
-            record(notice.guestId, GuestInvitedEvent.CHANNEL_EMAIL, notice.recipient, status, attempt, error)
+    fun deliverTicketConfirmation(notice: TicketConfirmedNotice): DeliveryOutcome {
+        val send =
+            if (notice.channel == GuestInvitedEvent.CHANNEL_WHATSAPP) ticketWhatsApp(notice, null) else ticketEmail(notice)
+        return deliverWithRetry(send) { status, attempt, error ->
+            record(notice.guestId, notice.channel, notice.recipient, status, attempt, error)
         }
+    }
+
+    /** The ticket in WhatsApp, its QR code as the image; [invitationId] records the thread when it opens one. */
+    private fun ticketWhatsApp(
+        notice: TicketConfirmedNotice,
+        invitationId: UUID?,
+    ): () -> Unit {
+        val text =
+            whatsAppRenderer.renderTicket(
+                WhatsAppInvitation(
+                    recipientPhone = notice.recipient,
+                    recipientName = notice.recipientName,
+                    eventName = notice.eventName,
+                    eventWhen = notice.eventStart?.let { MessageLanguage.formatEventStart(it, notice.eventTimezone, notice.language) },
+                    organizerName = notice.organizerName,
+                    invitationUrl = notice.ticketUrl,
+                ),
+                notice.language,
+            )
+        val thread = invitationId?.let { WhatsAppThreadStart(it, notice.tenantId, notice.language) }
+        return whatsApp(
+            WhatsAppMessage(to = notice.recipient, body = text, imageUrl = notice.qrImageUrl),
+            invitationId ?: notice.guestId,
+            notice.eventId,
+            thread,
+        )
+    }
 
     /** The ticket email, with the calendar invite attached when the event has a date. */
     private fun ticketEmail(notice: TicketConfirmedNotice): () -> Unit {
@@ -117,7 +157,14 @@ class NotificationService(
         channel: ReminderChannel,
         text: String,
     ): DeliveryOutcome {
-        val byWhatsApp = { deliverLogged(referenceId, ReminderChannel.WHATSAPP, phone, whatsApp(phone, text, referenceId, null)) }
+        val byWhatsApp = {
+            deliverLogged(
+                referenceId,
+                ReminderChannel.WHATSAPP,
+                phone,
+                whatsApp(WhatsAppMessage(phone, text), referenceId, null),
+            )
+        }
         val bySms = { deliverLogged(referenceId, ReminderChannel.SMS, phone, sms(phone, text)) }
         return when (channel) {
             ReminderChannel.WHATSAPP -> byWhatsApp()
@@ -150,20 +197,29 @@ class NotificationService(
         )
     }
 
-    /** One WhatsApp send with its guardrails: content class, conversation budget, cost record. */
+    /**
+     * One WhatsApp send with its guardrails: the recipient's STOP (JIKU-143),
+     * content class, conversation budget, cost record. When [thread] is given,
+     * the send is remembered so the guest's replies find their invitation.
+     */
     private fun whatsApp(
-        to: String,
-        text: String,
+        message: WhatsAppMessage,
         referenceId: UUID,
         eventId: UUID?,
+        thread: WhatsAppThreadStart? = null,
     ): () -> Unit =
         {
+            val phone = whatsAppDigits(message.to)
+            if (optOuts.existsById(phone)) {
+                throw WhatsAppOptedOutException("${message.to} wrote STOP: nothing more is sent to it by WhatsApp")
+            }
             val resolved = providers.whatsApp()
-            val category = contentGuard.classify(text)
+            val category = contentGuard.classify(message.body)
             contentGuard.assertAllowed(category)
             conversationCounter.assertWithinBudget(resolved.tenantOverride)
-            resolved.sender.send(WhatsAppMessage(to = to, body = text))
+            resolved.sender.send(message)
             costTracker.record(referenceId, eventId, resolved.tenantOverride, category)
+            thread?.let { threads.save(WhatsAppThread(it.invitationId, it.tenantId, phone, it.language)) }
         }
 
     private fun email(message: EmailMessage): () -> Unit =
@@ -198,6 +254,11 @@ class NotificationService(
                 // routing daily caps (JIKU-62) — queued until tomorrow's reset.
                 record(NotificationLog.STATUS_QUEUED, attempt, ex.message)
                 return DeliveryOutcome(delivered = false, attempts = attempt, error = null, queued = true)
+            } catch (ex: WhatsAppOptedOutException) {
+                // The recipient asked for silence: retrying would only ask again.
+                lastError = ex.message
+                record(NotificationLog.STATUS_FAILED, attempt, lastError)
+                return DeliveryOutcome(delivered = false, attempts = attempt, error = lastError)
             } catch (ex: WhatsAppContentPolicyException) {
                 // A human decision is required (fix the content or enable the
                 // override) — retrying automatically would just repeat the block.
@@ -224,21 +285,7 @@ class NotificationService(
     ): () -> Unit =
         when (event.channel) {
             GuestInvitedEvent.CHANNEL_EMAIL -> ticketEmail(ticket)
-            GuestInvitedEvent.CHANNEL_WHATSAPP -> {
-                val text =
-                    whatsAppRenderer.renderTicket(
-                        WhatsAppInvitation(
-                            recipientPhone = event.recipient,
-                            recipientName = event.recipientName,
-                            eventName = event.eventName,
-                            eventWhen = event.eventWhen,
-                            organizerName = event.organizerName,
-                            invitationUrl = ticket.ticketUrl,
-                        ),
-                        event.language,
-                    )
-                whatsApp(event.recipient, text, event.invitationId, event.eventId)
-            }
+            GuestInvitedEvent.CHANNEL_WHATSAPP -> ticketWhatsApp(ticket, event.invitationId)
 
             else -> throw IllegalArgumentException("Unsupported channel: ${event.channel}")
         }
@@ -284,11 +331,27 @@ class NotificationService(
                         ),
                         event.language,
                     )
-                whatsApp(event.recipient, text, event.invitationId, event.eventId)
+                val buttons = if (event.interactive) replyButtons(event.invitationId, event.language) else emptyList()
+                whatsApp(
+                    WhatsAppMessage(to = event.recipient, body = text, buttons = buttons),
+                    event.invitationId,
+                    event.eventId,
+                    WhatsAppThreadStart(event.invitationId, event.tenantId, event.language),
+                )
             }
 
             else -> throw IllegalArgumentException("Unsupported channel: ${event.channel}")
         }
+
+    /** Accept and decline, each carrying the invitation it answers (JIKU-143). */
+    private fun replyButtons(
+        invitationId: UUID,
+        language: String,
+    ): List<WhatsAppButton> =
+        listOf(
+            WhatsAppButton(WhatsAppReplyPayload.accept(invitationId), catalog.text(language, "whatsapp.button.accept")),
+            WhatsAppButton(WhatsAppReplyPayload.decline(invitationId), catalog.text(language, "whatsapp.button.decline")),
+        )
 
     private fun cancellationSendAction(notice: EventCancellationNotice): () -> Unit =
         when (notice.channel) {
@@ -329,7 +392,7 @@ class NotificationService(
                         ),
                         notice.language,
                     )
-                whatsApp(notice.recipient, text, notice.invitationId, notice.eventId)
+                whatsApp(WhatsAppMessage(notice.recipient, text), notice.invitationId, notice.eventId)
             }
 
             else -> throw IllegalArgumentException("Unsupported channel: ${notice.channel}")

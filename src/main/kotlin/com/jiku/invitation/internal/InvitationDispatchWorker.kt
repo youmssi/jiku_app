@@ -100,6 +100,7 @@ class InvitationDispatchWorker(
                 invitationUrl = ticket?.ticketUrl ?: "${properties.appBaseUrl}/invitation/$token",
                 language = language,
                 ticket = ticket,
+                interactive = event?.deliveryMode == DeliveryMode.INTERACTIVE && channelName == GuestInvitedEvent.CHANNEL_WHATSAPP,
             ),
         )
     }
