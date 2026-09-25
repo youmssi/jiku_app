@@ -1,5 +1,6 @@
 package com.jiku.messaging.internal
 
+import com.jiku.shared.TenantTransaction
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -23,13 +24,16 @@ import javax.crypto.spec.SecretKeySpec
  * field. The GET answers Meta's registration check with the verify token; each
  * POST is authenticated by Meta's signature over the raw body with the app
  * secret. A verified call is always acknowledged, even when nothing in it is
- * ours, so Meta does not retry it.
+ * ours, so Meta does not retry it. A message to an organization's own number
+ * (ADR 105) is handled for that organization and answered from its number.
  */
 @RestController
 @RequestMapping("/whatsapp/webhook")
 class WhatsAppWebhookController(
     private val properties: WhatsAppProperties,
     private val inbound: WhatsAppInboundService,
+    private val numbers: WhatsAppBusinessNumberRepository,
+    private val tenantTransaction: TenantTransaction,
     private val objectMapper: ObjectMapper,
 ) {
     private val log = LoggerFactory.getLogger(WhatsAppWebhookController::class.java)
@@ -62,7 +66,12 @@ class WhatsAppWebhookController(
         }
         for (message in WhatsAppWebhookParser.messages(objectMapper.readTree(rawBody))) {
             try {
-                inbound.handle(message)
+                val tenantId = message.businessNumberId?.let { numbers.findById(it).orElse(null) }?.tenantId
+                if (tenantId == null) {
+                    inbound.handle(message)
+                } else {
+                    tenantTransaction.run(tenantId) { inbound.handle(message, tenantId) }
+                }
             } catch (ex: RuntimeException) {
                 log.warn("WhatsApp reply from {} could not be handled", message.from, ex)
             }
@@ -93,11 +102,15 @@ object MetaWebhookSignature {
     }
 }
 
-/** What a guest sent: a tapped button's id, or text. [from] is the number, digits only. */
+/**
+ * What a guest sent: a tapped button's id, or text. [from] is the number,
+ * digits only; [businessNumberId] is the Meta id of the number it was sent to.
+ */
 data class InboundWhatsApp(
     val from: String,
     val buttonId: String? = null,
     val text: String? = null,
+    val businessNumberId: String? = null,
 )
 
 /**
@@ -110,7 +123,9 @@ object WhatsAppWebhookParser {
     fun messages(root: JsonNode): List<InboundWhatsApp> =
         root.path("entry").flatMap { entry ->
             entry.path("changes").flatMap { change ->
-                change.path("value").path("messages").mapNotNull(::message)
+                val value = change.path("value")
+                val businessNumberId = value.path("metadata").path("phone_number_id").textOrNull()
+                value.path("messages").mapNotNull { message(it)?.copy(businessNumberId = businessNumberId) }
             }
         }
 

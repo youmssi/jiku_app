@@ -33,6 +33,11 @@ class WhatsAppThread(
 
 interface WhatsAppThreadRepository : JpaRepository<WhatsAppThread, UUID> {
     fun findFirstByPhoneOrderBySentAtDesc(phone: String): WhatsAppThread?
+
+    fun findFirstByPhoneAndTenantIdOrderBySentAtDesc(
+        phone: String,
+        tenantId: String,
+    ): WhatsAppThread?
 }
 
 /** A number that wrote STOP (JIKU-143): nothing more goes to it by WhatsApp until it writes START. */

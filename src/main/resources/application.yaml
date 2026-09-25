@@ -44,6 +44,11 @@ jiku:
       # Blank refuses every call.
       app-secret: ${WHATSAPP_META_APP_SECRET:}
       verify-token: ${WHATSAPP_META_VERIFY_TOKEN:}
+      # Embedded Signup (ADR 105): the Meta app organizations connect their own
+      # number to, and the signup configuration made for it in Meta. The app
+      # secret above also exchanges the signup code. Blank keeps it off.
+      app-id: ${WHATSAPP_META_APP_ID:}
+      embedded-signup-config-id: ${WHATSAPP_META_EMBEDDED_SIGNUP_CONFIG_ID:}
     # Cost/quota/category guardrails (JIKU-61).
     conversation-safety-threshold: ${WHATSAPP_CONVERSATION_SAFETY_THRESHOLD:220}
     usd-to-gnf-rate: ${WHATSAPP_USD_TO_GNF_RATE:8760}

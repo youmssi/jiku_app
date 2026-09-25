@@ -91,6 +91,8 @@ class MessagingProviderResolver(
                         baseUrl = metaBaseUrl,
                         templateName = credentials.templateName?.takeIf { it.isNotBlank() },
                         templateLanguage = credentials.templateLanguage,
+                        buttonsTemplateName = credentials.buttonsTemplateName?.takeIf { it.isNotBlank() },
+                        imageTemplateName = credentials.imageTemplateName?.takeIf { it.isNotBlank() },
                     )
                 CacheEntry(row.credentials, sender, from = null)
             }
