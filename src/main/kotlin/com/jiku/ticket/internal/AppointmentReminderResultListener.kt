@@ -1,10 +1,9 @@
 package com.jiku.ticket.internal
 
 import com.jiku.shared.ReminderDelivered
-import com.jiku.shared.TenantContext
+import com.jiku.shared.TenantTransaction
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 
 /**
@@ -15,15 +14,13 @@ import java.time.Instant
  */
 @Component
 class AppointmentReminderResultListener(
+    private val tenantTransaction: TenantTransaction,
     private val reminders: AppointmentReminderRepository,
 ) {
     @EventListener
-    @Transactional
     fun onReminderDelivered(event: ReminderDelivered) {
-        val previous = TenantContext.get()
-        TenantContext.set(event.tenantId)
-        try {
-            val row = reminders.findById(event.reminderId).orElse(null) ?: return
+        tenantTransaction.run(event.tenantId) {
+            val row = reminders.findById(event.reminderId).orElse(null) ?: return@run
             row.attempts = event.attempts
             when {
                 event.delivered -> {
@@ -37,8 +34,6 @@ class AppointmentReminderResultListener(
                     row.error = event.error?.take(500)
                 }
             }
-        } finally {
-            if (previous == null) TenantContext.clear() else TenantContext.set(previous)
         }
     }
 }
