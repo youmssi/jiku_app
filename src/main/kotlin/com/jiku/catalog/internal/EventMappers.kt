@@ -1,5 +1,6 @@
 package com.jiku.catalog.internal
 
+import com.jiku.catalog.EventBrand
 import com.jiku.catalog.EventInfo
 
 fun Event.toResponse(): EventResponse =
@@ -20,6 +21,9 @@ fun Event.toResponse(): EventResponse =
                 overbookingAllowed = settings.overbookingAllowed,
                 maxOverbookingCount = settings.maxOverbookingCount,
                 deliveryMode = settings.deliveryMode,
+                brandName = settings.brandName,
+                brandLogoUrl = settings.brandLogoUrl,
+                brandColor = settings.brandColor,
             ),
         invitationChannels = invitationChannels.toSet(),
         // Null quand aucun quorum n'est configuré, ce qui est le cas de la
@@ -50,6 +54,7 @@ fun Event.toEventInfo(): EventInfo =
         transferDeadline = settings.transferDeadline,
         invitationChannels = invitationChannels.toSet(),
         deliveryMode = settings.deliveryMode,
+        brand = EventBrand(settings.brandName, settings.brandLogoUrl, settings.brandColor),
     )
 
 fun EventSettingsDto.toEmbeddable(): EventSettings =
@@ -59,4 +64,7 @@ fun EventSettingsDto.toEmbeddable(): EventSettings =
         overbookingAllowed = overbookingAllowed,
         maxOverbookingCount = maxOverbookingCount,
         deliveryMode = deliveryMode,
+        brandName = brandName?.trim()?.takeIf { it.isNotEmpty() },
+        brandLogoUrl = brandLogoUrl?.trim()?.takeIf { it.isNotEmpty() },
+        brandColor = brandColor?.takeIf { it.isNotEmpty() },
     )
