@@ -38,5 +38,16 @@ data class WhatsAppProperties(
         /** Approved template for business-initiated sends; blank sends plain text. */
         val templateName: String = "",
         val templateLanguage: String = "fr",
+        /**
+         * Approved template with two quick-reply buttons (accept, decline) for
+         * interactive invitations (JIKU-143); blank sends session reply buttons.
+         */
+        val buttonsTemplateName: String = "",
+        /** Approved template with an image header, for the ticket and its QR code (JIKU-143); blank sends a session image. */
+        val imageTemplateName: String = "",
+        /** The Meta app secret that signs inbound webhook calls (JIKU-143); blank refuses every call. */
+        val appSecret: String = "",
+        /** The token Meta echoes when the webhook is registered (JIKU-143); blank refuses registration. */
+        val verifyToken: String = "",
     )
 }

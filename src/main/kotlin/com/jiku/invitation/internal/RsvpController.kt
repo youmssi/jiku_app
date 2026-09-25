@@ -4,7 +4,10 @@ import com.jiku.shared.TenantAccessGate
 import com.jiku.shared.TenantContext
 import io.jsonwebtoken.Claims
 import jakarta.validation.Valid
+import org.springframework.http.CacheControl
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
+import java.time.Duration
 import java.util.UUID
 
 /**
@@ -47,6 +51,23 @@ class RsvpController(
             rsvpService.view(guestId)
         }
 
+    /**
+     * The ticket's QR code as a PNG (JIKU-143), the image of the WhatsApp ticket
+     * message: Meta fetches it by URL. Only a guest holding a ticket has one.
+     */
+    @GetMapping("/{token}/qr.png", produces = [MediaType.IMAGE_PNG_VALUE])
+    fun qrCode(
+        @PathVariable token: String,
+    ): ResponseEntity<ByteArray> {
+        val code =
+            withTokenContext(token) { guestId, _ -> rsvpService.view(guestId).ticketCode }
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "No ticket for this invitation")
+        return ResponseEntity
+            .ok()
+            .cacheControl(CacheControl.maxAge(Duration.ofHours(1)).cachePrivate())
+            .body(QrCodeImage.png(code))
+    }
+
     @PostMapping("/{token}/confirm")
     fun confirm(
         @PathVariable token: String,
@@ -75,10 +96,10 @@ class RsvpController(
             view
         }
 
-    private fun withTokenContext(
+    private fun <T> withTokenContext(
         token: String,
-        block: (UUID, UUID) -> RsvpView,
-    ): RsvpView {
+        block: (UUID, UUID) -> T,
+    ): T {
         val claims = parse(token)
         if (claims[InvitationTokenService.CLAIM_TYPE] != InvitationTokenService.TOKEN_TYPE) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "This invitation link is invalid")

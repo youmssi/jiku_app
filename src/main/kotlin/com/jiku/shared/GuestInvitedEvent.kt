@@ -33,6 +33,11 @@ data class GuestInvitedEvent(
      * confirmed and receives the ticket itself instead of an invitation.
      */
     val ticket: TicketConfirmedNotice? = null,
+    /**
+     * The guest answers from the chat (ADR 105, INTERACTIVE mode): a WhatsApp
+     * invitation then carries accept and decline buttons.
+     */
+    val interactive: Boolean = false,
 ) {
     companion object {
         const val CHANNEL_EMAIL = "EMAIL"

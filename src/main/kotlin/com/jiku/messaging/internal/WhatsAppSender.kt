@@ -4,6 +4,16 @@ package com.jiku.messaging.internal
 data class WhatsAppMessage(
     val to: String,
     val body: String,
+    /** Quick-reply buttons under the text (JIKU-143); a tap comes back through the webhook with the button's id. */
+    val buttons: List<WhatsAppButton> = emptyList(),
+    /** A public PNG or JPEG shown above the text, such as a ticket's QR code (JIKU-143). */
+    val imageUrl: String? = null,
+)
+
+/** One quick-reply button: [id] is what the webhook receives, [title] what the guest sees (20 characters at most). */
+data class WhatsAppButton(
+    val id: String,
+    val title: String,
 )
 
 /**
