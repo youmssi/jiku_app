@@ -85,6 +85,15 @@ class EventPricingFlowTest {
         billingModuleApi.adminConfirmManualPayment(UUID.fromString(JsonPath.read(bronze, "$.paymentId")))
         setMode(token, eventId, "INTERACTIVE")
 
+        api
+            .get(token, "/api/v1/events/$eventId/billing/quotes")
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].tier").value("BRONZE"))
+            .andExpect(jsonPath("$[0].amountMinor").value(300 * 150))
+            .andExpect(jsonPath("$[0].surchargeMinor").value(300 * 150))
+            .andExpect(jsonPath("$[1].tier").value("ARGENT"))
+            .andExpect(jsonPath("$[1].amountMinor").value(375_000 - 225_000 + 600 * 150))
+
         val surcharge = requestTier(token, eventId, "BRONZE")
         assertEquals(300 * 150, JsonPath.read<Int>(surcharge, "$.amountMinor"))
         billingModuleApi.adminConfirmManualPayment(UUID.fromString(JsonPath.read(surcharge, "$.paymentId")))
@@ -117,6 +126,13 @@ class EventPricingFlowTest {
         val bronze = requestTier(token, eventId, "BRONZE")
         assertEquals(225_000, JsonPath.read<Int>(bronze, "$.amountMinor"))
         billingModuleApi.adminConfirmManualPayment(UUID.fromString(JsonPath.read(bronze, "$.paymentId")))
+
+        api
+            .get(token, "/api/v1/events/$eventId/billing/quotes")
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].tier").value("ARGENT"))
+            .andExpect(jsonPath("$[0].amountMinor").value(375_000 - 225_000))
+            .andExpect(jsonPath("$[0].interactive").value(false))
 
         val argent = requestTier(token, eventId, "ARGENT")
         assertEquals(375_000 - 225_000, JsonPath.read<Int>(argent, "$.amountMinor"))

@@ -6832,6 +6832,40 @@
         }
       }
     },
+    "/api/v1/events/{eventId}/billing/quotes" : {
+      "get" : {
+        "tags" : [
+          "event-tier-quotes-controller"
+        ],
+        "operationId" : "quotes",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/EventTierQuote"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/events/{eventId}/attendance/register" : {
       "get" : {
         "tags" : [
@@ -13110,6 +13144,32 @@
               "string",
               "null"
             ]
+          }
+        }
+      },
+      "EventTierQuote" : {
+        "type" : "object",
+        "properties" : {
+          "tier" : {
+            "type" : "string"
+          },
+          "maxGuests" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "amountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "surchargeMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "interactive" : {
+            "type" : "boolean"
           }
         }
       },
