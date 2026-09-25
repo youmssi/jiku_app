@@ -9570,19 +9570,64 @@
           }
         }
       },
+      "PriceList" : {
+        "type" : "object",
+        "properties" : {
+          "gnf" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "fcfa" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "usdCents" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
       "SubscriptionPlanOption" : {
         "type" : "object",
         "properties" : {
           "name" : {
             "type" : "string"
           },
-          "maxResources" : {
+          "includedPeople" : {
             "type" : "integer",
             "format" : "int64"
           },
+          "maxPeople" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
+          },
+          "monthly" : {
+            "$ref" : "#/components/schemas/PriceList"
+          },
+          "extraPerson" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/PriceList"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          },
+          "maxResources" : {
+            "type" : "integer",
+            "format" : "int64",
+            "deprecated" : true,
+            "description" : "Use maxPeople and includedPeople"
+          },
           "priceMinorPerMonth" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "deprecated" : true,
+            "description" : "Use monthly"
           }
         }
       },
@@ -13213,9 +13258,15 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "factorMilli" : {
+          "chargedMonths" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "factorMilli" : {
+            "type" : "integer",
+            "format" : "int32",
+            "deprecated" : true,
+            "description" : "Use chargedMonths"
           }
         }
       },
@@ -13225,13 +13276,46 @@
           "name" : {
             "type" : "string"
           },
-          "maxResources" : {
+          "includedPeople" : {
             "type" : "integer",
             "format" : "int64"
           },
-          "priceMinorPerMonth" : {
+          "maxPeople" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
+          },
+          "monthlyMinor" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "extraPersonMinor" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
+          },
+          "teamMonthlyMinor" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
+          },
+          "maxResources" : {
+            "type" : "integer",
+            "format" : "int64",
+            "deprecated" : true,
+            "description" : "Use maxPeople and includedPeople"
+          },
+          "priceMinorPerMonth" : {
+            "type" : "integer",
+            "format" : "int64",
+            "deprecated" : true,
+            "description" : "Use monthlyMinor"
           }
         }
       },
@@ -13239,6 +13323,9 @@
         "type" : "object",
         "properties" : {
           "plan" : {
+            "type" : "string"
+          },
+          "currency" : {
             "type" : "string"
           },
           "resourcesActive" : {
@@ -13260,7 +13347,10 @@
             "format" : "date-time"
           },
           "expiresAt" : {
-            "type" : "string",
+            "type" : [
+              "string",
+              "null"
+            ],
             "format" : "date-time"
           },
           "suspensionAt" : {
@@ -13269,6 +13359,10 @@
               "null"
             ],
             "format" : "date-time"
+          },
+          "monthlyMinor" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "plans" : {
             "type" : "array",

@@ -25,24 +25,26 @@ enum class SubscriptionStatus {
 }
 
 /**
- * Abonnement prépayé par ressource active d'un tenant (JIKU-90), une ligne par
- * tenant. La formule et son plafond sont un instantané du dernier engagement ;
- * resources_active est la photo du nombre de ressources actives, tenue à jour par
- * les événements ResourceCountChanged du module catalog.
+ * A tenant's services subscription (JIKU-90, priced per team since ADR 105), one
+ * row per tenant. The plan and its cap are a snapshot of the last commitment;
+ * resources_active counts the people who serve clients, kept current by the
+ * catalog module's ResourceCountChanged events.
  */
 @Entity
 @Table(name = "subscription")
 class Subscription(
     @Column(name = "plan", nullable = false, length = 32)
     var plan: String,
-    @Column(name = "resource_limit", nullable = false)
-    var resourceLimit: Long,
+    /** Most people the plan allows; null when it has no cap. */
+    @Column(name = "resource_limit")
+    var resourceLimit: Long?,
     @Column(name = "resources_active", nullable = false)
     var resourcesActive: Long,
     @Column(name = "started_at", nullable = false, updatable = false)
     val startedAt: Instant,
-    @Column(name = "expires_at", nullable = false)
-    var expiresAt: Instant,
+    /** End of the paid period; null while a free plan covers the team. */
+    @Column(name = "expires_at")
+    var expiresAt: Instant?,
 ) : BaseTenantEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

@@ -23,10 +23,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Abonnement prépayé par ressource active (JIKU-90). Couvre le DoD : le cycle
- * complet expiration → grâce → suspension → réactivation, le signalement de
- * dépassement sans blocage immédiat, la matérialisation à la première ressource
- * active et la demande de prépaiement idempotente sur le circuit manuel.
+ * Services subscription priced per team (JIKU-90, ADR 105): the first person
+ * opens a free Solo plan that never expires, places and equipment do not count,
+ * outgrowing Solo opens a window to choose a paid plan, a team plan is priced
+ * for its size, and the expiry → grace → suspension → reactivation cycle holds.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -48,40 +48,50 @@ class SubscriptionFlowTest {
     fun clearContext() = TenantContext.clear()
 
     @Test
-    fun `first active resource opens a subscription that signals over-limit without blocking`() {
+    fun `one person is free for good, a second opens the window to choose a team plan`() {
         val token = register("Solo Org", uniqueEmail())
-        val tenantId = currentTenantId(token)
 
-        // La première ressource active matérialise un abonnement Solo (1 ressource).
         createResource(token)
-        val first = subscriptionJson(token)
-        assertEquals("Solo", JsonPath.read<String>(first, "$.plan"))
-        assertEquals(1, JsonPath.read<Int>(first, "$.resourcesIncluded"))
-        assertEquals(1, JsonPath.read<Int>(first, "$.resourcesActive"))
-        assertEquals(false, JsonPath.read<Boolean>(first, "$.overLimit"))
+        createResource(token, type = "LOCATION")
+        val solo = subscriptionJson(token)
+        assertEquals("Solo", JsonPath.read<String>(solo, "$.plan"))
+        assertEquals("GNF", JsonPath.read<String>(solo, "$.currency"))
+        assertEquals(1, JsonPath.read<Int>(solo, "$.resourcesActive"), "a place is not a person who serves")
+        assertEquals(0, JsonPath.read<Int>(solo, "$.monthlyMinor"))
+        assertEquals(null, JsonPath.read<String?>(solo, "$.expiresAt"), "a free plan never ends")
+        assertEquals(false, JsonPath.read<Boolean>(solo, "$.overLimit"))
 
-        // Racheter Équipe (jusqu'à 5 ressources) puis dépasser : signalé, jamais bloqué.
-        requestAndConfirm(token, plan = "Équipe", months = 1)
-        repeat(5) { createResource(token) }
-        val after = subscriptionJson(token)
-        assertEquals(6, JsonPath.read<Int>(after, "$.resourcesActive"))
-        assertEquals(5, JsonPath.read<Int>(after, "$.resourcesIncluded"))
-        assertEquals(true, JsonPath.read<Boolean>(after, "$.overLimit"))
-        assertEquals("ACTIVE", JsonPath.read<String>(after, "$.status"))
+        createResource(token)
+        val outgrown = subscriptionJson(token)
+        assertEquals(true, JsonPath.read<Boolean>(outgrown, "$.overLimit"))
+        assertTrue(JsonPath.read<String?>(outgrown, "$.expiresAt") != null, "outgrowing Solo starts the window to choose")
+        assertEquals(150_000, JsonPath.read<List<Int>>(outgrown, "$.plans[?(@.name == 'Teams')].teamMonthlyMinor").single())
 
-        TenantContext.set(tenantId)
-        val row = subscriptions.findCurrent().single()
-        assertTrue(row.resourcesActive == 6L && row.resourceLimit == 5L)
-        TenantContext.clear()
+        requestAndConfirm(token, plan = "Teams", months = 1)
+        createResource(token)
+        val teams = subscriptionJson(token)
+        assertEquals("Teams", JsonPath.read<String>(teams, "$.plan"))
+        assertEquals(false, JsonPath.read<Boolean>(teams, "$.overLimit"))
+        assertEquals(200_000, JsonPath.read<Int>(teams, "$.monthlyMinor"), "150 000 for two people, 50 000 for the third")
+    }
+
+    @Test
+    fun `a free plan cannot be bought and Solo Plus cannot hold a team`() {
+        val token = register("Free Org", uniqueEmail())
+        createResource(token)
+        createResource(token)
+
+        requestSubscription(token, plan = "Solo", months = 1, expected = 400)
+        requestSubscription(token, plan = "Solo Plus", months = 1, expected = 409)
+        requestSubscription(token, plan = "Teams", months = 3, expected = 400)
     }
 
     @Test
     fun `expiry leads to grace then suspension then reactivation on payment`() {
         val token = register("Cycle Org", uniqueEmail())
         val tenantId = currentTenantId(token)
-        createResource(token)
+        repeat(2) { createResource(token) }
 
-        // J-7 : l'échéance approche, le préavis part une seule fois.
         forceExpiry(tenantId, Instant.now().plusSeconds(86400))
         expiryJob.sweep()
         TenantContext.set(tenantId)
@@ -89,21 +99,18 @@ class SubscriptionFlowTest {
         assertTrue(noticed.expiryNoticeSent)
         TenantContext.clear()
 
-        // Demande de prépaiement Équipe 3 mois (ouverte pendant la période active).
-        val requested = requestSubscription(token, plan = "Équipe", months = 3)
+        val requested = requestSubscription(token, plan = "Teams", months = 12)
         val paymentId = JsonPath.read<String>(requested, "$.paymentId")
-        assertEquals(712_500, JsonPath.read<Int>(requested, "$.amountMinor"))
-        val again = requestSubscription(token, plan = "Équipe", months = 3)
+        assertEquals(1_500_000, JsonPath.read<Int>(requested, "$.amountMinor"), "a year of Teams charges ten months")
+        val again = requestSubscription(token, plan = "Teams", months = 12)
         assertEquals(paymentId, JsonPath.read<String>(again, "$.paymentId"))
 
-        // Échéance atteinte → grâce : l'organisateur reste joignable, non suspendu.
         forceExpiry(tenantId, Instant.now().minusSeconds(60))
         expiryJob.sweep()
         val inGrace = subscriptionJson(token)
         assertEquals("GRACE", JsonPath.read<String>(inGrace, "$.status"))
         assertTrue(JsonPath.read<String>(inGrace, "$.suspensionAt") != null)
 
-        // Fin de grâce → expiration et suspension par le kill-switch.
         forceExpiry(tenantId, Instant.now().minusSeconds(3L * 86400))
         expiryJob.sweep()
         TenantContext.set(tenantId)
@@ -113,12 +120,11 @@ class SubscriptionFlowTest {
             .perform(get("/api/v1/billing/subscription").header("Authorization", "Bearer $token"))
             .andExpect(status().is4xxClientError())
 
-        // La confirmation du paiement réactive immédiatement (et lève la suspension).
         billingModuleApi.adminConfirmManualPayment(UUID.fromString(paymentId))
         val reactivated = subscriptionJson(token)
         assertEquals("ACTIVE", JsonPath.read<String>(reactivated, "$.status"))
-        assertEquals("Équipe", JsonPath.read<String>(reactivated, "$.plan"))
-        assertEquals(5, JsonPath.read<Int>(reactivated, "$.resourcesIncluded"))
+        assertEquals("Teams", JsonPath.read<String>(reactivated, "$.plan"))
+        assertEquals(2, JsonPath.read<Int>(reactivated, "$.resourcesIncluded"))
         assertTrue(JsonPath.read<String>(reactivated, "$.expiresAt") > JsonPath.read<String>(reactivated, "$.startedAt"))
     }
 
@@ -148,6 +154,7 @@ class SubscriptionFlowTest {
         token: String,
         plan: String,
         months: Int,
+        expected: Int = 200,
     ): String =
         mockMvc
             .perform(
@@ -155,7 +162,7 @@ class SubscriptionFlowTest {
                     .header("Authorization", "Bearer $token")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"plan":"$plan","months":$months}"""),
-            ).andExpect(status().isOk())
+            ).andExpect(status().`is`(expected))
             .andReturn()
             .response
             .contentAsString
@@ -170,13 +177,16 @@ class SubscriptionFlowTest {
         billingModuleApi.adminConfirmManualPayment(UUID.fromString(paymentId))
     }
 
-    private fun createResource(token: String) {
+    private fun createResource(
+        token: String,
+        type: String = "PERSON",
+    ) {
         mockMvc
             .perform(
                 post("/api/v1/resources")
                     .header("Authorization", "Bearer $token")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content("""{"name":"Poste ${UUID.randomUUID()}","type":"PERSON","timezone":"Africa/Conakry"}"""),
+                    .content("""{"name":"Poste ${UUID.randomUUID()}","type":"$type","timezone":"Africa/Conakry"}"""),
             ).andExpect(status().is2xxSuccessful())
     }
 
