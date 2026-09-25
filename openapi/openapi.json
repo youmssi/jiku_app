@@ -9503,9 +9503,14 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "price" : {
+            "$ref" : "#/components/schemas/PriceList"
+          },
           "priceMinor" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "deprecated" : true,
+            "description" : "Use price"
           }
         }
       },
@@ -13191,13 +13196,21 @@
       "CustomTierOption" : {
         "type" : "object",
         "properties" : {
-          "perGuestUsdCents" : {
+          "beyondPerGuestMinor" : {
             "type" : "integer",
             "format" : "int64"
           },
+          "perGuestUsdCents" : {
+            "type" : "integer",
+            "format" : "int64",
+            "deprecated" : true,
+            "description" : "Use beyondPerGuestMinor"
+          },
           "setupFeeUsdCents" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "deprecated" : true,
+            "description" : "There is no setup fee since ADR 105; always 0"
           }
         }
       },
@@ -13248,6 +13261,9 @@
           "priceMinor" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "currency" : {
+            "type" : "string"
           }
         }
       },

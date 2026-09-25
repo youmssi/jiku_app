@@ -1,13 +1,13 @@
 package com.jiku.money.internal
 
+import com.jiku.money.PriceList
 import org.springframework.boot.context.properties.ConfigurationProperties
 import java.time.Duration
 
 /**
- * Pricing configuration (JIKU-32, regraded to the Guinea market grid in JIKU-53).
- * The free-tier allowance and the paid tiers are configuration, not literals
- * scattered through the code, so pricing changes without a code change. Tiers are
- * consumed here for naming and by the payment flow (JIKU-33) for amounts.
+ * Event pricing (JIKU-32, re-based in ADR 105). The free allowance, the fixed
+ * tiers and the per-guest price beyond the last tier are configuration, each
+ * price set in GNF, FCFA and USD, so pricing changes without a code change.
  */
 @ConfigurationProperties(prefix = "billing")
 data class BillingProperties(
@@ -21,44 +21,22 @@ data class BillingProperties(
      * "rolling 12 months".
      */
     val freeTierWindow: Duration = Duration.ofDays(365),
-    /** ISO-4217 currency the paid tiers are priced in. GNF has no minor unit. */
-    val currency: String = "GNF",
     /** Fixed-price paid tiers, ascending by allowance. Each unlocks up to [Tier.maxGuests]. */
     val tiers: List<Tier> =
         listOf(
-            Tier(name = "BRONZE", maxGuests = 300, priceMinor = 150_000),
-            Tier(name = "ARGENT", maxGuests = 600, priceMinor = 300_000),
-            Tier(name = "OR", maxGuests = 1_000, priceMinor = 500_000),
+            Tier(name = "BRONZE", maxGuests = 300, price = PriceList(225_000, 15_000, 2_500)),
+            Tier(name = "ARGENT", maxGuests = 600, price = PriceList(375_000, 25_000, 4_500)),
+            Tier(name = "OR", maxGuests = 1_000, price = PriceList(600_000, 40_000, 7_000)),
         ),
-    /** Pricing for usage beyond the last fixed [tiers] entry — see [CustomTierPricing]. */
-    val custom: CustomTierPricing = CustomTierPricing(),
+    /** Price of each guest beyond the last fixed tier, added to that tier's price. */
+    val beyondPerGuest: PriceList = PriceList(500, 35, 6),
 ) {
     data class Tier(
         val name: String,
         /** Inclusive upper bound of invited guests this tier unlocks. */
         val maxGuests: Long,
-        /** Price in [currency]'s minor unit (GNF has none, so this is the full amount). */
-        val priceMinor: Long,
+        val price: PriceList,
     )
-
-    /**
-     * CUSTOM tier pricing: open-ended usage beyond the last fixed [Tier], so it
-     * cannot be a flat price. Quoted in USD cents (the market's source pricing
-     * unit) and converted through a configurable rate — both the dollar amounts
-     * and the exchange rate move independently of a release, so neither is a
-     * literal.
-     */
-    data class CustomTierPricing(
-        val perGuestUsdCents: Long = 5,
-        val setupFeeUsdCents: Long = 1_500,
-        val usdToGnfRate: Long = 8_760,
-    ) {
-        /** Total price in GNF for [guestCount] guests: variable sending + fixed setup. */
-        fun priceGnf(guestCount: Long): Long {
-            val totalUsdCents = perGuestUsdCents * guestCount + setupFeeUsdCents
-            return totalUsdCents * usdToGnfRate / 100
-        }
-    }
 
     /** Tier name for a given number of invited guests (usage volume). */
     fun tierForUsage(invitedGuests: Long): String =
@@ -67,7 +45,7 @@ data class BillingProperties(
             else -> tiers.firstOrNull { invitedGuests <= it.maxGuests }?.name ?: CUSTOM_TIER
         }
 
-    /** The smallest fixed-price tier that unlocks at least [invitedGuests]; null beyond the last tier (CUSTOM pricing applies instead). */
+    /** The smallest fixed-price tier that unlocks at least [invitedGuests]; null beyond the last tier. */
     fun tierForAllowance(invitedGuests: Long): Tier? = tiers.firstOrNull { invitedGuests <= it.maxGuests }
 
     companion object {

@@ -94,9 +94,9 @@ class PlatformBillingSettingsService(
         val row = settings.findById(PlatformBillingSettings.ROW_ID).orElse(null)
         val managed = row?.tierPricesJson != null || row?.subscriptionPlansJson != null
         return PlatformBillingSettingsView(
-            currency = billingProperties.currency,
+            currency = PriceList.GNF,
             payee = payeeDetails(),
-            tiers = tiers().map { BillingTierOption(it.name, it.maxGuests, it.priceMinor) },
+            tiers = tiers().map { BillingTierOption(it.name, it.maxGuests, it.price) },
             subscriptionPlans =
                 plans().map {
                     SubscriptionPlanOption(
@@ -124,7 +124,7 @@ class PlatformBillingSettingsService(
         row.mobileMoneyNumber = update.payee.mobileMoneyNumber?.takeIf { it.isNotBlank() }
         row.mobileMoneyOperator = update.payee.mobileMoneyOperator?.takeIf { it.isNotBlank() }
         row.bankDetails = update.payee.bankDetails?.takeIf { it.isNotBlank() }
-        row.tierPricesJson = objectMapper.writeValueAsString(update.tiers)
+        row.tierPricesJson = objectMapper.writeValueAsString(update.tiers.map { BillingProperties.Tier(it.name, it.maxGuests, it.price) })
         row.subscriptionPlansJson =
             objectMapper.writeValueAsString(
                 update.subscriptionPlans.map { Plan(it.name, it.includedPeople, it.maxPeople, it.monthly, it.extraPerson) },

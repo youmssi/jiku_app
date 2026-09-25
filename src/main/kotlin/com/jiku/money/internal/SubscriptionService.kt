@@ -2,7 +2,6 @@ package com.jiku.money.internal
 
 import com.jiku.money.MonthOption
 import com.jiku.money.PlanOption
-import com.jiku.money.PriceList
 import com.jiku.money.SubscriptionView
 import com.jiku.shared.SubscriptionNotice
 import com.jiku.shared.TenantContext
@@ -29,12 +28,13 @@ class SubscriptionService(
     private val platformSettings: PlatformBillingSettingsService,
     private val tenantModuleApi: TenantModuleApi,
     private val notifier: SubscriptionNotifier,
+    private val billingCurrency: TenantBillingCurrency,
 ) {
     /** The current tenant's subscription, or null when it has none. */
     @Transactional(readOnly = true)
     fun view(): SubscriptionView? {
         val row = current() ?: return null
-        val currency = billingCurrency()
+        val currency = billingCurrency.current()
         val plan = platformSettings.planByName(row.plan)
         val people = row.resourcesActive
         val graceEnd = if (row.status == SubscriptionStatus.GRACE) row.expiresAt?.plus(properties.grace) else null
@@ -154,14 +154,8 @@ class SubscriptionService(
         if (!plan.covers(people)) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "${plan.name} allows at most ${plan.maxPeople} people; the team has $people")
         }
-        val currency = billingCurrency()
+        val currency = billingCurrency.current()
         return SubscriptionQuote(amountMinor = plan.monthlyMinor(currency, people) * period.chargedMonths, currency = currency)
-    }
-
-    private fun billingCurrency(): String {
-        val tenantId = requireNotNull(TenantContext.get()) { "Billing requires an authenticated tenant" }
-        val organizationCurrency = tenantModuleApi.findTenant(UUID.fromString(tenantId))?.currency ?: PriceList.GNF
-        return PriceList.billingCurrencyFor(organizationCurrency)
     }
 
     private fun current(): Subscription? = subscriptions.findCurrent().firstOrNull()

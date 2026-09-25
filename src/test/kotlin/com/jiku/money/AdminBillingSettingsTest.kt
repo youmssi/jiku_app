@@ -54,8 +54,8 @@ class AdminBillingSettingsTest {
                             ),
                         tiers =
                             listOf(
-                                BillingTierOption("BRONZE", 400, 200_000),
-                                BillingTierOption("OR", 1_200, 600_000),
+                                BillingTierOption("BRONZE", 400, PriceList(200_000, 13_000, 2_300)),
+                                BillingTierOption("OR", 1_200, PriceList(650_000, 43_000, 7_500)),
                             ),
                         subscriptionPlans =
                             listOf(
@@ -70,7 +70,8 @@ class AdminBillingSettingsTest {
             val tier = settings.tierByName("bronze")
             assertNotNull(tier)
             assertEquals(400, tier.maxGuests)
-            assertEquals(200_000, tier.priceMinor)
+            assertEquals(200_000, tier.price.gnf)
+            assertEquals(13_000, tier.price.amountMinor("XAF"))
             assertEquals(null, settings.tierByName("ARGENT"), "removed tiers must disappear")
 
             val payee = settings.payeeDetails()
@@ -96,7 +97,7 @@ class AdminBillingSettingsTest {
                             mobileMoneyOperator = null,
                             bankDetails = null,
                         ),
-                    tiers = before.map { BillingTierOption(it.name, it.maxGuests, it.priceMinor) },
+                    tiers = before.map { BillingTierOption(it.name, it.maxGuests, it.price) },
                     subscriptionPlans =
                         plansBefore.map {
                             SubscriptionPlanOption(

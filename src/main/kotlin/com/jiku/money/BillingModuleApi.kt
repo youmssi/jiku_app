@@ -80,7 +80,7 @@ interface BillingModuleApi {
         reason: String,
     ): AdminTrialView
 
-    /** The platform's pricing currency (JIKU-53: GNF). */
+    /** The reference currency of the price grid shown to the admin desk (GNF; ADR 105 prices every currency). */
     fun currency(): String
 
     /**
@@ -108,8 +108,13 @@ interface BillingModuleApi {
 data class BillingTierOption(
     val name: String,
     val maxGuests: Long,
-    val priceMinor: Long,
-)
+    /** The tier's price in GNF, FCFA and USD (ADR 105). */
+    val price: PriceList,
+) {
+    /** Kept for /v1 clients written before ADR 105: the GNF price. */
+    @Deprecated("Use price")
+    val priceMinor: Long get() = price.gnf
+}
 
 /**
  * A snapshot of one event's billing position. [invitedGuests] is the billable
