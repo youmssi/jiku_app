@@ -1,5 +1,6 @@
 package com.jiku.messaging.internal
 
+import com.jiku.shared.OwnWhatsAppNumberGate
 import com.jiku.shared.TenantContext
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -11,7 +12,9 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Chooses the effective sender for the current tenant (JIKU-44): the tenant's
  * own provider when one is configured in the org settings, otherwise the
- * platform transport. Built adapters are cached per tenant and invalidated by
+ * platform transport. A tenant's own WhatsApp number is used only while its
+ * offer includes it (ADR 105); otherwise its sends go through the platform
+ * number and its saved credentials wait for a renewal. Built adapters are cached per tenant and invalidated by
  * comparing the stored (encrypted) credentials — every save re-encrypts with a
  * fresh IV, so a settings change always rebuilds the adapter.
  */
@@ -24,6 +27,7 @@ class MessagingProviderResolver(
     private val platformEmailSender: EmailSender,
     private val platformWhatsAppSender: WhatsAppSender,
     private val emailProperties: NotificationEmailProperties,
+    private val ownNumberGate: OwnWhatsAppNumberGate,
     @Value("\${jiku.mail.resend.base-url:https://api.resend.com}") private val resendBaseUrl: String,
     @Value("\${jiku.whatsapp.meta.base-url:https://graph.facebook.com/v21.0}") private val metaBaseUrl: String,
 ) {
@@ -71,7 +75,7 @@ class MessagingProviderResolver(
 
     @Transactional(readOnly = true)
     fun whatsApp(): ResolvedWhatsApp {
-        val row = activeRow(TenantProviderSettings.CHANNEL_WHATSAPP)
+        val row = activeRow(TenantProviderSettings.CHANNEL_WHATSAPP)?.takeIf { ownNumberGate.ownNumberAllowed() }
         if (row == null) {
             return ResolvedWhatsApp(platformWhatsAppSender, tenantOverride = false)
         }

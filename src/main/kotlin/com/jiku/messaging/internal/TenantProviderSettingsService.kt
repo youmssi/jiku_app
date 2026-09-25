@@ -1,7 +1,10 @@
 package com.jiku.messaging.internal
 
+import com.jiku.shared.OwnWhatsAppNumberGate
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
 import tools.jackson.databind.ObjectMapper
 
 /**
@@ -16,6 +19,7 @@ class TenantProviderSettingsService(
     private val cipher: CredentialsCipher,
     private val objectMapper: ObjectMapper,
     private val resolver: MessagingProviderResolver,
+    private val ownNumberGate: OwnWhatsAppNumberGate,
 ) {
     @Transactional(readOnly = true)
     fun overview(): ProviderSettingsResponse = ProviderSettingsResponse(email = emailView(), whatsapp = whatsAppView())
@@ -38,6 +42,12 @@ class TenantProviderSettingsService(
 
     @Transactional
     fun updateWhatsApp(request: UpdateWhatsAppProviderRequest): ProviderSettingsResponse {
+        if (!ownNumberGate.ownNumberAllowed()) {
+            throw ResponseStatusException(
+                HttpStatus.PAYMENT_REQUIRED,
+                "Your own WhatsApp number comes with the Organisation plan, the Organizer Pack or its monthly add-on",
+            )
+        }
         val credentials =
             MetaCloudCredentials(
                 phoneNumberId = request.phoneNumberId.trim(),
@@ -150,7 +160,7 @@ class TenantProviderSettingsService(
     private fun whatsAppView(): WhatsAppProviderView {
         val row =
             repository.findByChannel(TenantProviderSettings.CHANNEL_WHATSAPP)
-                ?: return WhatsAppProviderView(configured = false)
+                ?: return WhatsAppProviderView(configured = false, allowed = ownNumberGate.ownNumberAllowed())
         val credentials = objectMapper.readValue(cipher.decrypt(row.credentials), MetaCloudCredentials::class.java)
         return WhatsAppProviderView(
             configured = true,
@@ -159,6 +169,7 @@ class TenantProviderSettingsService(
             accessTokenMasked = maskSecret(credentials.accessToken),
             templateName = credentials.templateName,
             templateLanguage = credentials.templateLanguage,
+            allowed = ownNumberGate.ownNumberAllowed(),
         )
     }
 }
