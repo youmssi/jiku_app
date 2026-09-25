@@ -1,10 +1,9 @@
 package com.jiku.invitation.internal
 
 import com.jiku.shared.InvitationDeliveryResult
-import com.jiku.shared.TenantContext
+import com.jiku.shared.TenantTransaction
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 
 /**
@@ -14,15 +13,13 @@ import java.time.Instant
  */
 @Component
 class InvitationResultListener(
+    private val tenantTransaction: TenantTransaction,
     private val invitations: InvitationRepository,
 ) {
     @EventListener
-    @Transactional
     fun onDeliveryResult(result: InvitationDeliveryResult) {
-        val previousTenant = TenantContext.get()
-        TenantContext.set(result.tenantId)
-        try {
-            val invitation = invitations.findById(result.invitationId).orElse(null) ?: return
+        tenantTransaction.run(result.tenantId) {
+            val invitation = invitations.findById(result.invitationId).orElse(null) ?: return@run
             invitation.attempts = result.attempts
             when {
                 result.delivered -> {
@@ -40,8 +37,6 @@ class InvitationResultListener(
                 }
             }
             invitations.save(invitation)
-        } finally {
-            if (previousTenant != null) TenantContext.set(previousTenant) else TenantContext.clear()
         }
     }
 }

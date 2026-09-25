@@ -1,10 +1,9 @@
 package com.jiku.messaging.internal
 
-import com.jiku.shared.TenantContext
+import com.jiku.shared.TenantTransaction
 import com.jiku.shared.TicketConfirmedNotice
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 
 /**
  * Sends a confirmed guest their ticket (JIKU-129) in reaction to a
@@ -13,17 +12,13 @@ import org.springframework.transaction.annotation.Transactional
  */
 @Component
 class TicketConfirmationListener(
+    private val tenantTransaction: TenantTransaction,
     private val notificationService: NotificationService,
 ) {
     @EventListener
-    @Transactional
     fun onTicketConfirmed(notice: TicketConfirmedNotice) {
-        val previousTenant = TenantContext.get()
-        TenantContext.set(notice.tenantId)
-        try {
+        tenantTransaction.run(notice.tenantId) {
             notificationService.deliverTicketConfirmation(notice)
-        } finally {
-            if (previousTenant != null) TenantContext.set(previousTenant) else TenantContext.clear()
         }
     }
 }
