@@ -36,12 +36,20 @@ class ResendEmailSender internal constructor(
         val recipient =
             if (message.toName.isBlank()) message.to else "${message.toName} <${message.to}>"
         val body =
-            mapOf(
-                "from" to from,
-                "to" to listOf(recipient),
-                "subject" to message.subject,
-                "html" to message.htmlBody,
-            )
+            buildMap {
+                put("from", from)
+                put("to", listOf(recipient))
+                put("subject", message.subject)
+                put("html", message.htmlBody)
+                if (message.attachments.isNotEmpty()) {
+                    put(
+                        "attachments",
+                        message.attachments.map {
+                            mapOf("filename" to it.filename, "content" to it.base64(), "content_type" to it.contentType)
+                        },
+                    )
+                }
+            }
         try {
             client
                 .post()

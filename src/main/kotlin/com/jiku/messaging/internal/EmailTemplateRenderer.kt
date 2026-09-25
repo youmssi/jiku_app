@@ -2,6 +2,8 @@ package com.jiku.messaging.internal
 
 import com.jiku.shared.ManualPaymentNotice
 import com.jiku.shared.MemberInvitationNotice
+import com.jiku.shared.MessageLanguage
+import com.jiku.shared.TicketConfirmedNotice
 import org.springframework.stereotype.Component
 import java.util.Locale
 
@@ -54,6 +56,59 @@ class EmailTemplateRenderer(
                 "primaryColor" to email.primaryColor,
             )
         return renderClient(CANCELLATION, language, values, email.logoUrl, email.organizerName, email.eventWhen, email.eventLocation)
+    }
+
+    /**
+     * A confirmed guest's ticket (JIKU-129), in the organizer's colours: the way
+     * to the ticket, the event's details and, when the event has a date, the
+     * calendar links. Not a tenant-editable template.
+     */
+    fun renderTicketConfirmed(
+        notice: TicketConfirmedNotice,
+        calendarLink: String?,
+    ): RenderedEmail {
+        val language = notice.language
+        val eventWhen = notice.eventStart?.let { MessageLanguage.formatEventStart(it, notice.eventTimezone, language) }
+        val values =
+            mapOf(
+                "guestName" to notice.recipientName,
+                "organizerName" to notice.organizerName,
+                "eventName" to notice.eventName,
+                "primaryColor" to notice.primaryColor,
+                "ticketUrl" to notice.ticketUrl,
+            )
+        val details =
+            detailsTable(
+                listOfNotNull(
+                    eventWhen?.let { catalog.text(language, "label.when") to it },
+                    notice.eventLocation?.let { catalog.text(language, "label.where") to it },
+                    notice.categoryName?.let { catalog.text(language, "label.category") to it },
+                ),
+            )
+        val html =
+            catalog.substitute(
+                catalog.emailDocument(language, TICKET_CONFIRMED, FOOTER_CLIENT, "{{organizerName}}"),
+                values.mapValues { escapeHtml(it.value) } +
+                    mapOf(
+                        "logoBlock" to logoBlock(notice.logoUrl, notice.organizerName),
+                        "eventDetails" to details,
+                        "calendarBlock" to calendarLink?.let { calendarBlock(language, it) }.orEmpty(),
+                    ),
+            )
+        return RenderedEmail(catalog.text(language, "$TICKET_CONFIRMED.subject", values), html)
+    }
+
+    private fun calendarBlock(
+        language: String,
+        link: String,
+    ): String {
+        val label = escapeHtml(catalog.text(language, "calendar.google"))
+        val note = escapeHtml(catalog.text(language, "calendar.file"))
+        return """<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 10px;"><tr>""" +
+            """<td style="border-radius:999px;border:1px solid #d9d1c5;"><a href="${escapeHtml(link)}" """ +
+            """style="display:inline-block;padding:11px 22px;border-radius:999px;font:600 14px/1 $SANS;color:#2a2621;""" +
+            """text-decoration:none;">$label</a></td></tr></table>""" +
+            """<p style="margin:0;font-size:13px;line-height:1.6;color:#8c8377;">$note</p>"""
     }
 
     /** The build's default document for a client template, as the tenant's editor shows it. */
@@ -271,6 +326,7 @@ class EmailTemplateRenderer(
     private companion object {
         const val INVITATION = "invitation"
         const val CANCELLATION = "event-cancelled"
+        const val TICKET_CONFIRMED = "ticket-confirmed"
         const val FOOTER_CLIENT = "footer.client"
         const val FOOTER_PLATFORM = "footer.platform"
 

@@ -3,6 +3,7 @@ package com.jiku.messaging.internal
 import jakarta.mail.MessagingException
 import jakarta.mail.internet.InternetAddress
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.core.io.ByteArrayResource
 import org.springframework.mail.MailException
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
@@ -25,11 +26,12 @@ class SmtpEmailSender(
     ) {
         val mime = mailSender.createMimeMessage()
         try {
-            val helper = MimeMessageHelper(mime, false, "UTF-8")
+            val helper = MimeMessageHelper(mime, message.attachments.isNotEmpty(), "UTF-8")
             helper.setFrom(from)
             helper.setTo(InternetAddress(message.to, message.toName.ifBlank { null }, "UTF-8"))
             helper.setSubject(message.subject)
             helper.setText(message.htmlBody, true)
+            message.attachments.forEach { helper.addAttachment(it.filename, ByteArrayResource(it.content), it.contentType) }
         } catch (e: MessagingException) {
             throw EmailDeliveryException("Failed to assemble email to ${message.to}", e)
         }

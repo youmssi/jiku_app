@@ -7,6 +7,7 @@ import com.jiku.shared.TenantContext
 import com.jiku.tenant.TenantModuleApi
 import com.jiku.ticket.TicketInfo
 import com.jiku.ticket.TicketingModuleApi
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -28,6 +29,7 @@ class RsvpService(
     private val events: EventModuleApi,
     private val tenants: TenantModuleApi,
     private val ticketing: TicketingModuleApi,
+    private val eventPublisher: ApplicationEventPublisher,
 ) {
     @Transactional(readOnly = true)
     fun view(guestId: UUID): RsvpView = buildView(loadGuest(guestId))
@@ -52,6 +54,7 @@ class RsvpService(
             guests.save(guest)
             val charge = guest.ticketTypeId?.let { typeId -> events.ticketTypes(eventId).firstOrNull { it.id == typeId } }?.clientCharge()
             ticketing.issueTicket(eventId, guestId, guest.ticketTypeId, charge)
+            eventPublisher.publishEvent(TicketConfirmed(guestId, eventId, TenantContext.get().orEmpty()))
         }
         return buildView(guest)
     }

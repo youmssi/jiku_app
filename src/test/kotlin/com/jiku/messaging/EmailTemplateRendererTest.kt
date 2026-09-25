@@ -11,6 +11,7 @@ import com.jiku.messaging.internal.WhatsAppTemplateRenderer
 import com.jiku.shared.ManualPaymentNotice
 import com.jiku.shared.MemberInvitationNotice
 import com.jiku.shared.MessageLanguage
+import com.jiku.shared.TicketConfirmedNotice
 import org.junit.jupiter.api.Test
 import org.springframework.context.ApplicationEventPublisher
 import java.lang.reflect.Proxy
@@ -71,6 +72,42 @@ class EmailTemplateRendererTest {
         assertEquals("Gala has been cancelled", email.subject)
         assertFalse(email.html.contains("When"))
         assertFalse(email.html.contains("{{"))
+    }
+
+    @Test
+    fun `a ticket email carries the ticket link, the details and the calendar links`() {
+        val notice =
+            TicketConfirmedNotice(
+                guestId = UUID.randomUUID(),
+                tenantId = UUID.randomUUID().toString(),
+                eventId = UUID.randomUUID(),
+                recipient = "awa@example.com",
+                recipientName = "Awa Diallo",
+                eventName = "Gala",
+                eventStart = Instant.parse("2026-12-12T18:00:00Z"),
+                eventEnd = null,
+                eventTimezone = "Africa/Conakry",
+                eventLocation = "Palais du Peuple",
+                categoryName = "VIP",
+                organizerName = "Maison Aminata",
+                primaryColor = "#7C3AED",
+                logoUrl = null,
+                ticketUrl = "https://jiku.app/invitation/abc/ticket",
+                language = MessageLanguage.FRENCH,
+            )
+
+        val withCalendar = renderer.renderTicketConfirmed(notice, "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Gala")
+        val undated = renderer.renderTicketConfirmed(notice.copy(eventStart = null), null)
+
+        assertEquals("Votre billet : Gala", withCalendar.subject)
+        assertTrue(withCalendar.html.contains("https://jiku.app/invitation/abc/ticket"))
+        assertTrue(withCalendar.html.contains("Samedi 12 décembre 2026 à 18:00"))
+        assertTrue(withCalendar.html.contains("VIP"))
+        assertTrue(withCalendar.html.contains("Ajouter à Google Agenda"))
+        assertTrue(withCalendar.html.contains("action=TEMPLATE&amp;text=Gala"))
+        assertFalse(undated.html.contains("Google Agenda"), "an undated event offers no calendar link")
+        assertFalse(withCalendar.html.contains("{{"))
+        assertFalse(undated.html.contains("{{"))
     }
 
     @Test

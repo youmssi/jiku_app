@@ -5,6 +5,7 @@ import com.jiku.shared.EventCancellationNotice
 import com.jiku.shared.GuestInvitedEvent
 import com.jiku.shared.ReminderChannel
 import com.jiku.shared.ReminderDue
+import com.jiku.shared.TicketConfirmedNotice
 import org.springframework.stereotype.Service
 import java.time.ZoneId
 import java.util.UUID
@@ -46,6 +47,40 @@ class NotificationService(
         deliverWithRetry(cancellationSendAction(notice)) { status, attempt, error ->
             record(notice.invitationId, notice.channel, notice.recipient, status, attempt, error)
         }
+
+    /**
+     * A confirmed guest's ticket by email (JIKU-129), with a calendar invite
+     * attached when the event has a date. Logged against the guest.
+     */
+    fun deliverTicketConfirmation(notice: TicketConfirmedNotice): DeliveryOutcome {
+        val entry =
+            notice.eventStart?.let { start ->
+                CalendarEntry(
+                    uid = "${notice.guestId}@jiku",
+                    title = notice.eventName,
+                    start = start,
+                    end = notice.eventEnd,
+                    location = notice.eventLocation,
+                    description = "${notice.organizerName} · ${notice.ticketUrl}",
+                    url = notice.ticketUrl,
+                )
+            }
+        val rendered = emailRenderer.renderTicketConfirmed(notice, entry?.let { EventCalendar.googleLink(it) })
+        val message =
+            EmailMessage(
+                to = notice.recipient,
+                toName = notice.recipientName,
+                subject = rendered.subject,
+                htmlBody = rendered.html,
+                attachments =
+                    listOfNotNull(
+                        entry?.let { EmailAttachment(CALENDAR_FILE, CALENDAR_TYPE, EventCalendar.ics(it)) },
+                    ),
+            )
+        return deliverWithRetry(email(message)) { status, attempt, error ->
+            record(notice.guestId, GuestInvitedEvent.CHANNEL_EMAIL, notice.recipient, status, attempt, error)
+        }
+    }
 
     /**
      * Reminder de rendez-vous (JIKU-89), par le canal choisi pour le service :
@@ -283,5 +318,10 @@ class NotificationService(
                 error = error?.take(500),
             ),
         )
+    }
+
+    private companion object {
+        const val CALENDAR_FILE = "invitation.ics"
+        const val CALENDAR_TYPE = "text/calendar; charset=utf-8; method=PUBLISH"
     }
 }
