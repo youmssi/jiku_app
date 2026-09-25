@@ -31,6 +31,7 @@ class BillingTiersController(
                 platformSettings.tiers().map {
                     TierOption(name = it.name, maxGuests = it.maxGuests, priceMinor = it.price.amountMinor(currency))
                 },
+            interactivePerGuestMinor = properties.interactivePerGuest.amountMinor(currency),
             custom =
                 CustomTierOption(
                     beyondPerGuestMinor = beyond,
@@ -43,8 +44,9 @@ class BillingTiersController(
     @GetMapping("/custom-quote")
     fun customQuote(
         @RequestParam guestCount: Long,
+        @RequestParam(defaultValue = "false") interactive: Boolean,
     ): CustomQuote {
-        val quote = eventPricing.beyondQuote(guestCount)
+        val quote = eventPricing.beyondQuote(guestCount, interactive)
         return CustomQuote(guestCount = guestCount, priceMinor = quote.amountMinor, currency = quote.currency)
     }
 }
@@ -54,6 +56,8 @@ data class TierCatalog(
     val currency: String,
     val freeTierGuests: Long,
     val tiers: List<TierOption>,
+    /** Added per paid guest when the event's guests answer in WhatsApp (ADR 105); the free tier includes it. */
+    val interactivePerGuestMinor: Long,
     val custom: CustomTierOption,
 )
 

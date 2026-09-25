@@ -7275,6 +7275,15 @@
               "type" : "integer",
               "format" : "int64"
             }
+          },
+          {
+            "name" : "interactive",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "boolean",
+              "default" : false
+            }
           }
         ],
         "responses" : {
@@ -13345,6 +13354,10 @@
             "items" : {
               "$ref" : "#/components/schemas/TierOption"
             }
+          },
+          "interactivePerGuestMinor" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "custom" : {
             "$ref" : "#/components/schemas/CustomTierOption"

@@ -6,6 +6,7 @@ import com.jiku.catalog.InvitationChannel
 import com.jiku.shared.GuestInvitedEvent
 import com.jiku.shared.MessageLanguage
 import com.jiku.shared.TenantContext
+import com.jiku.shared.UsageAllowanceGate
 import com.jiku.tenant.TenantModuleApi
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
@@ -30,6 +31,7 @@ class InvitationDispatchWorker(
     private val eventPublisher: ApplicationEventPublisher,
     private val rsvpService: RsvpService,
     private val ticketNotices: TicketNotices,
+    private val allowanceGate: UsageAllowanceGate,
 ) {
     @Transactional
     fun process(invitationId: UUID) {
@@ -100,7 +102,10 @@ class InvitationDispatchWorker(
                 invitationUrl = ticket?.ticketUrl ?: "${properties.appBaseUrl}/invitation/$token",
                 language = language,
                 ticket = ticket,
-                interactive = event?.deliveryMode == DeliveryMode.INTERACTIVE && channelName == GuestInvitedEvent.CHANNEL_WHATSAPP,
+                interactive =
+                    event?.deliveryMode == DeliveryMode.INTERACTIVE &&
+                        channelName == GuestInvitedEvent.CHANNEL_WHATSAPP &&
+                        allowanceGate.interactiveCovered(invitation.eventId),
             ),
         )
     }

@@ -62,10 +62,10 @@ class ManualPaymentService(
                 PROVIDER_MANUAL,
                 PaymentStatus.PENDING,
             )
-        if (existing != null) {
+        val quote = eventPricing.upgradeQuote(eventId, tier)
+        if (existing != null && existing.amountMinor == quote.amountMinor && existing.interactive == quote.interactive) {
             return instructionsFor(existing)
         }
-        val quote = eventPricing.upgradeQuote(eventId, tier)
 
         val payment =
             payments.save(
@@ -74,6 +74,7 @@ class ManualPaymentService(
                     tier = tier.name,
                     amountMinor = quote.amountMinor,
                     currency = quote.currency,
+                    interactive = quote.interactive,
                     provider = PROVIDER_MANUAL,
                 ),
             )
@@ -229,7 +230,7 @@ class ManualPaymentService(
                                 requireNotNull(payment.subscriptionMonths),
                             )
                         } else {
-                            tierUnlockService.unlock(requireNotNull(payment.eventId), payment.tier)
+                            tierUnlockService.unlock(requireNotNull(payment.eventId), payment.tier, payment.interactive)
                         }
                     }
                     payment.toAdminView()

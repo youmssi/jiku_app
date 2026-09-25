@@ -34,4 +34,11 @@ interface UsageAllowanceGate {
         eventId: UUID,
         newGuestCount: Long,
     )
+
+    /**
+     * Whether the event's guests may answer in WhatsApp (ADR 105): always on the
+     * free tier, and on a paid tier only once the interactive surcharge covers
+     * it. Otherwise the invitation goes out as a plain link.
+     */
+    fun interactiveCovered(eventId: UUID): Boolean
 }
