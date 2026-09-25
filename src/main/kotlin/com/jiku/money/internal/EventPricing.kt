@@ -43,12 +43,27 @@ class EventPricing(
                 val paid = platformSettings.tiers().filter { it.maxGuests <= unlocked }.maxByOrNull { it.maxGuests }
                 (tier.price.amountMinor(currency) - (paid?.price?.amountMinor(currency) ?: 0)).coerceAtLeast(0)
             }
+        val surcharge = uncovered * properties.interactivePerGuest.amountMinor(currency)
         return EventQuote(
-            amountMinor = tierAmount + uncovered * properties.interactivePerGuest.amountMinor(currency),
+            amountMinor = tierAmount + surcharge,
             currency = currency,
             interactive = interactive,
+            surchargeMinor = surcharge,
         )
     }
+
+    /** What each tier would cost this event now: only the tiers it can still buy, each at [upgradeQuote]. */
+    @Transactional(readOnly = true)
+    fun tierQuotes(eventId: UUID): List<EventTierQuote> =
+        platformSettings.tiers().mapNotNull { tier ->
+            try {
+                val quote = upgradeQuote(eventId, tier)
+                EventTierQuote(tier.name, tier.maxGuests, quote.amountMinor, quote.surchargeMinor, quote.currency, quote.interactive)
+            } catch (ex: ResponseStatusException) {
+                if (ex.statusCode != HttpStatus.CONFLICT) throw ex
+                null
+            }
+        }
 
     /**
      * Price of an event of [guests] beyond the last tier: that tier plus each
@@ -67,6 +82,7 @@ class EventPricing(
             amountMinor = last.price.amountMinor(currency) + extra * properties.beyondPerGuest.amountMinor(currency) + surcharge,
             currency = currency,
             interactive = interactive,
+            surchargeMinor = surcharge,
         )
     }
 }
@@ -76,4 +92,21 @@ data class EventQuote(
     val currency: String,
     /** Includes the interactive WhatsApp surcharge. */
     val interactive: Boolean = false,
+    /** The part of [amountMinor] that is the interactive surcharge. */
+    val surchargeMinor: Long = 0,
+)
+
+/**
+ * One tier an event can still buy, priced for that event (ADR 105): the tier
+ * difference plus, for an interactive event, the surcharge on its guests not
+ * yet covered. A tier the event already has appears only when the surcharge is
+ * all that is left to pay.
+ */
+data class EventTierQuote(
+    val tier: String,
+    val maxGuests: Long,
+    val amountMinor: Long,
+    val surchargeMinor: Long,
+    val currency: String,
+    val interactive: Boolean,
 )
