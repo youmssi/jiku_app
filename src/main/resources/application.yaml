@@ -328,6 +328,10 @@ billing:
   # per tenant account, not per event (JIKU-54) — closes the bypass of
   # fragmenting guests across many small free events.
   free-tier-window: ${BILLING_FREE_TIER_WINDOW:P365D}
+  subscription:
+    # WhatsApp appointment reminders a free services plan (Solo) includes each
+    # calendar month (ADR 105); past it, reminders stop until the next month.
+    free-plan-whatsapp-reminders: ${FREE_PLAN_WHATSAPP_REMINDERS:50}
   invoice:
     # Accounting-grade invoicing (JIKU-69). Numbers are gapless per tenant per
     # fiscal year; these prefixes only shape the human-readable form.
