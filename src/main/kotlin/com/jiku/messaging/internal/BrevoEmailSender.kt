@@ -40,12 +40,15 @@ class BrevoEmailSender internal constructor(
         val recipient =
             if (message.toName.isBlank()) mapOf("email" to message.to) else mapOf("email" to message.to, "name" to message.toName)
         val body =
-            mapOf(
-                "sender" to sender,
-                "to" to listOf(recipient),
-                "subject" to message.subject,
-                "htmlContent" to message.htmlBody,
-            )
+            buildMap {
+                put("sender", sender)
+                put("to", listOf(recipient))
+                put("subject", message.subject)
+                put("htmlContent", message.htmlBody)
+                if (message.attachments.isNotEmpty()) {
+                    put("attachment", message.attachments.map { mapOf("name" to it.filename, "content" to it.base64()) })
+                }
+            }
         try {
             client
                 .post()
