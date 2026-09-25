@@ -38,6 +38,9 @@ class Payment(
     /** Mois de prépaiement achetés, pour un renouvellement d'abonnement. */
     @Column(name = "subscription_months")
     val subscriptionMonths: Int? = null,
+    /** The tier was paid with the interactive WhatsApp surcharge (ADR 105). */
+    @Column(name = "interactive", nullable = false, updatable = false)
+    val interactive: Boolean = false,
 ) : BaseTenantEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

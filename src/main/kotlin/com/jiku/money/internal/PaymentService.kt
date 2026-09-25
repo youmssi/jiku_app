@@ -61,6 +61,7 @@ class PaymentService(
                     tier = tier.name,
                     amountMinor = quote.amountMinor,
                     currency = quote.currency,
+                    interactive = quote.interactive,
                     provider = provider.name,
                 ),
             )
@@ -139,7 +140,11 @@ class PaymentService(
         payment.updatedAt = Instant.now()
         payments.save(payment)
         if (!succeeded) return CallbackOutcome.FAILED
-        tierUnlockService.unlock(requireNotNull(payment.eventId) { "A provider payment always references an event" }, payment.tier)
+        tierUnlockService.unlock(
+            requireNotNull(payment.eventId) { "A provider payment always references an event" },
+            payment.tier,
+            payment.interactive,
+        )
         return CallbackOutcome.SUCCEEDED
     }
 

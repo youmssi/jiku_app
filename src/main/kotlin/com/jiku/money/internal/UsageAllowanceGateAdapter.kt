@@ -40,4 +40,10 @@ class UsageAllowanceGateAdapter(
         }
         tenantQuota.recordFreeCommitment(newGuestCount)
     }
+
+    @Transactional(readOnly = true)
+    override fun interactiveCovered(eventId: UUID): Boolean {
+        val record = usageRecords.findByEventId(eventId) ?: return true
+        return record.unlockedAllowance <= properties.freeTierGuests || record.interactiveAllowance >= record.unlockedAllowance
+    }
 }

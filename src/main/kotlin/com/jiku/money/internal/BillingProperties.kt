@@ -30,6 +30,11 @@ data class BillingProperties(
         ),
     /** Price of each guest beyond the last fixed tier, added to that tier's price. */
     val beyondPerGuest: PriceList = PriceList(500, 35, 6),
+    /**
+     * Added per guest of a paid tier when the event's guests answer in WhatsApp
+     * (ADR 105, INTERACTIVE mode). The free tier includes every mode.
+     */
+    val interactivePerGuest: PriceList = PriceList(150, 10, 2),
 ) {
     data class Tier(
         val name: String,

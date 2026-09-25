@@ -44,6 +44,10 @@ class UsageRecord(
     @Column(name = "invitations_sent_whatsapp", nullable = false)
     var invitationsSentWhatsapp: Long = 0
 
+    /** Paid guests covered for the interactive WhatsApp mode (ADR 105); raised with the tier when paid for. */
+    @Column(name = "interactive_allowance", nullable = false)
+    var interactiveAllowance: Long = 0
+
     @Column(name = "updated_at", nullable = false)
     var updatedAt: Instant = Instant.now()
 }

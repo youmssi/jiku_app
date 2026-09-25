@@ -3,6 +3,7 @@ package com.jiku.invitation
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.messaging.internal.MetaWebhookSignature
+import com.jiku.money.BillingModuleApi
 import com.jiku.support.OrganizerApi
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
@@ -24,6 +25,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.time.Duration
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
@@ -40,6 +42,9 @@ import kotlin.random.Random
 class InteractiveWhatsAppTest {
     @Autowired
     lateinit var mockMvc: MockMvc
+
+    @Autowired
+    lateinit var billing: BillingModuleApi
 
     @Test
     fun `a guest accepts in the chat, gets the ticket there and can ask for it again`(output: CapturedOutput) {
@@ -88,6 +93,38 @@ class InteractiveWhatsAppTest {
         webhook(text = "Start", from = digits).andExpect(status().isOk())
         webhook(text = "ticket", from = digits).andExpect(status().isOk())
         await().atMost(10, TimeUnit.SECONDS).untilAsserted { assert(tickets(output, phone) == 3) { "START did not lift the silence" } }
+    }
+
+    @Test
+    fun `a paid event without the interactive surcharge sends a plain link`(output: CapturedOutput) {
+        val api = OrganizerApi(mockMvc)
+        val token = api.register()
+        val eventId = api.createEvent(token)
+        val payment =
+            api
+                .post(token, "/api/v1/events/$eventId/payments/manual", """{"tier":"BRONZE"}""")
+                .andExpect(status().isOk())
+                .andReturn()
+                .response.contentAsString
+        billing.adminConfirmManualPayment(UUID.fromString(JsonPath.read(payment, "$.paymentId")))
+        api
+            .put(
+                token,
+                "/api/v1/events/$eventId",
+                """
+                {"name":"Gala sans supplément","timezone":"Africa/Conakry","startDateTime":"2026-12-01T19:00:00Z",
+                "invitationChannels":["WHATSAPP"],"settings":{"deliveryMode":"INTERACTIVE"}}
+                """.trimIndent(),
+            ).andExpect(status().isOk())
+        api.publish(token, eventId)
+        val phone = "+22463" + Random.nextInt(1_000_000, 9_999_999)
+        importGuest(api, token, eventId, phone)
+
+        api.post(token, "/api/v1/events/$eventId/invitations/send?channels=WHATSAPP", "{}").andExpect(status().isOk())
+
+        await().atMost(10, TimeUnit.SECONDS).untilAsserted {
+            assert(output.out.contains("to=$phone buttons=[] image=null")) { "the invitation was not sent as a plain link" }
+        }
     }
 
     @Test
