@@ -35,7 +35,21 @@ data class BillingProperties(
      * (ADR 105, INTERACTIVE mode). The free tier includes every mode.
      */
     val interactivePerGuest: PriceList = PriceList(150, 10, 2),
+    /** The Organizer Pack (ADR 105), for planners, agencies and venues. */
+    val pack: Pack = Pack(),
 ) {
+    /**
+     * A monthly price for [includedGuests] guests a month across every event,
+     * all delivery modes included. More guests are bought ahead in blocks of
+     * [extraBlockGuests] at [extraPerGuest] each; unused guests do not carry over.
+     */
+    data class Pack(
+        val monthly: PriceList = PriceList(600_000, 40_000, 7_000),
+        val includedGuests: Long = 1_000,
+        val extraPerGuest: PriceList = PriceList(600, 40, 7),
+        val extraBlockGuests: Long = 100,
+    )
+
     data class Tier(
         val name: String,
         /** Inclusive upper bound of invited guests this tier unlocks. */

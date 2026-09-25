@@ -105,6 +105,13 @@ Paliers par événement :
 - Chaque événement à la marque du client.
 - Votre propre numéro WhatsApp inclus.
 - Les invités non utilisés ne se reportent pas.
+- Mois comptés à partir du paiement, comme l'abonnement services ; l'année
+  est facturée 10 mois.
+- Les invités en plus s'achètent d'avance, par blocs de 100.
+- Le jour de l'événement, l'envoi ne s'arrête jamais : les invités envoyés
+  au-delà du mois sont dus et réglés avec le renouvellement suivant.
+- Tant que le Pack est actif, les événements n'ont pas de palier à acheter et
+  l'invitation interactive est comprise.
 
 ## Décision 4 — Ventes de billets : 3 %, sans blocage le jour J
 

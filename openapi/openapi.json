@@ -4473,6 +4473,66 @@
         }
       }
     },
+    "/api/v1/billing/pack/request" : {
+      "post" : {
+        "tags" : [
+          "organizer-pack-controller"
+        ],
+        "operationId" : "requestPack",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PackRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ManualPaymentInstructions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/pack/extra" : {
+      "post" : {
+        "tags" : [
+          "organizer-pack-controller"
+        ],
+        "operationId" : "requestPackExtra",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PackExtraRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ManualPaymentInstructions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/billing/invoices/{invoiceId}/credit-note" : {
       "post" : {
         "tags" : [
@@ -7401,6 +7461,26 @@
               "text/plain" : {
                 "schema" : {
                   "type" : "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/pack" : {
+      "get" : {
+        "tags" : [
+          "organizer-pack-controller"
+        ],
+        "operationId" : "packView",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PackView"
                 }
               }
             }
@@ -11488,6 +11568,26 @@
           "plan"
         ]
       },
+      "PackRequest" : {
+        "type" : "object",
+        "properties" : {
+          "months" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 1
+          }
+        }
+      },
+      "PackExtraRequest" : {
+        "type" : "object",
+        "properties" : {
+          "blocks" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 1
+          }
+        }
+      },
       "InvoiceDetail" : {
         "type" : "object",
         "properties" : {
@@ -13616,6 +13716,87 @@
           "createdAt" : {
             "type" : "string",
             "format" : "date-time"
+          }
+        }
+      },
+      "PackView" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "startedAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "expiresAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "monthStart" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "monthEnd" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "includedGuests" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "extraGuests" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "usedGuests" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "remainingGuests" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "owedGuests" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "monthlyMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "extraPerGuestMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "extraBlockGuests" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "owedMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "months" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MonthOption"
+            }
           }
         }
       },

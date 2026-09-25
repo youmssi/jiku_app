@@ -36,10 +36,7 @@ class BillingHistoryController(
                 paymentId = requireNotNull(payment.id),
                 eventId = payment.eventId,
                 eventName =
-                    when {
-                        payment.kind == Payment.KIND_SUBSCRIPTION -> "${payment.tier} subscription"
-                        else -> payment.eventId?.let { events.findEvent(it)?.name } ?: "Event"
-                    },
+                    label(payment),
                 tier = payment.tier,
                 amountMinor = payment.amountMinor,
                 currency = payment.currency,
@@ -60,10 +57,7 @@ class BillingHistoryController(
             throw ResponseStatusException(HttpStatus.CONFLICT, "A receipt is only available for a successful payment")
         }
         val eventName =
-            when {
-                payment.kind == Payment.KIND_SUBSCRIPTION -> "${payment.tier} subscription"
-                else -> payment.eventId?.let { events.findEvent(it)?.name } ?: "Event"
-            }
+            label(payment)
         val when0 = RECEIPT_DATE.format(payment.createdAt)
         val amount = formatAmount(payment.amountMinor, payment.currency)
         return buildString {
@@ -81,6 +75,15 @@ class BillingHistoryController(
             appendLine("This is a basic receipt for your records, not a tax invoice.")
         }
     }
+
+    /** What a payment was for: its event, the subscription, or the Organizer Pack (ADR 105). */
+    private fun label(payment: Payment): String =
+        when (payment.kind) {
+            Payment.KIND_SUBSCRIPTION -> "${payment.tier} subscription"
+            Payment.KIND_PACK -> "Organizer Pack (${payment.subscriptionMonths} months)"
+            Payment.KIND_PACK_EXTRA -> "Organizer Pack: ${payment.guests} extra guests"
+            else -> payment.eventId?.let { events.findEvent(it)?.name } ?: "Event"
+        }
 
     private fun formatAmount(
         minor: Long,

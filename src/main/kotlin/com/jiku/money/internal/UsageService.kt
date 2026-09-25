@@ -25,6 +25,7 @@ class UsageService(
     private val platformSettings: PlatformBillingSettingsService,
     private val trialService: TrialService,
     private val tenantQuota: TenantQuotaService,
+    private val organizerPack: OrganizerPackService,
 ) {
     @Transactional
     fun allowance(eventId: UUID): BillingAllowance {
@@ -65,13 +66,13 @@ class UsageService(
         unlockedAllowance: Long,
     ): BillingAllowance {
         val invited = stats.invited
-        val effective = effectiveAllowance(eventId, invited, unlockedAllowance)
+        val effective = effectiveAllowance(eventId, invited, unlockedAllowance, unlimitedOnEventDay = false)
         return BillingAllowance(
             invitedGuests = invited,
             allowance = effective,
             remaining = (effective - invited).coerceAtLeast(0),
             withinAllowance = invited <= effective,
-            tier = platformSettings.tierForUsage(invited),
+            tier = if (organizerPack.isActive()) PACK_TIER else platformSettings.tierForUsage(invited),
             guestsImported = stats.total,
             invitationsSentEmail = sent.email,
             invitationsSentWhatsapp = sent.whatsapp,
@@ -101,8 +102,20 @@ class UsageService(
         eventId: UUID,
         alreadyCommitted: Long,
         paidAllowance: Long,
+        unlimitedOnEventDay: Boolean = true,
     ): Long {
-        val base = if (paidAllowance > properties.freeTierGuests) paidAllowance else tenantQuota.freeCeilingFor(alreadyCommitted)
+        val pack = organizerPack.ceiling(eventId, alreadyCommitted, unlimitedOnEventDay)
+        val base =
+            when {
+                paidAllowance > properties.freeTierGuests -> maxOf(paidAllowance, pack ?: 0)
+                pack != null -> pack
+                else -> tenantQuota.freeCeilingFor(alreadyCommitted)
+            }
         return maxOf(base, trialService.liveTrialAllowance(eventId) ?: 0)
+    }
+
+    private companion object {
+        /** The tier an event reports while an Organizer Pack covers it (ADR 105). */
+        const val PACK_TIER = "PACK"
     }
 }
