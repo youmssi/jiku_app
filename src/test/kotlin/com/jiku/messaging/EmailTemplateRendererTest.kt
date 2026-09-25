@@ -179,6 +179,26 @@ class EmailTemplateRendererTest {
         assertTrue(text.startsWith("Bonjour Awa, Maison Aminata vous invite à Gala le mardi 3 novembre 2026 à 15:00."))
     }
 
+    @Test
+    fun `a ticket sent directly on WhatsApp carries the ticket link`() {
+        val text =
+            whatsApp.renderTicket(
+                WhatsAppInvitation(
+                    recipientPhone = "+224600000000",
+                    recipientName = "Awa",
+                    eventName = "Gala",
+                    eventWhen = "Samedi 12 décembre 2026 à 18:00",
+                    organizerName = "Maison Aminata",
+                    invitationUrl = "https://jiku.app/invitation/abc/ticket",
+                ),
+                MessageLanguage.FRENCH,
+            )
+
+        assertTrue(text.startsWith("Bonjour Awa, voici votre billet pour Gala le samedi 12 décembre 2026 à 18:00"))
+        assertTrue(text.contains("https://jiku.app/invitation/abc/ticket"))
+        assertFalse(text.contains("{{"))
+    }
+
     private fun invitation() =
         InvitationEmail(
             recipientEmail = "awa@example.com",

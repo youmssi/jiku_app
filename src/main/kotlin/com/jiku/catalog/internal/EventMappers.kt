@@ -19,6 +19,7 @@ fun Event.toResponse(): EventResponse =
                 transferDeadline = settings.transferDeadline,
                 overbookingAllowed = settings.overbookingAllowed,
                 maxOverbookingCount = settings.maxOverbookingCount,
+                deliveryMode = settings.deliveryMode,
             ),
         invitationChannels = invitationChannels.toSet(),
         // Null quand aucun quorum n'est configuré, ce qui est le cas de la
@@ -48,6 +49,7 @@ fun Event.toEventInfo(): EventInfo =
         transferAllowed = settings.transferAllowed,
         transferDeadline = settings.transferDeadline,
         invitationChannels = invitationChannels.toSet(),
+        deliveryMode = settings.deliveryMode,
     )
 
 fun EventSettingsDto.toEmbeddable(): EventSettings =
@@ -56,4 +58,5 @@ fun EventSettingsDto.toEmbeddable(): EventSettings =
         transferDeadline = transferDeadline,
         overbookingAllowed = overbookingAllowed,
         maxOverbookingCount = maxOverbookingCount,
+        deliveryMode = deliveryMode,
     )

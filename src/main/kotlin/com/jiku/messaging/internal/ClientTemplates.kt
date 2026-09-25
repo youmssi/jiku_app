@@ -72,6 +72,22 @@ object ClientTemplates {
                 whatsappFile = "invitation.txt",
             ),
             Definition(
+                name = "ticket",
+                label = "Ticket sent directly (WhatsApp)",
+                channels = listOf(CHANNEL_WHATSAPP),
+                emailVariables = null,
+                whatsappVariables =
+                    listOf(
+                        Variable("guestName", "Guest name", "Awa Diallo", required = true),
+                        Variable("organizerName", "Organizer name", "Salon Aminata", required = true),
+                        Variable("eventName", "Event / offer name", "Gala des 25 ans", required = true),
+                        Variable("eventWhen", "Date and time", "on Saturday 12 Dec at 18:00"),
+                        Variable("ticketUrl", "Ticket link", "https://jiku.app/invitation/8f3k2a/ticket", required = true),
+                    ),
+                emailFile = null,
+                whatsappFile = "ticket.txt",
+            ),
+            Definition(
                 name = "event-cancelled",
                 label = "Event cancellation",
                 channels = listOf(CHANNEL_EMAIL, CHANNEL_WHATSAPP),

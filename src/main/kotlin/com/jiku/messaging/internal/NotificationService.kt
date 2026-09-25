@@ -52,7 +52,13 @@ class NotificationService(
      * A confirmed guest's ticket by email (JIKU-129), with a calendar invite
      * attached when the event has a date. Logged against the guest.
      */
-    fun deliverTicketConfirmation(notice: TicketConfirmedNotice): DeliveryOutcome {
+    fun deliverTicketConfirmation(notice: TicketConfirmedNotice): DeliveryOutcome =
+        deliverWithRetry(ticketEmail(notice)) { status, attempt, error ->
+            record(notice.guestId, GuestInvitedEvent.CHANNEL_EMAIL, notice.recipient, status, attempt, error)
+        }
+
+    /** The ticket email, with the calendar invite attached when the event has a date. */
+    private fun ticketEmail(notice: TicketConfirmedNotice): () -> Unit {
         val entry =
             notice.eventStart?.let { start ->
                 CalendarEntry(
@@ -66,7 +72,7 @@ class NotificationService(
                 )
             }
         val rendered = emailRenderer.renderTicketConfirmed(notice, entry?.let { EventCalendar.googleLink(it) })
-        val message =
+        return email(
             EmailMessage(
                 to = notice.recipient,
                 toName = notice.recipientName,
@@ -76,10 +82,8 @@ class NotificationService(
                     listOfNotNull(
                         entry?.let { EmailAttachment(CALENDAR_FILE, CALENDAR_TYPE, EventCalendar.ics(it)) },
                     ),
-            )
-        return deliverWithRetry(email(message)) { status, attempt, error ->
-            record(notice.guestId, GuestInvitedEvent.CHANNEL_EMAIL, notice.recipient, status, attempt, error)
-        }
+            ),
+        )
     }
 
     /**
@@ -208,7 +212,38 @@ class NotificationService(
         return DeliveryOutcome(delivered = false, attempts = sendProperties.maxAttempts, error = lastError)
     }
 
-    private fun sendAction(event: GuestInvitedEvent): () -> Unit =
+    private fun sendAction(event: GuestInvitedEvent): () -> Unit {
+        val ticket = event.ticket
+        return if (ticket == null) invitationAction(event) else directTicketAction(event, ticket)
+    }
+
+    /** The ticket itself, for an event that sends tickets directly (ADR 105). */
+    private fun directTicketAction(
+        event: GuestInvitedEvent,
+        ticket: TicketConfirmedNotice,
+    ): () -> Unit =
+        when (event.channel) {
+            GuestInvitedEvent.CHANNEL_EMAIL -> ticketEmail(ticket)
+            GuestInvitedEvent.CHANNEL_WHATSAPP -> {
+                val text =
+                    whatsAppRenderer.renderTicket(
+                        WhatsAppInvitation(
+                            recipientPhone = event.recipient,
+                            recipientName = event.recipientName,
+                            eventName = event.eventName,
+                            eventWhen = event.eventWhen,
+                            organizerName = event.organizerName,
+                            invitationUrl = ticket.ticketUrl,
+                        ),
+                        event.language,
+                    )
+                whatsApp(event.recipient, text, event.invitationId, event.eventId)
+            }
+
+            else -> throw IllegalArgumentException("Unsupported channel: ${event.channel}")
+        }
+
+    private fun invitationAction(event: GuestInvitedEvent): () -> Unit =
         when (event.channel) {
             GuestInvitedEvent.CHANNEL_EMAIL -> {
                 val rendered =
