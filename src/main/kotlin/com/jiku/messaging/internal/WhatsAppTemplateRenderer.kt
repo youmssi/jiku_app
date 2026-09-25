@@ -30,6 +30,23 @@ class WhatsAppTemplateRenderer(
             ),
         )
 
+    /** The ticket itself, for an event that sends tickets directly (ADR 105). */
+    fun renderTicket(
+        ticket: WhatsAppInvitation,
+        language: String,
+    ): String =
+        render(
+            "ticket",
+            language,
+            mapOf(
+                "guestName" to ticket.recipientName,
+                "organizerName" to ticket.organizerName,
+                "eventName" to ticket.eventName,
+                "eventWhen" to joined(language, "whatsapp.on", ticket.eventWhen?.let { inSentence(it, language) }),
+                "ticketUrl" to ticket.invitationUrl,
+            ),
+        )
+
     fun renderCancellation(
         cancellation: WhatsAppCancellation,
         language: String,

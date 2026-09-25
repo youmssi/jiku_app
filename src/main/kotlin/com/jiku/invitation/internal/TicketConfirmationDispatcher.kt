@@ -1,9 +1,6 @@
 package com.jiku.invitation.internal
 
 import com.jiku.catalog.EventModuleApi
-import com.jiku.shared.MessageLanguage
-import com.jiku.shared.TicketConfirmedNotice
-import com.jiku.tenant.TenantModuleApi
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
@@ -27,9 +24,7 @@ data class TicketConfirmed(
 class TicketConfirmationDispatcher(
     private val guests: GuestRepository,
     private val events: EventModuleApi,
-    private val tenants: TenantModuleApi,
-    private val tokenService: InvitationTokenService,
-    private val properties: InvitationSendProperties,
+    private val notices: TicketNotices,
     private val eventPublisher: ApplicationEventPublisher,
 ) {
     @Async("invitationExecutor")
@@ -38,35 +33,6 @@ class TicketConfirmationDispatcher(
         val guest = guests.findById(confirmed.guestId).orElse(null) ?: return
         val email = guest.email?.takeIf { it.isNotBlank() } ?: return
         val event = events.findEvent(confirmed.eventId) ?: return
-        val tenant = tenants.findTenant(UUID.fromString(confirmed.tenantId))
-        val language = MessageLanguage.forCountry(tenant?.country)
-        val token = tokenService.issue(confirmed.guestId, confirmed.eventId, confirmed.tenantId)
-        val prefix = if (language == MessageLanguage.FRENCH) "" else "/$language"
-        val category = guest.ticketTypeId?.let { typeId -> events.ticketTypes(confirmed.eventId).firstOrNull { it.id == typeId }?.label }
-
-        eventPublisher.publishEvent(
-            TicketConfirmedNotice(
-                guestId = confirmed.guestId,
-                tenantId = confirmed.tenantId,
-                eventId = confirmed.eventId,
-                recipient = email,
-                recipientName = "${guest.firstName} ${guest.lastName}".trim(),
-                eventName = event.name,
-                eventStart = event.startDateTime,
-                eventEnd = event.endDateTime,
-                eventTimezone = event.timezone,
-                eventLocation = event.location,
-                categoryName = category,
-                organizerName = tenant?.displayName ?: event.name,
-                primaryColor = tenant?.primaryColor ?: DEFAULT_COLOR,
-                logoUrl = tenant?.logoUrl,
-                ticketUrl = "${properties.appBaseUrl}$prefix/invitation/$token/ticket",
-                language = language,
-            ),
-        )
-    }
-
-    private companion object {
-        const val DEFAULT_COLOR = "#1E293B"
+        eventPublisher.publishEvent(notices.build(guest, event, confirmed.tenantId, email))
     }
 }

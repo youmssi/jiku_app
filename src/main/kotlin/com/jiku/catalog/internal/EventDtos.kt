@@ -1,5 +1,6 @@
 package com.jiku.catalog.internal
 
+import com.jiku.catalog.DeliveryMode
 import com.jiku.catalog.InvitationChannel
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
@@ -14,6 +15,8 @@ data class EventSettingsDto(
     val transferDeadline: Instant? = null,
     val overbookingAllowed: Boolean = false,
     val maxOverbookingCount: Int? = null,
+    /** How guests receive their ticket (ADR 105): a link to answer, or the ticket itself. */
+    val deliveryMode: DeliveryMode = DeliveryMode.LINK,
 )
 
 data class CreateEventRequest(

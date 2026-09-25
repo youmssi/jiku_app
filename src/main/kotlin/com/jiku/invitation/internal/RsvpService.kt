@@ -59,6 +59,25 @@ class RsvpService(
         return buildView(guest)
     }
 
+    /**
+     * Confirms a guest as their invitation is sent, for an event that sends
+     * tickets directly (ADR 105). Same capacity rules as [confirm], but no
+     * separate ticket email: the invitation itself carries the ticket.
+     * Returns false when the event is full or the guest erased their data.
+     */
+    @Transactional
+    fun issueDirectTicket(guest: Guest): Boolean {
+        if (guest.personalDataErased) return false
+        if (guest.rsvpStatus == RsvpStatus.CONFIRMED) return true
+        val eventId = requireNotNull(guest.eventId)
+        if (!events.reserveAttendanceSlot(eventId, guest.ticketTypeId)) return false
+        guest.rsvpStatus = RsvpStatus.CONFIRMED
+        guests.save(guest)
+        val charge = guest.ticketTypeId?.let { typeId -> events.ticketTypes(eventId).firstOrNull { it.id == typeId }?.clientCharge() }
+        ticketing.issueTicket(eventId, requireNotNull(guest.id), guest.ticketTypeId, charge)
+        return true
+    }
+
     @Transactional
     fun decline(
         guestId: UUID,

@@ -23,6 +23,8 @@ data class EventInfo(
     val transferDeadline: Instant? = null,
     /** Channels the organizer enabled on the event (EMAIL/WHATSAPP), enforced at send. */
     val invitationChannels: Set<InvitationChannel> = emptySet(),
+    /** How guests receive their ticket (ADR 105). */
+    val deliveryMode: DeliveryMode = DeliveryMode.LINK,
 ) {
     companion object {
         /** [status] value of a draft event, shared so consumers avoid magic strings. */

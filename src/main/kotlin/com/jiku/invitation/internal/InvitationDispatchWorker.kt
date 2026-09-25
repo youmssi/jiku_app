@@ -1,5 +1,6 @@
 package com.jiku.invitation.internal
 
+import com.jiku.catalog.DeliveryMode
 import com.jiku.catalog.EventModuleApi
 import com.jiku.catalog.InvitationChannel
 import com.jiku.shared.GuestInvitedEvent
@@ -27,6 +28,8 @@ class InvitationDispatchWorker(
     private val tokenService: InvitationTokenService,
     private val properties: InvitationSendProperties,
     private val eventPublisher: ApplicationEventPublisher,
+    private val rsvpService: RsvpService,
+    private val ticketNotices: TicketNotices,
 ) {
     @Transactional
     fun process(invitationId: UUID) {
@@ -69,6 +72,16 @@ class InvitationDispatchWorker(
         val tenant = tenantId.takeIf { it.isNotEmpty() }?.let { tenants.findTenant(UUID.fromString(it)) }
         val language = MessageLanguage.forCountry(tenant?.country)
         val token = tokenService.issue(invitation.guestId, invitation.eventId, tenantId)
+        val ticket =
+            if (event?.deliveryMode == DeliveryMode.DIRECT_TICKET) {
+                if (!rsvpService.issueDirectTicket(guest)) {
+                    fail(invitation, "No ticket could be issued: the event is full or the guest's data was erased")
+                    return
+                }
+                ticketNotices.build(guest, event, tenantId, recipient)
+            } else {
+                null
+            }
 
         eventPublisher.publishEvent(
             GuestInvitedEvent(
@@ -84,8 +97,9 @@ class InvitationDispatchWorker(
                 organizerName = tenant?.displayName ?: "Your organizer",
                 primaryColor = tenant?.primaryColor ?: DEFAULT_COLOR,
                 logoUrl = tenant?.logoUrl,
-                invitationUrl = "${properties.appBaseUrl}/invitation/$token",
+                invitationUrl = ticket?.ticketUrl ?: "${properties.appBaseUrl}/invitation/$token",
                 language = language,
+                ticket = ticket,
             ),
         )
     }

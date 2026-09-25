@@ -9119,6 +9119,13 @@
               "null"
             ],
             "format" : "int32"
+          },
+          "deliveryMode" : {
+            "type" : "string",
+            "enum" : [
+              "LINK",
+              "DIRECT_TICKET"
+            ]
           }
         }
       },

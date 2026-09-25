@@ -1,0 +1,5 @@
+Hi {{guestName}}, here is your ticket for {{eventName}}{{eventWhen}}, from {{organizerName}}.
+
+Your ticket: {{ticketUrl}}
+
+Show its QR code at the entrance. It works even without a connection.
