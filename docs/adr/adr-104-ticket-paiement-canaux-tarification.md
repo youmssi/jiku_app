@@ -206,6 +206,9 @@ un lien de visio au lieu d'un QR.
 
 ## 8. Tarification
 
+> **Remplacé par l'ADR 105** (2026-09-25) : grille unique en GNF, FCFA et USD,
+> modes d'envoi, Pack Organisateur et règles de commission assouplies.
+
 Trois lignes, affichées telles quelles sur la page des prix :
 
 1. **Services** (file d'attente, réservation, rendez-vous) : **abonnement par

@@ -3,7 +3,8 @@
 **Date :** 2026-09-24
 **Statut :** estimation de travail. Les tarifs des prestataires changent ; les
 chiffres sont à revoir à chaque renégociation ou changement de grille.
-**Référence :** ADR 104.
+**Référence :** ADR 104. La grille et les marges à jour sont dans l'ADR 105,
+qui remplace les prix utilisés ci-dessous.
 
 Toutes les valeurs sont en francs guinéens (GNF), au taux configuré dans
 l'application : **1 USD = 8 760 GNF** (`billing.custom.usd-to-gnf-rate`).
