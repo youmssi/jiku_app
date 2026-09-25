@@ -17,13 +17,15 @@ import org.springframework.web.server.ResponseStatusException
  * Org settings for messaging providers (JIKU-44): the organization owner plugs
  * in their own Resend key and WhatsApp Cloud API credentials, reads back only
  * masked values, reverts to the platform default, and verifies the setup with
- * a one-click test send. Tenant scoping comes from the Hibernate tenant filter.
+ * a one-click test send. Their own WhatsApp number can also connect through
+ * Meta's Embedded Signup (ADR 105). Tenant scoping comes from the Hibernate tenant filter.
  */
 @RestController
 @RequestMapping("/settings/providers")
 @PreAuthorize("hasRole('ORGANIZER_MANAGER')")
 class ProviderSettingsController(
     private val service: TenantProviderSettingsService,
+    private val embeddedSignup: EmbeddedSignupService,
 ) {
     @GetMapping
     fun overview(): ProviderSettingsResponse = service.overview()
@@ -37,6 +39,16 @@ class ProviderSettingsController(
     fun updateWhatsApp(
         @Valid @RequestBody request: UpdateWhatsAppProviderRequest,
     ): ProviderSettingsResponse = service.updateWhatsApp(request)
+
+    /** What the web needs to open Meta's Embedded Signup window (ADR 105). */
+    @GetMapping("/whatsapp/embedded-signup")
+    fun embeddedSignupConfig(): EmbeddedSignupConfig = embeddedSignup.config()
+
+    /** Finishes Embedded Signup with what Meta's window handed back: the organization's own number becomes its WhatsApp provider. */
+    @PostMapping("/whatsapp/embedded-signup")
+    fun completeEmbeddedSignup(
+        @Valid @RequestBody request: CompleteEmbeddedSignupRequest,
+    ): ProviderSettingsResponse = embeddedSignup.complete(request)
 
     @DeleteMapping("/{channel}")
     fun remove(

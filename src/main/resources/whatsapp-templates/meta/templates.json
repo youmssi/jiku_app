@@ -1,0 +1,13 @@
+{
+  "text": [
+    { "type": "BODY", "text": "Message de votre organisateur :\n\n{{1}}\n\nRépondez STOP pour ne plus recevoir de messages.", "example": { "body_text": [["Votre rendez-vous est demain à 10 h."]] } }
+  ],
+  "buttons": [
+    { "type": "BODY", "text": "Vous êtes invité(e) :\n\n{{1}}\n\nMerci de nous dire si vous venez.", "example": { "body_text": [["Mariage d'Awa et Moussa, samedi 12 octobre à 18 h."]] } },
+    { "type": "BUTTONS", "buttons": [ { "type": "QUICK_REPLY", "text": "Je viens" }, { "type": "QUICK_REPLY", "text": "Je ne viens pas" } ] }
+  ],
+  "image": [
+    { "type": "HEADER", "format": "IMAGE", "example": { "header_handle": ["{{EXAMPLE_IMAGE_HANDLE}}"] } },
+    { "type": "BODY", "text": "Votre billet :\n\n{{1}}\n\nPrésentez ce code à l'entrée.", "example": { "body_text": [["Mariage d'Awa et Moussa, samedi 12 octobre à 18 h."]] } }
+  ]
+}

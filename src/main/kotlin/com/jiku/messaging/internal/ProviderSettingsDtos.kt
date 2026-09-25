@@ -15,6 +15,14 @@ data class MetaCloudCredentials(
     val accessToken: String,
     val templateName: String? = null,
     val templateLanguage: String = "fr",
+    val buttonsTemplateName: String? = null,
+    val imageTemplateName: String? = null,
+    /** Set when the number came through Embedded Signup (ADR 105). */
+    val wabaId: String? = null,
+    val displayPhoneNumber: String? = null,
+    val verifiedName: String? = null,
+    /** The two-step verification PIN the number was registered with. */
+    val pin: String? = null,
 )
 
 data class UpdateEmailProviderRequest(
@@ -57,6 +65,27 @@ data class WhatsAppProviderView(
      * through the platform number.
      */
     val allowed: Boolean = false,
+    /** The number as Meta shows it, for a number connected through Embedded Signup. */
+    val displayPhoneNumber: String? = null,
+    val verifiedName: String? = null,
+)
+
+/** What the web needs to open Meta's Embedded Signup window; [enabled] is false until the Meta app is configured. */
+data class EmbeddedSignupConfig(
+    val enabled: Boolean,
+    val appId: String? = null,
+    val configId: String? = null,
+    val graphVersion: String? = null,
+)
+
+/** What Meta's window hands back: the code to exchange, and the account and number the organizer chose. */
+data class CompleteEmbeddedSignupRequest(
+    @field:NotBlank
+    val code: String,
+    @field:NotBlank
+    val wabaId: String,
+    @field:NotBlank
+    val phoneNumberId: String,
 )
 
 data class ProviderSettingsResponse(

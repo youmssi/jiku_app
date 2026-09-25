@@ -19,7 +19,9 @@ import java.text.Normalizer
  * latest invitation's ticket again, STOP silences the number, START lifts it.
  *
  * Answers go back inside the conversation the guest just opened, which Meta
- * does not charge, from the platform number.
+ * does not charge, from the number the guest wrote to: the platform's, or an
+ * organization's own (ADR 105), in which case only that organization's
+ * invitations are considered.
  */
 @Service
 class WhatsAppInboundService(
@@ -32,9 +34,12 @@ class WhatsAppInboundService(
     private val log = LoggerFactory.getLogger(WhatsAppInboundService::class.java)
 
     @Transactional
-    fun handle(message: InboundWhatsApp) {
-        message.buttonId?.let { answer(message.from, it) }
-        message.text?.let { keyword(message.from, it) }
+    fun handle(
+        message: InboundWhatsApp,
+        tenantId: String? = null,
+    ) {
+        message.buttonId?.let { answer(message.from, it, tenantId) }
+        message.text?.let { keyword(message.from, it, tenantId) }
     }
 
     /** Tells the guest how an answer ended when it did not end with a ticket. */
@@ -51,19 +56,26 @@ class WhatsAppInboundService(
     private fun answer(
         from: String,
         buttonId: String,
+        tenantId: String?,
     ) {
         val answer = WhatsAppReplyPayload.parse(buttonId) ?: return
         val thread = threads.findById(answer.invitationId).orElse(null) ?: return
-        if (thread.phone != from) return
+        if (thread.phone != from || (tenantId != null && thread.tenantId != tenantId)) return
         events.publishEvent(WhatsAppRsvpReply(thread.tenantId, thread.invitationId, answer.accepted))
     }
 
     private fun keyword(
         from: String,
         text: String,
+        tenantId: String?,
     ) {
         val word = normalize(text)
-        val thread = threads.findFirstByPhoneOrderBySentAtDesc(from)
+        val thread =
+            if (tenantId == null) {
+                threads.findFirstByPhoneOrderBySentAtDesc(from)
+            } else {
+                threads.findFirstByPhoneAndTenantIdOrderBySentAtDesc(from, tenantId)
+            }
         val language = thread?.language ?: MessageLanguage.FRENCH
         when {
             word in START_WORDS -> {

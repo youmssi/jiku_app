@@ -49,6 +49,9 @@ class TenantProviderSettings(
         const val CHANNEL_WHATSAPP = "WHATSAPP"
         const val PROVIDER_RESEND = "RESEND"
         const val PROVIDER_META_CLOUD = "META_CLOUD"
+
+        /** A number connected through Embedded Signup (ADR 105). */
+        const val PROVIDER_META_EMBEDDED = "META_EMBEDDED"
     }
 }
 

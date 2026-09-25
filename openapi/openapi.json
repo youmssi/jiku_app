@@ -987,6 +987,54 @@
         }
       }
     },
+    "/api/v1/settings/providers/whatsapp/embedded-signup" : {
+      "get" : {
+        "tags" : [
+          "provider-settings-controller"
+        ],
+        "operationId" : "embeddedSignupConfig",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EmbeddedSignupConfig"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [
+          "provider-settings-controller"
+        ],
+        "operationId" : "completeEmbeddedSignup",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CompleteEmbeddedSignupRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProviderSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/services" : {
       "get" : {
         "tags" : [
@@ -8748,6 +8796,18 @@
           },
           "allowed" : {
             "type" : "boolean"
+          },
+          "displayPhoneNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "verifiedName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         }
       },
@@ -10028,6 +10088,28 @@
             ]
           }
         }
+      },
+      "CompleteEmbeddedSignupRequest" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "wabaId" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "phoneNumberId" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        },
+        "required" : [
+          "code",
+          "phoneNumberId",
+          "wabaId"
+        ]
       },
       "ServiceCreateRequest" : {
         "type" : "object",
@@ -12716,6 +12798,32 @@
             "items" : {
               "type" : "string"
             }
+          }
+        }
+      },
+      "EmbeddedSignupConfig" : {
+        "type" : "object",
+        "properties" : {
+          "enabled" : {
+            "type" : "boolean"
+          },
+          "appId" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "configId" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "graphVersion" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         }
       },

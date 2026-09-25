@@ -1,6 +1,7 @@
 package com.jiku.messaging.internal
 
 import com.jiku.shared.OwnWhatsAppNumberGate
+import com.jiku.shared.TenantContext
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -20,6 +21,7 @@ class TenantProviderSettingsService(
     private val objectMapper: ObjectMapper,
     private val resolver: MessagingProviderResolver,
     private val ownNumberGate: OwnWhatsAppNumberGate,
+    private val numbers: WhatsAppBusinessNumberRepository,
 ) {
     @Transactional(readOnly = true)
     fun overview(): ProviderSettingsResponse = ProviderSettingsResponse(email = emailView(), whatsapp = whatsAppView())
@@ -42,30 +44,55 @@ class TenantProviderSettingsService(
 
     @Transactional
     fun updateWhatsApp(request: UpdateWhatsAppProviderRequest): ProviderSettingsResponse {
+        requireOwnNumberAllowed()
+        saveWhatsApp(
+            MetaCloudCredentials(
+                phoneNumberId = request.phoneNumberId.trim(),
+                accessToken = request.accessToken.trim(),
+                templateName = request.templateName?.trim()?.takeIf { it.isNotBlank() },
+                templateLanguage = request.templateLanguage?.trim()?.takeIf { it.isNotBlank() } ?: "fr",
+            ),
+            TenantProviderSettings.PROVIDER_META_CLOUD,
+        )
+        return overview()
+    }
+
+    fun requireOwnNumberAllowed() {
         if (!ownNumberGate.ownNumberAllowed()) {
             throw ResponseStatusException(
                 HttpStatus.PAYMENT_REQUIRED,
                 "Your own WhatsApp number comes with the Organisation plan, the Organizer Pack or its monthly add-on",
             )
         }
-        val credentials =
-            MetaCloudCredentials(
-                phoneNumberId = request.phoneNumberId.trim(),
-                accessToken = request.accessToken.trim(),
-                templateName = request.templateName?.trim()?.takeIf { it.isNotBlank() },
-                templateLanguage = request.templateLanguage?.trim()?.takeIf { it.isNotBlank() } ?: "fr",
-            )
+    }
+
+    /** Saves the organization's WhatsApp credentials and routes its number's incoming messages to it. */
+    @Transactional
+    fun saveWhatsApp(
+        credentials: MetaCloudCredentials,
+        provider: String,
+    ) {
+        val tenantId = requireNotNull(TenantContext.get()) { "Saving a WhatsApp number requires an authenticated tenant" }
+        val owner = numbers.findById(credentials.phoneNumberId).orElse(null)
+        if (owner != null && owner.tenantId != tenantId) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "This WhatsApp number is already connected to another organization")
+        }
+        numbers.deleteByTenantId(tenantId)
+        numbers.flush()
+        numbers.save(WhatsAppBusinessNumber(credentials.phoneNumberId, tenantId))
         upsert(
             channel = TenantProviderSettings.CHANNEL_WHATSAPP,
-            provider = TenantProviderSettings.PROVIDER_META_CLOUD,
+            provider = provider,
             credentialsJson = objectMapper.writeValueAsString(credentials),
         )
-        return overview()
     }
 
     @Transactional
     fun remove(channel: String): ProviderSettingsResponse {
         repository.findByChannel(channel)?.let { repository.delete(it) }
+        if (channel == TenantProviderSettings.CHANNEL_WHATSAPP) {
+            TenantContext.get()?.let(numbers::deleteByTenantId)
+        }
         return overview()
     }
 
@@ -170,6 +197,8 @@ class TenantProviderSettingsService(
             templateName = credentials.templateName,
             templateLanguage = credentials.templateLanguage,
             allowed = ownNumberGate.ownNumberAllowed(),
+            displayPhoneNumber = credentials.displayPhoneNumber,
+            verifiedName = credentials.verifiedName,
         )
     }
 }

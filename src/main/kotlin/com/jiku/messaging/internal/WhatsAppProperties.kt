@@ -49,5 +49,12 @@ data class WhatsAppProperties(
         val appSecret: String = "",
         /** The token Meta echoes when the webhook is registered (JIKU-143); blank refuses registration. */
         val verifyToken: String = "",
+        /**
+         * The Meta app organizations connect their own number to through
+         * Embedded Signup (ADR 105), with the signup configuration made for it
+         * in Meta. Blank keeps Embedded Signup off.
+         */
+        val appId: String = "",
+        val embeddedSignupConfigId: String = "",
     )
 }
