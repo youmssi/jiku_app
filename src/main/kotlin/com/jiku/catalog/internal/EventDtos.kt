@@ -2,6 +2,7 @@ package com.jiku.catalog.internal
 
 import com.jiku.catalog.DeliveryMode
 import com.jiku.catalog.InvitationChannel
+import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Pattern
@@ -17,6 +18,14 @@ data class EventSettingsDto(
     val maxOverbookingCount: Int? = null,
     /** How guests receive their ticket (ADR 105): a link to answer, or the ticket itself. */
     val deliveryMode: DeliveryMode = DeliveryMode.LINK,
+    /** The client the event is run for, shown to guests instead of the organization (ADR 105). */
+    @field:Size(max = 255)
+    val brandName: String? = null,
+    @field:Size(max = 2048)
+    @field:Pattern(regexp = "^(https://\\S+)?$", message = "The logo must be an https:// address")
+    val brandLogoUrl: String? = null,
+    @field:Pattern(regexp = "^(#[0-9a-fA-F]{6})?$", message = "The colour must be a 6-digit hex colour, e.g. #1E293B")
+    val brandColor: String? = null,
 )
 
 data class CreateEventRequest(
@@ -27,6 +36,7 @@ data class CreateEventRequest(
     @field:NotBlank val timezone: String,
     val location: String? = null,
     val maxCapacity: Int? = null,
+    @field:Valid
     val settings: EventSettingsDto = EventSettingsDto(),
     val invitationChannels: Set<InvitationChannel> = emptySet(),
 )
@@ -39,6 +49,7 @@ data class UpdateEventRequest(
     @field:NotBlank val timezone: String,
     val location: String? = null,
     val maxCapacity: Int? = null,
+    @field:Valid
     val settings: EventSettingsDto = EventSettingsDto(),
     val invitationChannels: Set<InvitationChannel> = emptySet(),
 )
@@ -53,6 +64,7 @@ data class EventResponse(
     val location: String?,
     val maxCapacity: Int?,
     val status: String,
+    @field:Valid
     val settings: EventSettingsDto,
     val invitationChannels: Set<InvitationChannel>,
     /** Règle de quorum, si l'organisateur en a défini une (JIKU-94). */

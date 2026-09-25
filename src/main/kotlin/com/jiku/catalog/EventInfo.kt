@@ -25,6 +25,8 @@ data class EventInfo(
     val invitationChannels: Set<InvitationChannel> = emptySet(),
     /** How guests receive their ticket (ADR 105). */
     val deliveryMode: DeliveryMode = DeliveryMode.LINK,
+    /** The client this event is branded for, over the organization's own branding. */
+    val brand: EventBrand = EventBrand(),
 ) {
     companion object {
         /** [status] value of a draft event, shared so consumers avoid magic strings. */

@@ -25,4 +25,10 @@ class EventSettings(
     @Enumerated(EnumType.STRING)
     @Column(name = "delivery_mode", nullable = false, length = 24)
     var deliveryMode: DeliveryMode = DeliveryMode.LINK,
+    @Column(name = "brand_name")
+    var brandName: String? = null,
+    @Column(name = "brand_logo_url", length = 2048)
+    var brandLogoUrl: String? = null,
+    @Column(name = "brand_color", length = 7)
+    var brandColor: String? = null,
 )

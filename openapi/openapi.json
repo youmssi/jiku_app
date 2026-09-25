@@ -9358,6 +9358,30 @@
               "DIRECT_TICKET",
               "INTERACTIVE"
             ]
+          },
+          "brandName" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "brandLogoUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "maxLength" : 2048,
+            "minLength" : 0,
+            "pattern" : "^(https://\\S+)?$"
+          },
+          "brandColor" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "pattern" : "^(#[0-9a-fA-F]{6})?$"
           }
         }
       },

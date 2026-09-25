@@ -68,9 +68,9 @@ class EventCancellationNoticeDispatcher(
                         eventName = event.name,
                         eventWhen = event.startDateTime?.let { MessageLanguage.formatEventStart(it, event.timezone, language) },
                         eventLocation = event.location,
-                        organizerName = tenant?.displayName ?: "Your organizer",
-                        primaryColor = tenant?.primaryColor ?: DEFAULT_COLOR,
-                        logoUrl = tenant?.logoUrl,
+                        organizerName = event.brand.name ?: tenant?.displayName ?: "Your organizer",
+                        primaryColor = event.brand.primaryColor ?: tenant?.primaryColor ?: DEFAULT_COLOR,
+                        logoUrl = event.brand.logoUrl ?: tenant?.logoUrl,
                         language = language,
                     ),
                 )
