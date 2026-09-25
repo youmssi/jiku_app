@@ -9,6 +9,7 @@ import com.jiku.money.BillingModuleApi
 import com.jiku.money.BillingTierOption
 import com.jiku.money.PlatformBillingSettingsUpdate
 import com.jiku.money.PlatformBillingSettingsView
+import com.jiku.money.PriceList
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.UUID
@@ -73,10 +74,10 @@ class BillingModuleApiService(
         reason: String,
     ): AdminTrialView = trialService.endEarly(trialId, reason)
 
-    override fun currency(): String = properties.currency
+    override fun currency(): String = PriceList.GNF
 
     override fun tierOptions(): List<BillingTierOption> =
-        platformSettings.tiers().map { BillingTierOption(name = it.name, maxGuests = it.maxGuests, priceMinor = it.priceMinor) }
+        platformSettings.tiers().map { BillingTierOption(name = it.name, maxGuests = it.maxGuests, price = it.price) }
 
     override fun adminBillingSettings(): PlatformBillingSettingsView = platformSettings.view()
 

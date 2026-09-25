@@ -29,7 +29,7 @@ import java.util.UUID
 class ManualPaymentService(
     private val payments: PaymentRepository,
     private val tierUnlockService: TierUnlockService,
-    private val billingProperties: BillingProperties,
+    private val eventPricing: EventPricing,
     private val subscriptionService: SubscriptionService,
     private val subscriptionNotifier: SubscriptionNotifier,
     private val platformSettings: PlatformBillingSettingsService,
@@ -65,14 +65,15 @@ class ManualPaymentService(
         if (existing != null) {
             return instructionsFor(existing)
         }
+        val quote = eventPricing.upgradeQuote(eventId, tier)
 
         val payment =
             payments.save(
                 Payment(
                     eventId = eventId,
                     tier = tier.name,
-                    amountMinor = tier.priceMinor,
-                    currency = billingProperties.currency,
+                    amountMinor = quote.amountMinor,
+                    currency = quote.currency,
                     provider = PROVIDER_MANUAL,
                 ),
             )

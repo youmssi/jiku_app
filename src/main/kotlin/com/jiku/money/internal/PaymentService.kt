@@ -24,8 +24,8 @@ class PaymentService(
     private val payments: PaymentRepository,
     private val tierUnlockService: TierUnlockService,
     private val providers: PaymentProviderSelector,
-    private val billingProperties: BillingProperties,
     private val platformSettings: PlatformBillingSettingsService,
+    private val eventPricing: EventPricing,
     transactionManager: PlatformTransactionManager,
 ) {
     enum class CallbackOutcome {
@@ -52,14 +52,15 @@ class PaymentService(
                 ?: throw IllegalArgumentException("Unknown tier: $tierName")
         val tenantId = requireNotNull(TenantContext.get()) { "Payment initiation requires an authenticated tenant" }
         val provider = providers.active
+        val quote = eventPricing.upgradeQuote(eventId, tier)
 
         val payment =
             payments.save(
                 Payment(
                     eventId = eventId,
                     tier = tier.name,
-                    amountMinor = tier.priceMinor,
-                    currency = billingProperties.currency,
+                    amountMinor = quote.amountMinor,
+                    currency = quote.currency,
                     provider = provider.name,
                 ),
             )
@@ -69,8 +70,8 @@ class PaymentService(
             provider.initiate(
                 PaymentInitiationRequest(
                     paymentId = paymentId,
-                    amountMinor = tier.priceMinor,
-                    currency = billingProperties.currency,
+                    amountMinor = quote.amountMinor,
+                    currency = quote.currency,
                     description = "Unlock ${tier.name} tier",
                     reference = reference,
                 ),
@@ -82,8 +83,8 @@ class PaymentService(
         return PaymentInitiationResult(
             paymentId = paymentId,
             status = payment.status.name,
-            amountMinor = tier.priceMinor,
-            currency = billingProperties.currency,
+            amountMinor = quote.amountMinor,
+            currency = quote.currency,
             instruction = initiation.instruction,
         )
     }

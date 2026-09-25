@@ -7,8 +7,9 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 /**
- * The paid tiers an organizer can purchase (JIKU-35 purchase UI). Served from
- * configuration so the frontend never hardcodes prices or allowances.
+ * The event tiers an organizer can buy (JIKU-35), priced in the organization's
+ * billing currency (ADR 105). Served from configuration so the frontend never
+ * hardcodes prices or allowances.
  */
 @RestController
 @RequestMapping("/billing/tiers")
@@ -16,30 +17,40 @@ import org.springframework.web.bind.annotation.RestController
 class BillingTiersController(
     private val properties: BillingProperties,
     private val platformSettings: PlatformBillingSettingsService,
+    private val billingCurrency: TenantBillingCurrency,
+    private val eventPricing: EventPricing,
 ) {
     @GetMapping
-    fun tiers(): TierCatalog =
-        TierCatalog(
-            currency = properties.currency,
+    fun tiers(): TierCatalog {
+        val currency = billingCurrency.current()
+        val beyond = properties.beyondPerGuest.amountMinor(currency)
+        return TierCatalog(
+            currency = currency,
             freeTierGuests = properties.freeTierGuests,
             tiers =
                 platformSettings.tiers().map {
-                    TierOption(name = it.name, maxGuests = it.maxGuests, priceMinor = it.priceMinor)
+                    TierOption(name = it.name, maxGuests = it.maxGuests, priceMinor = it.price.amountMinor(currency))
                 },
             custom =
                 CustomTierOption(
-                    perGuestUsdCents = properties.custom.perGuestUsdCents,
-                    setupFeeUsdCents = properties.custom.setupFeeUsdCents,
+                    beyondPerGuestMinor = beyond,
+                    perGuestUsdCents = properties.beyondPerGuest.usdCents,
+                    setupFeeUsdCents = 0,
                 ),
         )
+    }
 
     @GetMapping("/custom-quote")
     fun customQuote(
         @RequestParam guestCount: Long,
-    ): CustomQuote = CustomQuote(guestCount = guestCount, priceMinor = properties.custom.priceGnf(guestCount))
+    ): CustomQuote {
+        val quote = eventPricing.beyondQuote(guestCount)
+        return CustomQuote(guestCount = guestCount, priceMinor = quote.amountMinor, currency = quote.currency)
+    }
 }
 
 data class TierCatalog(
+    /** Currency every price below is in: GNF, XOF, XAF or USD (minor units). */
     val currency: String,
     val freeTierGuests: Long,
     val tiers: List<TierOption>,
@@ -52,12 +63,17 @@ data class TierOption(
     val priceMinor: Long,
 )
 
+/** Pricing beyond the last tier: its price plus [beyondPerGuestMinor] for each guest above it. */
 data class CustomTierOption(
+    val beyondPerGuestMinor: Long,
+    @Deprecated("Use beyondPerGuestMinor")
     val perGuestUsdCents: Long,
+    @Deprecated("There is no setup fee since ADR 105; always 0")
     val setupFeeUsdCents: Long,
 )
 
 data class CustomQuote(
     val guestCount: Long,
     val priceMinor: Long,
+    val currency: String,
 )

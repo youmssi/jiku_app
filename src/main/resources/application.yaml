@@ -308,17 +308,15 @@ admin:
     password: ${ADMIN_BOOTSTRAP_PASSWORD:}
 
 billing:
-  # Pay-per-event pricing (JIKU-32, regraded to the Guinea market grid in
-  # JIKU-53: FREE/BRONZE/ARGENT/OR/CUSTOM). The free tier and paid tiers are
-  # configuration, not literals in code, so pricing changes without a release.
-  # Amounts are in the currency's minor unit — GNF has none, so they are the
-  # full amount.
+  # Pay-per-event pricing (JIKU-32, re-based in ADR 105). The tiers and the
+  # per-guest price beyond them are set in GNF, FCFA and USD (BillingProperties
+  # defaults, overridable here or from the admin desk); an organization is
+  # billed in its own franc, or in dollars elsewhere.
   free-tier-guests: ${BILLING_FREE_TIER_GUESTS:100}
   # Rolling window (ISO-8601 duration) over which free-tier-guests accumulates
   # per tenant account, not per event (JIKU-54) — closes the bypass of
   # fragmenting guests across many small free events.
   free-tier-window: ${BILLING_FREE_TIER_WINDOW:P365D}
-  currency: ${BILLING_CURRENCY:GNF}
   invoice:
     # Accounting-grade invoicing (JIKU-69). Numbers are gapless per tenant per
     # fiscal year; these prefixes only shape the human-readable form.
@@ -344,14 +342,6 @@ billing:
     #     GN:
     #       label: "TVA 18%"
     #       rate: "0.18"
-  custom:
-    # CUSTOM tier pricing (beyond the OR tier's 1,000 guests): quoted in USD
-    # cents and converted through this rate, since both move independently of a
-    # release. Defaults match the GTM plan's $0.05/guest + $15 setup at
-    # ~8,760 GNF/USD — revisit the rate periodically, it is not pegged.
-    per-guest-usd-cents: ${BILLING_CUSTOM_PER_GUEST_USD_CENTS:5}
-    setup-fee-usd-cents: ${BILLING_CUSTOM_SETUP_FEE_USD_CENTS:1500}
-    usd-to-gnf-rate: ${BILLING_CUSTOM_USD_TO_GNF_RATE:8760}
   payment:
     # Mobile Money integration (JIKU-33). `provider` names the adapter that starts
     # new payments (JIKU-105); every registered adapter keeps confirming its own
