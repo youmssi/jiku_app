@@ -29,6 +29,7 @@ class SubscriptionService(
     private val tenantModuleApi: TenantModuleApi,
     private val notifier: SubscriptionNotifier,
     private val billingCurrency: TenantBillingCurrency,
+    private val reminderAllowance: ReminderAllowanceService,
 ) {
     /** The current tenant's subscription, or null when it has none. */
     @Transactional(readOnly = true)
@@ -61,6 +62,7 @@ class SubscriptionService(
                     )
                 },
             months = properties.periods.map { MonthOption(it.months, it.chargedMonths) },
+            whatsAppReminders = reminderAllowance.view(),
         )
     }
 

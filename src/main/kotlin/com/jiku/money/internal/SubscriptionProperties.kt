@@ -40,6 +40,8 @@ data class SubscriptionProperties(
     val noticeLead: Duration = Duration.ofDays(7),
     /** Tolerance after the end of a paid period before suspension. */
     val grace: Duration = Duration.ofDays(3),
+    /** WhatsApp appointment reminders a free plan includes each calendar month (ADR 105). */
+    val freePlanWhatsAppReminders: Int = 50,
 ) {
     fun period(months: Int): Period? = periods.firstOrNull { it.months == months }
 }

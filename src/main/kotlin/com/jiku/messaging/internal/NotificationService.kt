@@ -4,6 +4,7 @@ import com.jiku.shared.ClientCalled
 import com.jiku.shared.EventCancellationNotice
 import com.jiku.shared.GuestInvitedEvent
 import com.jiku.shared.MessageLanguage
+import com.jiku.shared.ReminderAllowanceGate
 import com.jiku.shared.ReminderChannel
 import com.jiku.shared.ReminderDue
 import com.jiku.shared.TicketConfirmedNotice
@@ -47,6 +48,7 @@ class NotificationService(
     private val catalog: MessageCatalog,
     private val threads: WhatsAppThreadRepository,
     private val optOuts: WhatsAppOptOutRepository,
+    private val reminderAllowance: ReminderAllowanceGate,
 ) {
     fun deliverInvitation(event: GuestInvitedEvent): DeliveryOutcome =
         deliverWithRetry(sendAction(event)) { status, attempt, error ->
@@ -135,7 +137,14 @@ class NotificationService(
      * un client absent. Un rappel non délivré ne remonte jamais à la réservation.
      */
     fun deliverAppointmentReminder(due: ReminderDue): DeliveryOutcome =
-        deliverToPhone(due.reminderId, due.clientPhone, due.channel, reminderText(due))
+        deliverToPhone(
+            due.reminderId,
+            due.clientPhone,
+            due.channel,
+            reminderText(due),
+            whatsAppAllowed = reminderAllowance.canSendWhatsAppReminder(due.tenantId),
+            onWhatsAppSent = { reminderAllowance.recordWhatsAppReminder(due.tenantId) },
+        )
 
     /** "It's your turn" for a client just called in the line (JIKU-114), by the service's channel. */
     fun deliverClientCalled(called: ClientCalled): DeliveryOutcome =
@@ -150,20 +159,30 @@ class NotificationService(
      * Sends [text] to a client's phone by [channel]. With WHATSAPP_OR_SMS, an SMS
      * takes over whenever WhatsApp cannot deliver (JIKU-112): the fallback is
      * decided here, never by a provider, so a provider switch cannot change it.
+     * When [whatsAppAllowed] is off (a free plan's monthly reminders are used,
+     * ADR 105), WhatsApp is not tried and the channel's SMS fallback, if any,
+     * takes over.
      */
     private fun deliverToPhone(
         referenceId: UUID,
         phone: String,
         channel: ReminderChannel,
         text: String,
+        whatsAppAllowed: Boolean = true,
+        onWhatsAppSent: () -> Unit = {},
     ): DeliveryOutcome {
         val byWhatsApp = {
-            deliverLogged(
-                referenceId,
-                ReminderChannel.WHATSAPP,
-                phone,
-                whatsApp(WhatsAppMessage(phone, text), referenceId, null),
-            )
+            if (whatsAppAllowed) {
+                deliverLogged(
+                    referenceId,
+                    ReminderChannel.WHATSAPP,
+                    phone,
+                    whatsApp(WhatsAppMessage(phone, text), referenceId, null),
+                ).also { if (it.delivered) onWhatsAppSent() }
+            } else {
+                record(referenceId, ReminderChannel.WHATSAPP.name, phone, NotificationLog.STATUS_FAILED, 0, FREE_REMINDERS_USED)
+                DeliveryOutcome(delivered = false, attempts = 0, error = FREE_REMINDERS_USED)
+            }
         }
         val bySms = { deliverLogged(referenceId, ReminderChannel.SMS, phone, sms(phone, text)) }
         return when (channel) {
@@ -419,6 +438,7 @@ class NotificationService(
     }
 
     private companion object {
+        const val FREE_REMINDERS_USED = "The free plan's WhatsApp reminders for this month are used"
         const val CALENDAR_FILE = "invitation.ics"
         const val CALENDAR_TYPE = "text/calendar; charset=utf-8; method=PUBLISH"
     }

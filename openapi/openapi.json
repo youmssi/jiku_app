@@ -13648,6 +13648,19 @@
           }
         }
       },
+      "ReminderAllowance" : {
+        "type" : "object",
+        "properties" : {
+          "sent" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "limit" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
       "SubscriptionView" : {
         "type" : "object",
         "properties" : {
@@ -13704,6 +13717,16 @@
             "items" : {
               "$ref" : "#/components/schemas/MonthOption"
             }
+          },
+          "whatsAppReminders" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/ReminderAllowance"
+              },
+              {
+                "type" : "null"
+              }
+            ]
           }
         }
       },
