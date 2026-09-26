@@ -1,6 +1,6 @@
 # Jikū — Ce qu'il manque pour la production, et le plan de travail
 
-**Date :** 2026-09-24
+**Date :** 2026-09-24, état mis à jour le 2026-09-26
 **Référence :** ADR 104 (ticket, paiement, canaux, tarification).
 
 Ce document répond à une question : **que faut-il encore faire pour que le
@@ -26,40 +26,49 @@ connecté (niveau 3), Wave en direct.
 
 ## 2. Ce qui manque
 
+État vérifié dans le code le 2026-09-26. Les phases 0 à 5 du plan ci-dessous
+sont construites pour le produit ; il reste la phase 6, les séances collectives
+et la mise en production.
+
 ### 2.1 Produit
 
-| Élément | État | Constat dans le code |
+| Élément | État | Où |
 |---|---|---|
 | Invitations, RSVP, transfert, check-in hors-ligne | ✅ Prêt | modules `invitation`, `checkin` |
 | Rendez-vous sur créneau | ✅ Prêt | `catalog/SlotEngine`, ADR 85 |
-| File du jour côté personnel | 🟡 Partiel | `ServiceDayLineController`, `LineStaffController` : suivant, arrivé, appelé, terminé, absent. Le « sans rendez-vous » n'est saisi que par le personnel |
-| Ticket pris par le client lui-même (QR à l'entrée) | ❌ Manque | aucune route publique de prise de ticket sans rendez-vous |
-| Suivi du rang en direct par le client | ❌ Manque | aucune page publique de position dans la file |
-| « Vous êtes le prochain » par message | ❌ Manque | — |
-| Encaisser les revenus de Jikū pour de vrai | ❌ Manque | `PaymentProvider` n'a qu'une implémentation de test (`SandboxPaymentProvider`) |
-| Sélecteur de prestataires (paiement et messages) | 🟡 Partiel | un seul `PaymentProvider` actif ; `MessagingProviderResolver` construit lui-même Resend et Meta |
-| Prix et règle de paiement sur le ticket | ❌ Manque | ni `TicketType` ni `Service` ne portent de prix |
-| Moyens de paiement de l'organisation (niveaux 1 et 2) | ❌ Manque | — |
-| Canal SMS | ❌ Manque | seuls `EMAIL` et `WHATSAPP` existent dans `TenantProviderSettings` |
-| Repli WhatsApp → SMS | ❌ Manque | — |
-| Opérateur avec périmètre | 🟡 Partiel | liens validateur par événement, `ServiceStaff` par service, rôles `OWNER` / `ADMIN` |
-| Vente publique de billets (commande) | ❌ Manque | aucune notion de commande |
-| Facturation de la commission | ❌ Manque | — |
-| Plusieurs monnaies | ❌ Manque | `billing.currency` unique (GNF) |
+| File du jour côté personnel, sans-rendez-vous | ✅ Prêt | console de ligne (organisateur, lien comptoir, lien opérateur) |
+| Ticket pris par le client (QR à l'entrée) et suivi du rang en direct | ✅ Prêt | JIKU-113, JIKU-158 |
+| « C'est votre tour » par message, numéro de guichet | ✅ Prêt | JIKU-114, `ClientCalledListener` |
+| Encaisser les revenus de Jikū | ✅ Prêt | CinetPay et virement manuel pour chaque achat (JIKU-106, JIKU-164, JIKU-165) ; clés de production à poser |
+| Sélecteur de prestataires | ✅ Prêt | `PaymentProviderSelector`, `MessagingProviderResolver` |
+| Prix et règle de paiement sur le ticket, statut « payé » | ✅ Prêt | JIKU-108, JIKU-110, JIKU-161 |
+| Moyens de paiement de l'organisation | ✅ Prêt | JIKU-109, JIKU-160 |
+| Canal SMS (Nimba) et repli WhatsApp → SMS | ✅ Prêt | `NimbaSmsSender`, JIKU-112 (rappels et file) |
+| Opérateur avec périmètre, équipe, console unique | ✅ Prêt | JIKU-116, JIKU-162, JIKU-163 |
+| Plusieurs monnaies (GNF, FCFA, USD) | ✅ Prêt | ADR 105, JIKU-137, JIKU-138 |
+| Votre propre numéro WhatsApp (Embedded Signup) | ✅ Prêt | JIKU-154, JIKU-155, JIKU-156 |
+| **Séances collectives** (plusieurs clients par créneau) | ❌ Manque | vendues dans Teams (10) et Organisation (30), non construites |
+| **Vérification des organisateurs** | ❌ Manque | phase 6.0 |
+| **Vente publique de billets** (commande, page d'achat) | ❌ Manque | phase 6.1, 6.2 |
+| **Commission de 3 % par tranche** | ❌ Manque | phase 6.3 |
+| Traduction anglaise des écrans services, liens validateur, bureau admin | 🟡 En cours | JIKU-166 et JIKU-167 fusionnées |
 
 ### 2.2 Mise en production
 
 | Élément | État | Constat |
 |---|---|---|
-| Hébergement toujours actif | ❌ | API sur l'offre gratuite Render, qui s'endort (`docs/deploy.md`) ; les webhooks de paiement et de messages en pâtissent |
-| Domaine de marque | ❌ | web, API et e-mails sur `mrvin100.de` |
-| Branche `main` et flux de mise en production | ❌ | seule `develop` existe ; `post-deploy.yml` attend des fusions sur `main` |
+| Hébergement toujours actif | ❌ | offre payante Render (≈ 25 USD / mois) ou runbook Hetzner (`docs/deploy.md`) |
+| Domaine de marque | ❌ | web, API et e-mails encore sur `mrvin100.de` ; SPF et DKIM à refaire pour Resend et Brevo |
+| Branche `main` et mise en production | 🟡 | `main` existe mais a un historique séparé de `develop` : publier par une branche de version qui enregistre `main` sans changer les fichiers de `develop` |
+| Moyen de paiement sur le compte WhatsApp Business | ❌ | exigé par Meta avant le 30 septembre 2026, sinon l'envoi s'arrête |
+| Statut Tech Provider Meta, modèles de messages approuvés | ⏳ | nécessaire pour « votre propre numéro » et les invitations interactives |
+| Compte marchand CinetPay en production | ⏳ | clés, URL de notification, délai de reversement à négocier |
 | Secrets de production (constat F-3) | ⏳ | à poser et vérifier avant la bascule |
 | Scan des vulnérabilités du backend en CI (constat F-6) | ❌ | recommandé par la revue de sécurité, pas encore branché |
-| Validation de la revue de sécurité | ⏳ | case de validation non cochée |
+| Validation de la revue de sécurité | ⏳ | case non cochée |
 | Recette utilisateur (UAT) | ⏳ | plan rédigé, validations non cochées |
-| Identité légale sur les factures | ❌ | `BILLING_SELLER_NAME`, adresse et identifiant fiscal vides ; taux de taxe de la Guinée non confirmé |
-| CGU, CGV, mentions légales | 🟡 | page confidentialité présente ; conditions de vente à rédiger |
+| Identité légale sur les factures | ❌ | `BILLING_SELLER_NAME`, adresse et identifiant fiscal vides ; entreprise à immatriculer |
+| CGU, CGV, mentions légales | 🟡 | pages publiées avec des champs d'entreprise à compléter (JIKU-135) ; relecture juridique à faire |
 | Sauvegardes et restauration | ✅ | répétition de restauration faite (`docs/backup.md`) |
 | Suivi des erreurs et disponibilité | ✅ | Sentry branché, runbook de disponibilité |
 
