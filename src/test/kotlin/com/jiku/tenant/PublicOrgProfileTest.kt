@@ -8,6 +8,7 @@ import com.jiku.catalog.internal.ServiceCreateRequest
 import com.jiku.catalog.internal.ServiceLinkCodeService
 import com.jiku.shared.TenantContext
 import com.jiku.support.OrganizerApi
+import com.jiku.support.TestVerifications
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,6 +47,9 @@ class PublicOrgProfileTest {
     @Autowired
     lateinit var mockMvc: MockMvc
 
+    @Autowired
+    lateinit var verifications: TestVerifications
+
     private val api by lazy { OrganizerApi(mockMvc) }
 
     @AfterEach
@@ -73,6 +77,13 @@ class PublicOrgProfileTest {
             .andExpect(jsonPath("$.organizationName").value("Test Org"))
             .andExpect(jsonPath("$.services[0].name").value("Coloration"))
             .andExpect(jsonPath("$.services[0].shortCode").value(code))
+            .andExpect(jsonPath("$.verification").doesNotExist())
+
+        // Once the Jikū team approves it, the profile carries the trust badge (référentiel §9).
+        verifications.approve(tenantId.toString())
+        mockMvc
+            .perform(get("/api/v1/public/orgs/$username"))
+            .andExpect(jsonPath("$.verification").value("COMPANY"))
 
         mockMvc
             .perform(get("/api/v1/public/orgs/no-such-org"))

@@ -3,6 +3,7 @@ package com.jiku.catalog.internal
 import com.jiku.catalog.ResourceType
 import com.jiku.shared.TenantAccessGate
 import com.jiku.shared.TenantContext
+import com.jiku.shared.VerificationGate
 import com.jiku.ticket.LineTicket
 import com.jiku.ticket.TicketPaymentStatus
 import jakarta.validation.constraints.NotBlank
@@ -24,6 +25,8 @@ data class AppointmentServiceView(
     val slots: List<AppointmentSlotView>,
     /** Clients served together per slot; above 1 the service runs group sessions (JIKU-174). */
     val clientsPerSlot: Int = 1,
+    /** The organizer's approved verification (COMPANY, PERSONAL) or null (référentiel §9). */
+    val organizerVerification: String? = null,
 )
 
 data class AppointmentSlotView(
@@ -89,6 +92,7 @@ class AppointmentPublicService(
     private val tenantAccessGate: TenantAccessGate,
     private val cancellations: AppointmentCancellationService,
     private val line: DayLineConsoleService,
+    private val verification: VerificationGate,
 ) {
     /** A client takes a ticket for today's line, from the QR shown at the entrance (JIKU-113). */
     fun takeTicketByCode(
@@ -172,6 +176,7 @@ class AppointmentPublicService(
             professionals = professionals,
             slots = engine.openSlots(serviceId, day).map { AppointmentSlotView(it.startsAt, it.endsAt, it.placesLeft) },
             clientsPerSlot = effective.clientsPerSlot,
+            organizerVerification = verification.verifiedKind(),
         )
     }
 

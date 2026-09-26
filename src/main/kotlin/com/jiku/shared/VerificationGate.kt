@@ -10,8 +10,14 @@ import org.springframework.web.server.ResponseStatusException
  * module can check it without depending on the tenant module, which provides
  * the implementation.
  */
-fun interface VerificationGate {
-    fun isVerified(): Boolean
+interface VerificationGate {
+    /**
+     * The current organization's approved verification: `COMPANY`, `PERSONAL`,
+     * or null when none is approved. A company verification wins over a personal one.
+     */
+    fun verifiedKind(): String?
+
+    fun isVerified(): Boolean = verifiedKind() != null
 
     /** Refuses a step that makes clients pay while the organization is not verified. */
     fun requireVerified() {

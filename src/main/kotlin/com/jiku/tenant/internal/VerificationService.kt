@@ -90,9 +90,15 @@ class VerificationService(
     private val random = SecureRandom()
 
     @Transactional(readOnly = true)
-    override fun isVerified(): Boolean =
-        TenantContext.get() != null &&
-            verifications.findAll().any { it.status == VerificationStatus.APPROVED }
+    override fun verifiedKind(): String? {
+        if (TenantContext.get() == null) return null
+        val approved = verifications.findAll().filter { it.status == VerificationStatus.APPROVED }.map { it.kind }
+        return when {
+            VerificationKind.COMPANY in approved -> VerificationKind.COMPANY.name
+            VerificationKind.PERSONAL in approved -> VerificationKind.PERSONAL.name
+            else -> null
+        }
+    }
 
     @Transactional(readOnly = true)
     fun overview(): VerificationOverview {

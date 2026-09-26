@@ -11253,6 +11253,12 @@
               "$ref" : "#/components/schemas/RsvpQuestion"
             }
           },
+          "organizerVerification" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
           "payment" : {
             "oneOf" : [
               {
@@ -13640,6 +13646,12 @@
           "clientsPerSlot" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "organizerVerification" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         }
       },
@@ -13708,6 +13720,12 @@
             "items" : {
               "$ref" : "#/components/schemas/PublicOrgServiceView"
             }
+          },
+          "verification" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         }
       },
