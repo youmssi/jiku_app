@@ -1,6 +1,7 @@
 package com.jiku.checkin.internal
 
 import com.jiku.catalog.EventModuleApi
+import com.jiku.catalog.OperatorModuleApi
 import com.jiku.invitation.InvitationModuleApi
 import com.jiku.messaging.NotificationModuleApi
 import com.jiku.money.BillingModuleApi
@@ -17,7 +18,7 @@ import java.util.UUID
 /**
  * Aggregates an event's live dashboard metrics from the modules that own them:
  * guest/RSVP counts from invitation, attendance from ticketing, and the
- * per-entrance check-in breakdown from validator labels. Read-only; safe to poll.
+ * per-entrance check-in breakdown from operator labels. Read-only; safe to poll.
  */
 @Service
 class DashboardService(
@@ -27,7 +28,7 @@ class DashboardService(
     private val notifications: NotificationModuleApi,
     private val billing: BillingModuleApi,
     private val retentionProperties: RetentionProperties,
-    private val validators: ValidatorRepository,
+    private val operators: OperatorModuleApi,
 ) {
     @Transactional(readOnly = true)
     fun dashboard(eventId: UUID): DashboardResponse {
@@ -36,10 +37,9 @@ class DashboardService(
         val attendance = ticketing.attendanceStats(eventId)
         val countsByLabel = ticketing.checkInCountsByLabel(eventId)
 
-        // Every entry point appears, including validator links that haven't checked
-        // anyone in yet, plus any label present in the counts (e.g. organizer-led).
-        val labels = LinkedHashSet<String>()
-        validators.findByEventIdOrderByCreatedAtAsc(eventId).forEach { labels.add(it.label) }
+        // Every entry point appears, including operators who haven't checked anyone
+        // in yet, plus any label present in the counts (e.g. organizer-led).
+        val labels = LinkedHashSet(operators.eventOperatorLabels(eventId))
         labels.addAll(countsByLabel.keys)
         val entrances = labels.map { EntranceCount(it, countsByLabel[it] ?: 0L) }
         val quorum = events.quorum(eventId, guests.total, attendance.checkedIn)

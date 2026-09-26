@@ -1,8 +1,12 @@
 package com.jiku.catalog.internal
 
 import com.jiku.shared.BaseTenantEntity
+import com.jiku.shared.ClientCharge
 import jakarta.persistence.Column
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
@@ -31,4 +35,16 @@ class Service(
 
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now()
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_rule", nullable = false, length = 16)
+    var paymentRule: PaymentRule = PaymentRule.FREE
+
+    /** Null exactly when [paymentRule] is [PaymentRule.FREE]. */
+    @Embedded
+    var price: Price? = null
+
+    /** What a client of this service owes the organization, or null when it is free. */
+    fun clientCharge(): ClientCharge? =
+        price?.let { ClientCharge(it.amountMinor, it.currency, dueAfterService = paymentRule == PaymentRule.AFTER_SERVICE) }
 }

@@ -2,11 +2,10 @@ package com.jiku.messaging.internal
 
 import com.jiku.shared.GuestInvitedEvent
 import com.jiku.shared.InvitationDeliveryResult
-import com.jiku.shared.TenantContext
+import com.jiku.shared.TenantTransaction
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 
 /**
  * The notification module's inbound boundary: it reacts to a [GuestInvitedEvent]
@@ -16,15 +15,13 @@ import org.springframework.transaction.annotation.Transactional
  */
 @Component
 class InvitationNotificationListener(
+    private val tenantTransaction: TenantTransaction,
     private val notificationService: NotificationService,
     private val events: ApplicationEventPublisher,
 ) {
     @EventListener
-    @Transactional
     fun onGuestInvited(event: GuestInvitedEvent) {
-        val previousTenant = TenantContext.get()
-        TenantContext.set(event.tenantId)
-        try {
+        tenantTransaction.run(event.tenantId) {
             val outcome = notificationService.deliverInvitation(event)
             events.publishEvent(
                 InvitationDeliveryResult(
@@ -36,8 +33,6 @@ class InvitationNotificationListener(
                     queued = outcome.queued,
                 ),
             )
-        } finally {
-            if (previousTenant != null) TenantContext.set(previousTenant) else TenantContext.clear()
         }
     }
 }

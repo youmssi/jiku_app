@@ -1,0 +1,3 @@
+Bonjour {{guestName}}, {{organizerName}} vous invite à {{eventName}}{{eventWhen}}.
+
+Confirmez votre présence : {{invitationUrl}}

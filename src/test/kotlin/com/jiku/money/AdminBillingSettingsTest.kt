@@ -38,6 +38,7 @@ class AdminBillingSettingsTest {
     @Test
     fun `a saved update becomes the source of truth for tiers and payee`() {
         val before = settings.tiers()
+        val plansBefore = settings.plans()
         try {
             val updated =
                 settings.update(
@@ -53,13 +54,13 @@ class AdminBillingSettingsTest {
                             ),
                         tiers =
                             listOf(
-                                BillingTierOption("BRONZE", 400, 200_000),
-                                BillingTierOption("OR", 1_200, 600_000),
+                                BillingTierOption("BRONZE", 400, PriceList(200_000, 13_000, 2_300)),
+                                BillingTierOption("OR", 1_200, PriceList(650_000, 43_000, 7_500)),
                             ),
                         subscriptionPlans =
                             listOf(
-                                SubscriptionPlanOption("Solo", 1, 120_000),
-                                SubscriptionPlanOption("Salon", 15, 550_000),
+                                SubscriptionPlanOption("Solo Plus", 1, 1, PriceList(60_000, 4_000, 700), null),
+                                SubscriptionPlanOption("Teams", 3, null, PriceList(180_000, 12_000, 2_000), PriceList(55_000, 3_500, 600)),
                             ),
                     ),
                     updatedBy = "admin@jiku.app",
@@ -69,7 +70,8 @@ class AdminBillingSettingsTest {
             val tier = settings.tierByName("bronze")
             assertNotNull(tier)
             assertEquals(400, tier.maxGuests)
-            assertEquals(200_000, tier.priceMinor)
+            assertEquals(200_000, tier.price.gnf)
+            assertEquals(13_000, tier.price.amountMinor("XAF"))
             assertEquals(null, settings.tierByName("ARGENT"), "removed tiers must disappear")
 
             val payee = settings.payeeDetails()
@@ -77,9 +79,11 @@ class AdminBillingSettingsTest {
             assertEquals("+224620000000", payee.contactPhone)
             assertEquals("+224620000001", payee.mobileMoneyNumber)
 
-            val plan = settings.planByName("solo")
+            val plan = settings.planByName("teams")
             assertNotNull(plan)
-            assertEquals(120_000, plan.priceMinorPerMonth)
+            assertEquals(12_000, plan.monthly.amountMinor("XOF"))
+            assertEquals(180_000 + 55_000, plan.monthlyMinor("GNF", people = 4))
+            assertEquals(null, settings.planByName("Organisation"), "removed plans must disappear")
         } finally {
             // Remet l'état par défaut pour les autres tests de la suite.
             settings.update(
@@ -93,11 +97,17 @@ class AdminBillingSettingsTest {
                             mobileMoneyOperator = null,
                             bankDetails = null,
                         ),
-                    tiers = before.map { BillingTierOption(it.name, it.maxGuests, it.priceMinor) },
+                    tiers = before.map { BillingTierOption(it.name, it.maxGuests, it.price) },
                     subscriptionPlans =
-                        settings
-                            .plans()
-                            .map { SubscriptionPlanOption(it.name, it.maxResources, it.priceMinorPerMonth) },
+                        plansBefore.map {
+                            SubscriptionPlanOption(
+                                it.name,
+                                it.includedPeople,
+                                it.maxPeople,
+                                it.monthly,
+                                it.extraPerson,
+                            )
+                        },
                 ),
                 updatedBy = null,
             )

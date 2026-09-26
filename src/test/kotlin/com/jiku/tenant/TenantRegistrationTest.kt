@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
  * Covers the JIKU-10 Definition of Done under the JIKU-48 membership model: a
  * registration with an organization name creates the user, the tenant, and the
  * OWNER membership atomically, and a failure partway through rolls back all of it.
+ * JIKU-107: the organization opens in a supported country, with its currency.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -67,6 +68,21 @@ class TenantRegistrationTest {
         assertEquals(tenant.id.toString(), membership.tenantId, "the membership must point at the new tenant")
         assertEquals(OrganizerRole.OWNER, membership.role, "the founding user owns the organization")
         assertEquals("owner@acme.test", tenant.contactEmail)
+        assertEquals("GN", tenant.country, "a sign-up naming no country opens in the default market")
+        assertEquals("GNF", tenant.currency, "the currency follows the country")
+    }
+
+    @Test
+    fun `a sign-up in a country where Jikū is not sold creates nothing`() {
+        mockMvc
+            .perform(
+                post("/api/v1/auth/register")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"name":"Abidjan Events","email":"owner@abidjan.test","password":"supersecret","country":"CI"}"""),
+            ).andExpect(status().isBadRequest())
+
+        assertEquals(0, tenants.count())
+        assertEquals(0, users.count())
     }
 
     @Test

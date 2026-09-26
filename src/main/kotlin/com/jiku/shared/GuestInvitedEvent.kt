@@ -26,6 +26,18 @@ data class GuestInvitedEvent(
     val primaryColor: String,
     val logoUrl: String?,
     val invitationUrl: String,
+    /** The organizer's language, which the invitation is written in. */
+    val language: String = MessageLanguage.FRENCH,
+    /**
+     * Set when the event sends tickets directly (ADR 105): the guest is already
+     * confirmed and receives the ticket itself instead of an invitation.
+     */
+    val ticket: TicketConfirmedNotice? = null,
+    /**
+     * The guest answers from the chat (ADR 105, INTERACTIVE mode): a WhatsApp
+     * invitation then carries accept and decline buttons.
+     */
+    val interactive: Boolean = false,
 ) {
     companion object {
         const val CHANNEL_EMAIL = "EMAIL"

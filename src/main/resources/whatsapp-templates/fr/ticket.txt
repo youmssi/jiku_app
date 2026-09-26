@@ -1,0 +1,5 @@
+Bonjour {{guestName}}, voici votre billet pour {{eventName}}{{eventWhen}}, de la part de {{organizerName}}.
+
+Votre billet : {{ticketUrl}}
+
+Présentez son QR code à l'entrée. Il s'affiche même sans connexion.

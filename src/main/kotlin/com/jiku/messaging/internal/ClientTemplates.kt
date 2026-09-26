@@ -72,6 +72,22 @@ object ClientTemplates {
                 whatsappFile = "invitation.txt",
             ),
             Definition(
+                name = "ticket",
+                label = "Ticket sent directly (WhatsApp)",
+                channels = listOf(CHANNEL_WHATSAPP),
+                emailVariables = null,
+                whatsappVariables =
+                    listOf(
+                        Variable("guestName", "Guest name", "Awa Diallo", required = true),
+                        Variable("organizerName", "Organizer name", "Salon Aminata", required = true),
+                        Variable("eventName", "Event / offer name", "Gala des 25 ans", required = true),
+                        Variable("eventWhen", "Date and time", "on Saturday 12 Dec at 18:00"),
+                        Variable("ticketUrl", "Ticket link", "https://jiku.app/invitation/8f3k2a/ticket", required = true),
+                    ),
+                emailFile = null,
+                whatsappFile = "ticket.txt",
+            ),
+            Definition(
                 name = "event-cancelled",
                 label = "Event cancellation",
                 channels = listOf(CHANNEL_EMAIL, CHANNEL_WHATSAPP),
@@ -82,6 +98,7 @@ object ClientTemplates {
                         Variable("eventName", "Event / offer name", "Coupe + soin", required = true),
                         Variable("eventWhen", "Date and time", "Tuesday 3 Nov at 15:00"),
                         Variable("eventLocation", "Location", "Avenue de la République"),
+                        Variable("primaryColor", "Brand color", "#1E293B"),
                         Variable("eventDetails", "Formatted date/location block (advanced)", ""),
                         Variable("logoBlock", "Logo image (advanced)", ""),
                     ),
@@ -108,6 +125,19 @@ object ClientTemplates {
                     ),
                 emailFile = null,
                 whatsappFile = "appointment-reminder.txt",
+            ),
+            Definition(
+                name = "client-called",
+                label = "Your turn in the line (WhatsApp / SMS)",
+                channels = listOf(CHANNEL_WHATSAPP),
+                emailVariables = null,
+                whatsappVariables =
+                    listOf(
+                        Variable("clientName", "Client name", "Awa Diallo", required = true),
+                        Variable("counter", "Counter to go to", " at counter 4"),
+                    ),
+                emailFile = null,
+                whatsappFile = "client-called.txt",
             ),
         )
 

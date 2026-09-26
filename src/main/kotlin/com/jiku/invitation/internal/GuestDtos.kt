@@ -1,5 +1,6 @@
 package com.jiku.invitation.internal
 
+import com.jiku.ticket.TicketPaymentStatus
 import java.time.Instant
 import java.util.UUID
 
@@ -30,6 +31,14 @@ data class GuestResponse(
     val checkedInAt: Instant? = null,
     /** Catégorie d'accès de l'invité, si l'événement en définit (JIKU-93). */
     val ticketTypeId: UUID? = null,
+    /** The guest's answer to the invitation. */
+    val rsvpStatus: RsvpStatus = RsvpStatus.PENDING,
+    /** The code of the guest's live ticket, once they confirmed; null otherwise. */
+    val ticketCode: String? = null,
+    /** What the live ticket owes the organization (JIKU-110); null without a ticket. */
+    val paymentStatus: TicketPaymentStatus? = null,
+    val amountDueMinor: Long? = null,
+    val amountDueCurrency: String? = null,
 )
 
 data class SetGuestExclusionRequest(

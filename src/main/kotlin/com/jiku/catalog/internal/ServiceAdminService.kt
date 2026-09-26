@@ -1,7 +1,9 @@
 package com.jiku.catalog.internal
 
 import com.jiku.catalog.ResourceType
+import com.jiku.shared.ClientCharge
 import com.jiku.shared.ServiceDeletedEvent
+import com.jiku.shared.TenantCurrency
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
@@ -21,9 +23,9 @@ class ServiceAdminService(
     private val services: ServiceRepository,
     private val requirements: ServiceRequirementRepository,
     private val reservations: ServiceReservationRepository,
-    private val staffLinks: ServiceStaffRepository,
     private val configs: ServiceConfigRepository,
     private val eventPublisher: ApplicationEventPublisher,
+    private val tenantCurrency: TenantCurrency,
 ) {
     @Transactional(readOnly = true)
     fun list(): List<ServiceResponse> = services.findAll().map { it.toResponse() }
@@ -31,24 +33,39 @@ class ServiceAdminService(
     @Transactional(readOnly = true)
     fun get(serviceId: UUID): ServiceResponse = services.findById(serviceId).map { it.toResponse() }.orElseThrow { notFound(serviceId) }
 
-    @Transactional
-    fun create(
-        name: String,
-        timezone: String,
-    ): ServiceResponse {
-        validateTimezone(timezone)
-        return services
-            .save(Service(name = name.trim(), timezone = timezone))
-            .toResponse()
-    }
+    /** What a client of [serviceId] owes the organization, or null when the service is free. */
+    @Transactional(readOnly = true)
+    fun clientCharge(serviceId: UUID): ClientCharge? = services.findById(serviceId).orElseThrow { notFound(serviceId) }.clientCharge()
 
     @Transactional
-    fun updateName(
+    fun create(request: ServiceCreateRequest): ServiceResponse {
+        validateTimezone(request.timezone)
+        val service =
+            Service(name = request.name.trim(), timezone = request.timezone).apply {
+                paymentRule = request.paymentRule
+                price = priceFor(request.paymentRule, request.priceMinor, tenantCurrency::ofCurrentTenant)
+            }
+        return services.save(service).toResponse()
+    }
+
+    /**
+     * A new price applies to the tickets issued from now on; a ticket already
+     * issued keeps the price it was issued at.
+     */
+    @Transactional
+    fun update(
         serviceId: UUID,
-        name: String?,
+        request: ServiceUpdateRequest,
     ): ServiceResponse {
         val service = services.findById(serviceId).orElseThrow { notFound(serviceId) }
-        name?.takeIf { it.isNotBlank() }?.let { service.name = it.trim() }
+        request.name?.takeIf { it.isNotBlank() }?.let { service.name = it.trim() }
+        if (request.paymentRule != null || request.priceMinor != null) {
+            val rule = request.paymentRule ?: service.paymentRule
+            // Switching between paid rules keeps the current amount unless a new one is given.
+            val amount = if (rule == PaymentRule.FREE) request.priceMinor else request.priceMinor ?: service.price?.amountMinor
+            service.price = priceFor(rule, amount, tenantCurrency::ofCurrentTenant)
+            service.paymentRule = rule
+        }
         return services.save(service).toResponse()
     }
 
@@ -96,7 +113,8 @@ class ServiceAdminService(
      * [ServiceDeletedEvent] is consumed synchronously by the ticketing module
      * inside this same transaction (its appointment tickets, and through the
      * FK cascade their reminders, disappear with the service); the catalog rows
-     * (requirements, reservations, staff links, configuration) are removed here.
+     * (requirements, reservations, configuration) are removed here, and the
+     * service leaves every operator's scope through the FK cascade.
      */
     @Transactional
     fun delete(serviceId: UUID) {
@@ -104,7 +122,6 @@ class ServiceAdminService(
         eventPublisher.publishEvent(ServiceDeletedEvent(requireNotNull(service.id), requireNotNull(service.tenantId)))
         requirements.deleteAll(requirements.findByServiceId(serviceId))
         reservations.deleteAll(reservations.findByServiceId(serviceId))
-        staffLinks.deleteAll(staffLinks.findAllByServiceId(serviceId))
         configs.findByServiceId(serviceId)?.let { configs.delete(it) }
         services.delete(service)
     }
@@ -125,7 +142,15 @@ class ServiceAdminService(
     }
 }
 
-private fun Service.toResponse(): ServiceResponse = ServiceResponse(id = requireNotNull(id), name = name, timezone = timezone)
+private fun Service.toResponse(): ServiceResponse =
+    ServiceResponse(
+        id = requireNotNull(id),
+        name = name,
+        timezone = timezone,
+        paymentRule = paymentRule,
+        priceMinor = price?.amountMinor,
+        currency = price?.currency,
+    )
 
 private fun ServiceRequirement.toResponse(): ServiceRequirementResponse =
     ServiceRequirementResponse(

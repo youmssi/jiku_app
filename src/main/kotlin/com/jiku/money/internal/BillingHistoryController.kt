@@ -28,6 +28,7 @@ import java.util.UUID
 class BillingHistoryController(
     private val payments: PaymentRepository,
     private val events: EventModuleApi,
+    private val paymentService: PaymentService,
 ) {
     @GetMapping
     fun history(): List<PaymentHistoryItem> =
@@ -36,10 +37,7 @@ class BillingHistoryController(
                 paymentId = requireNotNull(payment.id),
                 eventId = payment.eventId,
                 eventName =
-                    when {
-                        payment.kind == Payment.KIND_SUBSCRIPTION -> "${payment.tier} subscription"
-                        else -> payment.eventId?.let { events.findEvent(it)?.name } ?: "Event"
-                    },
+                    label(payment),
                 tier = payment.tier,
                 amountMinor = payment.amountMinor,
                 currency = payment.currency,
@@ -47,6 +45,12 @@ class BillingHistoryController(
                 createdAt = payment.createdAt,
             )
         }
+
+    /** One payment's status, polled by the page the payer returns to from the provider (JIKU-164). */
+    @GetMapping("/{paymentId}")
+    fun status(
+        @PathVariable paymentId: UUID,
+    ): PaymentStatusView = paymentService.status(paymentId)
 
     @GetMapping("/{paymentId}/receipt", produces = [MediaType.TEXT_PLAIN_VALUE])
     fun receipt(
@@ -60,10 +64,7 @@ class BillingHistoryController(
             throw ResponseStatusException(HttpStatus.CONFLICT, "A receipt is only available for a successful payment")
         }
         val eventName =
-            when {
-                payment.kind == Payment.KIND_SUBSCRIPTION -> "${payment.tier} subscription"
-                else -> payment.eventId?.let { events.findEvent(it)?.name } ?: "Event"
-            }
+            label(payment)
         val when0 = RECEIPT_DATE.format(payment.createdAt)
         val amount = formatAmount(payment.amountMinor, payment.currency)
         return buildString {
@@ -81,6 +82,16 @@ class BillingHistoryController(
             appendLine("This is a basic receipt for your records, not a tax invoice.")
         }
     }
+
+    /** What a payment was for: its event, the subscription, the Organizer Pack or the own-number add-on (ADR 105). */
+    private fun label(payment: Payment): String =
+        when (payment.kind) {
+            Payment.KIND_SUBSCRIPTION -> "${payment.tier} subscription"
+            Payment.KIND_PACK -> "Organizer Pack (${payment.subscriptionMonths} months)"
+            Payment.KIND_PACK_EXTRA -> "Organizer Pack: ${payment.guests} extra guests"
+            Payment.KIND_WHATSAPP_NUMBER -> "Own WhatsApp number (${payment.subscriptionMonths} months)"
+            else -> payment.eventId?.let { events.findEvent(it)?.name } ?: "Event"
+        }
 
     private fun formatAmount(
         minor: Long,

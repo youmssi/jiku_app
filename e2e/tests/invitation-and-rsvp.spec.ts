@@ -65,7 +65,7 @@ test.describe('Invitation and RSVP', () => {
         const invitation = await waitForMessage(guestEmail, { timeoutMs: 60_000 });
         await page.goto(extractLink(invitation, '/invitation/'));
 
-        await page.getByRole('button', { name: 'Decline' }).click();
+        await page.getByRole('button', { name: "I can't make it" }).click();
         await expect(page.getByText(/You've declined/i).first()).toBeVisible();
         await expect(page.getByRole('link', { name: /View your ticket/i })).toHaveCount(0);
     });

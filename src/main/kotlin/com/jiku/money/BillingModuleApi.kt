@@ -61,7 +61,10 @@ interface BillingModuleApi {
         tenantId: UUID?,
         page: Int,
         size: Int,
-    ): List<AdminTrialView>
+    ): AdminTrialPage
+
+    /** Platform-wide trial funnel snapshot (JIKU-99) for the back-office overview strip. */
+    fun adminTrialStats(): AdminTrialStats
 
     /** Grants a time-boxed trial of a paid tier to one event. */
     fun adminGrantTrial(
@@ -77,20 +80,7 @@ interface BillingModuleApi {
         reason: String,
     ): AdminTrialView
 
-    /** The tier name (JIKU-53 grid) that [guestCount] invited guests falls into. */
-    fun tierForGuestCount(guestCount: Long): String
-
-    /**
-     * The full price for [tierName] given [guestCount] guests: the fixed tier
-     * price, or the CUSTOM formula for usage beyond the last fixed tier. Used by
-     * the booking flow (JIKU-55) to quote a reservation before any tenant exists.
-     */
-    fun priceForTier(
-        tierName: String,
-        guestCount: Long,
-    ): Long
-
-    /** The platform's pricing currency (JIKU-53: GNF). */
+    /** The reference currency of the price grid shown to the admin desk (GNF; ADR 105 prices every currency). */
     fun currency(): String
 
     /**
@@ -100,16 +90,6 @@ interface BillingModuleApi {
      * a hardcoded copy that silently drifts the next time pricing changes.
      */
     fun tierOptions(): List<BillingTierOption>
-
-    /**
-     * Unlocks [tierName] for [eventId] — the same effect a payment confirmation
-     * has (never lowers an existing allowance). Used when a booking's (JIKU-55)
-     * verified deposit already paid for a tier on a freshly provisioned event.
-     */
-    fun unlockTier(
-        eventId: UUID,
-        tierName: String,
-    )
 
     /**
      * Réglages de facturation complets (bénéficiaire + grilles de prix) tels que
@@ -122,38 +102,19 @@ interface BillingModuleApi {
         update: PlatformBillingSettingsUpdate,
         updatedBy: String?,
     ): PlatformBillingSettingsView
-
-    /**
-     * Records [amountMinor] already paid toward [eventId] outside the normal
-     * payment flow (JIKU-57) — a booking deposit or balance — so it is netted
-     * off the price the next tier upgrade actually charges, instead of the
-     * organizer paying for the same guests twice.
-     */
-    fun recordPrepayment(
-        eventId: UUID,
-        amountMinor: Long,
-    )
-
-    /**
-     * Emits the standalone credit note (avoir, JIKU-75) documenting a booking
-     * deposit refund returned to a customer. The caller has bound the organizer's
-     * tenant; the document numbers against that tenant's fiscal year.
-     */
-    fun issueBookingAvoir(
-        customerName: String,
-        customerCountry: String,
-        amountMinor: Long,
-        currency: String,
-        description: String,
-    ): BookingAvoirDocument
 }
 
 /** One configured fixed-price tier: what it costs and how many guests it unlocks. */
 data class BillingTierOption(
     val name: String,
     val maxGuests: Long,
-    val priceMinor: Long,
-)
+    /** The tier's price in GNF, FCFA and USD (ADR 105). */
+    val price: PriceList,
+) {
+    /** Kept for /v1 clients written before ADR 105: the GNF price. */
+    @Deprecated("Use price")
+    val priceMinor: Long get() = price.gnf
+}
 
 /**
  * A snapshot of one event's billing position. [invitedGuests] is the billable

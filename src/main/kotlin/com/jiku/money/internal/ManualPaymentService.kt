@@ -28,13 +28,14 @@ import java.util.UUID
 @Service
 class ManualPaymentService(
     private val payments: PaymentRepository,
-    private val tierUnlockService: TierUnlockService,
-    private val billingProperties: BillingProperties,
+    private val fulfillment: PaymentFulfillment,
+    private val eventPricing: EventPricing,
     private val subscriptionService: SubscriptionService,
     private val subscriptionNotifier: SubscriptionNotifier,
+    private val organizerPack: OrganizerPackService,
+    private val ownWhatsAppNumber: OwnWhatsAppNumberService,
     private val platformSettings: PlatformBillingSettingsService,
     private val tenantModuleApi: TenantModuleApi,
-    private val usageService: UsageService,
     private val eventPublisher: ApplicationEventPublisher,
     transactionManager: PlatformTransactionManager,
 ) {
@@ -63,21 +64,19 @@ class ManualPaymentService(
                 PROVIDER_MANUAL,
                 PaymentStatus.PENDING,
             )
-        if (existing != null) {
+        val quote = eventPricing.upgradeQuote(eventId, tier)
+        if (existing != null && existing.amountMinor == quote.amountMinor && existing.interactive == quote.interactive) {
             return instructionsFor(existing)
         }
 
-        // Nets off any deposit/balance already paid toward this event outside this
-        // flow (JIKU-57 — a booking that grew past its estimated tier), so an
-        // organizer never pays twice for the same guests.
-        val discountedAmountMinor = usageService.applyPrepaymentDiscount(eventId, tier.priceMinor)
         val payment =
             payments.save(
                 Payment(
                     eventId = eventId,
                     tier = tier.name,
-                    amountMinor = discountedAmountMinor,
-                    currency = billingProperties.currency,
+                    amountMinor = quote.amountMinor,
+                    currency = quote.currency,
+                    interactive = quote.interactive,
                     provider = PROVIDER_MANUAL,
                 ),
             )
@@ -103,9 +102,7 @@ class ManualPaymentService(
         val plan =
             platformSettings.planByName(planName)
                 ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown subscription plan: $planName")
-        val amount =
-            platformSettings.priceMinor(plan, months)
-                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported prepaid period: $months months")
+        val quote = subscriptionService.quote(plan, months)
         val tenantId = requireNotNull(TenantContext.get()) { "A subscription request requires an authenticated tenant" }
 
         val existing =
@@ -123,8 +120,8 @@ class ManualPaymentService(
                 Payment(
                     eventId = null,
                     tier = plan.name,
-                    amountMinor = amount,
-                    currency = billingProperties.currency,
+                    amountMinor = quote.amountMinor,
+                    currency = quote.currency,
                     provider = PROVIDER_MANUAL,
                     kind = Payment.KIND_SUBSCRIPTION,
                     subscriptionMonths = months,
@@ -139,10 +136,66 @@ class ManualPaymentService(
             tenantId = tenantId,
             plan = plan.name,
             months = months,
-            amountMinor = amount,
-            currency = billingProperties.currency,
+            amountMinor = quote.amountMinor,
+            currency = quote.currency,
             reference = payment.providerReference,
         )
+        return instructionsFor(payment)
+    }
+
+    /**
+     * A request to pay for [months] of Organizer Pack (ADR 105), with the guests
+     * still owed from an event day included. Same manual circuit as a
+     * subscription; an open request at the same price is handed back.
+     */
+    @Transactional
+    fun requestPack(months: Int): ManualPaymentInstructions {
+        val quote = organizerPack.quote(months)
+        return requestTenantPayment(Payment.KIND_PACK, Payment.PACK_TIER, quote, months, quote.owedGuests)
+    }
+
+    /** A request to buy [blocks] blocks of extra guests for the pack's current month (ADR 105). */
+    @Transactional
+    fun requestPackExtra(blocks: Int): ManualPaymentInstructions {
+        val quote = organizerPack.quoteExtra(blocks)
+        return requestTenantPayment(Payment.KIND_PACK_EXTRA, Payment.PACK_TIER, quote, null, quote.guests)
+    }
+
+    /** A request to pay for [months] of the "own WhatsApp number" add-on (ADR 105). */
+    @Transactional
+    fun requestOwnWhatsAppNumber(months: Int): ManualPaymentInstructions {
+        val quote = ownWhatsAppNumber.quote(months)
+        return requestTenantPayment(Payment.KIND_WHATSAPP_NUMBER, Payment.OWN_NUMBER_TIER, quote, months, 0)
+    }
+
+    private fun requestTenantPayment(
+        kind: String,
+        tier: String,
+        quote: PackQuote,
+        months: Int?,
+        guests: Long,
+    ): ManualPaymentInstructions {
+        requireNotNull(TenantContext.get()) { "A payment request requires an authenticated tenant" }
+        val existing = payments.findFirstByKindAndProviderAndStatusOrderByCreatedAtDesc(kind, PROVIDER_MANUAL, PaymentStatus.PENDING)
+        if (existing != null && existing.amountMinor == quote.amountMinor && existing.subscriptionMonths == months) {
+            return instructionsFor(existing)
+        }
+        val payment =
+            payments.save(
+                Payment(
+                    eventId = null,
+                    tier = tier,
+                    amountMinor = quote.amountMinor,
+                    currency = quote.currency,
+                    provider = PROVIDER_MANUAL,
+                    kind = kind,
+                    subscriptionMonths = months,
+                    guests = guests,
+                ),
+            )
+        payment.providerReference = generateReference()
+        payment.updatedAt = Instant.now()
+        payments.save(payment)
         return instructionsFor(payment)
     }
 
@@ -210,7 +263,7 @@ class ManualPaymentService(
         val previous = TenantContext.get()
         TenantContext.set(tenantId)
         try {
-            var subscriptionKind = false
+            var tenantKind = false
             val view =
                 transactions.execute {
                     val payment =
@@ -225,22 +278,13 @@ class ManualPaymentService(
                     payment.status = if (succeeded) PaymentStatus.SUCCEEDED else PaymentStatus.FAILED
                     payment.updatedAt = Instant.now()
                     payments.save(payment)
-                    if (succeeded) {
-                        if (payment.kind == Payment.KIND_SUBSCRIPTION) {
-                            // Le prépaiement (ré)active et prolonge l'abonnement et
-                            // publie son propre avis (SubscriptionNotice.REACTIVATED).
-                            subscriptionKind = true
-                            subscriptionService.confirmSubscriptionPayment(
-                                payment.tier,
-                                requireNotNull(payment.subscriptionMonths),
-                            )
-                        } else {
-                            tierUnlockService.unlock(requireNotNull(payment.eventId), payment.tier)
-                        }
-                    }
+                    // Only an event tier has an event to notify about; a
+                    // subscription publishes its own notice (REACTIVATED).
+                    tenantKind = payment.kind != Payment.KIND_TIER
+                    if (succeeded) fulfillment.fulfill(payment)
                     payment.toAdminView()
                 }
-            if (!subscriptionKind) {
+            if (!tenantKind) {
                 val kind = if (succeeded) ManualPaymentNotice.KIND_CONFIRMED else ManualPaymentNotice.KIND_REJECTED
                 publishNoticeFromView(requireNotNull(view), tenantId, kind, note)
             }

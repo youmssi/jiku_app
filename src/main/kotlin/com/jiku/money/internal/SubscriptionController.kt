@@ -24,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException
 class SubscriptionController(
     private val subscriptionService: SubscriptionService,
     private val manualPaymentService: ManualPaymentService,
+    private val paymentService: PaymentService,
 ) {
     @GetMapping
     fun view(): SubscriptionView =
@@ -34,4 +35,10 @@ class SubscriptionController(
     fun request(
         @Valid @RequestBody request: SubscriptionRequest,
     ): ManualPaymentInstructions = manualPaymentService.requestSubscription(request.plan, request.months)
+
+    /** Pays the plan months online with the active provider (JIKU-164). */
+    @PostMapping("/checkout")
+    fun checkout(
+        @Valid @RequestBody request: SubscriptionRequest,
+    ): PaymentInitiationResult = paymentService.checkoutSubscription(request.plan, request.months)
 }

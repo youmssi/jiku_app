@@ -1,7 +1,9 @@
 package com.jiku.catalog.internal
 
+import com.jiku.shared.ORGANIZER_OPERATOR_LABEL
 import com.jiku.ticket.LineActionResult
-import com.jiku.ticket.LineOutcome
+import com.jiku.ticket.MarkPaidRequest
+import com.jiku.ticket.TicketInfo
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
@@ -62,7 +64,8 @@ class ServiceDayLineController(
     @PostMapping("/next")
     fun next(
         @PathVariable serviceId: UUID,
-    ): NextResponse = NextResponse(console.next(serviceId))
+        @RequestParam(required = false) counter: String?,
+    ): NextResponse = NextResponse(console.next(serviceId, counter))
 
     @PostMapping("/walk-in")
     @ResponseStatus(HttpStatus.CREATED)
@@ -75,43 +78,39 @@ class ServiceDayLineController(
     fun arrive(
         @PathVariable serviceId: UUID,
         @PathVariable ticketCode: String,
-    ): LineActionResult = reply(console.arrive(serviceId, ticketCode))
+    ): LineActionResult = console.arrive(serviceId, ticketCode).orThrow()
 
     @PostMapping("/tickets/{ticketCode}/call")
     fun call(
         @PathVariable serviceId: UUID,
         @PathVariable ticketCode: String,
-    ): LineActionResult = reply(console.call(serviceId, ticketCode))
+        @RequestParam(required = false) counter: String?,
+    ): LineActionResult = console.call(serviceId, ticketCode, counter).orThrow()
 
     @PostMapping("/tickets/{ticketCode}/present")
     fun present(
         @PathVariable serviceId: UUID,
         @PathVariable ticketCode: String,
-    ): LineActionResult = reply(console.present(serviceId, ticketCode))
+    ): LineActionResult = console.present(serviceId, ticketCode).orThrow()
 
     @PostMapping("/tickets/{ticketCode}/finish")
     fun finish(
         @PathVariable serviceId: UUID,
         @PathVariable ticketCode: String,
-    ): LineActionResult = reply(console.finish(serviceId, ticketCode))
+    ): LineActionResult = console.finish(serviceId, ticketCode).orThrow()
 
     @PostMapping("/tickets/{ticketCode}/no-show")
     fun noShow(
         @PathVariable serviceId: UUID,
         @PathVariable ticketCode: String,
-    ): LineActionResult = reply(console.noShow(serviceId, ticketCode))
+    ): LineActionResult = console.noShow(serviceId, ticketCode).orThrow()
 
-    private fun reply(result: LineActionResult): LineActionResult =
-        when (result.outcome) {
-            LineOutcome.OK -> result
-            LineOutcome.NOT_FOUND ->
-                throw ResponseStatusException(HttpStatus.NOT_FOUND, "No line entry with this code on this service")
-            LineOutcome.WRONG_STATE ->
-                throw ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "This entry is no longer in the expected state — it may have been handled by another desk",
-                )
-        }
+    @PostMapping("/tickets/{ticketCode}/paid")
+    fun markPaid(
+        @PathVariable serviceId: UUID,
+        @PathVariable ticketCode: String,
+        @RequestBody request: MarkPaidRequest,
+    ): TicketInfo = console.markPaid(serviceId, ticketCode, request.method, ORGANIZER_OPERATOR_LABEL)
 
     private fun parseDate(date: String?): LocalDate? =
         date?.let {

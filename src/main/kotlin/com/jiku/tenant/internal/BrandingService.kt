@@ -22,6 +22,7 @@ class BrandingService(
         val branding = tenant.ensureBranding()
         branding.displayName = request.displayName?.takeIf { it.isNotBlank() }
         branding.logoUrl = request.logoUrl?.takeIf { it.isNotBlank() }
+        branding.bannerUrl = request.bannerUrl?.takeIf { it.isNotBlank() }
         branding.primaryColor = request.primaryColor?.takeIf { it.isNotBlank() }
         tenants.save(tenant)
         return tenant.toBrandingResponse()

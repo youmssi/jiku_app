@@ -9,8 +9,9 @@ import { onboardedOrganizer } from '../fixtures/organizer';
  *
  * The scenario books the appointment and prepares the service through the API
  * (the flow under test is the console, not booking), then drives the console in
- * the UI: arrival of the rendez-vous, walk-in at the counter, SUIVANT calling the
- * longest wait first, take-in-charge and finish for both.
+ * the UI: confirmation of the requested rendez-vous, its arrival, walk-in at the
+ * counter, NEXT calling the longest wait first, take-in-charge and finish for
+ * both.
  */
 
 interface DayService {
@@ -93,40 +94,73 @@ test('serves a booked appointment and a walk-in client on the same day', async (
     const service = await createDayService(token);
     await bookToday(token, service.serviceId, 'Fatou Camara', '+224611111111');
 
-    // The organizer opens the day-line console of the service.
-    await page.goto(`/services/${service.serviceId}/ligne`);
-    await expect(page.getByRole('heading', { name: 'Ligne du jour' })).toBeVisible();
+    // The organizer opens the day-line console of the service. With no locale
+    // cookie, the console follows the browser's English.
+    await page.goto(`/services/${service.serviceId}/line`);
+    await expect(page.getByRole('heading', { name: "Today's line" })).toBeVisible();
     await expect(page.getByText('Coupe').first()).toBeVisible();
+
+    // A new service confirms bookings on request: the rendez-vous waits for the
+    // organizer's decision, then joins the line once confirmed.
+    await expect(page.getByText('Pending requests')).toBeVisible();
+    await page.getByRole('button', { name: 'Confirm', exact: true }).click();
 
     // The booked rendez-vous is on the line, not arrived yet: it can be marked arrived.
     await expect(page.getByText('Fatou Camara', { exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Arrivée' }).click();
-    await expect(page.getByRole('button', { name: 'Appeler' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Arrivée' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Arrived', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Call', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Arrived', exact: true })).toHaveCount(0);
 
     // A walk-in arrives at the counter and joins the same line, interleaved.
-    await page.getByRole('button', { name: '+ Sans RDV' }).click();
+    await page.getByRole('button', { name: '+ Walk-in' }).click();
     await page.locator('#walkin-name').fill('Aïssatou Barry');
     await page.locator('#walkin-phone').fill('+224622222222');
-    await page.getByRole('button', { name: 'Ajouter à la file' }).click();
+    await page.getByRole('button', { name: 'Add to the line' }).click();
     await expect(page.getByText('Aïssatou Barry', { exact: true })).toBeVisible();
 
-    // SUIVANT applies the rule: the rendez-vous arrived first is the longest wait.
-    await page.getByRole('button', { name: 'SUIVANT' }).click();
-    await expect(page.getByRole('button', { name: 'Prendre en charge' })).toBeVisible();
+    // NEXT applies the rule: the rendez-vous arrived first is the longest wait.
+    await page.getByRole('button', { name: 'NEXT', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Start', exact: true })).toBeVisible();
 
     // The rendez-vous is taken in charge and finished.
-    await page.getByRole('button', { name: 'Prendre en charge' }).click();
-    await page.getByRole('button', { name: 'Terminer' }).click();
+    await page.getByRole('button', { name: 'Start', exact: true }).click();
+    await page.getByRole('button', { name: 'Finish', exact: true }).click();
     await expect(page.getByText('Fatou Camara', { exact: true })).toBeVisible();
 
-    // SUIVANT now calls the walk-in, which is served the same way.
-    await page.getByRole('button', { name: 'SUIVANT' }).click();
-    await expect(page.getByRole('button', { name: 'Prendre en charge' })).toBeVisible();
-    await page.getByRole('button', { name: 'Prendre en charge' }).click();
-    await page.getByRole('button', { name: 'Terminer' }).click();
+    // NEXT now calls the walk-in, which is served the same way.
+    await page.getByRole('button', { name: 'NEXT', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Start', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Start', exact: true }).click();
+    await page.getByRole('button', { name: 'Finish', exact: true }).click();
 
     // Everyone has been served: nobody is left to call.
-    await page.getByRole('button', { name: 'SUIVANT' }).click();
-    await expect(page.getByRole('button', { name: 'Appeler' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'NEXT', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Call', exact: true })).toHaveCount(0);
+});
+
+test('a walk-in client takes a ticket from the entrance QR and is told when it is their turn', async ({ page }) => {
+    const organizer = await onboardedOrganizer(page, 'selfline');
+    const token = await login(organizer);
+    const service = await createDayService(token);
+    const link = await api<{ shortCode: string }>(`/services/${service.serviceId}/booking-link`, { token });
+
+    // The entrance QR leads the client, with no account, to take a ticket. The
+    // client has no locale cookie, so the page follows the browser's English.
+    await page.goto(`/r/${link.shortCode}/line`);
+    await expect(page.getByText('Take a ticket')).toBeVisible();
+    await page.locator('#line-name').fill('Mariama Diallo');
+    await page.locator('#line-phone').fill('+224620112233');
+    await page.getByRole('button', { name: 'Take my ticket' }).click();
+
+    // Their own page: their number and their place, nobody else's.
+    await expect(page.getByText('Ticket no. 1')).toBeVisible();
+    await expect(page.getByText("You're next.")).toBeVisible();
+
+    // The counter calls the next client; the client's page follows on its own.
+    await api(`/services/${service.serviceId}/day-line/next?counter=${encodeURIComponent('guichet 4')}`, {
+        token,
+        method: 'POST',
+    });
+    await expect(page.getByText("It's your turn!")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText('Please go to guichet 4.')).toBeVisible();
 });

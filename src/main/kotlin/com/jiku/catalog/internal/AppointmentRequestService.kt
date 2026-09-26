@@ -1,6 +1,5 @@
 package com.jiku.catalog.internal
 
-import com.jiku.catalog.ResourceType
 import com.jiku.shared.AppointmentBooked
 import com.jiku.shared.TenantContext
 import org.springframework.context.ApplicationEventPublisher
@@ -85,9 +84,9 @@ class AppointmentRequestService(
         if (reservations.confirmByTokenHash(hash, now) == 0) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "This request has already been handled")
         }
-        val confirmed = reservations.findByBookingTokenHash(hash).first()
-        val professionalName =
-            resources.findByActiveTrueAndTypeOrderByNameAsc(ResourceType.PERSON).firstOrNull()?.name
+        val rows = reservations.findByBookingTokenHash(hash)
+        val confirmed = rows.first()
+        val professionalName = resources.professionalAmong(rows.map { it.resourceId })
         val tenantId = TenantContext.get() ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "No tenant")
         events.publishEvent(
             AppointmentBooked(
@@ -98,6 +97,7 @@ class AppointmentRequestService(
                 clientName = requireNotNull(confirmed.clientName) { "Request without a client name" },
                 clientPhone = requireNotNull(confirmed.clientPhone) { "Request without a client phone" },
                 professionalName = professionalName,
+                charge = services.clientCharge(confirmed.serviceId),
             ),
         )
     }

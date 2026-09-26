@@ -14,6 +14,8 @@ class TenantBranding(
     var displayName: String? = null,
     @Column(name = "branding_logo_url")
     var logoUrl: String? = null,
+    @Column(name = "branding_banner_url")
+    var bannerUrl: String? = null,
     @Column(name = "branding_primary_color")
     var primaryColor: String? = null,
 )

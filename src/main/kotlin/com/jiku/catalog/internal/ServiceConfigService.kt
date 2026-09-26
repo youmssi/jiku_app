@@ -1,5 +1,6 @@
 package com.jiku.catalog.internal
 
+import com.jiku.shared.ReminderChannel
 import com.jiku.shared.ReminderOffsets
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -61,7 +62,7 @@ class ServiceConfigService(
             // défauts du produit (J-1/H-2) dès la persistance : le balayage des
             // rappels ne relit alors jamais une valeur nulle pour un canal activé
             // (JIKU-B2).
-            if (channel == ReminderChannel.WHATSAPP && config.reminderOffsetsMinutes == null) {
+            if (channel != ReminderChannel.NONE && config.reminderOffsetsMinutes == null) {
                 config.reminderOffsetsMinutes = ReminderOffsets.encode(serviceDefaults.reminderOffsetsMinutes)
             }
         }

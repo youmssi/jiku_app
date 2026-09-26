@@ -25,6 +25,7 @@ class UsageService(
     private val platformSettings: PlatformBillingSettingsService,
     private val trialService: TrialService,
     private val tenantQuota: TenantQuotaService,
+    private val organizerPack: OrganizerPackService,
 ) {
     @Transactional
     fun allowance(eventId: UUID): BillingAllowance {
@@ -65,56 +66,17 @@ class UsageService(
         unlockedAllowance: Long,
     ): BillingAllowance {
         val invited = stats.invited
-        val effective = effectiveAllowance(eventId, invited, unlockedAllowance)
+        val effective = effectiveAllowance(eventId, invited, unlockedAllowance, unlimitedOnEventDay = false)
         return BillingAllowance(
             invitedGuests = invited,
             allowance = effective,
             remaining = (effective - invited).coerceAtLeast(0),
             withinAllowance = invited <= effective,
-            tier = platformSettings.tierForUsage(invited),
+            tier = if (organizerPack.isActive()) PACK_TIER else platformSettings.tierForUsage(invited),
             guestsImported = stats.total,
             invitationsSentEmail = sent.email,
             invitationsSentWhatsapp = sent.whatsapp,
         )
-    }
-
-    /**
-     * Adds [amountMinor] to [eventId]'s prepaid credit (JIKU-57) — a booking
-     * deposit or balance already paid outside the normal payment flow, to be
-     * netted off the next manual payment request rather than charged twice.
-     */
-    @Transactional
-    fun recordPrepayment(
-        eventId: UUID,
-        amountMinor: Long,
-    ) {
-        if (amountMinor <= 0) return
-        val record =
-            usageRecords.findByEventId(eventId)
-                ?: UsageRecord(eventId = eventId, unlockedAllowance = properties.freeTierGuests)
-        record.prepaidAmountMinor += amountMinor
-        record.updatedAt = Instant.now()
-        usageRecords.save(record)
-    }
-
-    /**
-     * Spends up to [tierPriceMinor] of [eventId]'s prepaid credit and returns
-     * the discounted price to actually charge (JIKU-57). The credit is zeroed
-     * the moment it is applied — a booking's deposit is meant to offset the
-     * *next* upgrade this event needs, not every future one.
-     */
-    @Transactional
-    fun applyPrepaymentDiscount(
-        eventId: UUID,
-        tierPriceMinor: Long,
-    ): Long {
-        val record = usageRecords.findByEventId(eventId) ?: return tierPriceMinor
-        val discount = minOf(record.prepaidAmountMinor, tierPriceMinor)
-        if (discount <= 0) return tierPriceMinor
-        record.prepaidAmountMinor -= discount
-        record.updatedAt = Instant.now()
-        usageRecords.save(record)
-        return tierPriceMinor - discount
     }
 
     @Transactional(readOnly = true)
@@ -140,8 +102,20 @@ class UsageService(
         eventId: UUID,
         alreadyCommitted: Long,
         paidAllowance: Long,
+        unlimitedOnEventDay: Boolean = true,
     ): Long {
-        val base = if (paidAllowance > properties.freeTierGuests) paidAllowance else tenantQuota.freeCeilingFor(alreadyCommitted)
+        val pack = organizerPack.ceiling(eventId, alreadyCommitted, unlimitedOnEventDay)
+        val base =
+            when {
+                paidAllowance > properties.freeTierGuests -> maxOf(paidAllowance, pack ?: 0)
+                pack != null -> pack
+                else -> tenantQuota.freeCeilingFor(alreadyCommitted)
+            }
         return maxOf(base, trialService.liveTrialAllowance(eventId) ?: 0)
+    }
+
+    private companion object {
+        /** The tier an event reports while an Organizer Pack covers it (ADR 105). */
+        const val PACK_TIER = "PACK"
     }
 }

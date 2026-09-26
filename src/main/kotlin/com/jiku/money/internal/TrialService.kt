@@ -1,5 +1,8 @@
 package com.jiku.money.internal
 
+import com.jiku.catalog.EventModuleApi
+import com.jiku.money.AdminTrialPage
+import com.jiku.money.AdminTrialStats
 import com.jiku.money.AdminTrialView
 import com.jiku.shared.TenantContext
 import com.jiku.shared.TrialNotice
@@ -11,7 +14,9 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import org.springframework.web.server.ResponseStatusException
+import java.time.Duration
 import java.time.Instant
+import java.time.ZoneOffset
 import java.util.UUID
 
 /**
@@ -29,6 +34,7 @@ class TrialService(
     private val trialProperties: TrialProperties,
     private val platformSettings: PlatformBillingSettingsService,
     private val tenantModuleApi: TenantModuleApi,
+    private val eventModuleApi: EventModuleApi,
     private val eventPublisher: ApplicationEventPublisher,
     transactionManager: PlatformTransactionManager,
 ) {
@@ -101,19 +107,62 @@ class TrialService(
         tenantId: UUID?,
         page: Int,
         size: Int,
-    ): List<AdminTrialView> {
+    ): AdminTrialPage {
         val normalized = status?.trim()?.uppercase()?.takeIf { it.isNotBlank() }
         if (normalized != null && runCatching { TrialStatus.valueOf(normalized) }.isFailure) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown status: $status")
         }
         val effectiveSize = size.coerceIn(1, MAX_PAGE_SIZE)
-        return trials
-            .adminList(
+        val effectivePage = page.coerceAtLeast(0)
+        val tenantParam = tenantId?.toString()
+        val rows =
+            trials.adminList(
                 status = normalized,
-                tenantId = tenantId?.toString(),
+                tenantId = tenantParam,
                 limit = effectiveSize,
-                offset = page.coerceAtLeast(0) * effectiveSize,
-            ).map { it.toView(it.tenantId ?: "") }
+                offset = effectivePage * effectiveSize,
+            )
+        val total = trials.countAdminList(status = normalized, tenantId = tenantParam)
+
+        // One tenant lookup per distinct tenant on the page, not per row — a page
+        // of 50 trials from the same handful of prospects costs a handful of calls.
+        val tenantNames =
+            rows
+                .mapNotNull { it.tenantId }
+                .distinct()
+                .associateWith { id -> runCatching { tenantModuleApi.findTenant(UUID.fromString(id)) }.getOrNull()?.displayName }
+        val eventNames = runCatching { eventModuleApi.adminEventNames(rows.map { it.eventId }.distinct()) }.getOrDefault(emptyMap())
+
+        val entries =
+            rows.map { row ->
+                val resolvedTenantId = row.tenantId ?: ""
+                row.toView(resolvedTenantId).copy(
+                    tenantName = tenantNames[resolvedTenantId],
+                    eventName = eventNames[row.eventId],
+                )
+            }
+        return AdminTrialPage(entries = entries, total = total, page = effectivePage, size = effectiveSize)
+    }
+
+    /** Platform-wide trial funnel snapshot (JIKU-99) for the back-office overview strip. */
+    fun adminStats(): AdminTrialStats {
+        val now = Instant.now()
+        val monthStart =
+            now
+                .atZone(ZoneOffset.UTC)
+                .toLocalDate()
+                .withDayOfMonth(1)
+                .atStartOfDay(ZoneOffset.UTC)
+                .toInstant()
+        val concluded = trials.countByConcludedStatus().associate { it[0].toString() to (it[1] as Number).toLong() }
+        val converted = concluded["CONVERTED"] ?: 0
+        val concludedTotal = converted + (concluded["EXPIRED"] ?: 0) + (concluded["ENDED"] ?: 0)
+        return AdminTrialStats(
+            active = trials.countActive(),
+            expiringWithin7Days = trials.countActiveExpiringBy(now.plus(Duration.ofDays(7))),
+            convertedThisMonth = trials.countConvertedSince(monthStart),
+            conversionRatePercent = if (concludedTotal == 0L) null else converted * 100.0 / concludedTotal,
+        )
     }
 
     /**

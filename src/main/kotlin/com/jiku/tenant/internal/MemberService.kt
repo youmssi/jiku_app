@@ -1,6 +1,7 @@
 package com.jiku.tenant.internal
 
 import com.jiku.shared.MemberInvitationNotice
+import com.jiku.shared.MessageLanguage
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -96,6 +97,7 @@ class MemberService(
                 inviterEmail = caller.user.email,
                 role = role.name,
                 actionUrl = "${properties.appBaseUrl}/invitations/accept?token=$raw",
+                language = tenantLanguage(tenantId),
             ),
         )
         return InvitationView(requireNotNull(saved.id), saved.email, saved.role.name, saved.expiresAt, saved.createdAt)
@@ -255,4 +257,7 @@ class MemberService(
         }
 
     private fun tenantName(tenantId: String): String = tenants.findById(UUID.fromString(tenantId)).map { it.name }.orElse("")
+
+    private fun tenantLanguage(tenantId: String): String =
+        tenants.findById(UUID.fromString(tenantId)).map { MessageLanguage.forCountry(it.country) }.orElse(MessageLanguage.FRENCH)
 }

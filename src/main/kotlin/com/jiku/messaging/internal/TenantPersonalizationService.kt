@@ -17,6 +17,9 @@ class TenantPersonalizationService(
     private val templates: TenantTemplateRepository,
     private val vocabulary: TenantVocabularyRepository,
     private val resolver: TenantTemplateResolver,
+    private val defaults: ClientTemplateDefaults,
+    private val catalog: MessageCatalog,
+    private val emailRenderer: EmailTemplateRenderer,
 ) {
     // ─── Vocabulaire ───────────────────────────────────────────────────────────
 
@@ -69,9 +72,10 @@ class TenantPersonalizationService(
             ClientTemplates.definition(name)
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Unknown template: $name")
         val rows = templates.findByNameOrderByChannelAsc(name).associateBy { it.channel }
+        val language = tenantLanguage()
         val channels =
             definition.channels.mapNotNull { channel ->
-                val defaultBody = ClientTemplateDefaults.load(name, channel) ?: return@mapNotNull null
+                val defaultBody = defaults.load(name, channel, language) ?: return@mapNotNull null
                 val override = rows[channel]
                 TemplateChannelView(
                     channel = channel,
@@ -134,14 +138,20 @@ class TenantPersonalizationService(
         if (definition.defaultFile(request.channel) == null) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Channel ${request.channel} is not available for $name")
         }
-        val defaultBody = ClientTemplateDefaults.load(name, request.channel) ?: ""
+        val language = tenantLanguage()
+        val defaultBody = defaults.load(name, request.channel, language) ?: ""
         val override = templates.findByNameAndChannel(name, request.channel)?.takeIf { it.active }?.body
         val body = request.body?.takeIf { it.isNotBlank() } ?: override ?: defaultBody
-        val values = previewValues(request.channel)
+        val values = previewValues(request.channel, language)
         return TemplatePreviewResponse(body = resolver.substitute(body, values))
     }
 
-    private fun previewValues(channel: String): Map<String, String> {
+    private fun tenantLanguage(): String = catalog.language(TenantContext.get())
+
+    private fun previewValues(
+        channel: String,
+        language: String,
+    ): Map<String, String> {
         val samples =
             ClientTemplates.definitions
                 .flatMap { it.variables(channel) }
@@ -149,7 +159,7 @@ class TenantPersonalizationService(
         return if (channel == ClientTemplates.CHANNEL_EMAIL) {
             samples +
                 mapOf(
-                    "eventDetails" to "<p>📅 Tuesday 3 Nov at 15:00</p><p>📍 Avenue de la République</p>",
+                    "eventDetails" to emailRenderer.sampleEventDetails(language),
                     "logoBlock" to "",
                 )
         } else {

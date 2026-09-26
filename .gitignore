@@ -53,3 +53,7 @@ e2e/node_modules/
 /package-lock.json
 e2e/playwright-report/
 e2e/test-results/
+
+# JVM crash dumps
+hs_err_pid*.log
+replay_pid*.log

@@ -2,12 +2,16 @@ package com.jiku.checkin.internal
 
 import com.jiku.catalog.EventInfo
 import com.jiku.catalog.EventModuleApi
+import com.jiku.catalog.OperatorAction
 import com.jiku.invitation.GuestInfo
 import com.jiku.invitation.InvitationModuleApi
 import com.jiku.shared.TenantContext
 import com.jiku.tenant.TenantModuleApi
 import com.jiku.ticket.CheckInOutcome
 import com.jiku.ticket.CheckInResult
+import com.jiku.ticket.TicketInfo
+import com.jiku.ticket.TicketPaymentMethod
+import com.jiku.ticket.TicketPaymentOutcome
 import com.jiku.ticket.TicketingModuleApi
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -31,12 +35,13 @@ class CheckInService(
     private val log = org.slf4j.LoggerFactory.getLogger(CheckInService::class.java)
 
     /**
-     * Branding and live attendance context for the validator opening [validatorLabel]'s
-     * link against [eventId]. The tenant is already bound by the caller.
+     * Branding and live attendance context for the operator [operatorLabel] opening
+     * [eventId]'s door, allowed [actions] there. The tenant is already bound by the caller.
      */
     fun context(
         eventId: UUID,
-        validatorLabel: String,
+        operatorLabel: String,
+        actions: Set<OperatorAction>,
     ): ValidatorContextResponse {
         val event = events.findEvent(eventId)
         val tenant = TenantContext.get()?.let { tenants.findTenant(UUID.fromString(it)) }
@@ -47,10 +52,11 @@ class CheckInService(
             startDateTime = event?.startDateTime,
             timezone = event?.timezone ?: "UTC",
             eventLocation = event?.location,
-            organizerName = tenant?.displayName ?: "Your organizer",
-            primaryColor = tenant?.primaryColor ?: "#1E293B",
-            logoUrl = tenant?.logoUrl,
-            validatorLabel = validatorLabel,
+            organizerName = event?.brand?.name ?: tenant?.displayName ?: "Your organizer",
+            primaryColor = event?.brand?.primaryColor ?: tenant?.primaryColor ?: "#1E293B",
+            logoUrl = event?.brand?.logoUrl ?: tenant?.logoUrl,
+            validatorLabel = operatorLabel,
+            actions = actions,
             checkedIn = stats.checkedIn,
             confirmed = stats.confirmed,
         )
@@ -68,7 +74,7 @@ class CheckInService(
         if (ticket == null || ticket.eventId != eventId) {
             return notFound()
         }
-        return respond(ticketing.checkInByCode(ticketCode, validatorLabel))
+        return respond(eventId, ticketing.checkInByCode(ticketCode, validatorLabel))
     }
 
     fun checkInByGuest(
@@ -83,7 +89,7 @@ class CheckInService(
         if (guest == null || guest.eventId != eventId) {
             return notFound()
         }
-        return respond(ticketing.checkInByGuest(guestId, validatorLabel))
+        return respond(eventId, ticketing.checkInByGuest(guestId, validatorLabel))
     }
 
     fun search(
@@ -138,8 +144,31 @@ class CheckInService(
                 checkedInBy = ticket?.checkedInBy,
                 ticketTypeLabel = type?.label,
                 ticketTypeColor = type?.colorHex,
+                paymentStatus = ticket?.paymentStatus,
             )
         }
+    }
+
+    /**
+     * Records that a guest paid the organization for their ticket (JIKU-110),
+     * attributed to [operatorLabel]. Only a ticket of this event can be marked.
+     */
+    fun markPaid(
+        eventId: UUID,
+        ticketCode: String,
+        method: TicketPaymentMethod,
+        operatorLabel: String,
+    ): TicketInfo {
+        if (eventCancelled(eventId)) {
+            throw ResponseStatusException(HttpStatus.GONE, "This event has been cancelled")
+        }
+        ticketing.findByCode(ticketCode)?.takeIf { it.eventId == eventId }
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "No ticket with this code for this event")
+        val result = ticketing.markPaidByCode(ticketCode, method, operatorLabel)
+        if (result.outcome != TicketPaymentOutcome.PAID) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Nothing is owed on this ticket, or it is already paid")
+        }
+        return requireNotNull(result.ticket)
     }
 
     /**
@@ -174,9 +203,12 @@ class CheckInService(
         }
     }
 
-    private fun respond(result: CheckInResult): CheckInResponse {
+    private fun respond(
+        eventId: UUID,
+        result: CheckInResult,
+    ): CheckInResponse {
         if (result.outcome == CheckInOutcome.CHECKED_IN) {
-            result.ticket?.let { recordQuorumIfReached(it.eventId) }
+            recordQuorumIfReached(eventId)
         }
         val guestName = result.ticket?.let { invitation.findGuest(it.guestId)?.fullName() }
         // La catégorie vient du billet, pas de l'invité : si l'organisateur a
@@ -184,7 +216,7 @@ class CheckInService(
         // le billet présenté.
         val type =
             result.ticket?.ticketTypeId?.let { typeId ->
-                events.ticketTypes(result.ticket.eventId).firstOrNull { it.id == typeId }
+                events.ticketTypes(eventId).firstOrNull { it.id == typeId }
             }
         return CheckInResponse(
             outcome = result.outcome.name,
@@ -194,6 +226,8 @@ class CheckInService(
             checkedInBy = result.checkedInBy,
             ticketTypeLabel = type?.label,
             ticketTypeColor = type?.colorHex,
+            amountDueMinor = result.ticket?.takeIf { result.outcome == CheckInOutcome.PAYMENT_DUE }?.amountDueMinor,
+            amountDueCurrency = result.ticket?.takeIf { result.outcome == CheckInOutcome.PAYMENT_DUE }?.amountDueCurrency,
         )
     }
 

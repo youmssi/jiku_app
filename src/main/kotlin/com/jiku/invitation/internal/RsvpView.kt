@@ -1,5 +1,7 @@
 package com.jiku.invitation.internal
 
+import com.jiku.tenant.TenantPaymentMethodsInfo
+import com.jiku.ticket.TicketPaymentStatus
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
@@ -7,6 +9,7 @@ import java.time.Instant
 
 data class RsvpView(
     val eventName: String,
+    /** Preformatted start, kept for existing clients; new clients format [eventStart] in [eventTimezone]. */
     val eventWhen: String?,
     val eventLocation: String?,
     val organizerName: String,
@@ -33,6 +36,28 @@ data class RsvpView(
     val transferredTo: String? = null,
     /** Questions personnalisées posées au moment de confirmer (JIKU-77). */
     val questions: List<RsvpQuestion> = emptyList(),
+    /** What the guest owes the organization and how to pay it (JIKU-110); null when the ticket is free. */
+    val payment: RsvpPayment? = null,
+    /** When the event starts, so the guest page can write it in the guest's own language. */
+    val eventStart: Instant? = null,
+    val eventEnd: Instant? = null,
+    /** The event's IANA timezone: times are always shown in it, never in the viewer's. */
+    val eventTimezone: String? = null,
+    /** The ticket category this guest holds, when the event has several. */
+    val categoryName: String? = null,
+)
+
+/**
+ * The payment a sold ticket asks for. The guest pays the organization directly,
+ * with one of its [methods]; the organization then confirms it.
+ */
+data class RsvpPayment(
+    /** DUE until the organization confirms it, then PAID. */
+    val status: TicketPaymentStatus,
+    val amountMinor: Long,
+    val currency: String,
+    /** Null when the organization has not listed any payment method yet. */
+    val methods: TenantPaymentMethodsInfo?,
 )
 
 /** Question à répondre lors de la confirmation ; réponse libre attendue. */

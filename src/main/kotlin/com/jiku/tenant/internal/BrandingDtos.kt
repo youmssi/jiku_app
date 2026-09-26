@@ -12,6 +12,8 @@ data class UpdateBrandingRequest(
     val displayName: String? = null,
     @field:Size(max = 2048)
     val logoUrl: String? = null,
+    @field:Size(max = 2048)
+    val bannerUrl: String? = null,
     @field:Pattern(
         regexp = "^#[0-9a-fA-F]{6}$",
         message = "primaryColor must be a 6-digit hex color, e.g. #1E293B",
@@ -22,5 +24,6 @@ data class UpdateBrandingRequest(
 data class BrandingResponse(
     val displayName: String,
     val logoUrl: String?,
+    val bannerUrl: String?,
     val primaryColor: String,
 )

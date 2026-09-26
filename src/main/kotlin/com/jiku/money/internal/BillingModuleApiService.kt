@@ -1,13 +1,15 @@
 package com.jiku.money.internal
 
 import com.jiku.money.AdminPaymentView
+import com.jiku.money.AdminTrialPage
+import com.jiku.money.AdminTrialStats
 import com.jiku.money.AdminTrialView
 import com.jiku.money.BillingAllowance
 import com.jiku.money.BillingModuleApi
 import com.jiku.money.BillingTierOption
-import com.jiku.money.BookingAvoirDocument
 import com.jiku.money.PlatformBillingSettingsUpdate
 import com.jiku.money.PlatformBillingSettingsView
+import com.jiku.money.PriceList
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.UUID
@@ -27,11 +29,6 @@ class BillingModuleApiService(
     private val platformSettings: PlatformBillingSettingsService,
     private val properties: BillingProperties,
 ) : BillingModuleApi {
-    override fun recordPrepayment(
-        eventId: UUID,
-        amountMinor: Long,
-    ) = usageService.recordPrepayment(eventId, amountMinor)
-
     override fun allowance(eventId: UUID): BillingAllowance = usageService.allowance(eventId)
 
     override fun readAllowance(eventId: UUID): BillingAllowance = usageService.readAllowance(eventId)
@@ -61,7 +58,9 @@ class BillingModuleApiService(
         tenantId: UUID?,
         page: Int,
         size: Int,
-    ): List<AdminTrialView> = trialService.adminList(status, tenantId, page, size)
+    ): AdminTrialPage = trialService.adminList(status, tenantId, page, size)
+
+    override fun adminTrialStats(): AdminTrialStats = trialService.adminStats()
 
     override fun adminGrantTrial(
         tenantId: UUID,
@@ -75,23 +74,10 @@ class BillingModuleApiService(
         reason: String,
     ): AdminTrialView = trialService.endEarly(trialId, reason)
 
-    override fun tierForGuestCount(guestCount: Long): String = platformSettings.tierForUsage(guestCount)
-
-    override fun priceForTier(
-        tierName: String,
-        guestCount: Long,
-    ): Long =
-        if (tierName == BillingProperties.FREE_TIER) {
-            0
-        } else {
-            platformSettings.tierByName(tierName)?.priceMinor
-                ?: properties.custom.priceGnf(guestCount)
-        }
-
-    override fun currency(): String = properties.currency
+    override fun currency(): String = PriceList.GNF
 
     override fun tierOptions(): List<BillingTierOption> =
-        platformSettings.tiers().map { BillingTierOption(name = it.name, maxGuests = it.maxGuests, priceMinor = it.priceMinor) }
+        platformSettings.tiers().map { BillingTierOption(name = it.name, maxGuests = it.maxGuests, price = it.price) }
 
     override fun adminBillingSettings(): PlatformBillingSettingsView = platformSettings.view()
 
@@ -99,17 +85,4 @@ class BillingModuleApiService(
         update: PlatformBillingSettingsUpdate,
         updatedBy: String?,
     ): PlatformBillingSettingsView = platformSettings.update(update, updatedBy)
-
-    override fun unlockTier(
-        eventId: UUID,
-        tierName: String,
-    ) = tierUnlockService.unlock(eventId, tierName)
-
-    override fun issueBookingAvoir(
-        customerName: String,
-        customerCountry: String,
-        amountMinor: Long,
-        currency: String,
-        description: String,
-    ): BookingAvoirDocument = invoiceService.issueBookingAvoir(customerName, customerCountry, amountMinor, currency, description)
 }

@@ -20,4 +20,5 @@ data class ReminderDue(
     val professionalName: String?,
     /** Fuseau du service, pour écrire l'heure du rendez-vous côté client. */
     val serviceTimezone: String,
+    val channel: ReminderChannel = ReminderChannel.WHATSAPP,
 )

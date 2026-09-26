@@ -4,6 +4,7 @@ import com.jiku.money.BillingTierOption
 import com.jiku.money.PayeeDetails
 import com.jiku.money.PlatformBillingSettingsUpdate
 import com.jiku.money.PlatformBillingSettingsView
+import com.jiku.money.PriceList
 import com.jiku.money.SubscriptionPlanOption
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -50,22 +51,15 @@ class PlatformBillingSettingsService(
     @Transactional(readOnly = true)
     fun planByName(name: String): Plan? = plans().firstOrNull { it.name.equals(name, ignoreCase = true) }
 
-    /** Prix du prépaiement (minor unit) : formules de la base, périodes de la config. */
+    /**
+     * The plan a team of [people] opens on: the free plan when it holds the
+     * team, otherwise the cheapest plan (in GNF, the reference grid) that does.
+     */
     @Transactional(readOnly = true)
-    fun priceMinor(
-        plan: Plan,
-        months: Int,
-    ): Long? =
-        subscriptionProperties.period(months)?.let { p ->
-            plan.priceMinorPerMonth * months * p.factorMilli / 1_000
-        }
-
-    /** La formule couvrant [activeResources] ressources actives. */
-    @Transactional(readOnly = true)
-    fun planForResources(activeResources: Long): Plan =
-        plans().sortedBy { it.maxResources }.firstOrNull { activeResources <= it.maxResources }
-            ?: plans().maxByOrNull { it.maxResources }
-            ?: subscriptionProperties.plans.maxByOrNull { it.maxResources }!!
+    fun openingPlan(people: Long): Plan {
+        val holding = plans().filter { it.covers(people) }.ifEmpty { subscriptionProperties.plans.filter { it.covers(people) } }
+        return holding.firstOrNull { it.free } ?: holding.minBy { it.monthlyMinor(PriceList.GNF, people) }
+    }
 
     /** Le palier correspondant à [invitedGuests] invités (pour l'affichage). */
     @Transactional(readOnly = true)
@@ -100,10 +94,19 @@ class PlatformBillingSettingsService(
         val row = settings.findById(PlatformBillingSettings.ROW_ID).orElse(null)
         val managed = row?.tierPricesJson != null || row?.subscriptionPlansJson != null
         return PlatformBillingSettingsView(
-            currency = billingProperties.currency,
+            currency = PriceList.GNF,
             payee = payeeDetails(),
-            tiers = tiers().map { BillingTierOption(it.name, it.maxGuests, it.priceMinor) },
-            subscriptionPlans = plans().map { SubscriptionPlanOption(it.name, it.maxResources, it.priceMinorPerMonth) },
+            tiers = tiers().map { BillingTierOption(it.name, it.maxGuests, it.price) },
+            subscriptionPlans =
+                plans().map {
+                    SubscriptionPlanOption(
+                        it.name,
+                        it.includedPeople,
+                        it.maxPeople,
+                        it.monthly,
+                        it.extraPerson,
+                    )
+                },
             managedInDatabase = managed,
         )
     }
@@ -121,8 +124,11 @@ class PlatformBillingSettingsService(
         row.mobileMoneyNumber = update.payee.mobileMoneyNumber?.takeIf { it.isNotBlank() }
         row.mobileMoneyOperator = update.payee.mobileMoneyOperator?.takeIf { it.isNotBlank() }
         row.bankDetails = update.payee.bankDetails?.takeIf { it.isNotBlank() }
-        row.tierPricesJson = objectMapper.writeValueAsString(update.tiers)
-        row.subscriptionPlansJson = objectMapper.writeValueAsString(update.subscriptionPlans)
+        row.tierPricesJson = objectMapper.writeValueAsString(update.tiers.map { BillingProperties.Tier(it.name, it.maxGuests, it.price) })
+        row.subscriptionPlansJson =
+            objectMapper.writeValueAsString(
+                update.subscriptionPlans.map { Plan(it.name, it.includedPeople, it.maxPeople, it.monthly, it.extraPerson) },
+            )
         row.updatedAt = Instant.now()
         row.updatedBy = updatedBy
         settings.save(row)

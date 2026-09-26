@@ -154,13 +154,15 @@ class ResourceService(
     private fun requireResource(resourceId: UUID): Resource = resources.findById(resourceId).orElseThrow { resourceId.notFound() }
 
     /**
-     * Annonce le nouveau nombre de ressources actives au module money (JIKU-90) :
-     * la première ressource active matérialise un abonnement, la photo du nombre
-     * est ensuite tenue à jour. Publié dans la transaction de la ressource.
+     * Announces the number of active people who serve clients to the money
+     * module (JIKU-90, ADR 105): services are priced per person, so places and
+     * equipment do not count. Published in the resource's transaction.
      */
     private fun publishResourceCount() {
         val tenantId = TenantContext.get() ?: return
-        events.publishEvent(ResourceCountChanged(tenantId = tenantId, activeResources = resources.countByActiveTrue()))
+        events.publishEvent(
+            ResourceCountChanged(tenantId = tenantId, activeResources = resources.countByActiveTrueAndType(ResourceType.PERSON)),
+        )
     }
 
     private fun validateTimezone(timezone: String) {

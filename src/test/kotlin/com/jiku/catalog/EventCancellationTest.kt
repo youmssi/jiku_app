@@ -116,7 +116,7 @@ class EventCancellationTest {
         // regardless of RSVP status — asynchronously, after the commit.
         await().atMost(10, TimeUnit.SECONDS).untilAsserted {
             val sends = output.out
-            assert(sends.contains("subject=\"Summit has been cancelled\"")) { "no cancellation email was sent" }
+            assert(sends.contains("subject=\"Summit est annulé\"")) { "no cancellation email was sent" }
             assert(sends.contains("to=ada-cancel@example.com")) { "confirmed guest was not notified" }
             assert(sends.contains("to=grace-cancel@example.com")) { "pending guest was not notified" }
         }

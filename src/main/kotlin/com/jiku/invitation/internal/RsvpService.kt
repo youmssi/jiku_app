@@ -7,6 +7,7 @@ import com.jiku.shared.TenantContext
 import com.jiku.tenant.TenantModuleApi
 import com.jiku.ticket.TicketInfo
 import com.jiku.ticket.TicketingModuleApi
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -28,6 +29,7 @@ class RsvpService(
     private val events: EventModuleApi,
     private val tenants: TenantModuleApi,
     private val ticketing: TicketingModuleApi,
+    private val eventPublisher: ApplicationEventPublisher,
 ) {
     @Transactional(readOnly = true)
     fun view(guestId: UUID): RsvpView = buildView(loadGuest(guestId))
@@ -50,9 +52,30 @@ class RsvpService(
             }
             guest.rsvpStatus = RsvpStatus.CONFIRMED
             guests.save(guest)
-            ticketing.issueTicket(eventId, guestId, guest.ticketTypeId)
+            val charge = guest.ticketTypeId?.let { typeId -> events.ticketTypes(eventId).firstOrNull { it.id == typeId } }?.clientCharge()
+            ticketing.issueTicket(eventId, guestId, guest.ticketTypeId, charge)
+            eventPublisher.publishEvent(TicketConfirmed(guestId, eventId, TenantContext.get().orEmpty()))
         }
         return buildView(guest)
+    }
+
+    /**
+     * Confirms a guest as their invitation is sent, for an event that sends
+     * tickets directly (ADR 105). Same capacity rules as [confirm], but no
+     * separate ticket email: the invitation itself carries the ticket.
+     * Returns false when the event is full or the guest erased their data.
+     */
+    @Transactional
+    fun issueDirectTicket(guest: Guest): Boolean {
+        if (guest.personalDataErased) return false
+        if (guest.rsvpStatus == RsvpStatus.CONFIRMED) return true
+        val eventId = requireNotNull(guest.eventId)
+        if (!events.reserveAttendanceSlot(eventId, guest.ticketTypeId)) return false
+        guest.rsvpStatus = RsvpStatus.CONFIRMED
+        guests.save(guest)
+        val charge = guest.ticketTypeId?.let { typeId -> events.ticketTypes(eventId).firstOrNull { it.id == typeId }?.clientCharge() }
+        ticketing.issueTicket(eventId, requireNotNull(guest.id), guest.ticketTypeId, charge)
+        return true
     }
 
     @Transactional
@@ -151,8 +174,7 @@ class RsvpService(
         guests.save(recipient)
         val recipientId = requireNotNull(recipient.id)
 
-        ticketing.cancelByGuest(guestId)
-        ticketing.issueTicket(eventId, recipientId, recipient.ticketTypeId)
+        ticketing.transferTicket(guestId, recipientId)
 
         sender.rsvpStatus = RsvpStatus.TRANSFERRED
         sender.transferredToGuestId = recipientId
@@ -215,9 +237,9 @@ class RsvpService(
             eventName = event?.name ?: "Event",
             eventWhen = event?.startDateTime?.let { formatWhen(it, event.timezone) },
             eventLocation = event?.location,
-            organizerName = tenant?.displayName ?: "Your organizer",
-            primaryColor = tenant?.primaryColor ?: "#1E293B",
-            logoUrl = tenant?.logoUrl,
+            organizerName = event?.brand?.name ?: tenant?.displayName ?: "Your organizer",
+            primaryColor = event?.brand?.primaryColor ?: tenant?.primaryColor ?: "#1E293B",
+            logoUrl = event?.brand?.logoUrl ?: tenant?.logoUrl,
             guestName = "${guest.firstName} ${guest.lastName}",
             status = guest.rsvpStatus.name,
             ticketCode = ticket?.ticketCode,
@@ -232,6 +254,19 @@ class RsvpService(
                         RsvpQuestion(questionId = q.id, prompt = q.prompt, required = q.required)
                     }
                 } ?: emptyList(),
+            payment =
+                ticket?.amountDueMinor?.let { amount ->
+                    RsvpPayment(
+                        status = ticket.paymentStatus,
+                        amountMinor = amount,
+                        currency = requireNotNull(ticket.amountDueCurrency),
+                        methods = tenant?.paymentMethods,
+                    )
+                },
+            eventStart = event?.startDateTime,
+            eventEnd = event?.endDateTime,
+            eventTimezone = event?.timezone,
+            categoryName = guest.ticketTypeId?.let { typeId -> events.ticketTypes(eventId).firstOrNull { it.id == typeId }?.label },
         )
     }
 

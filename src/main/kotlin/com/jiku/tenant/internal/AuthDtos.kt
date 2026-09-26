@@ -15,6 +15,9 @@ data class RegisterRequest(
     @field:Size(max = 255) val fullName: String? = null,
     @field:Email @field:NotBlank val email: String,
     @field:NotBlank @field:Size(min = 8, message = "Password must be at least 8 characters") val password: String,
+    // Country of the organization created with the account (JIKU-107), ISO
+    // 3166-1 alpha-2. Optional: absent means the default market.
+    @field:Size(min = 2, max = 2) val country: String? = null,
 )
 
 data class LoginRequest(
@@ -32,6 +35,8 @@ data class GoogleLoginRequest(
 
 data class CreateOrgRequest(
     @field:NotBlank val name: String,
+    // ISO 3166-1 alpha-2 (JIKU-107); absent means the default market.
+    @field:Size(min = 2, max = 2) val country: String? = null,
 )
 
 data class ForgotPasswordRequest(

@@ -60,4 +60,45 @@ interface TrialGrantRepository : JpaRepository<TrialGrant, UUID> {
     fun findTenantIdById(
         @Param("id") id: UUID,
     ): String?
+
+    /** The true total behind [adminList]'s page, for pagination (JIKU-99) — the same filters, no limit/offset. */
+    @Query(
+        value = """
+            SELECT COUNT(*) FROM trial_grant
+            WHERE (:status IS NULL OR status = :status)
+              AND (:tenantId IS NULL OR tenant_id = :tenantId)
+        """,
+        nativeQuery = true,
+    )
+    fun countAdminList(
+        @Param("status") status: String?,
+        @Param("tenantId") tenantId: String?,
+    ): Long
+
+    @Query(value = "SELECT COUNT(*) FROM trial_grant WHERE status = 'ACTIVE'", nativeQuery = true)
+    fun countActive(): Long
+
+    /** Active trials whose deadline falls on or before [cutoff] — the overview strip's "needs a nudge" count. */
+    @Query(
+        value = "SELECT COUNT(*) FROM trial_grant WHERE status = 'ACTIVE' AND expires_at <= :cutoff",
+        nativeQuery = true,
+    )
+    fun countActiveExpiringBy(
+        @Param("cutoff") cutoff: Instant,
+    ): Long
+
+    @Query(
+        value = "SELECT COUNT(*) FROM trial_grant WHERE status = 'CONVERTED' AND updated_at >= :since",
+        nativeQuery = true,
+    )
+    fun countConvertedSince(
+        @Param("since") since: Instant,
+    ): Long
+
+    /** Every trial that has ever reached a final state, grouped for the all-time conversion rate. */
+    @Query(
+        value = "SELECT status, COUNT(*) FROM trial_grant WHERE status IN ('CONVERTED', 'EXPIRED', 'ENDED') GROUP BY status",
+        nativeQuery = true,
+    )
+    fun countByConcludedStatus(): List<Array<Any>>
 }

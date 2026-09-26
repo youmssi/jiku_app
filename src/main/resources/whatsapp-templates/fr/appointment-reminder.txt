@@ -1,0 +1,3 @@
+Bonjour {{clientName}}, petit rappel de votre rendez-vous{{professional}} le {{when}}.
+
+Si vous ne pouvez pas venir, prévenez l'organisateur pour annuler et libérer le créneau.

@@ -4,7 +4,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Instant
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 
 /**
  * Courrier opérationnel émis par le sender plateforme (essais, abonnements,
@@ -21,46 +20,29 @@ class OperationalMailer(
     private val log = LoggerFactory.getLogger(OperationalMailer::class.java)
 
     /**
-     * Envoie un e-mail opérationnel. [label] sert aux logs (« trial »,
-     * « subscription »…) ; [heading]/[body] alimentent le gabarit d'avis existant.
+     * Envoie un avis opérationnel simple (titre + paragraphe) dans [language].
+     * [label] sert aux logs (« trial », « subscription »…).
      */
-    fun sendOperational(
+    fun sendNotice(
         label: String,
         to: String,
         toName: String,
-        subject: String,
-        heading: String,
-        body: String,
+        language: String,
+        copy: NoticeCopy,
     ) {
-        if (to.isBlank()) {
-            log.warn("Skipping {} email: no recipient address", label)
-            return
-        }
-        try {
-            emailSender.send(
-                emailProperties.from,
-                EmailMessage(
-                    to = to,
-                    toName = toName,
-                    subject = subject,
-                    htmlBody = templateRenderer.renderTrialNotice(toName, heading, body),
-                ),
-            )
-        } catch (ex: Exception) {
-            log.error("Failed to send {} email to {}", label, to, ex)
-        }
+        val rendered = templateRenderer.renderNotice(language, toName, copy.subject, copy.heading, copy.body)
+        send(label, to, toName, rendered)
     }
 
     /**
-     * Envoie un e-mail opérationnel dont le HTML est déjà rendu (squelette commun :
-     * adresse vide, échec silencieux). [label] sert aux logs.
+     * Envoie un e-mail opérationnel déjà rendu (squelette commun : adresse vide,
+     * échec silencieux). [label] sert aux logs.
      */
-    fun sendOperationalHtml(
+    fun send(
         label: String,
         to: String,
         toName: String,
-        subject: String,
-        htmlBody: String,
+        email: RenderedEmail,
     ) {
         if (to.isBlank()) {
             log.warn("Skipping {} email: no recipient address", label)
@@ -69,7 +51,7 @@ class OperationalMailer(
         try {
             emailSender.send(
                 emailProperties.from,
-                EmailMessage(to = to, toName = toName, subject = subject, htmlBody = htmlBody),
+                EmailMessage(to = to, toName = toName, subject = email.subject, htmlBody = email.html),
             )
         } catch (ex: Exception) {
             log.error("Failed to send {} email to {}", label, to, ex)
@@ -77,7 +59,33 @@ class OperationalMailer(
     }
 }
 
-/** Format d'heure partagé des avis opérationnels, en UTC. */
-internal fun formatOperationalInstant(instant: Instant): String = OPERATIONAL_UTC_FORMAT.format(instant.atZone(ZoneOffset.UTC))
+/** Objet, titre et paragraphe d'un avis opérationnel, déjà dans la langue du destinataire. */
+data class NoticeCopy(
+    val subject: String,
+    val heading: String,
+    val body: String,
+)
 
-private val OPERATIONAL_UTC_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMM uuuu, HH:mm")
+/**
+ * La copie d'un avis `<prefix>.<kind>.{subject,heading,body}` du catalogue, ou
+ * null quand ce type d'avis n'a pas de texte.
+ */
+internal fun MessageCatalog.noticeCopy(
+    language: String,
+    prefix: String,
+    kind: String,
+    values: Map<String, String>,
+): NoticeCopy? {
+    val subject = textOrNull(language, "$prefix.$kind.subject", values) ?: return null
+    return NoticeCopy(
+        subject = subject,
+        heading = text(language, "$prefix.$kind.heading", values),
+        body = text(language, "$prefix.$kind.body", values),
+    )
+}
+
+/** Date d'un avis opérationnel, en UTC, écrite dans [language]. */
+internal fun MessageCatalog.formatOperationalInstant(
+    language: String,
+    instant: Instant,
+): String = formatDate(language, "date.operational", instant, ZoneOffset.UTC)

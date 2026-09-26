@@ -1,0 +1,1 @@
+Bonjour {{guestName}}, {{organizerName}} a le regret de vous annoncer que {{eventName}}{{eventWhen}} est annulé. Votre billet n'est plus valable, vous n'avez rien à faire. Si l'événement est reprogrammé, vous recevrez une nouvelle invitation.

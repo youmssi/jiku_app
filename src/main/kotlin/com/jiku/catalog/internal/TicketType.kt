@@ -2,6 +2,7 @@ package com.jiku.catalog.internal
 
 import com.jiku.shared.BaseTenantEntity
 import jakarta.persistence.Column
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -48,4 +49,8 @@ class TicketType(
 
     @Column(name = "position", nullable = false)
     var position: Int = 0
+
+    /** Null for a free category (invitation, free registration); set for a ticket sold. */
+    @Embedded
+    var price: Price? = null
 }

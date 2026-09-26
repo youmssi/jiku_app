@@ -2,6 +2,7 @@ package com.jiku.tenant.internal
 
 import com.jiku.tenant.TenantInfo
 import com.jiku.tenant.TenantLegalIdentityInfo
+import com.jiku.tenant.TenantPaymentMethodsInfo
 
 /** Default brand color used when a tenant has not chosen one (Jikū neutral). */
 const val DEFAULT_PRIMARY_COLOR = "#1E293B"
@@ -19,9 +20,23 @@ fun Tenant.toTenantInfo(): TenantInfo =
         createdAt = createdAt,
         displayName = effectiveDisplayName(),
         logoUrl = branding?.logoUrl,
+        bannerUrl = branding?.bannerUrl,
         primaryColor = effectivePrimaryColor(),
         legalIdentity = legalIdentity?.toInfo(),
         username = username,
+        country = country,
+        currency = currency,
+        paymentMethods = paymentMethods?.takeIf { it.hasAny() }?.toInfo(),
+    )
+
+/** Always a value: an organization without payment methods reads as all-empty. */
+internal fun TenantPaymentMethods?.toInfo(): TenantPaymentMethodsInfo =
+    TenantPaymentMethodsInfo(
+        payeeName = this?.payeeName,
+        orangeMoneyNumber = this?.orangeMoneyNumber,
+        mtnMomoNumber = this?.mtnMomoNumber,
+        waveNumber = this?.waveNumber,
+        paymentLinkUrl = this?.paymentLinkUrl,
     )
 
 /**
@@ -47,5 +62,6 @@ fun Tenant.toBrandingResponse(): BrandingResponse =
     BrandingResponse(
         displayName = effectiveDisplayName(),
         logoUrl = branding?.logoUrl,
+        bannerUrl = branding?.bannerUrl,
         primaryColor = effectivePrimaryColor(),
     )

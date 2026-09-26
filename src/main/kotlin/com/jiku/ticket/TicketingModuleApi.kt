@@ -1,5 +1,6 @@
 package com.jiku.ticket
 
+import com.jiku.shared.ClientCharge
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
@@ -11,13 +12,25 @@ import java.util.UUID
  * tenant-scoped by the persistence-layer filter.
  */
 interface TicketingModuleApi {
+    /** [charge] is what the guest owes for a sold category; null for a free one. */
     fun issueTicket(
         eventId: UUID,
         guestId: UUID,
         ticketTypeId: UUID? = null,
+        charge: ClientCharge? = null,
     ): TicketInfo
 
     fun cancelByGuest(guestId: UUID)
+
+    /**
+     * Hands [fromGuestId]'s ticket to [toGuestId] (JIKU-64): the sender's ticket is
+     * cancelled and the recipient's carries the same category and the same payment
+     * — a place already paid for stays paid.
+     */
+    fun transferTicket(
+        fromGuestId: UUID,
+        toGuestId: UUID,
+    ): TicketInfo
 
     /**
      * Émet le billet d'un rendez-vous sans compte (JIKU-87) : billet sans
@@ -33,6 +46,7 @@ interface TicketingModuleApi {
         professionalName: String?,
         clientName: String,
         clientPhone: String,
+        charge: ClientCharge? = null,
     ): String
 
     fun findByGuest(guestId: UUID): TicketInfo?
@@ -111,6 +125,7 @@ interface TicketingModuleApi {
         dayEnd: Instant,
         now: Instant,
         toleranceMinutes: Long,
+        counter: String? = null,
     ): LineTicket?
 
     /**
@@ -132,6 +147,7 @@ interface TicketingModuleApi {
     fun callByCode(
         serviceId: UUID,
         ticketCode: String,
+        counter: String? = null,
     ): LineActionResult
 
     /** Prise en charge : APPELÉ (ou ABSENT rappelé) → EN_COURS. */
@@ -168,7 +184,55 @@ interface TicketingModuleApi {
         dayStart: Instant,
         dayEnd: Instant,
         rankDay: LocalDate,
+        charge: ClientCharge? = null,
     ): LineTicket
+
+    /**
+     * Records that the holder paid the organization what the ticket owes
+     * (JIKU-110), attributing it to [paidBy]. Atomic: of two operators confirming
+     * at once, one records it and the other is told it is already paid.
+     */
+    fun markPaidByCode(
+        ticketCode: String,
+        method: TicketPaymentMethod,
+        paidBy: String,
+    ): TicketPaymentResult
+}
+
+enum class TicketPaymentStatus {
+    NOT_REQUIRED,
+
+    /** Must be paid before the ticket is used: no entry, no service. */
+    DUE,
+
+    /** Becomes [DUE] when the service ends. */
+    DUE_AFTER_SERVICE,
+    PAID,
+}
+
+/** How the holder paid the organization; Jikū never handles the money. */
+enum class TicketPaymentMethod {
+    MOBILE_MONEY,
+    PAYMENT_LINK,
+    CASH,
+}
+
+/** An operator confirming that a ticket's holder paid the organization. */
+data class MarkPaidRequest(
+    val method: TicketPaymentMethod,
+)
+
+data class TicketPaymentResult(
+    val outcome: TicketPaymentOutcome,
+    val ticket: TicketInfo? = null,
+)
+
+enum class TicketPaymentOutcome {
+    PAID,
+
+    /** Nothing is owed on this ticket, or it was already paid. */
+    NOT_DUE,
+    NOT_FOUND,
 }
 
 /**
@@ -186,6 +250,11 @@ data class LineTicket(
     val endsAt: Instant? = null,
     val arrivedAt: Instant? = null,
     val dayRank: Int? = null,
+    val paymentStatus: TicketPaymentStatus = TicketPaymentStatus.NOT_REQUIRED,
+    val amountDueMinor: Long? = null,
+    val amountDueCurrency: String? = null,
+    /** The counter the client was called to, once called (JIKU-113). */
+    val counter: String? = null,
 )
 
 data class LineActionResult(
@@ -202,11 +271,17 @@ enum class LineOutcome {
 
     /** Le ticket existe mais n'est pas dans l'état attendu (ou pas du bon service / jour). */
     WRONG_STATE,
+
+    /** Le service ne peut pas commencer : le ticket n'est pas encore payé. */
+    PAYMENT_DUE,
 }
 
 data class TicketInfo(
     val id: UUID,
-    val eventId: UUID,
+    /** Null for a service ticket (appointment or walk-in), which belongs to no event. */
+    val eventId: UUID?,
+    /** The service of an appointment or walk-in; null for an event ticket. */
+    val serviceId: UUID? = null,
     val guestId: UUID,
     val ticketCode: String,
     val status: String,
@@ -215,6 +290,9 @@ data class TicketInfo(
     val checkedInBy: String? = null,
     /** Catégorie d'accès figée à l'émission (JIKU-93). */
     val ticketTypeId: UUID? = null,
+    val paymentStatus: TicketPaymentStatus = TicketPaymentStatus.NOT_REQUIRED,
+    val amountDueMinor: Long? = null,
+    val amountDueCurrency: String? = null,
 ) {
     companion object {
         /** [status] of a ticket already used at the entrance, shared so consumers avoid magic strings. */
@@ -248,6 +326,9 @@ enum class CheckInOutcome {
     ALREADY_CHECKED_IN,
     CANCELLED,
     NOT_FOUND,
+
+    /** The ticket is not paid yet: no entry until the organization confirms the payment. */
+    PAYMENT_DUE,
 }
 
 data class AttendanceStats(

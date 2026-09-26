@@ -50,6 +50,8 @@ dependencies {
     // Invoice documents (JIKU-69). A buyer's accounts department cannot process
     // the plain-text receipt the platform issued before this.
     implementation("com.github.librepdf:openpdf:2.2.2")
+    // Ticket QR codes as images, for the WhatsApp ticket message (JIKU-143).
+    implementation("com.google.zxing:core:3.5.3")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
     runtimeOnly("org.postgresql:postgresql")

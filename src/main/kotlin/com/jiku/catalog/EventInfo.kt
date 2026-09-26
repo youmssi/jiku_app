@@ -1,5 +1,6 @@
 package com.jiku.catalog
 
+import com.jiku.shared.ClientCharge
 import java.time.Instant
 import java.util.UUID
 
@@ -22,6 +23,10 @@ data class EventInfo(
     val transferDeadline: Instant? = null,
     /** Channels the organizer enabled on the event (EMAIL/WHATSAPP), enforced at send. */
     val invitationChannels: Set<InvitationChannel> = emptySet(),
+    /** How guests receive their ticket (ADR 105). */
+    val deliveryMode: DeliveryMode = DeliveryMode.LINK,
+    /** The client this event is branded for, over the organization's own branding. */
+    val brand: EventBrand = EventBrand(),
 ) {
     companion object {
         /** [status] value of a draft event, shared so consumers avoid magic strings. */
@@ -39,6 +44,18 @@ data class EventInfo(
 data class RetentionCandidate(
     val eventId: UUID,
     val tenantId: String,
+)
+
+/**
+ * Minimal cross-tenant event listing for the back-office (JIKU-42's trial desk):
+ * enough to label an event in a picker or a table without exposing the full
+ * [EventInfo] shape to callers outside the event's own tenant.
+ */
+data class EventSummary(
+    val id: UUID,
+    val name: String,
+    val startDateTime: Instant?,
+    val status: String,
 )
 
 /**
@@ -66,7 +83,13 @@ data class TicketTypeInfo(
     val colorHex: String,
     val maxCapacity: Int?,
     val confirmedCount: Int,
-)
+    /** Price of a ticket sold in this category (JIKU-108); null when it is free. */
+    val priceMinor: Long? = null,
+    val currency: String? = null,
+) {
+    /** What a guest of this category owes the organization, or null when it is free. */
+    fun clientCharge(): ClientCharge? = priceMinor?.let { ClientCharge(it, requireNotNull(currency)) }
+}
 
 /**
  * Question personnalisée d'un événement (JIKU-77), partagée au-delà du module :

@@ -45,7 +45,7 @@ export async function clearInbox(): Promise<void> {
  */
 export async function waitForMessage(
     recipient: string,
-    options: { subjectContains?: string; timeoutMs?: number } = {},
+    options: { subject?: RegExp; timeoutMs?: number } = {},
 ): Promise<MailpitMessage> {
     const deadline = Date.now() + (options.timeoutMs ?? 30_000);
     let lastSeen: string[] = [];
@@ -56,7 +56,7 @@ export async function waitForMessage(
         const match = inbox.messages.find(
             (m) =>
                 m.To.some((t) => t.Address.toLowerCase() === recipient.toLowerCase()) &&
-                (!options.subjectContains || m.Subject.includes(options.subjectContains)),
+                (!options.subject || options.subject.test(m.Subject)),
         );
         if (match) {
             return json<MailpitMessage>(`/api/v1/message/${match.ID}`);
@@ -65,7 +65,7 @@ export async function waitForMessage(
     }
 
     throw new Error(
-        `No mail for ${recipient}${options.subjectContains ? ` matching "${options.subjectContains}"` : ''} ` +
+        `No mail for ${recipient}${options.subject ? ` matching ${options.subject}` : ''} ` +
             `within the timeout. Inbox held:\n${lastSeen.join('\n') || '(empty)'}`,
     );
 }

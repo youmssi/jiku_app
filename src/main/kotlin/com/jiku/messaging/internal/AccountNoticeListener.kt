@@ -6,8 +6,8 @@ import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 
 /**
- * Account-lifecycle emails (JIKU-49): password reset and email verification.
- * Content only — the delivery mechanics live in [OperationalMailer].
+ * Account-lifecycle emails (JIKU-49): password reset and email verification, in the language
+ * the request was made in. Content only — the delivery mechanics live in [OperationalMailer].
  */
 @Component
 class AccountNoticeListener(
@@ -18,17 +18,15 @@ class AccountNoticeListener(
 
     @EventListener
     fun onAccountNotice(notice: AccountNotice) {
-        val (subject, body) =
+        val email =
             when (notice.kind) {
-                AccountNotice.KIND_PASSWORD_RESET ->
-                    "Reset your Jikū password" to templateRenderer.renderPasswordReset(notice.actionUrl)
-                AccountNotice.KIND_EMAIL_VERIFICATION ->
-                    "Verify your email address" to templateRenderer.renderVerifyEmail(notice.actionUrl)
+                AccountNotice.KIND_PASSWORD_RESET -> templateRenderer.renderPasswordReset(notice.actionUrl, notice.language)
+                AccountNotice.KIND_EMAIL_VERIFICATION -> templateRenderer.renderVerifyEmail(notice.actionUrl, notice.language)
                 else -> {
                     log.warn("Ignoring account notice of unknown kind: {}", notice.kind)
                     return
                 }
             }
-        mailer.sendOperationalHtml("account", notice.email, notice.email, subject, body)
+        mailer.send("account", notice.email, notice.email, email)
     }
 }

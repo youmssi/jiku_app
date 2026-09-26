@@ -98,15 +98,23 @@ interface EventModuleApi {
     fun markQuorumReached(eventId: UUID)
 
     /**
-     * Creates a draft event pre-filled from a verified booking (JIKU-55), under
-     * the tenant bound in the current [com.jiku.shared.TenantContext]. Returns
-     * the new event's id. The organizer completes and publishes it themselves —
-     * this only spares them a blank starting point.
+     * Events under [tenantId] whose name matches [query] (case-insensitive
+     * substring; all events when blank or null), newest-scheduled first. Powers
+     * the back-office trial grant form's event picker (JIKU-42) — deliberately
+     * cross-tenant like [eventsPastRetention], since the admin selects an event
+     * before any tenant context is bound.
      */
-    fun createDraftEvent(
-        name: String,
-        timezone: String,
-        startDateTime: Instant?,
-        invitationChannels: Set<InvitationChannel>,
-    ): UUID
+    fun adminSearchEvents(
+        tenantId: UUID,
+        query: String?,
+        limit: Int,
+    ): List<EventSummary>
+
+    /**
+     * Names for [eventIds], regardless of tenant — the back-office trial desk
+     * (JIKU-42) resolves many trials' events across tenants in one call instead
+     * of one cross-tenant lookup per row. Ids with no matching event are simply
+     * absent from the result.
+     */
+    fun adminEventNames(eventIds: Collection<UUID>): Map<UUID, String>
 }

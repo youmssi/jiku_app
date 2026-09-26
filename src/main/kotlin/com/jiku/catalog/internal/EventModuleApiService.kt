@@ -2,7 +2,7 @@ package com.jiku.catalog.internal
 
 import com.jiku.catalog.EventInfo
 import com.jiku.catalog.EventModuleApi
-import com.jiku.catalog.InvitationChannel
+import com.jiku.catalog.EventSummary
 import com.jiku.catalog.QuestionInfo
 import com.jiku.catalog.QuorumInfo
 import com.jiku.catalog.RetentionCandidate
@@ -104,6 +104,8 @@ class EventModuleApiService(
                 colorHex = it.colorHex,
                 maxCapacity = it.maxCapacity,
                 confirmedCount = it.confirmedCount,
+                priceMinor = it.price?.amountMinor,
+                currency = it.price?.currency,
             )
         }
 
@@ -142,20 +144,43 @@ class EventModuleApiService(
         events.markQuorumReached(eventId, Instant.now())
     }
 
-    @Transactional
-    override fun createDraftEvent(
-        name: String,
-        timezone: String,
-        startDateTime: Instant?,
-        invitationChannels: Set<InvitationChannel>,
-    ): UUID =
-        eventService
-            .create(
-                CreateEventRequest(
-                    name = name,
-                    timezone = timezone,
-                    startDateTime = startDateTime,
-                    invitationChannels = invitationChannels,
-                ),
-            ).id
+    @Transactional(readOnly = true)
+    override fun adminSearchEvents(
+        tenantId: UUID,
+        query: String?,
+        limit: Int,
+    ): List<EventSummary> =
+        events
+            .adminSearchByTenant(
+                tenantId = tenantId.toString(),
+                query = query?.trim()?.takeIf { it.isNotEmpty() },
+                limit = limit.coerceIn(1, MAX_SEARCH_RESULTS),
+            ).map { row ->
+                EventSummary(
+                    id = UUID.fromString(row[0].toString()),
+                    name = row[1].toString(),
+                    startDateTime = row[2]?.let { toInstant(it) },
+                    status = row[3].toString(),
+                )
+            }
+
+    @Transactional(readOnly = true)
+    override fun adminEventNames(eventIds: Collection<UUID>): Map<UUID, String> {
+        if (eventIds.isEmpty()) return emptyMap()
+        return events
+            .findNamesByIds(eventIds.distinct())
+            .associate { row -> UUID.fromString(row[0].toString()) to row[1].toString() }
+    }
+
+    /** Native-query timestamp columns surface as [java.sql.Timestamp] or [Instant] depending on the JDBC driver. */
+    private fun toInstant(value: Any): Instant =
+        when (value) {
+            is Instant -> value
+            is java.sql.Timestamp -> value.toInstant()
+            else -> Instant.parse(value.toString())
+        }
+
+    private companion object {
+        const val MAX_SEARCH_RESULTS = 50
+    }
 }

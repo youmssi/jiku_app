@@ -1,10 +1,9 @@
 package com.jiku.money.internal
 
 import com.jiku.shared.ResourceCountChanged
-import com.jiku.shared.TenantContext
+import com.jiku.shared.TenantTransaction
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
-import org.springframework.transaction.annotation.Transactional
 
 /**
  * Le module catalog annonce un changement du nombre de ressources actives
@@ -14,17 +13,13 @@ import org.springframework.transaction.annotation.Transactional
  */
 @Component
 class SubscriptionResourceListener(
+    private val tenantTransaction: TenantTransaction,
     private val subscriptionService: SubscriptionService,
 ) {
     @EventListener
-    @Transactional
     fun onResourceCountChanged(event: ResourceCountChanged) {
-        val previous = TenantContext.get()
-        TenantContext.set(event.tenantId)
-        try {
+        tenantTransaction.run(event.tenantId) {
             subscriptionService.applyResourceCount(event.activeResources)
-        } finally {
-            if (previous != null) TenantContext.set(previous) else TenantContext.clear()
         }
     }
 }

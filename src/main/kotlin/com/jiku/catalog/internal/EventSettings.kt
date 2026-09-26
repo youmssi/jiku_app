@@ -1,7 +1,10 @@
 package com.jiku.catalog.internal
 
+import com.jiku.catalog.DeliveryMode
 import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import java.time.Instant
 
 /**
@@ -19,4 +22,13 @@ class EventSettings(
     var overbookingAllowed: Boolean = false,
     @Column(name = "max_overbooking_count")
     var maxOverbookingCount: Int? = null,
+    @Enumerated(EnumType.STRING)
+    @Column(name = "delivery_mode", nullable = false, length = 24)
+    var deliveryMode: DeliveryMode = DeliveryMode.LINK,
+    @Column(name = "brand_name")
+    var brandName: String? = null,
+    @Column(name = "brand_logo_url", length = 2048)
+    var brandLogoUrl: String? = null,
+    @Column(name = "brand_color", length = 7)
+    var brandColor: String? = null,
 )

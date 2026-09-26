@@ -20,10 +20,11 @@ class LoggingEmailSender : EmailSender {
         message: EmailMessage,
     ) {
         log.info(
-            "Email queued (transport=log, not delivered): from={} to={} subject=\"{}\"",
+            "Email queued (transport=log, not delivered): from={} to={} subject=\"{}\" attachments={}",
             from,
             message.to,
             message.subject,
+            message.attachments.map { it.filename },
         )
     }
 }

@@ -17,7 +17,12 @@ class LoggingWhatsAppSender : WhatsAppSender {
     private val log = LoggerFactory.getLogger(LoggingWhatsAppSender::class.java)
 
     override fun send(message: WhatsAppMessage) {
-        log.info("WhatsApp queued (transport=log, not delivered): to={}", message.to)
+        log.info(
+            "WhatsApp queued (transport=log, not delivered): to={} buttons={} image={}",
+            message.to,
+            message.buttons.map { it.id },
+            message.imageUrl,
+        )
     }
 }
 
@@ -40,5 +45,7 @@ class WhatsAppSenderConfig {
             baseUrl = properties.meta.baseUrl,
             templateName = properties.meta.templateName.ifBlank { null },
             templateLanguage = properties.meta.templateLanguage,
+            buttonsTemplateName = properties.meta.buttonsTemplateName.ifBlank { null },
+            imageTemplateName = properties.meta.imageTemplateName.ifBlank { null },
         )
 }

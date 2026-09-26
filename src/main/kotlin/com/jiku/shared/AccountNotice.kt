@@ -10,6 +10,8 @@ data class AccountNotice(
     val kind: String,
     val email: String,
     val actionUrl: String,
+    /** The language the account holder reads, from the request that caused the notice. */
+    val language: String = MessageLanguage.FRENCH,
 ) {
     companion object {
         const val KIND_PASSWORD_RESET = "PASSWORD_RESET"

@@ -1,6 +1,7 @@
 package com.jiku.catalog.internal
 
 import com.jiku.shared.BaseTenantEntity
+import com.jiku.shared.ReminderChannel
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -13,17 +14,6 @@ import java.util.UUID
 enum class ConfirmationMode {
     INSTANTANEOUS,
     ON_REQUEST,
-}
-
-/**
- * Canal de rappel d'un service (JIKU-89). NONE tant que l'organisateur n'active
- * pas les rappels : aucun rappel n'est émis avant ce choix. Seul le canal
- * WhatsApp est exposé : le parcours de réservation ne capture que le téléphone
- * du client, jamais son adresse e-mail.
- */
-enum class ReminderChannel {
-    WHATSAPP,
-    NONE,
 }
 
 /**

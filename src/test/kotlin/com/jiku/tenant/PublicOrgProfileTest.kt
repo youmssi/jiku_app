@@ -4,8 +4,10 @@ import com.jiku.TestcontainersConfiguration
 import com.jiku.catalog.internal.Resource
 import com.jiku.catalog.internal.ResourceRepository
 import com.jiku.catalog.internal.ServiceAdminService
+import com.jiku.catalog.internal.ServiceCreateRequest
 import com.jiku.catalog.internal.ServiceLinkCodeService
 import com.jiku.shared.TenantContext
+import com.jiku.support.OrganizerApi
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -43,18 +46,20 @@ class PublicOrgProfileTest {
     @Autowired
     lateinit var mockMvc: MockMvc
 
+    private val api by lazy { OrganizerApi(mockMvc) }
+
     @AfterEach
     fun clearContext() = TenantContext.clear()
 
     @Test
     fun `the public profile lists bookable services with their short links`() {
-        val tenantId = tenants.provisionTenant("Salon Aïcha", "owner@salon.test", "Aïcha")
+        val tenantId = UUID.fromString(api.tenantId(api.register()))
         val username = "salon-aicha"
         tenants.updateUsername(tenantId, username)
 
         TenantContext.set(tenantId.toString())
         resources.save(Resource(name = "Coiffeuse", type = com.jiku.catalog.ResourceType.PERSON, timezone = "Africa/Conakry"))
-        val service = services.create("Coloration", "Africa/Conakry")
+        val service = services.create(ServiceCreateRequest(name = "Coloration", timezone = "Africa/Conakry"))
         val code = codes.forService(service.id, tenantId.toString()).code
         TenantContext.clear()
 
@@ -65,7 +70,7 @@ class PublicOrgProfileTest {
         mockMvc
             .perform(get("/api/v1/public/orgs/$username"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.organizationName").value("Salon Aïcha"))
+            .andExpect(jsonPath("$.organizationName").value("Test Org"))
             .andExpect(jsonPath("$.services[0].name").value("Coloration"))
             .andExpect(jsonPath("$.services[0].shortCode").value(code))
 

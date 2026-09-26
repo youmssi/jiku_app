@@ -3,6 +3,8 @@ package com.jiku.catalog.internal
 import com.jiku.catalog.ResourceType
 import com.jiku.shared.TenantAccessGate
 import com.jiku.shared.TenantContext
+import com.jiku.ticket.LineTicket
+import com.jiku.ticket.TicketPaymentStatus
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import org.springframework.http.HttpStatus
@@ -40,6 +42,24 @@ data class AppointmentBookingView(
     val endsAt: Instant,
 )
 
+/**
+ * A client's own place in the day's line (JIKU-113): counts only, never who else
+ * is waiting.
+ */
+data class ClientLineTicketView(
+    val ticketCode: String,
+    val status: String,
+    val dayRank: Int?,
+    /** Clients who arrived earlier and still wait; an appointment due meanwhile may pass first. */
+    val peopleAhead: Int,
+    val estimatedWaitMinutes: Long,
+    /** The counter to go to, once called. */
+    val counter: String?,
+    val paymentStatus: TicketPaymentStatus,
+    val amountDueMinor: Long?,
+    val amountDueCurrency: String?,
+)
+
 data class AppointmentStatusView(
     val status: String,
     val startsAt: Instant,
@@ -64,7 +84,29 @@ class AppointmentPublicService(
     private val reservations: ServiceReservationRepository,
     private val tenantAccessGate: TenantAccessGate,
     private val cancellations: AppointmentCancellationService,
+    private val line: DayLineConsoleService,
 ) {
+    /** A client takes a ticket for today's line, from the QR shown at the entrance (JIKU-113). */
+    fun takeTicketByCode(
+        code: String,
+        request: WalkInRequest,
+    ): ClientLineTicketView = withService(resolveCode(code), null) { serviceId -> takeTicket(serviceId, request) }
+
+    fun takeTicketByToken(
+        token: String,
+        request: WalkInRequest,
+    ): ClientLineTicketView = withService(resolveToken(token), null) { serviceId -> takeTicket(serviceId, request) }
+
+    fun lineTicketByCode(
+        code: String,
+        ticketCode: String,
+    ): ClientLineTicketView = withService(resolveCode(code), null) { serviceId -> lineTicket(serviceId, ticketCode) }
+
+    fun lineTicketByToken(
+        token: String,
+        ticketCode: String,
+    ): ClientLineTicketView = withService(resolveToken(token), null) { serviceId -> lineTicket(serviceId, ticketCode) }
+
     fun viewByToken(
         token: String,
         date: String?,
@@ -162,6 +204,54 @@ class AppointmentPublicService(
         return rows
     }
 
+    private fun takeTicket(
+        serviceId: UUID,
+        request: WalkInRequest,
+    ): ClientLineTicketView {
+        val phone = request.clientPhone.trim()
+        val entries = line.walkIn(serviceId, request.clientName, phone).entries
+        // Issued in this transaction: the newest walk-in of this phone is the one just taken.
+        val mine =
+            entries.filter { it.kind == WALK_IN && it.clientPhone == phone }.maxBy { it.dayRank ?: 0 }
+        return placeOf(serviceId, mine, entries)
+    }
+
+    private fun lineTicket(
+        serviceId: UUID,
+        ticketCode: String,
+    ): ClientLineTicketView {
+        val entries = line.view(serviceId, null).entries
+        val mine =
+            entries.firstOrNull { it.ticketCode == ticketCode }
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "This ticket is not in today's line")
+        return placeOf(serviceId, mine, entries)
+    }
+
+    private fun placeOf(
+        serviceId: UUID,
+        mine: LineTicket,
+        entries: List<LineTicket>,
+    ): ClientLineTicketView {
+        val arrived = mine.arrivedAt
+        val ahead =
+            if (mine.status != WAITING || arrived == null) {
+                0
+            } else {
+                entries.count { it.status == WAITING && it.id != mine.id && it.arrivedAt?.isBefore(arrived) == true }
+            }
+        return ClientLineTicketView(
+            ticketCode = mine.ticketCode,
+            status = mine.status,
+            dayRank = mine.dayRank,
+            peopleAhead = ahead,
+            estimatedWaitMinutes = ahead * config.effective(serviceId).occupancyMinutes,
+            counter = mine.counter,
+            paymentStatus = mine.paymentStatus,
+            amountDueMinor = mine.amountDueMinor,
+            amountDueCurrency = mine.amountDueCurrency,
+        )
+    }
+
     private fun resolveToken(token: String): ResolvedLink {
         val claims =
             try {
@@ -208,3 +298,6 @@ class AppointmentPublicService(
         val tenantId: String,
     )
 }
+
+private const val WALK_IN = "WALK_IN"
+private const val WAITING = "WAITING"

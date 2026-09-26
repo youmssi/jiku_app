@@ -1,6 +1,5 @@
 package com.jiku.money.internal
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import tools.jackson.databind.ObjectMapper
@@ -8,11 +7,11 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 /**
- * Default payment provider used until a real Mobile Money provider is wired in. It
- * lets the full flow work end to end — initiation returns a return-URL instruction,
- * and callbacks are verified with a real HMAC-SHA256 signature over the raw body,
- * exercising the same verification path a real provider would. A concrete provider
- * replaces it automatically by defining another [PaymentProvider] bean.
+ * Test payment adapter. It lets the full flow work end to end — initiation returns
+ * a return-URL instruction, and callbacks are verified with a real HMAC-SHA256
+ * signature over the raw body, exercising the same verification path a real
+ * provider would. It stays registered next to the real adapters and only starts
+ * payments when `billing.payment.provider` selects it.
  */
 class SandboxPaymentProvider(
     private val properties: PaymentProperties,
@@ -26,7 +25,7 @@ class SandboxPaymentProvider(
             instruction =
                 PaymentInstruction(
                     type = "REDIRECT",
-                    value = "${properties.sandboxReturnUrl}?ref=${request.reference}",
+                    value = "${returnUrlFor(properties.sandboxReturnUrl, request.paymentId)}&ref=${request.reference}",
                 ),
         )
 
@@ -42,7 +41,14 @@ class SandboxPaymentProvider(
         return PaymentCallback(
             reference = reference,
             providerReference = node.get("providerReference")?.asString() ?: "",
-            succeeded = (node.get("status")?.asString() ?: "") == "SUCCEEDED",
+            outcome =
+                when (node.get("status")?.asString()) {
+                    "SUCCEEDED" -> PaymentOutcome.SUCCEEDED
+                    "PENDING" -> PaymentOutcome.PENDING
+                    else -> PaymentOutcome.FAILED
+                },
+            amountMinor = node.get("amount")?.asLong(),
+            currency = node.get("currency")?.asString(),
         )
     }
 
@@ -68,7 +74,6 @@ class SandboxPaymentProvider(
 @Configuration
 class PaymentProviderConfig {
     @Bean
-    @ConditionalOnMissingBean(PaymentProvider::class)
     fun sandboxPaymentProvider(
         properties: PaymentProperties,
         objectMapper: ObjectMapper,

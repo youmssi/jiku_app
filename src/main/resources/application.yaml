@@ -33,10 +33,36 @@ jiku:
       # (only reaches recipients inside the 24h customer-service window).
       template-name: ${WHATSAPP_META_TEMPLATE_NAME:}
       template-language: ${WHATSAPP_META_TEMPLATE_LANGUAGE:fr}
+      # Interactive WhatsApp (JIKU-143): an approved template with two
+      # quick-reply buttons (accept, decline) and one with an image header (the
+      # ticket's QR code). Blank sends session messages instead, which only reach
+      # recipients inside the 24h window.
+      buttons-template-name: ${WHATSAPP_META_BUTTONS_TEMPLATE_NAME:}
+      image-template-name: ${WHATSAPP_META_IMAGE_TEMPLATE_NAME:}
+      # Inbound webhook (<api>/whatsapp/webhook): the app secret verifies each
+      # call's signature and the verify token answers Meta's registration check.
+      # Blank refuses every call.
+      app-secret: ${WHATSAPP_META_APP_SECRET:}
+      verify-token: ${WHATSAPP_META_VERIFY_TOKEN:}
+      # Embedded Signup (ADR 105): the Meta app organizations connect their own
+      # number to, and the signup configuration made for it in Meta. The app
+      # secret above also exchanges the signup code. Blank keeps it off.
+      app-id: ${WHATSAPP_META_APP_ID:}
+      embedded-signup-config-id: ${WHATSAPP_META_EMBEDDED_SIGNUP_CONFIG_ID:}
     # Cost/quota/category guardrails (JIKU-61).
     conversation-safety-threshold: ${WHATSAPP_CONVERSATION_SAFETY_THRESHOLD:220}
     usd-to-gnf-rate: ${WHATSAPP_USD_TO_GNF_RATE:8760}
     marketing-markers: ${WHATSAPP_MARKETING_MARKERS:promo,réduction,solde,gratuit,offre spéciale,cadeau,bon plan,code promo,achetez maintenant}
+  sms:
+    # SMS delivery transport (JIKU-112): log (default — records sends without
+    # delivering) or nimba (Nimba SMS, with the credentials below).
+    transport: ${SMS_TRANSPORT:log}
+    nimba:
+      service-id: ${NIMBA_SMS_SERVICE_ID:}
+      secret-token: ${NIMBA_SMS_SECRET_TOKEN:}
+      # The sender name approved on the Nimba account; case-sensitive.
+      sender-name: ${NIMBA_SMS_SENDER_NAME:}
+      base-url: ${NIMBA_SMS_BASE_URL:https://api.nimbasms.com}
   provider-credentials:
     # Encrypts tenant-provided provider credentials at rest (AES-GCM). Minimum
     # 32 characters; MUST be set to a strong random value outside local — and
@@ -122,6 +148,14 @@ auth:
     client-id: ${GOOGLE_OAUTH_CLIENT_ID:}
     jwks-uri: ${GOOGLE_OAUTH_JWKS_URI:https://www.googleapis.com/oauth2/v3/certs}
 
+tenant:
+  market:
+    # Where organizations can sign up (JIKU-107): comma-separated ISO 3166-1
+    # alpha-2 codes. An organization's currency is its country's, fixed at
+    # creation. The default country applies when a sign-up names none.
+    default-country: ${TENANT_DEFAULT_COUNTRY:GN}
+    supported-countries: ${TENANT_SUPPORTED_COUNTRIES:GN}
+
 jwt:
   # HMAC signing secret (minimum 32 bytes). The default is for local use only;
   # every real environment MUST set JWT_SECRET to a long random value.
@@ -187,21 +221,41 @@ api:
         paths: [/notifications/email-feedback/**]
         max-requests: ${RATE_LIMIT_EMAIL_FEEDBACK_MAX_REQUESTS:300}
         window: ${RATE_LIMIT_EMAIL_FEEDBACK_WINDOW:PT1M}
-      booking:
-        # Public deposit-reservation flow (JIKU-55): a legitimate prospect quotes
-        # and submits once, then declares one payment; keep scripted abuse slow.
-        # The access token lives in the query string, not the path, so this is
-        # IP-only (no token-segment) unlike rsvp/checkin.
-        paths: [/bookings/**]
-        max-requests: ${RATE_LIMIT_BOOKING_MAX_REQUESTS:20}
-        window: ${RATE_LIMIT_BOOKING_WINDOW:PT1M}
+      appointments:
+        # Public appointment and queue links (JIKU-87/113), by signed token or
+        # short code: a client books, takes a ticket and refreshes their place a
+        # few times a minute. Unthrottled, a script could hoard every slot.
+        paths: [/appointments/**, /r/**]
+        token-segment: 1
+        max-requests: ${RATE_LIMIT_APPOINTMENTS_MAX_REQUESTS:60}
+        window: ${RATE_LIMIT_APPOINTMENTS_WINDOW:PT1M}
+      counter:
+        # Counter staff links (JIKU-88): a busy desk calls, serves and records
+        # payments every few seconds, like a validator at the door.
+        paths: [/line/**, /line-codes/**]
+        token-segment: 1
+        max-requests: ${RATE_LIMIT_COUNTER_MAX_REQUESTS:120}
+        window: ${RATE_LIMIT_COUNTER_WINDOW:PT1M}
+      operator:
+        # Operator console (JIKU-116): the same pace as a door or a counter, since
+        # an operator scans, calls and records payments through the one link.
+        paths: [/operator/**, /operator-codes/**]
+        token-segment: 1
+        max-requests: ${RATE_LIMIT_OPERATOR_MAX_REQUESTS:120}
+        window: ${RATE_LIMIT_OPERATOR_WINDOW:PT1M}
       prospect:
         # Liste d'accès anticipé rendez-vous (JIKU-98). Un professionnel légitime
         # soumet une fois, éventuellement deux s'il se corrige ; au-delà c'est du
-        # script. Plus serré que booking parce qu'il n'y a aucun jeton à présenter.
+        # script. Serré parce qu'il n'y a aucun jeton à présenter.
         paths: [/prospects]
         max-requests: ${RATE_LIMIT_PROSPECT_MAX_REQUESTS:5}
         window: ${RATE_LIMIT_PROSPECT_WINDOW:PT1M}
+      feedback:
+        # Organizer feedback (JIKU-133): a person writes a few messages and
+        # answers a rating prompt now and then; a burst is a script.
+        paths: [/feedback, /feedback/ratings]
+        max-requests: ${RATE_LIMIT_FEEDBACK_MAX_REQUESTS:10}
+        window: ${RATE_LIMIT_FEEDBACK_WINDOW:PT1M}
 
 error-tracking:
   # Unhandled-error reporting (JIKU-70). The DSN is the switch: blank — the default
@@ -270,17 +324,19 @@ admin:
     password: ${ADMIN_BOOTSTRAP_PASSWORD:}
 
 billing:
-  # Pay-per-event pricing (JIKU-32, regraded to the Guinea market grid in
-  # JIKU-53: FREE/BRONZE/ARGENT/OR/CUSTOM). The free tier and paid tiers are
-  # configuration, not literals in code, so pricing changes without a release.
-  # Amounts are in the currency's minor unit — GNF has none, so they are the
-  # full amount.
+  # Pay-per-event pricing (JIKU-32, re-based in ADR 105). The tiers and the
+  # per-guest price beyond them are set in GNF, FCFA and USD (BillingProperties
+  # defaults, overridable here or from the admin desk); an organization is
+  # billed in its own franc, or in dollars elsewhere.
   free-tier-guests: ${BILLING_FREE_TIER_GUESTS:100}
   # Rolling window (ISO-8601 duration) over which free-tier-guests accumulates
   # per tenant account, not per event (JIKU-54) — closes the bypass of
   # fragmenting guests across many small free events.
   free-tier-window: ${BILLING_FREE_TIER_WINDOW:P365D}
-  currency: ${BILLING_CURRENCY:GNF}
+  subscription:
+    # WhatsApp appointment reminders a free services plan (Solo) includes each
+    # calendar month (ADR 105); past it, reminders stop until the next month.
+    free-plan-whatsapp-reminders: ${FREE_PLAN_WHATSAPP_REMINDERS:50}
   invoice:
     # Accounting-grade invoicing (JIKU-69). Numbers are gapless per tenant per
     # fiscal year; these prefixes only shape the human-readable form.
@@ -306,22 +362,28 @@ billing:
     #     GN:
     #       label: "TVA 18%"
     #       rate: "0.18"
-  custom:
-    # CUSTOM tier pricing (beyond the OR tier's 1,000 guests): quoted in USD
-    # cents and converted through this rate, since both move independently of a
-    # release. Defaults match the GTM plan's $0.05/guest + $15 setup at
-    # ~8,760 GNF/USD — revisit the rate periodically, it is not pegged.
-    per-guest-usd-cents: ${BILLING_CUSTOM_PER_GUEST_USD_CENTS:5}
-    setup-fee-usd-cents: ${BILLING_CUSTOM_SETUP_FEE_USD_CENTS:1500}
-    usd-to-gnf-rate: ${BILLING_CUSTOM_USD_TO_GNF_RATE:8760}
   payment:
-    # Mobile Money integration (JIKU-33). The active provider is a wiring choice;
-    # "sandbox" makes the full flow work before a real provider is chosen. The
-    # webhook secret verifies the signature on provider callbacks and MUST be set
-    # to a strong value outside local.
+    # Mobile Money integration (JIKU-33). `provider` names the adapter that starts
+    # new payments (JIKU-105); every registered adapter keeps confirming its own
+    # payments on /billing/payments/callback/{name}. Startup fails if the name
+    # matches no adapter. "sandbox" makes the full flow work locally. The webhook
+    # secret verifies the sandbox callback signature and MUST be set to a strong
+    # value outside local.
     provider: ${PAYMENT_PROVIDER:sandbox}
     webhook-secret: ${PAYMENT_WEBHOOK_SECRET:local-development-payment-webhook-secret}
     sandbox-return-url: ${PAYMENT_SANDBOX_RETURN_URL:http://localhost:3000/billing/return}
+    # CinetPay (JIKU-106): Orange Money, MTN MoMo and card. The adapter exists only
+    # when CINETPAY_SITE_ID is set; the other fields are then required. Select it
+    # with PAYMENT_PROVIDER=cinetpay. CINETPAY_NOTIFY_URL is this API's public
+    # /api/v1/billing/payments/callback/cinetpay. CINETPAY_RETURN_URL is the web's
+    # /billing/return page; each payment appends ?paymentId=<id> to it.
+    cinetpay:
+      api-key: ${CINETPAY_API_KEY:}
+      site-id: ${CINETPAY_SITE_ID:}
+      base-url: ${CINETPAY_BASE_URL:https://api-checkout.cinetpay.com}
+      notify-url: ${CINETPAY_NOTIFY_URL:}
+      return-url: ${CINETPAY_RETURN_URL:}
+      channels: ${CINETPAY_CHANNELS:ALL}
   trial:
     # Trial sweep (JIKU-42): cron for the expiry/notice job and how far before
     # expiry the organizer's heads-up email goes out.
@@ -336,17 +398,11 @@ billing:
     mobile-money-number: ${BILLING_MANUAL_MOMO_NUMBER:}
     mobile-money-operator: ${BILLING_MANUAL_MOMO_OPERATOR:}
     bank-details: ${BILLING_MANUAL_BANK_DETAILS:}
-booking:
-  # Deposit-reservation flow (JIKU-55): the deposit percentage, when the balance
-  # falls due, and the payee details shown on the payment instructions page —
-  # a distinct product surface from billing.manual above, even though the
-  # underlying Mobile Money accounts may be the same.
-  deposit-rate: ${BOOKING_DEPOSIT_RATE:0.30}
-  balance-due-days-before-event: ${BOOKING_BALANCE_DUE_DAYS:7}
-  event-timezone: ${BOOKING_EVENT_TIMEZONE:Africa/Conakry}
-  payee-name: ${BOOKING_PAYEE_NAME:}
-  orange-money-number: ${BOOKING_ORANGE_MONEY_NUMBER:}
-  mtn-momo-number: ${BOOKING_MTN_MOMO_NUMBER:}
+feedback:
+  # Minimum gap between two rating prompts for the same organizer (JIKU-133),
+  # so asking never becomes noise.
+  prompt-interval: ${FEEDBACK_PROMPT_INTERVAL:P7D}
+
 compliance:
   retention:
     # Data-retention policy (JIKU-37). Guest personal data is anonymized this many
@@ -363,20 +419,21 @@ invitation:
   send:
     # Frontend base URL used to build guest invitation links.
     app-base-url: ${SERVER_BASE_URL:http://localhost:3000}
+    # This API's public URL: WhatsApp fetches the ticket's QR image from it (JIKU-143).
+    api-public-url: ${API_PUBLIC_URL:http://localhost:8080}
   # How often QUEUED invitations (withheld by a delivery-capacity guardrail —
   # the WhatsApp conversation window, JIKU-61, or the email routing quota,
   # JIKU-62) are retried.
   queue-sweep-cron: ${INVITATION_QUEUE_SWEEP_CRON:0 */15 * * * *}
 
-checkin:
-  validator-link:
-    # Frontend base URL used to build shareable validator check-in links.
-    app-base-url: ${SERVER_BASE_URL:http://localhost:3000}
-    # How long a freshly issued validator link stays usable; revocation is
-    # immediate and independent of this window.
-    validity: ${CHECKIN_VALIDATOR_LINK_VALIDITY:P30D}
-
 catalog:
+  operator-link:
+    # Frontend base URL used to build shareable operator links (JIKU-116).
+    app-base-url: ${SERVER_BASE_URL:http://localhost:3000}
+    # How long a signed operator link stays usable before it is issued again
+    # from the operator's short code; revocation is immediate and independent
+    # of this window.
+    validity: ${OPERATOR_LINK_VALIDITY:P30D}
   slot:
     # Grille fixe du moteur de créneaux (JIKU-85) : les valeurs par défaut,
     # que la configuration par service (JIKU-86) remplacera service par service.
@@ -409,6 +466,9 @@ notification:
     # Sender address for outbound mail. Set per environment; in production the
     # domain must be verified with the configured transport (jiku.mail.transport).
     from: ${MAIL_FROM:no-reply@jiku.app}
+    # Language of the emails the platform team itself receives (activation
+    # requests). Organizers and guests get their organization's language.
+    platform-language: ${NOTIFICATION_PLATFORM_LANGUAGE:fr}
   send:
     # Delivery attempts before a notification is recorded as permanently failed.
     max-attempts: ${NOTIFICATION_MAX_ATTEMPTS:3}

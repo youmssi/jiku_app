@@ -1,5 +1,6 @@
 package com.jiku.catalog.internal
 
+import com.jiku.shared.ReminderChannel
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
