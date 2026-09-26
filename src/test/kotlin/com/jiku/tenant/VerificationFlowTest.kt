@@ -93,6 +93,8 @@ class VerificationFlowTest {
             .andExpect(jsonPath("$.verified").value(false))
             .andExpect(jsonPath("$.phone.verified").value(true))
             .andExpect(jsonPath("$.personal.status").value("PENDING"))
+            .andExpect(jsonPath("$.limits.maxFiles").value(3))
+            .andExpect(jsonPath("$.limits.maxFileBytes").value(2 * 1024 * 1024))
     }
 
     @Test
