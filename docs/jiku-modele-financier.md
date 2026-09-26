@@ -1,6 +1,6 @@
 # Jikū — Modèle financier (estimation)
 
-**Date :** 2026-09-24
+**Date :** 2026-09-24, mis à jour le 2026-09-26 (section 6)
 **Statut :** estimation de travail. Les tarifs des prestataires changent ; les
 chiffres sont à revoir à chaque renégociation ou changement de grille.
 **Référence :** ADR 104. La grille et les marges à jour sont dans l'ADR 105,
@@ -142,6 +142,80 @@ Lecture :
   revenu ne couvre pas un salaire à plein temps ; le seuil de viabilité se situe
   plutôt vers plusieurs centaines d'organisations payantes.
 
+## 6. Mise à jour du 26 septembre 2026
+
+Recalcul avec la grille de l'ADR 105 et les tarifs publics vérifiés ce jour.
+
+### Ce qui change
+
+1. **WhatsApp, 1er octobre 2026.** Les messages utilitaires envoyés dans la
+   fenêtre de 24 h deviennent payants, ainsi que les réponses au-delà de
+   1 000 par mois et par numéro. L'invitation interactive envoie deux réponses
+   par invité (confirmation, billet) : environ **+70 GNF par invité**. Le
+   supplément de 150 GNF le couvre. **Meta exige un moyen de paiement sur le
+   compte WhatsApp Business avant le 30 septembre 2026.**
+2. **CinetPay.** Commission de 1,5 % à 3,5 % selon le volume ; reversement
+   au solde disponible après 8 jours par défaut ; 45 % des paiements par carte
+   gardés en réserve 180 jours ; frais de virement de reversement à la charge
+   du marchand hors Côte d'Ivoire. Après une fraude en septembre 2025, CinetPay
+   a retardé des reversements pendant plusieurs mois (environ 1,2 M USD dus
+   début 2026) : retirer souvent, garder le circuit manuel Mobile Money actif,
+   prévoir un second prestataire.
+3. **Fiscalité selon la taille.** Sous 150 M GNF de chiffre d'affaires annuel,
+   TPU de 5 % du chiffre d'affaires. Au-dessus, impôt sur les sociétés sur le
+   bénéfice (25 % retenu ici, à confirmer). À partir de 500 M GNF, TVA de 18 %
+   prise dans les prix TTC.
+
+### Coût par invité et marges
+
+| Mode | Coût par invité (30 % des invitations classées marketing) |
+|---|---|
+| Lien d'invitation ou billet direct | ≈ 121 GNF |
+| Invitation interactive WhatsApp | ≈ 191 GNF |
+
+Marge après messages, CinetPay (3,5 %) et TPU (5 %), palier rempli à 80 %,
+un quart des événements en mode interactif :
+
+| Produit | Prix | Ce qui reste | Marge |
+|---|---|---|---|
+| Événement Bronze | 234 000 | 180 966 | 77 % |
+| Événement Argent | 393 000 | 293 307 | 75 % |
+| Événement Or | 630 000 | 465 970 | 74 % |
+| Pack Organisateur (par mois) | 570 000 | 411 070 | 72 % |
+| Solo Plus (par mois) | 47 500 | 36 113 | 76 % |
+| Teams, 3 personnes (par mois) | 190 000 | 151 800 | 80 % |
+| Organisation, 6 personnes (par mois) | 370 500 | 321 368 | 87 % |
+| Option « votre propre numéro » | 95 000 | 86 925 | 92 % |
+| Compte Solo gratuit | 0 | −1 465 | coût d'acquisition |
+
+Les prix d'abonnement tiennent compte de 30 % de clients payant à l'année
+(2 mois offerts).
+
+### Charges fixes mensuelles
+
+| Poste | Lancement | Au-delà de 150 organisations payantes |
+|---|---|---|
+| Serveurs, base, web, e-mail, boîtes mail, domaine, suivi d'erreurs | ≈ 100 USD | ≈ 303 USD |
+| Comptable (estimation, devis local à obtenir) | 1 000 000 GNF | 1 000 000 GNF |
+| Banque, téléphone, virements | 300 000 GNF | 300 000 GNF |
+| Marketing et vente (à choisir) | 2 000 000 GNF | 2 000 000 GNF |
+
+### Seuil de rentabilité et retour sur investissement
+
+Avec 4,2 M GNF de charges fixes par mois (fondateur non payé), il faut **l'une**
+de ces combinaisons pour les couvrir : 28 clients Teams, 13 clients
+Organisation, 11 Packs Organisateur, 9 événements Or ou 116 Solo Plus par mois.
+
+| Scénario (ADR 105) | Clients payants | Revenu mensuel | Bénéfice net mensuel, fondateur non payé | Avec 12 M GNF de salaires |
+|---|---|---|---|---|
+| Prudent | 54 | 11,4 M GNF | 4,6 M GNF | −7,4 M GNF |
+| Central | 191 | 39,8 M GNF | 20,1 M GNF | 11,1 M GNF |
+| Ambitieux | 555 | 113,6 M GNF | 53,0 M GNF | 44,0 M GNF |
+
+Un investissement de 60 M GNF est remboursé en environ 13 mois au niveau
+prudent et en 3 mois au niveau central, une fois ce niveau atteint. La
+commission sur les billets vendus suppose la phase 6, pas encore construite.
+
 ## Sources
 
 - CinetPay : [tarification des paiements](https://support.cinetpay.com/d/52-tarifications-des-paiements-entrants-et-sortants), [solde et délai de règlement](https://docs.cinetpay.com/api/1.0-fr/BO/finance)
@@ -150,4 +224,7 @@ Lecture :
 - Resend : [tarifs](https://resend.com/docs/knowledge-base/what-is-resend-pricing)
 - Render : [coûts d'hébergement](https://render.com/articles/how-much-does-cloud-application-hosting-cost-for-small-businesses)
 - Neon : [tarifs](https://neon.com/pricing)
+- WhatsApp, 1er octobre 2026 : [YCloud](https://www.ycloud.com/blog/whatsapp-api-message-pricing-update-effective-october-1-2026), [360dialog](https://360dialog.com/blog/whatsapp-service-message-charging-october-2026/)
+- CinetPay : [conditions (réserve carte)](https://cinetpay.com/legal/cgu-services), [retards de reversement](https://techcabal.com/2026/02/01/cinetpay-cyberattack/)
+- Hébergement : [Vercel Pro](https://vercel.com/docs/plans/pro-plan), [Render](https://render.com/pricing), [Google Workspace](https://workspace.google.com/pricing)
 - Valorisation : [SaaS Capital, SaaS autofinancés 2026](https://www.saas-capital.com/blog-posts/benchmarking-metrics-for-bootstrapped-saas-companies/), [multiples par tranche de revenu](https://windsordrake.com/saas-valuation-multiples/)
