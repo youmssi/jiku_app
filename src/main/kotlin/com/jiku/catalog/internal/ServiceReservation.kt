@@ -22,15 +22,17 @@ enum class ServiceReservationStatus {
 }
 
 /**
- * L'occupation d'une ressource par un créneau (JIKU-85). L'unicité
- * (resource_id, starts_at) est la garde de concurrence : deux réservations du
- * même créneau sur la même ressource sont impossibles, et le gagnant est celui
- * dont l'INSERT conditionnel aboutit.
+ * L'occupation d'une place d'une ressource sur un créneau (JIKU-85, JIKU-174).
+ * L'unicité (resource_id, starts_at, seat) est la garde de concurrence : deux
+ * clients ne prennent jamais la même place, et le gagnant est celui dont
+ * l'INSERT aboutit. Hors séance collective, la seule place est 0.
  */
 @Entity
 @Table(
     name = "service_reservation",
-    uniqueConstraints = [UniqueConstraint(name = "uq_reservation_resource_start", columnNames = ["resource_id", "starts_at"])],
+    uniqueConstraints = [
+        UniqueConstraint(name = "uq_reservation_resource_start_seat", columnNames = ["resource_id", "starts_at", "seat"]),
+    ],
 )
 class ServiceReservation(
     @Column(name = "service_id", nullable = false, updatable = false)
@@ -41,6 +43,9 @@ class ServiceReservation(
     val startsAt: Instant,
     @Column(name = "ends_at", nullable = false, updatable = false)
     val endsAt: Instant,
+    /** La place occupée dans la séance, de 0 à la capacité moins un. */
+    @Column(name = "seat", nullable = false, updatable = false)
+    val seat: Int = 0,
 ) : BaseTenantEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

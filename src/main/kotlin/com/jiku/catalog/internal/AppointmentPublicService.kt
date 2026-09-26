@@ -22,11 +22,15 @@ data class AppointmentServiceView(
     val confirmationMode: String,
     val professionals: List<String>,
     val slots: List<AppointmentSlotView>,
+    /** Clients served together per slot; above 1 the service runs group sessions (JIKU-174). */
+    val clientsPerSlot: Int = 1,
 )
 
 data class AppointmentSlotView(
     val startsAt: Instant,
     val endsAt: Instant,
+    /** Clients the slot can still take. */
+    val placesLeft: Int = 1,
 )
 
 data class AppointmentBookingRequest(
@@ -159,13 +163,15 @@ class AppointmentPublicService(
         val zone = ZoneId.of(service.timezone)
         val day = date?.let { LocalDate.parse(it) } ?: LocalDate.now(zone)
         val professionals = resources.findByActiveTrueAndTypeOrderByNameAsc(ResourceType.PERSON).map { it.name }
+        val effective = config.effective(service.id)
         return AppointmentServiceView(
             serviceId = service.id,
             name = service.name,
             timezone = service.timezone,
-            confirmationMode = config.effective(service.id).confirmationMode.name,
+            confirmationMode = effective.confirmationMode.name,
             professionals = professionals,
-            slots = engine.openSlots(serviceId, day).map { AppointmentSlotView(it.startsAt, it.endsAt) },
+            slots = engine.openSlots(serviceId, day).map { AppointmentSlotView(it.startsAt, it.endsAt, it.placesLeft) },
+            clientsPerSlot = effective.clientsPerSlot,
         )
     }
 

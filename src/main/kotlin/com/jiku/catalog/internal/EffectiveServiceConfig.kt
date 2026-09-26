@@ -21,6 +21,10 @@ data class EffectiveServiceConfig(
     val walkInsAllowed: Boolean,
     val reminderChannel: ReminderChannel,
     val reminderOffsetsMinutes: List<Int>,
+    /** Clients served together per resource and per slot, within the plan's cap (JIKU-174). */
+    val clientsPerSlot: Int = 1,
+    /** The most clients per slot the tenant's plan allows. */
+    val maxClientsPerSlot: Int = 1,
 ) {
     /** Durée totale réservée sur la grille : service + tampon de respiration. */
     val occupancyMinutes: Long
@@ -41,4 +45,5 @@ data class ServiceConfigUpdate(
     val walkInsAllowed: Boolean? = null,
     val reminderChannel: ReminderChannel? = null,
     val reminderOffsetsMinutes: List<Int>? = null,
+    val clientsPerSlot: Int? = null,
 )

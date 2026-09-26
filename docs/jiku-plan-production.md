@@ -27,8 +27,8 @@ connecté (niveau 3), Wave en direct.
 ## 2. Ce qui manque
 
 État vérifié dans le code le 2026-09-26. Les phases 0 à 5 du plan ci-dessous
-sont construites pour le produit ; il reste la phase 6, les séances collectives
-et la mise en production.
+sont construites pour le produit, séances collectives comprises ; il reste la
+phase 6 et la mise en production.
 
 ### 2.1 Produit
 
@@ -47,11 +47,11 @@ et la mise en production.
 | Opérateur avec périmètre, équipe, console unique | ✅ Prêt | JIKU-116, JIKU-162, JIKU-163 |
 | Plusieurs monnaies (GNF, FCFA, USD) | ✅ Prêt | ADR 105, JIKU-137, JIKU-138 |
 | Votre propre numéro WhatsApp (Embedded Signup) | ✅ Prêt | JIKU-154, JIKU-155, JIKU-156 |
-| **Séances collectives** (plusieurs clients par créneau) | ❌ Manque | vendues dans Teams (10) et Organisation (30), non construites |
+| Séances collectives (plusieurs clients par créneau) | ✅ Prêt | JIKU-174 : Solo 1, Teams 10, Organisation 30 |
 | **Vérification des organisateurs** | ❌ Manque | phase 6.0 |
 | **Vente publique de billets** (commande, page d'achat) | ❌ Manque | phase 6.1, 6.2 |
 | **Commission de 3 % par tranche** | ❌ Manque | phase 6.3 |
-| Traduction anglaise des écrans services, liens validateur, bureau admin | 🟡 En cours | JIKU-166 et JIKU-167 fusionnées |
+| Traduction anglaise de tous les écrans | ✅ Prêt | JIKU-166, JIKU-167, JIKU-172, JIKU-173 |
 
 ### 2.2 Mise en production
 

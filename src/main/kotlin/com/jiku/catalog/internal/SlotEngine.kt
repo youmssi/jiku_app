@@ -22,6 +22,8 @@ class SlotUnavailableException(
 data class OpenSlot(
     val startsAt: Instant,
     val endsAt: Instant,
+    /** Clients the slot can still take: 1 outside group sessions (JIKU-174). */
+    val placesLeft: Int = 1,
 )
 
 data class ReservationOutcome(
@@ -49,11 +51,15 @@ data class ClientBookingOutcome(
  * hebdomadaire dans SON fuseau, sans indisponibilité, et sans réservation
  * concurrente qui l'occupe.
  *
- * La réservation réclame chaque ressource par un INSERT conditionnel unique
- * (resource_id, starts_at) en HQL — jamais de SQL natif, pour que le prédicat
- * tenant de Hibernate s'applique. Deux clients sur la même case : exactement un
- * INSERT aboutit, l'autre échoue et la transaction se replie. La purge libère les
- * demandes en attente expirées.
+ * La réservation réclame une place de chaque ressource par un INSERT unique
+ * (resource_id, starts_at, seat) en HQL — jamais de SQL natif, pour que le
+ * prédicat tenant de Hibernate s'applique. Deux clients sur la même place :
+ * exactement un INSERT aboutit, l'autre échoue et la transaction se replie. La
+ * purge libère les demandes en attente expirées.
+ *
+ * Séance collective (JIKU-174) : une ressource reçoit jusqu'à `clientsPerSlot`
+ * clients sur un même créneau du même service. Occupée par une autre séance
+ * (autre début ou autre service), elle n'offre aucune place.
  */
 @SpringService
 class SlotEngine(
@@ -110,18 +116,19 @@ class SlotEngine(
         val reservationsByResource =
             reservations.findOccupyingBetweenResources(resourceIds, dayStart, dayEnd, now).groupBy { it.resourceId }
 
-        fun resourceFree(
+        fun placesOn(
             resource: Resource,
             startsAt: Instant,
             endsAt: Instant,
-        ): Boolean =
-            availabilityCovers(resource, startsAt, endsAt, availabilitiesByResource[requireNotNull(resource.id)]) &&
-                unavailabilitiesByResource[requireNotNull(resource.id)].orEmpty().none {
-                    it.startsAt < endsAt && it.endsAt > startsAt
-                } &&
-                reservationsByResource[requireNotNull(resource.id)].orEmpty().none {
-                    it.startsAt < endsAt && it.endsAt > startsAt
-                }
+        ): Int {
+            val id = requireNotNull(resource.id)
+            val open =
+                availabilityCovers(resource, startsAt, endsAt, availabilitiesByResource[id]) &&
+                    unavailabilitiesByResource[id].orEmpty().none { it.startsAt < endsAt && it.endsAt > startsAt }
+            if (!open) return 0
+            val occupying = reservationsByResource[id].orEmpty().filter { it.startsAt < endsAt && it.endsAt > startsAt }
+            return placesLeft(occupying, serviceId, startsAt, eff.clientsPerSlot)
+        }
 
         val minHorizon = now.plusSeconds(eff.minHorizonMinutes * 60L)
 
@@ -132,12 +139,14 @@ class SlotEngine(
             val endsAt = startsAt.plusSeconds(occupancy * 60)
             if (endsAt.isAfter(dayEnd)) break
             if (!startsAt.isBefore(minHorizon)) {
-                val freePerType =
+                val placesPerType =
                     resourcesOfType.mapValues { (_, resourcesOfType) ->
-                        resourcesOfType.count { resourceFree(it, startsAt, endsAt) }
+                        resourcesOfType.map { placesOn(it, startsAt, endsAt) }.filter { it > 0 }
                     }
-                if (required.all { freePerType[it.type] ?: 0 >= it.quantity }) {
-                    slots += OpenSlot(startsAt, endsAt)
+                if (required.all { placesPerType[it.type].orEmpty().size >= it.quantity }) {
+                    // Each client takes one place on `quantity` resources of every required type.
+                    val placesLeft = required.minOf { placesPerType[it.type].orEmpty().sum() / it.quantity }
+                    slots += OpenSlot(startsAt, endsAt, placesLeft)
                 }
             }
             offset += step
@@ -268,21 +277,28 @@ class SlotEngine(
         if (required.isEmpty()) {
             throw SlotUnavailableException("The service defines no requirements")
         }
-        // Ordre stable : on affecte la première ressource libre de chaque type.
-        val assigned = mutableListOf<UUID>()
+        // Ordre stable : on affecte la première ressource qui a encore une place,
+        // pour chaque type ; une séance collective se remplit donc ressource par ressource.
+        val assigned = mutableListOf<Pair<UUID, Int>>()
         for (requirement in required.sortedBy { it.type.name }) {
-            val free = freeOfType(requirement.type, startsAt, endsAt, now)
+            val free = freeOfType(requirement.type, serviceId, startsAt, endsAt, now, eff.clientsPerSlot)
             if (free.size < requirement.quantity) {
                 throw SlotUnavailableException("Pas assez de ressources libres (${requirement.type})")
             }
-            assigned += free.take(requirement.quantity).map { requireNotNull(it.id) }
+            assigned += free.take(requirement.quantity)
         }
         val status =
             if (heldUntil == null) ServiceReservationStatus.CONFIRMED else ServiceReservationStatus.PENDING
-        for (resourceId in assigned) {
+        for ((resourceId, seat) in assigned) {
             try {
                 reservations.saveAndFlush(
-                    ServiceReservation(serviceId = serviceId, resourceId = resourceId, startsAt = startsAt, endsAt = endsAt).apply {
+                    ServiceReservation(
+                        serviceId = serviceId,
+                        resourceId = resourceId,
+                        startsAt = startsAt,
+                        endsAt = endsAt,
+                        seat = seat,
+                    ).apply {
                         this.status = status
                         this.heldUntil = heldUntil
                         this.clientName = clientName
@@ -301,23 +317,45 @@ class SlotEngine(
             startsAt = startsAt,
             endsAt = endsAt,
             status = status,
-            resourceIds = assigned,
+            resourceIds = assigned.map { it.first },
         )
     }
 
+    /** Resources of [type] with a place left in the session, each with the first free place. */
     private fun freeOfType(
         type: ResourceType,
+        serviceId: UUID,
         startsAt: Instant,
         endsAt: Instant,
         now: Instant,
-    ): List<Resource> =
-        resources.findByActiveTrueAndTypeOrderByNameAsc(type).filter { resource ->
-            availabilityCovers(resource, startsAt, endsAt) &&
-                unavailabilities.findByResourceId(requireNotNull(resource.id)).none {
-                    it.startsAt < endsAt && it.endsAt > startsAt
-                } &&
-                reservations.countOccupying(requireNotNull(resource.id), startsAt, endsAt, now) == 0L
+        capacity: Int,
+    ): List<Pair<UUID, Int>> =
+        resources.findByActiveTrueAndTypeOrderByNameAsc(type).mapNotNull { resource ->
+            val id = requireNotNull(resource.id)
+            val open =
+                availabilityCovers(resource, startsAt, endsAt) &&
+                    unavailabilities.findByResourceId(id).none { it.startsAt < endsAt && it.endsAt > startsAt }
+            if (!open) return@mapNotNull null
+            val occupying = reservations.findOccupying(id, startsAt, endsAt, now)
+            if (placesLeft(occupying, serviceId, startsAt, capacity) == 0) return@mapNotNull null
+            val taken = occupying.map { it.seat }.toSet()
+            id to (0 until capacity).first { it !in taken }
         }
+
+    /**
+     * Places a resource still offers for the session of [serviceId] starting at
+     * [startsAt]: none while it serves another session, otherwise the capacity
+     * minus the clients already booked on it.
+     */
+    private fun placesLeft(
+        occupying: List<ServiceReservation>,
+        serviceId: UUID,
+        startsAt: Instant,
+        capacity: Int,
+    ): Int {
+        if (occupying.any { it.startsAt != startsAt || it.serviceId != serviceId }) return 0
+        return (capacity - occupying.size).coerceAtLeast(0)
+    }
 
     private fun availabilityCovers(
         resource: Resource,
