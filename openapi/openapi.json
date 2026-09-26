@@ -13446,6 +13446,19 @@
           }
         }
       },
+      "VerificationLimits" : {
+        "type" : "object",
+        "properties" : {
+          "maxFiles" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "maxFileBytes" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
       "VerificationOverview" : {
         "type" : "object",
         "properties" : {
@@ -13474,6 +13487,9 @@
           },
           "phone" : {
             "$ref" : "#/components/schemas/PhoneStatusView"
+          },
+          "limits" : {
+            "$ref" : "#/components/schemas/VerificationLimits"
           }
         }
       },

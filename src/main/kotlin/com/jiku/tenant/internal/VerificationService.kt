@@ -66,6 +66,13 @@ data class VerificationOverview(
     val personal: VerificationRequestView?,
     val company: VerificationRequestView?,
     val phone: PhoneStatusView,
+    /** Upload limits of a request, so the client can prepare files before sending them. */
+    val limits: VerificationLimits,
+)
+
+data class VerificationLimits(
+    val maxFiles: Int,
+    val maxFileBytes: Int,
 )
 
 data class PhoneCodeSent(
@@ -109,6 +116,7 @@ class VerificationService(
             personal = all.firstOrNull { it.kind == VerificationKind.PERSONAL }?.toView(),
             company = all.firstOrNull { it.kind == VerificationKind.COMPANY }?.toView(),
             phone = PhoneStatusView(phone = phone?.phone, verified = phone?.verifiedAt != null),
+            limits = VerificationLimits(maxFiles = properties.maxFiles, maxFileBytes = properties.maxFileBytes),
         )
     }
 
