@@ -28,6 +28,7 @@ import java.util.UUID
 class BillingHistoryController(
     private val payments: PaymentRepository,
     private val events: EventModuleApi,
+    private val paymentService: PaymentService,
 ) {
     @GetMapping
     fun history(): List<PaymentHistoryItem> =
@@ -44,6 +45,12 @@ class BillingHistoryController(
                 createdAt = payment.createdAt,
             )
         }
+
+    /** One payment's status, polled by the page the payer returns to from the provider (JIKU-164). */
+    @GetMapping("/{paymentId}")
+    fun status(
+        @PathVariable paymentId: UUID,
+    ): PaymentStatusView = paymentService.status(paymentId)
 
     @GetMapping("/{paymentId}/receipt", produces = [MediaType.TEXT_PLAIN_VALUE])
     fun receipt(

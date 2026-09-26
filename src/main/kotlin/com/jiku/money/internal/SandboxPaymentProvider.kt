@@ -25,7 +25,7 @@ class SandboxPaymentProvider(
             instruction =
                 PaymentInstruction(
                     type = "REDIRECT",
-                    value = "${properties.sandboxReturnUrl}?ref=${request.reference}",
+                    value = "${returnUrlFor(properties.sandboxReturnUrl, request.paymentId)}&ref=${request.reference}",
                 ),
         )
 

@@ -31,8 +31,6 @@ class PaymentController(
             paymentService.initiate(eventId, request.tier)
         } catch (ex: IllegalArgumentException) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, ex.message, ex)
-        } catch (ex: PaymentProviderException) {
-            throw ResponseStatusException(HttpStatus.BAD_GATEWAY, "The payment provider is unavailable; try again in a moment", ex)
         }
 }
 

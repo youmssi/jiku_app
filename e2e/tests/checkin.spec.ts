@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
 import {
     createEvent,
@@ -49,19 +49,19 @@ test.describe('Validator check-in', () => {
 
         // The result is a full-screen overlay; scoping to it keeps these
         // assertions off the search list rendered behind it.
-        const admitted = page.getByRole('button', { name: /Checked in/ });
+        const admitted = resultOverlay(page, 'Checked in');
         await expect(admitted).toBeVisible();
         await expect(admitted.getByText('Ibrahima Sow')).toBeVisible();
 
         // Dismiss the result and admit the same guest again.
-        await admitted.click();
+        await admitted.getByRole('button', { name: 'Scan next' }).click();
         await page.getByPlaceholder('Search by name, email or phone').fill('Ibrahima');
         await page.getByRole('button', { name: /Ibrahima Sow/ }).click();
 
         // A duplicate must not read as a generic failure: staff need to know who
         // admitted this guest and when, or they cannot resolve the dispute at the
         // door.
-        const duplicate = page.getByRole('button', { name: /Already checked in/ });
+        const duplicate = resultOverlay(page, 'Already checked in');
         await expect(duplicate).toBeVisible();
         await expect(duplicate.getByText(new RegExp(`by ${validatorLabel}\\b.*\\bat\\b`, 'i'))).toBeVisible();
     });
@@ -84,3 +84,10 @@ test.describe('Validator check-in', () => {
         await expect(page.getByText('No matching guests.')).toBeVisible();
     });
 });
+
+/** The full-screen check-in result whose heading reads [outcome]. */
+function resultOverlay(page: Page, outcome: string): Locator {
+    return page
+        .locator('[role="presentation"]')
+        .filter({ has: page.getByRole('heading', { name: outcome, exact: true }) });
+}

@@ -28,7 +28,7 @@ import java.util.UUID
 @Service
 class ManualPaymentService(
     private val payments: PaymentRepository,
-    private val tierUnlockService: TierUnlockService,
+    private val fulfillment: PaymentFulfillment,
     private val eventPricing: EventPricing,
     private val subscriptionService: SubscriptionService,
     private val subscriptionNotifier: SubscriptionNotifier,
@@ -151,21 +151,21 @@ class ManualPaymentService(
     @Transactional
     fun requestPack(months: Int): ManualPaymentInstructions {
         val quote = organizerPack.quote(months)
-        return requestTenantPayment(Payment.KIND_PACK, PACK_TIER, quote, months, quote.owedGuests)
+        return requestTenantPayment(Payment.KIND_PACK, Payment.PACK_TIER, quote, months, quote.owedGuests)
     }
 
     /** A request to buy [blocks] blocks of extra guests for the pack's current month (ADR 105). */
     @Transactional
     fun requestPackExtra(blocks: Int): ManualPaymentInstructions {
         val quote = organizerPack.quoteExtra(blocks)
-        return requestTenantPayment(Payment.KIND_PACK_EXTRA, PACK_TIER, quote, null, quote.guests)
+        return requestTenantPayment(Payment.KIND_PACK_EXTRA, Payment.PACK_TIER, quote, null, quote.guests)
     }
 
     /** A request to pay for [months] of the "own WhatsApp number" add-on (ADR 105). */
     @Transactional
     fun requestOwnWhatsAppNumber(months: Int): ManualPaymentInstructions {
         val quote = ownWhatsAppNumber.quote(months)
-        return requestTenantPayment(Payment.KIND_WHATSAPP_NUMBER, OWN_NUMBER_TIER, quote, months, 0)
+        return requestTenantPayment(Payment.KIND_WHATSAPP_NUMBER, Payment.OWN_NUMBER_TIER, quote, months, 0)
     }
 
     private fun requestTenantPayment(
@@ -281,24 +281,7 @@ class ManualPaymentService(
                     // Only an event tier has an event to notify about; a
                     // subscription publishes its own notice (REACTIVATED).
                     tenantKind = payment.kind != Payment.KIND_TIER
-                    if (succeeded) {
-                        when (payment.kind) {
-                            Payment.KIND_SUBSCRIPTION ->
-                                subscriptionService.confirmSubscriptionPayment(
-                                    payment.tier,
-                                    requireNotNull(payment.subscriptionMonths),
-                                )
-
-                            Payment.KIND_PACK ->
-                                organizerPack.confirmPack(requireNotNull(payment.subscriptionMonths), payment.guests ?: 0)
-
-                            Payment.KIND_PACK_EXTRA -> organizerPack.confirmExtra(payment.guests ?: 0)
-
-                            Payment.KIND_WHATSAPP_NUMBER -> ownWhatsAppNumber.confirm(requireNotNull(payment.subscriptionMonths))
-
-                            else -> tierUnlockService.unlock(requireNotNull(payment.eventId), payment.tier, payment.interactive)
-                        }
-                    }
+                    if (succeeded) fulfillment.fulfill(payment)
                     payment.toAdminView()
                 }
             if (!tenantKind) {
@@ -381,8 +364,6 @@ class ManualPaymentService(
 
     companion object {
         const val PROVIDER_MANUAL = "manual"
-        private const val PACK_TIER = "PACK"
-        private const val OWN_NUMBER_TIER = "WHATSAPP_NUMBER"
         private const val ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
         private const val MAX_PAGE_SIZE = 100
     }
