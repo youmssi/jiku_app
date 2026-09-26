@@ -18,6 +18,7 @@ import com.jiku.messaging.internal.NotificationLogRepository
 import com.jiku.messaging.internal.WhatsAppMessageCostRepository
 import com.jiku.shared.ReminderChannel
 import com.jiku.shared.TenantContext
+import com.jiku.support.TestDates.MONDAY
 import com.jiku.ticket.internal.AppointmentReminderRepository
 import com.jiku.ticket.internal.AppointmentReminderSweep
 import com.jiku.ticket.internal.ReminderStatus
@@ -109,10 +110,10 @@ class AppointmentReminderTest {
         val serviceId = seedService("reminder-once")
 
         TenantContext.set("reminder-once")
-        val slot = Instant.parse("2026-11-02T09:00:00Z")
+        val slot = Instant.parse("${MONDAY}T09:00:00Z")
         engine.bookClient(serviceId, slot, "Fatou", "+224600000060")
 
-        val now = Instant.parse("2026-11-02T07:40:00Z")
+        val now = Instant.parse("${MONDAY}T07:40:00Z")
         sweep.sweepService(serviceId, "WHATSAPP", "120", "reminder-once", "Africa/Conakry", now)
         sweep.sweepService(serviceId, "WHATSAPP", "120", "reminder-once", "Africa/Conakry", now)
 
@@ -131,7 +132,7 @@ class AppointmentReminderTest {
     fun `a cancelled appointment triggers no reminder`() {
         val serviceId = seedService("reminder-cancelled")
         TenantContext.set("reminder-cancelled")
-        val slot = Instant.parse("2026-11-02T09:00:00Z")
+        val slot = Instant.parse("${MONDAY}T09:00:00Z")
         val linkToken = linkTokens.issue(serviceId, "reminder-cancelled")
         TenantContext.clear()
 
@@ -169,7 +170,7 @@ class AppointmentReminderTest {
             )
         assertEquals(1, cancelled.size)
 
-        val now = Instant.parse("2026-11-02T07:40:00Z")
+        val now = Instant.parse("${MONDAY}T07:40:00Z")
         sweep.sweepService(serviceId, "WHATSAPP", "120", "reminder-cancelled", "Africa/Conakry", now)
         sweep.sweepService(serviceId, "WHATSAPP", "120", "reminder-cancelled", "Africa/Conakry", now)
         assertTrue(reminders.findAll().isEmpty(), "aucun rappel pour un rendez-vous annulé")

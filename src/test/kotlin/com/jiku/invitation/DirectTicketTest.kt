@@ -3,6 +3,7 @@ package com.jiku.invitation
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.support.OrganizerApi
+import com.jiku.support.TestDates.EVENT_YEAR
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -41,7 +42,7 @@ class DirectTicketTest {
                         token,
                         "/api/v1/events",
                         """
-                        {"name":"Conference directe","timezone":"Africa/Conakry","startDateTime":"2026-12-01T09:00:00Z",
+                        {"name":"Conference directe","timezone":"Africa/Conakry","startDateTime":"${EVENT_YEAR}-12-01T09:00:00Z",
                         "invitationChannels":["EMAIL"],"settings":{"deliveryMode":"DIRECT_TICKET"}}
                         """.trimIndent(),
                     ).andExpect(status().isCreated())

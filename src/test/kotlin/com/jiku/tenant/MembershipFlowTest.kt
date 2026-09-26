@@ -2,6 +2,7 @@ package com.jiku.tenant
 
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
+import com.jiku.support.TestDates.EVENT_YEAR
 import com.jiku.tenant.internal.OrganizerMembership
 import com.jiku.tenant.internal.OrganizerMembershipRepository
 import com.jiku.tenant.internal.OrganizerRole
@@ -230,7 +231,7 @@ class MembershipFlowTest {
                     post("/api/v1/events")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
-                            """{"name":"$name","timezone":"Africa/Abidjan","startDateTime":"2026-12-31T19:00:00Z","invitationChannels":["EMAIL"]}""",
+                            """{"name":"$name","timezone":"Africa/Abidjan","startDateTime":"${EVENT_YEAR}-12-31T19:00:00Z","invitationChannels":["EMAIL"]}""",
                         ).header("Authorization", "Bearer $token"),
                 ).andExpect(status().isCreated())
                 .andReturn()

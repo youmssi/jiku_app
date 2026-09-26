@@ -5,6 +5,7 @@ import com.jiku.TestcontainersConfiguration
 import com.jiku.messaging.internal.MetaWebhookSignature
 import com.jiku.money.BillingModuleApi
 import com.jiku.support.OrganizerApi
+import com.jiku.support.TestDates.EVENT_YEAR
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -112,7 +113,7 @@ class InteractiveWhatsAppTest {
                 token,
                 "/api/v1/events/$eventId",
                 """
-                {"name":"Gala sans supplément","timezone":"Africa/Conakry","startDateTime":"2026-12-01T19:00:00Z",
+                {"name":"Gala sans supplément","timezone":"Africa/Conakry","startDateTime":"${EVENT_YEAR}-12-01T19:00:00Z",
                 "invitationChannels":["WHATSAPP"],"settings":{"deliveryMode":"INTERACTIVE"}}
                 """.trimIndent(),
             ).andExpect(status().isOk())
@@ -149,7 +150,7 @@ class InteractiveWhatsAppTest {
                         token,
                         "/api/v1/events",
                         """
-                        {"name":"Gala interactif","timezone":"Africa/Conakry","startDateTime":"2026-12-01T19:00:00Z",
+                        {"name":"Gala interactif","timezone":"Africa/Conakry","startDateTime":"${EVENT_YEAR}-12-01T19:00:00Z",
                         "invitationChannels":["WHATSAPP"],"settings":{"deliveryMode":"INTERACTIVE"}}
                         """.trimIndent(),
                     ).andExpect(status().isCreated())
