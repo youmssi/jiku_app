@@ -1,5 +1,6 @@
 package com.jiku.ticket.internal
 
+import com.jiku.support.TestDates.MONDAY
 import java.time.Instant
 import java.util.UUID
 import kotlin.test.Test
@@ -14,7 +15,7 @@ import kotlin.test.assertNull
  * attente l'emporte. (JIKU-88)
  */
 class DayLinePolicyTest {
-    private val now = Instant.parse("2026-11-02T10:00:00Z")
+    private val now = Instant.parse("${MONDAY}T10:00:00Z")
 
     private fun candidate(
         slotStart: Instant?,

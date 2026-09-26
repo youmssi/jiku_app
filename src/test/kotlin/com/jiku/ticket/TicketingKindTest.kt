@@ -2,6 +2,7 @@ package com.jiku.ticket
 
 import com.jiku.TestcontainersConfiguration
 import com.jiku.shared.TenantContext
+import com.jiku.support.TestDates.MONDAY
 import com.jiku.ticket.internal.Ticket
 import com.jiku.ticket.internal.TicketKind
 import com.jiku.ticket.internal.TicketRepository
@@ -55,9 +56,9 @@ class TicketingKindTest {
     @Test
     fun `an appointment ticket persists its slot, arrival and day rank`() {
         TenantContext.set("tenant-kind-appointment")
-        val startsAt = Instant.parse("2026-11-02T09:00:00Z")
-        val endsAt = Instant.parse("2026-11-02T09:30:00Z")
-        val arrivedAt = Instant.parse("2026-11-02T08:52:00Z")
+        val startsAt = Instant.parse("${MONDAY}T09:00:00Z")
+        val endsAt = Instant.parse("${MONDAY}T09:30:00Z")
+        val arrivedAt = Instant.parse("${MONDAY}T08:52:00Z")
 
         val saved =
             tickets.save(

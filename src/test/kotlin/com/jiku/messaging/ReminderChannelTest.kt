@@ -10,6 +10,7 @@ import com.jiku.messaging.internal.WhatsAppSender
 import com.jiku.shared.ReminderChannel
 import com.jiku.shared.ReminderDue
 import com.jiku.shared.TenantContext
+import com.jiku.support.TestDates.EVENT_YEAR
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -114,7 +115,7 @@ class ReminderChannelTest {
                     offsetMinutes = 120,
                     clientName = "Kadiatou",
                     clientPhone = "+224620000002",
-                    startsAt = Instant.parse("2026-12-01T09:00:00Z"),
+                    startsAt = Instant.parse("${EVENT_YEAR}-12-01T09:00:00Z"),
                     professionalName = "Binta",
                     serviceTimezone = "Africa/Conakry",
                     channel = channel,

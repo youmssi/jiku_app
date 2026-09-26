@@ -3,6 +3,7 @@ package com.jiku.invitation
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.invitation.internal.InvitationTokenService
+import com.jiku.support.TestDates.EVENT_YEAR
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -43,7 +44,7 @@ class RsvpTest {
             .perform(get("/api/v1/rsvp/$token1"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("PENDING"))
-            .andExpect(jsonPath("$.eventStart").value("2026-12-01T18:00:00Z"))
+            .andExpect(jsonPath("$.eventStart").value("${EVENT_YEAR}-12-01T18:00:00Z"))
             .andExpect(jsonPath("$.eventTimezone").value("Africa/Abidjan"))
 
         mockMvc
@@ -94,7 +95,7 @@ class RsvpTest {
                         .content(
                             """
                             {"name":"Gala","timezone":"Africa/Abidjan","maxCapacity":$capacity,
-                            "startDateTime":"2026-12-01T18:00:00Z","invitationChannels":["EMAIL"]}
+                            "startDateTime":"${EVENT_YEAR}-12-01T18:00:00Z","invitationChannels":["EMAIL"]}
                             """.trimIndent(),
                         ),
                 ).andExpect(status().isCreated())

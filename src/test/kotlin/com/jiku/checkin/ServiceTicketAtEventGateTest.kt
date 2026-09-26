@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.shared.TenantContext
 import com.jiku.support.OrganizerApi
+import com.jiku.support.TestDates.EVENT_YEAR
 import com.jiku.ticket.TicketingModuleApi
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,8 +52,8 @@ class ServiceTicketAtEventGateTest {
             TenantContext.withTenant(tenantId) {
                 ticketing.issueAppointment(
                     guestId = UUID.randomUUID(),
-                    startsAt = Instant.parse("2026-12-01T09:00:00Z"),
-                    endsAt = Instant.parse("2026-12-01T09:30:00Z"),
+                    startsAt = Instant.parse("${EVENT_YEAR}-12-01T09:00:00Z"),
+                    endsAt = Instant.parse("${EVENT_YEAR}-12-01T09:30:00Z"),
                     serviceId = UUID.randomUUID(),
                     professionalName = null,
                     clientName = "Awa",
@@ -79,7 +80,7 @@ class ServiceTicketAtEventGateTest {
             .perform(
                 post("/api/v1/checkin/${link.substringAfter("/checkin/")}/sync")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content("""{"items":[{"ticketCode":"$appointmentCode","scannedAt":"2026-12-01T09:05:00Z"}]}"""),
+                    .content("""{"items":[{"ticketCode":"$appointmentCode","scannedAt":"${EVENT_YEAR}-12-01T09:05:00Z"}]}"""),
             ).andExpect(status().isOk())
             .andExpect(jsonPath("$[0].outcome").value("NOT_FOUND"))
     }

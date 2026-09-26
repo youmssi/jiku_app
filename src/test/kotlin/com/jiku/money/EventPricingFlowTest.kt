@@ -3,6 +3,7 @@ package com.jiku.money
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.support.OrganizerApi
+import com.jiku.support.TestDates.EVENT_YEAR
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -112,7 +113,7 @@ class EventPricingFlowTest {
                 token,
                 "/api/v1/events/$eventId",
                 """
-                {"name":"Test Event","timezone":"Africa/Conakry","startDateTime":"2026-12-01T18:00:00Z",
+                {"name":"Test Event","timezone":"Africa/Conakry","startDateTime":"${EVENT_YEAR}-12-01T18:00:00Z",
                 "invitationChannels":["WHATSAPP"],"settings":{"deliveryMode":"$mode"}}
                 """.trimIndent(),
             ).andExpect(status().isOk())

@@ -13,6 +13,7 @@ import com.jiku.catalog.internal.ServiceCreateRequest
 import com.jiku.catalog.internal.SlotEngine
 import com.jiku.invitation.internal.GuestRepository
 import com.jiku.shared.TenantContext
+import com.jiku.support.TestDates.MONDAY
 import com.jiku.ticket.internal.TicketKind
 import com.jiku.ticket.internal.TicketRepository
 import org.junit.jupiter.api.AfterEach
@@ -21,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import java.time.Instant
-import java.time.LocalDate
 import java.time.LocalTime
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -80,7 +80,7 @@ class AppointmentIssuanceTest {
         val service = services.create(ServiceCreateRequest(name = "Coupe", timezone = "Africa/Conakry"))
         services.addRequirement(service.id, ResourceType.PERSON, 1)
         configService.update(service.id, ServiceConfigUpdate(maxHorizonDays = 365))
-        val slot = Instant.parse("2026-11-02T09:00:00Z")
+        val slot = Instant.parse("${MONDAY}T09:00:00Z")
 
         val outcome = engine.bookClient(service.id, slot, "Fatou", "+224600000000")
         assertEquals("PENDING", outcome.status.name)
@@ -90,7 +90,7 @@ class AppointmentIssuanceTest {
         assertTrue(tickets.findAll().isEmpty())
 
         // L'organisateur confirme la demande : l'invité et le billet naissent.
-        val day = LocalDate.of(2026, 11, 2)
+        val day = MONDAY
         val pending = requests.pending(service.id, day)
         assertEquals(1, pending.size)
         assertEquals("Fatou", pending.single().clientName)
@@ -131,8 +131,8 @@ class AppointmentIssuanceTest {
         services.addRequirement(service.id, ResourceType.PERSON, 1)
         configService.update(service.id, ServiceConfigUpdate(maxHorizonDays = 365))
 
-        engine.bookClient(service.id, Instant.parse("2026-11-02T10:00:00Z"), "Mariama", "+224600000001")
-        requests.accept(service.id, requests.pending(service.id, LocalDate.of(2026, 11, 2)).single().id)
+        engine.bookClient(service.id, Instant.parse("${MONDAY}T10:00:00Z"), "Mariama", "+224600000001")
+        requests.accept(service.id, requests.pending(service.id, MONDAY).single().id)
 
         val guest = guests.findAllByEventIdIsNull().single { it.firstName == "Mariama" }
         assertEquals("Binta", tickets.findByGuestId(requireNotNull(guest.id))?.professionalName)

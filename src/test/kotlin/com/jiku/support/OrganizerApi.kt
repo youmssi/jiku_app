@@ -41,7 +41,7 @@ class OrganizerApi(
             post(
                 token,
                 "/api/v1/events",
-                """{"name":"Test Event","timezone":"Africa/Conakry","startDateTime":"2026-12-01T18:00:00Z","invitationChannels":["EMAIL"]}""",
+                """{"name":"Test Event","timezone":"Africa/Conakry","startDateTime":"${TestDates.EVENT_YEAR}-12-01T18:00:00Z","invitationChannels":["EMAIL"]}""",
             ).andExpect(status().isCreated())
                 .andReturn()
                 .response.contentAsString,

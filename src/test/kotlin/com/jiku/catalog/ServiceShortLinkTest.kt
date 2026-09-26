@@ -12,6 +12,7 @@ import com.jiku.catalog.internal.ServiceConfigUpdate
 import com.jiku.catalog.internal.ServiceCreateRequest
 import com.jiku.catalog.internal.ServiceLinkCodeService
 import com.jiku.shared.TenantContext
+import com.jiku.support.TestDates.MONDAY
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -68,7 +69,7 @@ class ServiceShortLinkTest {
         assertEquals(tenant, first.tenantId)
 
         mockMvc
-            .perform(get("/api/v1/r/${first.code}").param("date", "2026-11-02"))
+            .perform(get("/api/v1/r/${first.code}").param("date", "$MONDAY"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.name").value("Coupe"))
             .andExpect(jsonPath("$.slots.length()").value(8))
@@ -88,7 +89,7 @@ class ServiceShortLinkTest {
                 .perform(
                     post("/api/v1/r/$code/book")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"clientName":"Fatou","clientPhone":"+224600000000","startsAt":"2026-11-02T10:00:00Z"}"""),
+                        .content("""{"clientName":"Fatou","clientPhone":"+224600000000","startsAt":"${MONDAY}T10:00:00Z"}"""),
                 ).andExpect(status().isCreated())
                 .andReturn()
                 .response

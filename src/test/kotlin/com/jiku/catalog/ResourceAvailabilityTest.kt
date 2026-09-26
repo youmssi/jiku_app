@@ -2,6 +2,8 @@ package com.jiku.catalog
 
 import com.jiku.TestcontainersConfiguration
 import com.jiku.shared.TenantContext
+import com.jiku.support.TestDates.MONDAY
+import com.jiku.support.TestDates.TUESDAY
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -35,8 +37,8 @@ class ResourceAvailabilityTest {
     @AfterEach
     fun clearContext() = TenantContext.clear()
 
-    private val mondayMorning = Instant.parse("2026-11-02T09:30:00Z") // lundi
-    private val mondayTen = Instant.parse("2026-11-02T10:00:00Z")
+    private val mondayMorning = Instant.parse("${MONDAY}T09:30:00Z") // lundi
+    private val mondayTen = Instant.parse("${MONDAY}T10:00:00Z")
 
     @Test
     fun `create edit and disable a resource with a weekly schedule`() {
@@ -69,8 +71,8 @@ class ResourceAvailabilityTest {
 
         resources.addUnavailability(
             resource.id,
-            Instant.parse("2026-11-02T09:00:00Z"),
-            Instant.parse("2026-11-02T11:00:00Z"),
+            Instant.parse("${MONDAY}T09:00:00Z"),
+            Instant.parse("${MONDAY}T11:00:00Z"),
             reason = "Congé",
         )
 
@@ -80,8 +82,8 @@ class ResourceAvailabilityTest {
         assertTrue(
             resources.isSlotFree(
                 resource.id,
-                Instant.parse("2026-11-02T12:00:00Z"),
-                Instant.parse("2026-11-02T12:30:00Z"),
+                Instant.parse("${MONDAY}T12:00:00Z"),
+                Instant.parse("${MONDAY}T12:30:00Z"),
             ),
         )
     }
@@ -96,16 +98,16 @@ class ResourceAvailabilityTest {
         assertFalse(
             resources.isSlotFree(
                 resource.id,
-                Instant.parse("2026-11-02T14:00:00Z"),
-                Instant.parse("2026-11-02T14:30:00Z"),
+                Instant.parse("${MONDAY}T14:00:00Z"),
+                Instant.parse("${MONDAY}T14:30:00Z"),
             ),
         )
         // Créneau qui enjambe la frontière du jour.
         assertFalse(
             resources.isSlotFree(
                 resource.id,
-                Instant.parse("2026-11-02T12:00:00Z"),
-                Instant.parse("2026-11-03T09:00:00Z"),
+                Instant.parse("${MONDAY}T12:00:00Z"),
+                Instant.parse("${TUESDAY}T09:00:00Z"),
             ),
         )
         // Aucun horaire déclaré → jamais libre.
