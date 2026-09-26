@@ -907,6 +907,149 @@
         }
       }
     },
+    "/api/v1/settings/verification/{kind}" : {
+      "post" : {
+        "tags" : [
+          "verification-controller"
+        ],
+        "operationId" : "submit",
+        "parameters" : [
+          {
+            "name" : "kind",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "legalName",
+            "in" : "query",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "documentType",
+            "in" : "query",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "registrationNumber",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "name" : "taxIdentifier",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "files" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "string",
+                      "format" : "binary"
+                    }
+                  }
+                },
+                "required" : [
+                  "files"
+                ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VerificationRequestView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/settings/verification/phone" : {
+      "post" : {
+        "tags" : [
+          "verification-controller"
+        ],
+        "operationId" : "requestPhoneCode",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PhoneCodeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PhoneCodeSent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/settings/verification/phone/confirm" : {
+      "post" : {
+        "tags" : [
+          "verification-controller"
+        ],
+        "operationId" : "confirmPhone",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PhoneConfirmRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PhoneStatusView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/settings/templates/{name}/preview" : {
       "post" : {
         "tags" : [
@@ -3180,7 +3323,7 @@
         "tags" : [
           "feedback-controller"
         ],
-        "operationId" : "submit",
+        "operationId" : "submit_1",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5183,6 +5326,78 @@
         }
       }
     },
+    "/api/v1/admin/verifications/{id}/reject" : {
+      "post" : {
+        "tags" : [
+          "admin-verification-controller"
+        ],
+        "operationId" : "reject",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VerificationRejectRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminVerificationView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/verifications/{id}/approve" : {
+      "post" : {
+        "tags" : [
+          "admin-verification-controller"
+        ],
+        "operationId" : "approve",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminVerificationView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/trials" : {
       "get" : {
         "tags" : [
@@ -5429,7 +5644,7 @@
         "tags" : [
           "admin-payment-controller"
         ],
-        "operationId" : "reject",
+        "operationId" : "reject_1",
         "parameters" : [
           {
             "name" : "id",
@@ -6062,6 +6277,26 @@
         }
       }
     },
+    "/api/v1/settings/verification" : {
+      "get" : {
+        "tags" : [
+          "verification-controller"
+        ],
+        "operationId" : "overview",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VerificationOverview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/settings/templates" : {
       "get" : {
         "tags" : [
@@ -6090,7 +6325,7 @@
         "tags" : [
           "provider-settings-controller"
         ],
-        "operationId" : "overview",
+        "operationId" : "overview_1",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -8039,6 +8274,84 @@
         }
       }
     },
+    "/api/v1/admin/verifications" : {
+      "get" : {
+        "tags" : [
+          "admin-verification-controller"
+        ],
+        "operationId" : "list_14",
+        "parameters" : [
+          {
+            "name" : "status",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "string",
+              "default" : "PENDING"
+            }
+          },
+          {
+            "name" : "limit",
+            "in" : "query",
+            "required" : false,
+            "schema" : {
+              "type" : "integer",
+              "format" : "int32",
+              "default" : 50
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/AdminVerificationView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/verifications/{id}/documents" : {
+      "get" : {
+        "tags" : [
+          "admin-verification-controller"
+        ],
+        "operationId" : "documents",
+        "parameters" : [
+          {
+            "name" : "id",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/VerificationDocumentLink"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/trials/stats" : {
       "get" : {
         "tags" : [
@@ -8064,7 +8377,7 @@
         "tags" : [
           "admin-tenant-controller"
         ],
-        "operationId" : "list_14",
+        "operationId" : "list_15",
         "parameters" : [
           {
             "name" : "query",
@@ -8156,7 +8469,7 @@
         "tags" : [
           "admin-prospect-lead-controller"
         ],
-        "operationId" : "list_15",
+        "operationId" : "list_16",
         "parameters" : [
           {
             "name" : "status",
@@ -8189,7 +8502,7 @@
         "tags" : [
           "admin-payment-controller"
         ],
-        "operationId" : "list_16",
+        "operationId" : "list_17",
         "parameters" : [
           {
             "name" : "status",
@@ -8259,7 +8572,7 @@
         "tags" : [
           "admin-feedback-controller"
         ],
-        "operationId" : "list_17",
+        "operationId" : "list_18",
         "parameters" : [
           {
             "name" : "kind",
@@ -8372,7 +8685,7 @@
         "tags" : [
           "admin-audit-controller"
         ],
-        "operationId" : "list_18",
+        "operationId" : "list_19",
         "parameters" : [
           {
             "name" : "action",
@@ -10200,6 +10513,102 @@
             }
           },
           "managedInDatabase" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "VerificationRequestView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [
+              "PERSONAL",
+              "COMPANY"
+            ]
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [
+              "PENDING",
+              "APPROVED",
+              "REJECTED"
+            ]
+          },
+          "legalName" : {
+            "type" : "string"
+          },
+          "documentType" : {
+            "type" : "string"
+          },
+          "submittedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "decidedAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "rejectionReason" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "PhoneCodeRequest" : {
+        "type" : "object",
+        "properties" : {
+          "phone" : {
+            "type" : "string",
+            "maxLength" : 32,
+            "minLength" : 0
+          }
+        },
+        "required" : [
+          "phone"
+        ]
+      },
+      "PhoneCodeSent" : {
+        "type" : "object",
+        "properties" : {
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "PhoneConfirmRequest" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "maxLength" : 12,
+            "minLength" : 0
+          }
+        },
+        "required" : [
+          "code"
+        ]
+      },
+      "PhoneStatusView" : {
+        "type" : "object",
+        "properties" : {
+          "phone" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "verified" : {
             "type" : "boolean"
           }
         }
@@ -12240,6 +12649,87 @@
           }
         }
       },
+      "VerificationRejectRequest" : {
+        "type" : "object",
+        "properties" : {
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          }
+        },
+        "required" : [
+          "reason"
+        ]
+      },
+      "AdminVerificationView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "tenantId" : {
+            "type" : "string"
+          },
+          "tenantName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "legalName" : {
+            "type" : "string"
+          },
+          "documentType" : {
+            "type" : "string"
+          },
+          "registrationNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "taxIdentifier" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "phone" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "submittedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "decidedAt" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "date-time"
+          },
+          "rejectionReason" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "documentsAvailable" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "GrantTrialRequest" : {
         "type" : "object",
         "properties" : {
@@ -12947,6 +13437,37 @@
         "properties" : {
           "excluded" : {
             "type" : "boolean"
+          }
+        }
+      },
+      "VerificationOverview" : {
+        "type" : "object",
+        "properties" : {
+          "verified" : {
+            "type" : "boolean"
+          },
+          "personal" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/VerificationRequestView"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          },
+          "company" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/VerificationRequestView"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          },
+          "phone" : {
+            "$ref" : "#/components/schemas/PhoneStatusView"
           }
         }
       },
@@ -14362,6 +14883,21 @@
             "type" : "string"
           },
           "role" : {
+            "type" : "string"
+          }
+        }
+      },
+      "VerificationDocumentLink" : {
+        "type" : "object",
+        "properties" : {
+          "position" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "contentType" : {
+            "type" : "string"
+          },
+          "url" : {
             "type" : "string"
           }
         }

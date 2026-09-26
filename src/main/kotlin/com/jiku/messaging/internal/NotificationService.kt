@@ -4,6 +4,7 @@ import com.jiku.shared.ClientCalled
 import com.jiku.shared.EventCancellationNotice
 import com.jiku.shared.GuestInvitedEvent
 import com.jiku.shared.MessageLanguage
+import com.jiku.shared.PhoneCodeRequested
 import com.jiku.shared.ReminderAllowanceGate
 import com.jiku.shared.ReminderChannel
 import com.jiku.shared.ReminderDue
@@ -157,6 +158,15 @@ class NotificationService(
             called.clientPhone,
             called.channel,
             whatsAppRenderer.renderClientCalled(called.clientName.orEmpty(), called.counter, catalog.language(called.tenantId)),
+        )
+
+    /** Sends an organization its phone verification code, by SMS so any number receives it. */
+    fun deliverPhoneCode(requested: PhoneCodeRequested): DeliveryOutcome =
+        deliverToPhone(
+            UUID.randomUUID(),
+            requested.phone,
+            ReminderChannel.SMS,
+            whatsAppRenderer.renderPhoneCode(requested.code, catalog.language(requested.tenantId)),
         )
 
     /**
