@@ -9163,6 +9163,13 @@
               "type" : "integer",
               "format" : "int32"
             }
+          },
+          "clientsPerSlot" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
           }
         }
       },
@@ -9226,6 +9233,14 @@
               "type" : "integer",
               "format" : "int32"
             }
+          },
+          "clientsPerSlot" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "maxClientsPerSlot" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "occupancyMinutes" : {
             "type" : "integer",
@@ -13100,6 +13115,10 @@
             "items" : {
               "$ref" : "#/components/schemas/AppointmentSlotView"
             }
+          },
+          "clientsPerSlot" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },
@@ -13113,6 +13132,10 @@
           "endsAt" : {
             "type" : "string",
             "format" : "date-time"
+          },
+          "placesLeft" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },

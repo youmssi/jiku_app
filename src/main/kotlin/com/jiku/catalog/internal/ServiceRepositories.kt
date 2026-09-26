@@ -21,7 +21,7 @@ interface ServiceReservationRepository : JpaRepository<ServiceReservation, UUID>
     /**
      * Occupations des ressources données sur une fenêtre — le préchargement de la
      * grille du jour (P1) : une confirmation, ou une demande en attente non
-     * expirée (le même prédicat que [countOccupying], évalué en mémoire ensuite).
+     * expirée (le même prédicat que [findOccupying], évalué en mémoire ensuite).
      */
     @Query(
         "SELECT r FROM ServiceReservation r " +
@@ -83,24 +83,23 @@ interface ServiceReservationRepository : JpaRepository<ServiceReservation, UUID>
     ): Int
 
     /**
-     * Nombre de réservations qui occupent [resourceId] sur la fenêtre
-     * [startsAt]..[endsAt] : une confirmation, ou une demande en attente non
-     * expirée. Les demandes expirées sont ignorées ici — elles seront purgées,
-     * mais ne bloquent déjà plus.
+     * Réservations qui occupent [resourceId] sur la fenêtre [startsAt]..[endsAt] :
+     * une confirmation, ou une demande en attente non expirée. Les demandes
+     * expirées sont ignorées ici — elles seront purgées, mais ne bloquent déjà plus.
      */
     @Query(
-        "SELECT COUNT(r) FROM ServiceReservation r " +
+        "SELECT r FROM ServiceReservation r " +
             "WHERE r.resourceId = :resourceId AND r.startsAt < :endsAt AND r.endsAt > :startsAt " +
             "AND (r.status = com.jiku.catalog.internal.ServiceReservationStatus.CONFIRMED " +
             "OR (r.status = com.jiku.catalog.internal.ServiceReservationStatus.PENDING " +
             "AND (r.heldUntil IS NULL OR r.heldUntil > :now)))",
     )
-    fun countOccupying(
+    fun findOccupying(
         @Param("resourceId") resourceId: UUID,
         @Param("startsAt") startsAt: Instant,
         @Param("endsAt") endsAt: Instant,
         @Param("now") now: Instant,
-    ): Long
+    ): List<ServiceReservation>
 
     /** Libère les demandes en attente arrivées à expiration : la case redevient réservable. */
     @Modifying(clearAutomatically = true, flushAutomatically = true)

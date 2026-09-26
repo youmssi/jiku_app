@@ -94,9 +94,12 @@ commission**. Au-delà de la limite de toutes les offres, le logiciel refuse et
 propose de créer un événement ; il ne prélève rien. Ces limites sont des
 paramètres de configuration.
 
-Aujourd'hui, le code n'accepte qu'un client par ressource et par créneau
-(contrainte `uq_reservation_resource_start`) : les séances collectives sont une
-évolution à construire.
+Chaque service fixe ses clients par créneau (1 par défaut), dans la limite de
+l'offre ; chaque client occupe une place, et l'unicité (ressource, début, place)
+garantit qu'une place n'est jamais vendue deux fois (JIKU-174). Une ressource
+prise par une séance n'offre aucune place à un autre service ni à un autre
+horaire qui la chevauche. Après une baisse d'offre, la capacité effective
+redescend aussitôt à la limite de la nouvelle offre.
 
 ## 4. Les cinq usages d'un ticket
 

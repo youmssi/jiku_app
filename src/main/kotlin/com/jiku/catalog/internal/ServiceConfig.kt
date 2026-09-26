@@ -71,4 +71,8 @@ class ServiceConfig(
     /** Décalages avant le créneau (minutes), format défini par ReminderOffsets. */
     @Column(name = "reminder_offsets_minutes", length = 120)
     var reminderOffsetsMinutes: String? = null
+
+    /** Clients reçus ensemble par ressource et par créneau (séance collective, JIKU-174). */
+    @Column(name = "clients_per_slot")
+    var clientsPerSlot: Int? = null
 }
