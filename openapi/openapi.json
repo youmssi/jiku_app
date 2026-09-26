@@ -4447,6 +4447,36 @@
         }
       }
     },
+    "/api/v1/billing/whatsapp-number/checkout" : {
+      "post" : {
+        "tags" : [
+          "own-whats-app-number-controller"
+        ],
+        "operationId" : "checkoutOwnNumber",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PackRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentInitiationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/billing/subscription/request" : {
       "post" : {
         "tags" : [
@@ -4470,6 +4500,36 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ManualPaymentInstructions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/subscription/checkout" : {
+      "post" : {
+        "tags" : [
+          "subscription-controller"
+        ],
+        "operationId" : "checkout",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SubscriptionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentInitiationResult"
                 }
               }
             }
@@ -4604,6 +4664,66 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ManualPaymentInstructions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/pack/extra/checkout" : {
+      "post" : {
+        "tags" : [
+          "organizer-pack-controller"
+        ],
+        "operationId" : "checkoutPackExtra",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PackExtraRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentInitiationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/billing/pack/checkout" : {
+      "post" : {
+        "tags" : [
+          "organizer-pack-controller"
+        ],
+        "operationId" : "checkoutPack",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PackRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentInitiationResult"
                 }
               }
             }
@@ -7535,6 +7655,37 @@
         }
       }
     },
+    "/api/v1/billing/payments/{paymentId}" : {
+      "get" : {
+        "tags" : [
+          "billing-history-controller"
+        ],
+        "operationId" : "status_1",
+        "parameters" : [
+          {
+            "name" : "paymentId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentStatusView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/billing/payments/{paymentId}/receipt" : {
       "get" : {
         "tags" : [
@@ -7803,7 +7954,7 @@
         "tags" : [
           "appointment-public-controller"
         ],
-        "operationId" : "status_1",
+        "operationId" : "status_2",
         "parameters" : [
           {
             "name" : "token",
@@ -13965,6 +14116,60 @@
             "type" : "string"
           },
           "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "PaymentStatusView" : {
+        "type" : "object",
+        "properties" : {
+          "paymentId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "tier" : {
+            "type" : "string"
+          },
+          "eventId" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "format" : "uuid"
+          },
+          "months" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int32"
+          },
+          "guests" : {
+            "type" : [
+              "integer",
+              "null"
+            ],
+            "format" : "int64"
+          },
+          "amountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "updatedAt" : {
             "type" : "string",
             "format" : "date-time"
           }

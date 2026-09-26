@@ -54,6 +54,7 @@ class CinetPayPaymentProviderTest {
                 assertTrue(body.contains("\"currency\":\"GNF\""))
                 assertTrue(body.contains("\"metadata\":\"$reference\""))
                 assertTrue(body.contains("\"description\":\"Unlock BRONZE tier\""))
+                assertTrue(body.contains("\"return_url\":\"https://jiku.test/billing/return?paymentId=$paymentId\""))
             }.andRespond(
                 withSuccess(
                     """{"code":"201","message":"CREATED","data":{"payment_token":"tok","payment_url":"https://checkout.cinetpay.test/p/tok"}}""",

@@ -75,6 +75,15 @@ data class PaymentCallback(
     val currency: String? = null,
 )
 
+/**
+ * The page the payer returns to after [paymentId], carrying the id so the page can
+ * poll that payment's status (JIKU-164). Keeps any query [base] already has.
+ */
+fun returnUrlFor(
+    base: String,
+    paymentId: UUID,
+): String = base + (if ('?' in base) "&" else "?") + "paymentId=$paymentId"
+
 /** The provider refused a request or could not be reached. */
 class PaymentProviderException(
     message: String,

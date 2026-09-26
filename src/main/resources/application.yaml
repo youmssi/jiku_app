@@ -375,7 +375,8 @@ billing:
     # CinetPay (JIKU-106): Orange Money, MTN MoMo and card. The adapter exists only
     # when CINETPAY_SITE_ID is set; the other fields are then required. Select it
     # with PAYMENT_PROVIDER=cinetpay. CINETPAY_NOTIFY_URL is this API's public
-    # /api/v1/billing/payments/callback/cinetpay.
+    # /api/v1/billing/payments/callback/cinetpay. CINETPAY_RETURN_URL is the web's
+    # /billing/return page; each payment appends ?paymentId=<id> to it.
     cinetpay:
       api-key: ${CINETPAY_API_KEY:}
       site-id: ${CINETPAY_SITE_ID:}

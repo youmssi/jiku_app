@@ -28,7 +28,7 @@ data class CinetPayProperties(
     val baseUrl: String = "https://api-checkout.cinetpay.com",
     /** Public URL CinetPay notifies: the API's `/billing/payments/callback/cinetpay`. */
     val notifyUrl: String = "",
-    /** Where the payer lands after paying. */
+    /** Where the payer lands after paying; the payment id is appended as `paymentId`. */
     val returnUrl: String = "",
     /** Payment methods offered on CinetPay's page: ALL, MOBILE_MONEY, CREDIT_CARD or WALLET. */
     val channels: String = "ALL",
@@ -61,7 +61,7 @@ class CinetPayPaymentProvider(
                         "currency" to request.currency,
                         "description" to plainDescription(request.description),
                         "notify_url" to properties.notifyUrl,
-                        "return_url" to properties.returnUrl,
+                        "return_url" to returnUrlFor(properties.returnUrl, request.paymentId),
                         "channels" to properties.channels,
                         "metadata" to request.reference,
                         "lang" to "fr",

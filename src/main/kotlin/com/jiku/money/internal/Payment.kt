@@ -68,5 +68,11 @@ class Payment(
         const val KIND_PACK = "PACK"
         const val KIND_PACK_EXTRA = "PACK_EXTRA"
         const val KIND_WHATSAPP_NUMBER = "WHATSAPP_NUMBER"
+
+        /** The [tier] label of an Organizer Pack or pack extra payment. */
+        const val PACK_TIER = "PACK"
+
+        /** The [tier] label of an own WhatsApp number payment. */
+        const val OWN_NUMBER_TIER = "WHATSAPP_NUMBER"
     }
 }
