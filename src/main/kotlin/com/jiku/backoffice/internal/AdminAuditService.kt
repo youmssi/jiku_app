@@ -31,7 +31,8 @@ class AdminAuditService(
         )
     }
 
-    private fun currentAdminId(): UUID {
+    /** The authenticated platform admin's id. */
+    fun currentAdminId(): UUID {
         val principal = SecurityContextHolder.getContext().authentication?.name
         return requireNotNull(principal?.let { runCatching { UUID.fromString(it) }.getOrNull() }) {
             "Audit records require an authenticated platform admin"

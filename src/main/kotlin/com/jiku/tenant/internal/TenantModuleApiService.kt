@@ -1,13 +1,17 @@
 package com.jiku.tenant.internal
 
+import com.jiku.tenant.AdminVerificationView
 import com.jiku.tenant.TenantDirectoryEntry
 import com.jiku.tenant.TenantDirectoryPage
 import com.jiku.tenant.TenantInfo
 import com.jiku.tenant.TenantModuleApi
+import com.jiku.tenant.VerificationDocumentLink
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
 @Service
@@ -15,6 +19,7 @@ class TenantModuleApiService(
     private val tenants: TenantRepository,
     private val memberships: OrganizerMembershipRepository,
     private val accessGate: TenantAccessGateAdapter,
+    private val verificationAdmin: VerificationAdminService,
 ) : TenantModuleApi {
     @Transactional(readOnly = true)
     override fun findTenant(tenantId: UUID): TenantInfo? = tenants.findById(tenantId).map { it.toTenantInfo() }.orElse(null)
@@ -93,6 +98,25 @@ class TenantModuleApiService(
         tenant.username = normalized
         return tenants.save(tenant).toTenantInfo()
     }
+
+    override fun adminListVerifications(
+        status: String,
+        limit: Int,
+    ): List<AdminVerificationView> {
+        val parsed =
+            runCatching { VerificationStatus.valueOf(status.uppercase()) }
+                .getOrElse { throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown verification status: $status") }
+        return verificationAdmin.list(parsed, limit)
+    }
+
+    override fun adminVerificationDocuments(id: UUID): List<VerificationDocumentLink> = verificationAdmin.documentLinks(id)
+
+    override fun adminDecideVerification(
+        id: UUID,
+        approve: Boolean,
+        reason: String?,
+        adminId: UUID?,
+    ): AdminVerificationView = verificationAdmin.decide(id, approve, reason, adminId)
 
     private companion object {
         const val MAX_PAGE_SIZE = 100

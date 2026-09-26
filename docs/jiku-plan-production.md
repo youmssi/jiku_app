@@ -136,7 +136,7 @@ l'ordre.
 
 | Tranche | Dépôt | Contenu |
 |---|---|---|
-| 6.0 | app, web | Vérification des organisateurs : légère (obligatoire avant la première vente) et complète (facultative, badge bleu), validation dans le back-office, mentions de responsabilité sur les pages publiques |
+| 6.0 | app, web | Vérification des organisateurs (JIKU-175) : personnelle ou entreprise, obligatoire dès qu'un paiement intervient, facultative sinon ; documents dans un stockage privé (Cloudflare R2), validation dans le back-office, badge et mentions sur les pages publiques |
 | 6.1 | app | Commande : quantités par catégorie, jauge atomique (module `allocation`), expiration des commandes non payées |
 | 6.2 | web | Page publique de l'événement et parcours d'achat, paiement aux niveaux 1 et 2 |
 | 6.3 | app, web | Commission de 3 % payée par tranche avant la vente (circuit 1), vente en pause quand la tranche est épuisée, avoir pour la part non consommée |

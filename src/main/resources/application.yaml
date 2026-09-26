@@ -485,3 +485,27 @@ notification:
     complaint-rate-threshold: ${NOTIFICATION_COMPLAINT_RATE_THRESHOLD:0.005}
     undeliverable-hard-bounces: ${NOTIFICATION_UNDELIVERABLE_HARD_BOUNCES:2}
     ops-alert-email: ${NOTIFICATION_OPS_ALERT_EMAIL:}
+
+# Verification des organisations (JIKU-175, référentiel métier §9).
+verification:
+  # Time the documents of an approved request are kept before deletion; a
+  # rejected request's documents are deleted at once.
+  document-retention: ${VERIFICATION_DOCUMENT_RETENTION:30d}
+  max-file-bytes: ${VERIFICATION_MAX_FILE_BYTES:2097152}
+  max-files: ${VERIFICATION_MAX_FILES:3}
+  code-ttl: ${VERIFICATION_CODE_TTL:10m}
+  max-codes-per-window: ${VERIFICATION_MAX_CODES_PER_WINDOW:5}
+  code-window: ${VERIFICATION_CODE_WINDOW:1h}
+  max-code-attempts: ${VERIFICATION_MAX_CODE_ATTEMPTS:5}
+  purge-cron: ${VERIFICATION_PURGE_CRON:0 30 3 * * *}
+
+# Private document storage (S3-compatible: Cloudflare R2 in production, MinIO
+# locally). Leave the endpoint empty to keep verification uploads off.
+storage:
+  documents:
+    endpoint: ${DOCUMENT_STORAGE_ENDPOINT:}
+    region: ${DOCUMENT_STORAGE_REGION:auto}
+    bucket: ${DOCUMENT_STORAGE_BUCKET:}
+    access-key-id: ${DOCUMENT_STORAGE_ACCESS_KEY_ID:}
+    secret-access-key: ${DOCUMENT_STORAGE_SECRET_ACCESS_KEY:}
+    url-ttl: ${DOCUMENT_STORAGE_URL_TTL:5m}

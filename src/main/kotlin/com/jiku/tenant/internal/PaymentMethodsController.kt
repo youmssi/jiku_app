@@ -1,6 +1,7 @@
 package com.jiku.tenant.internal
 
 import com.jiku.shared.TenantContext
+import com.jiku.shared.VerificationGate
 import com.jiku.tenant.TenantPaymentMethodsInfo
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Pattern
@@ -53,6 +54,7 @@ class PaymentMethodsController(
 @Service
 class PaymentMethodsService(
     private val tenants: TenantRepository,
+    private val verification: VerificationGate,
 ) {
     @Transactional(readOnly = true)
     fun get(tenantId: UUID): TenantPaymentMethodsInfo = load(tenantId).paymentMethods.toInfo()
@@ -75,7 +77,11 @@ class PaymentMethodsService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Name the payee the client will see on their Mobile Money confirmation")
         }
         val tenant = load(tenantId)
-        tenant.paymentMethods = methods.takeIf { it.hasAny() || it.payeeName != null }
+        val next = methods.takeIf { it.hasAny() || it.payeeName != null }
+        // Showing clients where to pay makes them pay: adding or changing a method needs
+        // a verified organization; clearing them never does (référentiel §9).
+        if (next != null && !next.sameAs(tenant.paymentMethods)) verification.requireVerified()
+        tenant.paymentMethods = next
         return tenants.save(tenant).paymentMethods.toInfo()
     }
 
