@@ -9,8 +9,9 @@ import { onboardedOrganizer } from '../fixtures/organizer';
  *
  * The scenario books the appointment and prepares the service through the API
  * (the flow under test is the console, not booking), then drives the console in
- * the UI: arrival of the rendez-vous, walk-in at the counter, SUIVANT calling the
- * longest wait first, take-in-charge and finish for both.
+ * the UI: confirmation of the requested rendez-vous, its arrival, walk-in at the
+ * counter, SUIVANT calling the longest wait first, take-in-charge and finish for
+ * both.
  */
 
 interface DayService {
@@ -97,6 +98,11 @@ test('serves a booked appointment and a walk-in client on the same day', async (
     await page.goto(`/services/${service.serviceId}/line`);
     await expect(page.getByRole('heading', { name: 'Ligne du jour' })).toBeVisible();
     await expect(page.getByText('Coupe').first()).toBeVisible();
+
+    // A new service confirms bookings on request: the rendez-vous waits for the
+    // organizer's decision, then joins the line once confirmed.
+    await expect(page.getByText('Demandes en attente')).toBeVisible();
+    await page.getByRole('button', { name: 'Confirmer' }).click();
 
     // The booked rendez-vous is on the line, not arrived yet: it can be marked arrived.
     await expect(page.getByText('Fatou Camara', { exact: true })).toBeVisible();
