@@ -136,3 +136,30 @@ test('serves a booked appointment and a walk-in client on the same day', async (
     await page.getByRole('button', { name: 'SUIVANT' }).click();
     await expect(page.getByRole('button', { name: 'Appeler' })).toHaveCount(0);
 });
+
+test('a walk-in client takes a ticket from the entrance QR and is told when it is their turn', async ({ page }) => {
+    const organizer = await onboardedOrganizer(page, 'selfline');
+    const token = await login(organizer);
+    const service = await createDayService(token);
+    const link = await api<{ shortCode: string }>(`/services/${service.serviceId}/booking-link`, { token });
+
+    // The entrance QR leads the client, with no account, to take a ticket. The
+    // client has no locale cookie, so the page follows the browser's English.
+    await page.goto(`/r/${link.shortCode}/line`);
+    await expect(page.getByText('Take a ticket')).toBeVisible();
+    await page.locator('#line-name').fill('Mariama Diallo');
+    await page.locator('#line-phone').fill('+224620112233');
+    await page.getByRole('button', { name: 'Take my ticket' }).click();
+
+    // Their own page: their number and their place, nobody else's.
+    await expect(page.getByText('Ticket no. 1')).toBeVisible();
+    await expect(page.getByText("You're next.")).toBeVisible();
+
+    // The counter calls the next client; the client's page follows on its own.
+    await api(`/services/${service.serviceId}/day-line/next?counter=${encodeURIComponent('guichet 4')}`, {
+        token,
+        method: 'POST',
+    });
+    await expect(page.getByText("It's your turn!")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText('Please go to guichet 4.')).toBeVisible();
+});
