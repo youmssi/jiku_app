@@ -507,6 +507,16 @@ notification:
 
 # Verification des organisations (JIKU-175, référentiel métier §9).
 sales:
+  commission:
+    # Commission on tickets sold (JIKU-178, ADR 104 §8, ADR 105 decision 4): the
+    # rate of each ticket's price, paid by batch before selling. A batch never
+    # covers more places than the category has left.
+    rate: ${SALES_COMMISSION_RATE:0.03}
+    batch-size: ${SALES_COMMISSION_BATCH_SIZE:50}
+    # How long the unused part of a paid batch stays as a credit on the account.
+    credit-validity: ${SALES_COMMISSION_CREDIT_VALIDITY:P365D}
+    # When batches of past events are closed (credit and amounts owed computed).
+    close-cron: ${SALES_COMMISSION_CLOSE_CRON:0 15 * * * *}
   orders:
     # Tickets one order may hold, across its categories (JIKU-177).
     max-tickets: ${SALES_ORDER_MAX_TICKETS:10}

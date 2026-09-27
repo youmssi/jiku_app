@@ -4278,6 +4278,47 @@
         }
       }
     },
+    "/api/v1/events/{eventId}/commission/batches" : {
+      "post" : {
+        "tags" : [
+          "commission-controller"
+        ],
+        "operationId" : "open",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OpenBatchRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OpenedBatchView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/events/{eventId}/checkin/tickets/{ticketCode}/paid" : {
       "post" : {
         "tags" : [
@@ -7590,6 +7631,77 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/DashboardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/commission" : {
+      "get" : {
+        "tags" : [
+          "commission-controller"
+        ],
+        "operationId" : "overview_2",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommissionOverview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/{eventId}/commission/quote" : {
+      "get" : {
+        "tags" : [
+          "commission-controller"
+        ],
+        "operationId" : "quote",
+        "parameters" : [
+          {
+            "name" : "eventId",
+            "in" : "path",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          {
+            "name" : "ticketTypeId",
+            "in" : "query",
+            "required" : true,
+            "schema" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CommissionQuote"
                 }
               }
             }
@@ -12835,6 +12947,84 @@
           }
         }
       },
+      "OpenBatchRequest" : {
+        "type" : "object",
+        "properties" : {
+          "ticketTypeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "mode" : {
+            "type" : "string",
+            "enum" : [
+              "FREE",
+              "CREDIT",
+              "PAY"
+            ]
+          },
+          "manual" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "OpenedBatchView" : {
+        "type" : "object",
+        "properties" : {
+          "batchId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "funding" : {
+            "type" : "string",
+            "enum" : [
+              "FREE",
+              "PAID",
+              "CREDIT",
+              "OVERAGE"
+            ]
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [
+              "PENDING_PAYMENT",
+              "ACTIVE",
+              "CLOSED",
+              "CANCELLED"
+            ]
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "totalMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "payment" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/PaymentInitiationResult"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          },
+          "instructions" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/ManualPaymentInstructions"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          }
+        }
+      },
       "ScanRequest" : {
         "type" : "object",
         "properties" : {
@@ -14466,6 +14656,9 @@
               "null"
             ],
             "format" : "int32"
+          },
+          "paused" : {
+            "type" : "boolean"
           }
         }
       },
@@ -14548,7 +14741,8 @@
               "ENDED",
               "NOTHING_FOR_SALE",
               "ORGANIZER_NOT_VERIFIED",
-              "NO_PAYMENT_METHOD"
+              "NO_PAYMENT_METHOD",
+              "PAUSED"
             ]
           }
         }
@@ -14874,6 +15068,125 @@
                 "type" : "null"
               }
             ]
+          }
+        }
+      },
+      "CommissionCategoryView" : {
+        "type" : "object",
+        "properties" : {
+          "ticketTypeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "priceMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "unitCommissionMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "covered" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sold" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pendingPayment" : {
+            "type" : "boolean"
+          },
+          "nextBatchSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "CommissionOverview" : {
+        "type" : "object",
+        "properties" : {
+          "eventId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "ratePercent" : {
+            "type" : "string"
+          },
+          "batchSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "onEventDay" : {
+            "type" : "boolean"
+          },
+          "categories" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CommissionCategoryView"
+            }
+          },
+          "owedMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "creditMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "freeBatchAvailable" : {
+            "type" : "boolean"
+          },
+          "creditBatchAvailable" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "CommissionQuote" : {
+        "type" : "object",
+        "properties" : {
+          "ticketTypeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "unitCommissionMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "amountMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "owedMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "creditAppliedMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalMinor" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "freeBatchAvailable" : {
+            "type" : "boolean"
+          },
+          "creditBatchAvailable" : {
+            "type" : "boolean"
           }
         }
       },

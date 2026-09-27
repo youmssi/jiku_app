@@ -116,6 +116,17 @@ interface TicketOrderRepository : JpaRepository<TicketOrder, UUID> {
 
     fun existsByReference(reference: String): Boolean
 
+    /** Tickets of [ticketTypeId] held by orders still waiting for their payment to be confirmed. */
+    @Query(
+        "SELECT COALESCE(SUM(l.quantity), 0) FROM TicketOrderLine l, TicketOrder o WHERE l.orderId = o.id " +
+            "AND o.eventId = :eventId AND l.ticketTypeId = :ticketTypeId AND o.status IN " +
+            "(com.jiku.invitation.internal.TicketOrderStatus.AWAITING_PAYMENT, com.jiku.invitation.internal.TicketOrderStatus.DECLARED)",
+    )
+    fun heldQuantity(
+        @Param("eventId") eventId: UUID,
+        @Param("ticketTypeId") ticketTypeId: UUID,
+    ): Long
+
     /**
      * Moves an order from one of [from] to [to] in one conditional write, so two
      * operators confirming at once, or a confirmation racing the expiry sweep,

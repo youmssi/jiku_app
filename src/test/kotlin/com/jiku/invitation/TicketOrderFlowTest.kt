@@ -249,6 +249,9 @@ class TicketOrderFlowTest {
                 "$.id",
             )
         api.publish(token, eventId)
+        api
+            .post(token, "/api/v1/events/$eventId/commission/batches", """{"ticketTypeId":"$typeId","mode":"FREE"}""")
+            .andExpect(status().isOk())
         if (!verified) verifications.revoke(tenantId)
         return Sale(token, tenantId, username, eventId, typeId)
     }

@@ -139,7 +139,7 @@ l'ordre.
 | 6.0 | app, web | Vérification des organisateurs (JIKU-175) : personnelle ou entreprise, obligatoire dès qu'un paiement intervient, facultative sinon ; documents dans un stockage privé (Cloudflare R2), validation dans le back-office, badge et mentions sur les pages publiques |
 | 6.1 | app | Commande (JIKU-177) : quantités par catégorie, places prises d'un coup sous les deux jauges (événement et catégorie), au plus 10 billets par commande. Le client déclare son paiement (référence Mobile Money), l'organisation confirme (billets émis au nom de l'acheteur, transférables) ou refuse avec un motif. Une commande non déclarée rend ses places après le délai choisi par l'organisation (30 min par défaut, de 10 min à 72 h) ; une commande déclarée n'expire plus |
 | 6.2 | web | Page publique de l'événement et parcours d'achat, paiement aux niveaux 1 et 2 |
-| 6.3 | app, web | Commission de 3 % payée par tranche avant la vente (circuit 1), vente en pause quand la tranche est épuisée, avoir pour la part non consommée |
+| 6.3 | app, web | Commission (JIKU-178) : 3 % du prix, payée par tranche de 50 billets d'une catégorie avant la vente, jamais plus que ses places restantes. Première tranche offerte, une tranche à crédit (réglée avec le paiement suivant), vente en pause quand les tranches sont épuisées sauf le jour de l'événement (le dépassement est dû après). À la clôture, la part payée non consommée devient un avoir de 12 mois déduit des paiements de commission suivants |
 
 ### Après le lancement
 

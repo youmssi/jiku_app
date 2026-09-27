@@ -118,6 +118,25 @@ class PaymentService(
         )
     }
 
+    /** Pays a commission batch of [batch]'s event online, [totalMinor] with what is owed and less the credit (JIKU-178). */
+    @Transactional
+    fun checkoutCommission(
+        batch: CommissionBatch,
+        totalMinor: Long,
+    ): PaymentInitiationResult =
+        start(
+            Payment(
+                eventId = batch.eventId,
+                tier = Payment.COMMISSION_TIER,
+                amountMinor = totalMinor,
+                currency = batch.currency,
+                provider = providers.active.name,
+                kind = Payment.KIND_COMMISSION,
+                guests = batch.size.toLong(),
+            ).apply { commissionBatchId = batch.id },
+            "Commission on ${batch.size} tickets",
+        )
+
     /** Where one of the current organization's payments stands, for the page the payer returns to (JIKU-164). */
     @Transactional(readOnly = true)
     fun status(paymentId: UUID): PaymentStatusView {
@@ -276,7 +295,7 @@ class PaymentService(
 /** Where a payment stands, for the page the payer lands on after the provider's (JIKU-164). */
 data class PaymentStatusView(
     val paymentId: UUID,
-    /** TIER, SUBSCRIPTION, PACK, PACK_EXTRA or WHATSAPP_NUMBER. */
+    /** TIER, SUBSCRIPTION, PACK, PACK_EXTRA, WHATSAPP_NUMBER or COMMISSION. */
     val kind: String,
     val tier: String,
     val eventId: UUID?,
