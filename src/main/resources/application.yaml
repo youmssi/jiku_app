@@ -28,6 +28,10 @@ jiku:
     meta:
       access-token: ${WHATSAPP_META_ACCESS_TOKEN:}
       phone-number-id: ${WHATSAPP_META_PHONE_NUMBER_ID:}
+      # The Jikū number dedicated to cards (JIKU-185, ADR 106): its Meta phone
+      # number id, under the same app and token. Blank keeps the card
+      # conversation off; cards are then answered on their web page only.
+      cards-phone-number-id: ${WHATSAPP_META_CARDS_PHONE_NUMBER_ID:}
       base-url: ${WHATSAPP_META_BASE_URL:https://graph.facebook.com/v21.0}
       # Approved template for business-initiated sends; blank sends plain text
       # (only reaches recipients inside the 24h customer-service window).
