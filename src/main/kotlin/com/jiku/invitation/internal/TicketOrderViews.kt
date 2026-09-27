@@ -46,6 +46,9 @@ enum class SaleClosedReason {
     NOTHING_FOR_SALE,
     ORGANIZER_NOT_VERIFIED,
     NO_PAYMENT_METHOD,
+
+    /** Every category waits for the organizer's next commission batch (JIKU-178). */
+    PAUSED,
 }
 
 data class PublicSaleCategoryView(
@@ -56,6 +59,8 @@ data class PublicSaleCategoryView(
     val currency: String,
     /** Places still available in this category; null when there is no limit. */
     val available: Int?,
+    /** On sale again soon: the organizer's commission batch for this category is used up (JIKU-178). */
+    val paused: Boolean = false,
 )
 
 /** What the public event page needs to sell tickets (JIKU-177). */

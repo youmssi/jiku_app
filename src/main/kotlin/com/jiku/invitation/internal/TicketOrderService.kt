@@ -4,6 +4,7 @@ import com.jiku.catalog.EventInfo
 import com.jiku.catalog.EventModuleApi
 import com.jiku.catalog.TicketTypeInfo
 import com.jiku.shared.ClientCharge
+import com.jiku.shared.CommissionGate
 import com.jiku.shared.TenantContext
 import com.jiku.shared.VerificationGate
 import com.jiku.tenant.TenantInfo
@@ -46,6 +47,7 @@ class TicketOrderService(
     private val invitationTokens: InvitationTokenService,
     private val orderTokens: OrderTokenService,
     private val properties: TicketOrderProperties,
+    private val commission: CommissionGate,
 ) {
     private val random = SecureRandom()
 
@@ -59,6 +61,9 @@ class TicketOrderService(
         val types = events.ticketTypes(eventId)
         val categories = saleCategories(types)
         val remaining = eventRemaining(event.id)
+        val saleable = categories.associate { (type, _) -> type.id to saleable(eventId, type.id) }
+        val closed = closedReason(event, tenant, categories.isNotEmpty(), now)
+        val allPaused = categories.isNotEmpty() && categories.all { (type, _) -> saleable[type.id]?.let { it <= 0 } == true }
         return PublicSaleView(
             eventId = event.id,
             eventName = event.name,
@@ -78,13 +83,14 @@ class TicketOrderService(
                         colorHex = type.colorHex,
                         priceMinor = charge.amountMinor,
                         currency = charge.currency,
-                        available = available(type, remaining),
+                        available = listOfNotNull(available(type, remaining), saleable[type.id]?.coerceAtLeast(0)).minOrNull(),
+                        paused = saleable[type.id]?.let { it <= 0 } == true,
                     )
                 },
             maxTicketsPerOrder = properties.maxTickets,
             holdMinutes = tenants.orderHold(tenant.id).toMinutes(),
-            onSale = closedReason(event, tenant, categories.isNotEmpty(), now) == null,
-            closedReason = closedReason(event, tenant, categories.isNotEmpty(), now),
+            onSale = closed == null && !allPaused,
+            closedReason = closed ?: SaleClosedReason.PAUSED.takeIf { allPaused },
         )
     }
 
@@ -119,6 +125,10 @@ class TicketOrderService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "An order is paid in one currency")
         }
         for ((type, _, quantity) in priced) {
+            val covered = saleable(eventId, type.id)
+            if (covered != null && quantity > covered) {
+                throw ResponseStatusException(HttpStatus.CONFLICT, "${type.label} is paused until the organizer opens more tickets")
+            }
             if (!events.reserveAttendanceSlots(eventId, type.id, quantity)) {
                 throw ResponseStatusException(HttpStatus.CONFLICT, "Not enough places left in ${type.label}")
             }
@@ -228,10 +238,12 @@ class TicketOrderService(
                         },
                     )
                 val charge = ClientCharge(line.unitPriceMinor, order.currency)
+
                 val ticket = ticketing.issueTicket(eventId, requireNotNull(guest.id), line.ticketTypeId, charge)
                 ticketing.markPaidByCode(ticket.ticketCode, TicketPaymentMethod.MOBILE_MONEY, decidedBy ?: ORDER_PAYER)
             }
         }
+        orderLines.forEach { commission.consume(eventId, it.ticketTypeId, it.quantity) }
         val labels = types.mapValues { it.value.label }
         return load(orderId).toOrganizerView(orderLines, labels)
     }
@@ -334,6 +346,19 @@ class TicketOrderService(
         types.mapNotNull { type -> type.clientCharge()?.let { type to it } }
 
     private fun eventRemaining(eventId: UUID): Int? = events.remainingAttendance(eventId)
+
+    /**
+     * Tickets of a category still sellable under the organizer's commission
+     * batches, less those held by orders waiting for payment; null when the
+     * batches do not limit the sale (the event's day).
+     */
+    private fun saleable(
+        eventId: UUID,
+        ticketTypeId: UUID,
+    ): Int? =
+        commission.coveredPlaces(eventId, ticketTypeId)?.let { covered ->
+            covered - orders.heldQuantity(eventId, ticketTypeId).toInt()
+        }
 
     private fun available(
         type: TicketTypeInfo,

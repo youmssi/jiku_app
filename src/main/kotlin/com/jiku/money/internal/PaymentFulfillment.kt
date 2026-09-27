@@ -15,6 +15,7 @@ class PaymentFulfillment(
     private val subscriptionService: SubscriptionService,
     private val organizerPack: OrganizerPackService,
     private val ownWhatsAppNumber: OwnWhatsAppNumberService,
+    private val commission: CommissionService,
 ) {
     /** Grants what [payment] paid for. Runs in the caller's transaction, under the payment's tenant. */
     fun fulfill(payment: Payment) {
@@ -27,6 +28,8 @@ class PaymentFulfillment(
             Payment.KIND_PACK_EXTRA -> organizerPack.confirmExtra(payment.guests ?: 0)
 
             Payment.KIND_WHATSAPP_NUMBER -> ownWhatsAppNumber.confirm(requireNotNull(payment.subscriptionMonths))
+
+            Payment.KIND_COMMISSION -> commission.activatePaid(requireNotNull(payment.commissionBatchId))
 
             else ->
                 tierUnlockService.unlock(
