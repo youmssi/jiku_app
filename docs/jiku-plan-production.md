@@ -1,6 +1,6 @@
 # Jikū — Ce qu'il manque pour la production, et le plan de travail
 
-**Date :** 2026-09-24, état mis à jour le 2026-09-26
+**Date :** 2026-09-24, état mis à jour le 2026-09-27
 **Référence :** ADR 104 (ticket, paiement, canaux, tarification).
 
 Ce document répond à une question : **que faut-il encore faire pour que le
@@ -26,9 +26,9 @@ connecté (niveau 3), Wave en direct.
 
 ## 2. Ce qui manque
 
-État vérifié dans le code le 2026-09-26. Les phases 0 à 5 du plan ci-dessous
-sont construites pour le produit, séances collectives comprises ; il reste la
-phase 6 et la mise en production.
+État vérifié dans le code le 2026-09-27. Les phases 0 à 6 du plan ci-dessous
+sont construites pour le produit, vente publique de billets comprise ; il reste
+la mise en production (§2.2), dont le scan des vulnérabilités en CI.
 
 ### 2.1 Produit
 
@@ -48,9 +48,9 @@ phase 6 et la mise en production.
 | Plusieurs monnaies (GNF, FCFA, USD) | ✅ Prêt | ADR 105, JIKU-137, JIKU-138 |
 | Votre propre numéro WhatsApp (Embedded Signup) | ✅ Prêt | JIKU-154, JIKU-155, JIKU-156 |
 | Séances collectives (plusieurs clients par créneau) | ✅ Prêt | JIKU-174 : Solo 1, Teams 10, Organisation 30 |
-| **Vérification des organisateurs** | ❌ Manque | phase 6.0 |
-| **Vente publique de billets** (commande, page d'achat) | ❌ Manque | phase 6.1, 6.2 |
-| **Commission de 3 % par tranche** | ❌ Manque | phase 6.3 |
+| Vérification des organisateurs | ✅ Prêt | JIKU-175, JIKU-176 : personnelle ou entreprise, documents sur R2, file de revue, badge public |
+| Vente publique de billets (commande, page d'achat) | ✅ Prêt | JIKU-177 : places gardées, paiement déclaré puis confirmé, onglet Commandes |
+| Commission de 3 % par tranche | ✅ Prêt | JIKU-178 : tranche offerte, à crédit, jamais de pause le jour J, avoir de 12 mois |
 | Traduction anglaise de tous les écrans | ✅ Prêt | JIKU-166, JIKU-167, JIKU-172, JIKU-173 |
 
 ### 2.2 Mise en production
@@ -59,7 +59,7 @@ phase 6 et la mise en production.
 |---|---|---|
 | Hébergement toujours actif | ❌ | offre payante Render (≈ 25 USD / mois) ou runbook Hetzner (`docs/deploy.md`) |
 | Domaine de marque | ❌ | web, API et e-mails encore sur `mrvin100.de` ; SPF et DKIM à refaire pour Resend et Brevo |
-| Branche `main` et mise en production | 🟡 | `main` existe mais a un historique séparé de `develop` : publier par une branche de version qui enregistre `main` sans changer les fichiers de `develop` |
+| Branche `main` et mise en production | ✅ | `main` partage l'historique de `develop` depuis la version du 2026-09-26 ; une version est une PR `develop` → `main` fusionnée par commit de fusion |
 | Moyen de paiement sur le compte WhatsApp Business | ❌ | exigé par Meta avant le 30 septembre 2026, sinon l'envoi s'arrête |
 | Statut Tech Provider Meta, modèles de messages approuvés | ⏳ | nécessaire pour « votre propre numéro » et les invitations interactives |
 | Compte marchand CinetPay en production | ⏳ | clés, URL de notification, délai de reversement à négocier |
