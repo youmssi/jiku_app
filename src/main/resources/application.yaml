@@ -256,6 +256,25 @@ api:
         paths: [/feedback, /feedback/ratings]
         max-requests: ${RATE_LIMIT_FEEDBACK_MAX_REQUESTS:10}
         window: ${RATE_LIMIT_FEEDBACK_WINDOW:PT1M}
+      ticket-sale-page:
+        # Public sale page of an event (JIKU-177): browsed and refreshed while the
+        # buyer decides; a scraper reads far faster.
+        paths: [/public/orgs/*/events/*]
+        max-requests: ${RATE_LIMIT_TICKET_SALE_PAGE_MAX_REQUESTS:60}
+        window: ${RATE_LIMIT_TICKET_SALE_PAGE_WINDOW:PT1M}
+      ticket-order:
+        # Placing an order holds places: a buyer places one, maybe two after a
+        # mistake. Tight, so nobody can empty an event with unpaid orders.
+        paths: [/public/orgs/*/events/*/orders]
+        max-requests: ${RATE_LIMIT_TICKET_ORDER_MAX_REQUESTS:5}
+        window: ${RATE_LIMIT_TICKET_ORDER_WINDOW:PT10M}
+      order-link:
+        # A buyer follows its order (declare the payment, open the tickets) by its
+        # link; per link, like invitations.
+        paths: [/orders/**]
+        token-segment: 1
+        max-requests: ${RATE_LIMIT_ORDER_LINK_MAX_REQUESTS:30}
+        window: ${RATE_LIMIT_ORDER_LINK_WINDOW:PT1M}
 
 error-tracking:
   # Unhandled-error reporting (JIKU-70). The DSN is the switch: blank — the default
@@ -487,6 +506,19 @@ notification:
     ops-alert-email: ${NOTIFICATION_OPS_ALERT_EMAIL:}
 
 # Verification des organisations (JIKU-175, référentiel métier §9).
+sales:
+  orders:
+    # Tickets one order may hold, across its categories (JIKU-177).
+    max-tickets: ${SALES_ORDER_MAX_TICKETS:10}
+    # How often unpaid orders past their hold give their places back.
+    expiry-cron: ${SALES_ORDER_EXPIRY_CRON:30 * * * * *}
+  order-hold:
+    # How long an unpaid order keeps its places. Each organization picks its own
+    # value between min and max in its settings; default applies until it does.
+    default: ${SALES_ORDER_HOLD_DEFAULT:PT30M}
+    min: ${SALES_ORDER_HOLD_MIN:PT10M}
+    max: ${SALES_ORDER_HOLD_MAX:PT72H}
+
 verification:
   # Time the documents of an approved request are kept before deletion; a
   # rejected request's documents are deleted at once.

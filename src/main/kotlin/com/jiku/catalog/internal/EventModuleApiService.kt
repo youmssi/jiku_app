@@ -31,12 +31,20 @@ class EventModuleApiService(
     @Transactional
     override fun reserveAttendanceSlot(eventId: UUID): Boolean {
         val event = events.findById(eventId).orElse(null) ?: return false
-        val limit =
-            event.maxCapacity?.let { capacity ->
-                capacity + if (event.settings.overbookingAllowed) (event.settings.maxOverbookingCount ?: 0) else 0
-            } ?: Int.MAX_VALUE
-        return events.reserveSlot(eventId, limit) == 1
+        return events.reserveSlot(eventId, attendanceLimit(event)) == 1
     }
+
+    @Transactional(readOnly = true)
+    override fun remainingAttendance(eventId: UUID): Int? {
+        val event = events.findById(eventId).orElse(null) ?: return 0
+        if (event.maxCapacity == null) return null
+        return (attendanceLimit(event) - event.confirmedCount).coerceAtLeast(0)
+    }
+
+    private fun attendanceLimit(event: Event): Int =
+        event.maxCapacity?.let { capacity ->
+            capacity + if (event.settings.overbookingAllowed) (event.settings.maxOverbookingCount ?: 0) else 0
+        } ?: Int.MAX_VALUE
 
     /**
      * Les deux plafonds sont vérifiés dans **une seule transaction**. Si la
@@ -62,6 +70,30 @@ class EventModuleApiService(
         // laisser consommée pour rien.
         events.releaseSlot(eventId)
         return false
+    }
+
+    @Transactional
+    override fun reserveAttendanceSlots(
+        eventId: UUID,
+        ticketTypeId: UUID,
+        quantity: Int,
+    ): Boolean {
+        require(quantity > 0) { "An order takes at least one place" }
+        val event = events.findById(eventId).orElse(null) ?: return false
+        if (events.reserveSlots(eventId, attendanceLimit(event), quantity) != 1) return false
+        if (ticketTypes.reserveSlots(ticketTypeId, quantity) == 1) return true
+        events.releaseSlots(eventId, quantity)
+        return false
+    }
+
+    @Transactional
+    override fun releaseAttendanceSlots(
+        eventId: UUID,
+        ticketTypeId: UUID,
+        quantity: Int,
+    ) {
+        events.releaseSlots(eventId, quantity)
+        ticketTypes.releaseSlots(ticketTypeId, quantity)
     }
 
     @Transactional

@@ -9,6 +9,9 @@ import java.util.UUID
 interface GuestRepository : JpaRepository<Guest, UUID> {
     fun findByEventId(eventId: UUID): List<Guest>
 
+    /** The guests holding the tickets of a paid order (JIKU-177). */
+    fun findByOrderIdOrderByCreatedAtAsc(orderId: UUID): List<Guest>
+
     /** Titulaires de rendez-vous, sans événement (JIKU-87). */
     fun findAllByEventIdIsNull(): List<Guest>
 

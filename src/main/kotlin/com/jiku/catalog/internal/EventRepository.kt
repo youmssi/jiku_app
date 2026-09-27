@@ -63,6 +63,28 @@ interface EventRepository : JpaRepository<Event, UUID> {
         @Param("at") at: java.time.Instant,
     ): Int
 
+    /** [reserveSlot] for [quantity] places at once: all of them, or none. */
+    @Modifying
+    @Query(
+        "UPDATE Event e SET e.confirmedCount = e.confirmedCount + :quantity " +
+            "WHERE e.id = :id AND (e.maxCapacity IS NULL OR e.confirmedCount + :quantity <= :limit)",
+    )
+    fun reserveSlots(
+        @Param("id") id: UUID,
+        @Param("limit") limit: Int,
+        @Param("quantity") quantity: Int,
+    ): Int
+
+    @Modifying
+    @Query(
+        "UPDATE Event e SET e.confirmedCount = CASE WHEN e.confirmedCount >= :quantity " +
+            "THEN e.confirmedCount - :quantity ELSE 0 END WHERE e.id = :id",
+    )
+    fun releaseSlots(
+        @Param("id") id: UUID,
+        @Param("quantity") quantity: Int,
+    ): Int
+
     @Modifying
     @Query("UPDATE Event e SET e.confirmedCount = e.confirmedCount - 1 WHERE e.id = :id AND e.confirmedCount > 0")
     fun releaseSlot(
