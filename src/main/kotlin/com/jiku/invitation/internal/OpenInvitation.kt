@@ -36,6 +36,9 @@ class OpenInvitation(
     var maxCompanions: Int,
     @Column(name = "closes_at")
     var closesAt: Instant? = null,
+    /** On the free tier, whether the people who answered are told by WhatsApp when the event is cancelled. */
+    @Column(name = "notify_on_cancel", nullable = false)
+    var notifyOnCancel: Boolean = false,
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now(),
 ) : BaseTenantEntity() {
