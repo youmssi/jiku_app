@@ -5,6 +5,7 @@ import com.jiku.TestcontainersConfiguration
 import com.jiku.invitation.internal.GuestRepository
 import com.jiku.invitation.internal.InvitationTokenService
 import com.jiku.shared.TenantContext
+import com.jiku.support.TestDates.EVENT_YEAR
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -148,7 +149,7 @@ class GuestErasureTest {
                         .content(
                             """
                             {"name":"Erasure Event","timezone":"Africa/Abidjan","maxCapacity":10,
-                            "startDateTime":"2026-12-01T18:00:00Z","invitationChannels":["EMAIL"]}
+                            "startDateTime":"${EVENT_YEAR}-12-01T18:00:00Z","invitationChannels":["EMAIL"]}
                             """.trimIndent(),
                         ),
                 ).andExpect(status().isCreated())

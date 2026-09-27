@@ -1,6 +1,8 @@
 package com.jiku.tenant.internal
 
 import com.jiku.catalog.ServiceModuleApi
+import com.jiku.shared.TenantContext
+import com.jiku.shared.VerificationGate
 import com.jiku.tenant.TenantModuleApi
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
@@ -21,6 +23,7 @@ import java.util.UUID
 class PublicOrgController(
     private val tenants: TenantModuleApi,
     private val services: ServiceModuleApi,
+    private val verification: VerificationGate,
 ) {
     @GetMapping("/{username}")
     fun profile(
@@ -41,6 +44,7 @@ class PublicOrgController(
                 services.publicServiceLinks(tenant.id).map {
                     PublicOrgServiceView(serviceId = it.serviceId, name = it.name, shortCode = it.shortCode)
                 },
+            verification = TenantContext.withTenant(tenant.id.toString()) { verification.verifiedKind() },
         )
     }
 }
@@ -51,6 +55,8 @@ data class PublicOrgProfileView(
     val bannerUrl: String?,
     val primaryColor: String,
     val services: List<PublicOrgServiceView>,
+    /** The organization's approved verification (COMPANY, PERSONAL) or null, for its trust badge. */
+    val verification: String? = null,
 )
 
 data class PublicOrgServiceView(

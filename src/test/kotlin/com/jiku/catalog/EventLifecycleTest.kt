@@ -2,6 +2,7 @@ package com.jiku.catalog
 
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
+import com.jiku.support.TestDates.EVENT_YEAR
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -27,7 +28,7 @@ class EventLifecycleTest {
         val tokenB = register("Org B", "org-b-events@test.example")
 
         val createBody =
-            """{"name":"Gala","timezone":"Africa/Abidjan","startDateTime":"2026-12-31T19:00:00Z","invitationChannels":["EMAIL"]}"""
+            """{"name":"Gala","timezone":"Africa/Abidjan","startDateTime":"${EVENT_YEAR}-12-31T19:00:00Z","invitationChannels":["EMAIL"]}"""
         val createResult =
             mockMvc
                 .perform(authed(post("/api/v1/events"), tokenA).content(createBody))
@@ -53,7 +54,7 @@ class EventLifecycleTest {
             .andExpect(jsonPath("$.status").value("PUBLISHED"))
 
         // A draft without an invitation channel cannot be published.
-        val noChannel = """{"name":"No Channel","timezone":"Africa/Abidjan","startDateTime":"2026-12-31T19:00:00Z"}"""
+        val noChannel = """{"name":"No Channel","timezone":"Africa/Abidjan","startDateTime":"${EVENT_YEAR}-12-31T19:00:00Z"}"""
         val secondId =
             JsonPath.read<String>(
                 mockMvc

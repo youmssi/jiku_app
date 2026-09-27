@@ -1,0 +1,1 @@
+Jikū : votre code de vérification est {{code}}. Il expire dans 10 minutes. Ne le partagez avec personne.

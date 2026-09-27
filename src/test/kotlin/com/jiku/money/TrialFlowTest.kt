@@ -8,6 +8,7 @@ import com.jiku.money.internal.TrialGrantRepository
 import com.jiku.money.internal.TrialService
 import com.jiku.money.internal.TrialStatus
 import com.jiku.shared.TenantContext
+import com.jiku.support.TestDates.EVENT_YEAR
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.Matchers.greaterThanOrEqualTo
 import org.hamcrest.Matchers.hasItem
@@ -275,7 +276,7 @@ class TrialFlowTest {
                         .content(
                             """
                             {"name":"Trial Event","timezone":"Africa/Abidjan",
-                             "startDateTime":"2026-12-01T18:00:00Z","invitationChannels":["EMAIL"]}
+                             "startDateTime":"${EVENT_YEAR}-12-01T18:00:00Z","invitationChannels":["EMAIL"]}
                             """.trimIndent(),
                         ),
                 ).andExpect(status().isCreated())

@@ -5,6 +5,8 @@ import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.security.SecurityRequirement
 import io.swagger.v3.oas.models.security.SecurityScheme
+import org.springdoc.core.customizers.OpenApiCustomizer
+import org.springdoc.core.customizers.OperationCustomizer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -35,4 +37,42 @@ class OpenApiConfig {
                 ),
             ).addSecurityItem(SecurityRequirement().addList(scheme))
     }
+
+    /**
+     * Names every operation `<controller><Method>` (e.g. `ticketOrderConfirm`).
+     * Springdoc's default is the bare method name, and it numbers duplicates
+     * (`list_17`) in handler-discovery order, which the JVM does not guarantee:
+     * the committed contract then changed from one run to the next.
+     */
+    @Bean
+    fun stableOperationIds(): OperationCustomizer =
+        OperationCustomizer { operation, handler ->
+            val controller = handler.beanType.simpleName.removeSuffix("Controller")
+            operation.operationId(
+                controller.replaceFirstChar { it.lowercase() } +
+                    handler.method.name.replaceFirstChar { it.uppercase() },
+            )
+        }
+
+    /**
+     * A handler mapped under two paths still yields one name twice; springdoc
+     * would number the copies in discovery order. Numbering them by path instead
+     * keeps each path's operation id the same on every run.
+     */
+    @Bean
+    fun stableDuplicateOperationIds(): OpenApiCustomizer =
+        OpenApiCustomizer { openApi ->
+            val suffix = Regex("_\\d+$")
+            openApi.paths
+                .orEmpty()
+                .flatMap { (path, item) ->
+                    item.readOperationsMap().map { (method, operation) -> Triple(path, method, operation) }
+                }.filter { it.third.operationId != null }
+                .groupBy { it.third.operationId.replace(suffix, "") }
+                .forEach { (name, uses) ->
+                    uses.sortedWith(compareBy({ it.first }, { it.second })).forEachIndexed { index, use ->
+                        use.third.operationId = if (index == 0) name else "${name}_$index"
+                    }
+                }
+        }
 }

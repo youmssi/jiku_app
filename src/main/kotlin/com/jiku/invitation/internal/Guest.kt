@@ -68,4 +68,18 @@ class Guest(
 
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now()
+
+    /** Invited by the organization, or a buyer holding a ticket of a paid order (JIKU-177). */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "origin", nullable = false, updatable = false, length = 16)
+    var origin: GuestOrigin = GuestOrigin.INVITED
+
+    /** The ticket order this guest's ticket comes from; null for an invited guest. */
+    @Column(name = "order_id", updatable = false)
+    var orderId: UUID? = null
+}
+
+enum class GuestOrigin {
+    INVITED,
+    PURCHASED,
 }

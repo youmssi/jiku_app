@@ -35,6 +35,8 @@ class PublicRoutesRateLimitTest {
                 "/rsvp/some-token/confirm",
                 "/checkin/some-token/scan",
                 "/prospects",
+                "/public/orgs/some-org/events/some-event/orders",
+                "/orders/some-token/declare",
             )
         for (path in publicWrites) {
             assertTrue(

@@ -60,6 +60,13 @@ class Tenant(
     @Embedded
     var paymentMethods: TenantPaymentMethods? = null
 
+    /**
+     * How long an unpaid ticket order keeps its places (JIKU-177), chosen by the
+     * organization to match how fast it answers; null keeps the platform default.
+     */
+    @Column(name = "order_hold_minutes")
+    var orderHoldMinutes: Int? = null
+
     fun ensureBranding(): TenantBranding = branding ?: TenantBranding().also { branding = it }
 
     fun ensureLegalIdentity(): TenantLegalIdentity = legalIdentity ?: TenantLegalIdentity().also { legalIdentity = it }

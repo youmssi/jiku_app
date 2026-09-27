@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.backoffice.internal.PlatformAdmin
 import com.jiku.backoffice.internal.PlatformAdminRepository
+import com.jiku.support.TestDates.EVENT_YEAR
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -218,7 +219,7 @@ class ManualPaymentFlowTest {
                         .content(
                             """
                             {"name":"Concierge Event","timezone":"Africa/Abidjan",
-                             "startDateTime":"2026-12-01T18:00:00Z","invitationChannels":["EMAIL"]}
+                             "startDateTime":"${EVENT_YEAR}-12-01T18:00:00Z","invitationChannels":["EMAIL"]}
                             """.trimIndent(),
                         ),
                 ).andExpect(status().isCreated())

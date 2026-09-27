@@ -23,4 +23,13 @@ class TenantPaymentMethods(
     var paymentLinkUrl: String? = null,
 ) {
     fun hasAny(): Boolean = listOf(orangeMoneyNumber, mtnMomoNumber, waveNumber, paymentLinkUrl).any { !it.isNullOrBlank() }
+
+    /** Same payee and same methods; an embeddable compares by reference otherwise. */
+    fun sameAs(other: TenantPaymentMethods?): Boolean =
+        other != null &&
+            payeeName == other.payeeName &&
+            orangeMoneyNumber == other.orangeMoneyNumber &&
+            mtnMomoNumber == other.mtnMomoNumber &&
+            waveNumber == other.waveNumber &&
+            paymentLinkUrl == other.paymentLinkUrl
 }

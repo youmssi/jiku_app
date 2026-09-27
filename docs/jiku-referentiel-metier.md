@@ -94,9 +94,12 @@ commission**. Au-delà de la limite de toutes les offres, le logiciel refuse et
 propose de créer un événement ; il ne prélève rien. Ces limites sont des
 paramètres de configuration.
 
-Aujourd'hui, le code n'accepte qu'un client par ressource et par créneau
-(contrainte `uq_reservation_resource_start`) : les séances collectives sont une
-évolution à construire.
+Chaque service fixe ses clients par créneau (1 par défaut), dans la limite de
+l'offre ; chaque client occupe une place, et l'unicité (ressource, début, place)
+garantit qu'une place n'est jamais vendue deux fois (JIKU-174). Une ressource
+prise par une séance n'offre aucune place à un autre service ni à un autre
+horaire qui la chevauche. Après une baisse d'offre, la capacité effective
+redescend aussitôt à la limite de la nouvelle offre.
 
 ## 4. Les cinq usages d'un ticket
 
@@ -206,13 +209,39 @@ portefeuille à gérer.
 
 ## 9. Confiance et responsabilité
 
-L'argent des ventes va chez l'organisation, mais c'est sur une page Jikū que
-l'acheteur paie. Pour protéger l'acheteur et la plateforme :
+L'argent des clients va chez l'organisation, mais c'est sur une page Jikū que
+le client le découvre. Pour protéger le client et la plateforme, **toute
+organisation dont le parcours fait intervenir de l'argent doit être vérifiée** ;
+les autres peuvent l'être, et Jikū le recommande à tous pour inspirer confiance
+(décision du 2026-09-26).
 
-| Niveau | Condition | Ce qui s'affiche sur les pages publiques de l'organisation |
+**Quand la vérification est obligatoire.** Dès qu'une étape fait payer un client
+de l'organisation, quel que soit l'usage (événement, service, vente) : un prix
+sur une catégorie de billets, un paiement demandé pour un service, ou des moyens
+de paiement affichés aux clients. Invitations gratuites, services gratuits et
+file d'attente sans paiement : vérification facultative.
+
+**Deux vérifications, l'une ou l'autre suffit :**
+
+| Vérification | Ce que fournit l'organisation | Ce qui s'affiche sur ses pages publiques |
 |---|---|---|
-| **Vérification légère** | Obligatoire avant la première vente de billets : pièce d'identité et numéro de téléphone vérifiés, validés par l'équipe Jikū dans le back-office | Un avertissement visible avant tout paiement : « Vérifiez l'identité de l'organisateur avant de payer. Le paiement va directement à l'organisateur ; Jikū ne l'encaisse pas. » |
-| **Vérification complète** | Facultative : documents d'entreprise ou identité complète, validés par l'équipe Jikū | Un **badge bleu « Organisation vérifiée »** qui certifie que la page appartient à cette organisation |
+| **Personnelle** | Une pièce d'identité et un numéro de téléphone confirmé par code | Badge « Identité vérifiée » |
+| **Entreprise** | Les documents de l'entreprise (RCCM, NIF) | Badge bleu « Organisation vérifiée » |
+
+L'équipe Jikū valide chaque demande dans le back-office. Tant qu'aucune n'est
+validée, une page qui présente un paiement affiche : « Vérifiez l'identité de
+l'organisateur avant de payer. Le paiement va directement à l'organisateur ;
+Jikū ne l'encaisse pas. »
+
+**Documents.** Déposés dans l'application (JPEG, PNG ou PDF, 2 Mo par fichier,
+trois au plus), conservés dans un stockage privé jamais public. L'équipe les
+consulte par un lien valable quelques minutes. Ils sont supprimés un délai
+configurable après la validation (30 jours par défaut), et dès le refus d'une
+demande ; Jikū ne garde que la décision (qui, quand, quel type de document).
+
+**Organisations existantes.** Une organisation qui encaissait déjà avant cette
+règle garde ses prix et ses moyens de paiement ; elle doit être vérifiée pour
+en ajouter ou en modifier.
 
 Partage des responsabilités, rappelé sur chaque page publique qui présente un
 paiement et écrit dans les conditions d'utilisation :
@@ -225,7 +254,6 @@ paiement et écrit dans les conditions d'utilisation :
 La rédaction exacte de ces mentions et des conditions d'utilisation doit être
 relue par un juriste avant le lancement.
 
-Les invitations et les services n'exigent aucune vérification.
 
 ## 10. Décisions prises et propositions par défaut
 
@@ -238,8 +266,8 @@ Décidé le 2026-09-24 :
    L'acompte de 30 % du simulateur et du module `booking` disparaît pour ce cas,
    avec sa grille de remboursement.
 3. **Utilisateurs payants** : seulement ceux qui rendent le service (§6).
-4. **Vérification** : légère et obligatoire avant de vendre, complète et
-   facultative avec badge bleu (§9).
+4. **Vérification** : obligatoire dès que le parcours fait intervenir de
+   l'argent, personnelle ou entreprise, facultative et recommandée sinon (§9).
 
 Acceptées le 2026-09-24 :
 

@@ -13,6 +13,7 @@ import com.jiku.catalog.internal.ServiceConfigUpdate
 import com.jiku.catalog.internal.ServiceCreateRequest
 import com.jiku.catalog.internal.ServiceLinkTokenService
 import com.jiku.shared.TenantContext
+import com.jiku.support.TestDates.MONDAY
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -64,7 +65,7 @@ class AppointmentPublicControllerTest {
         val (token, _) = seedService("svc-link-tenant")
 
         mockMvc
-            .perform(get("/api/v1/appointments/$token").param("date", "2026-11-02"))
+            .perform(get("/api/v1/appointments/$token").param("date", "$MONDAY"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.name").value("Coupe"))
             .andExpect(jsonPath("$.confirmationMode").value("ON_REQUEST"))
@@ -80,7 +81,7 @@ class AppointmentPublicControllerTest {
     fun `a client books on request, cannot double book, and cancels within the deadline`() {
         val (token, _) = seedService("svc-book-tenant")
         val bookBody =
-            """{"clientName":"Fatou","clientPhone":"+224600000000","startsAt":"2026-11-02T09:00:00Z"}"""
+            """{"clientName":"Fatou","clientPhone":"+224600000000","startsAt":"${MONDAY}T09:00:00Z"}"""
 
         // Sur demande : le créneau est bloqué en PENDING, un jeton est remis.
         val created =
@@ -131,7 +132,7 @@ class AppointmentPublicControllerTest {
                 post("/api/v1/appointments/$token/book")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(
-                        """{"clientName":"Mariam","clientPhone":"+224600000001","startsAt":"2026-11-02T10:00:00Z"}""",
+                        """{"clientName":"Mariam","clientPhone":"+224600000001","startsAt":"${MONDAY}T10:00:00Z"}""",
                     ),
             ).andExpect(status().isCreated())
             .andExpect(jsonPath("$.status").value("CONFIRMED"))

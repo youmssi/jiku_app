@@ -77,6 +77,11 @@ class WhatsAppTemplateRenderer(
         )
 
     /** "It's your turn" for a waiting client (JIKU-114); also the SMS text. */
+    fun renderPhoneCode(
+        code: String,
+        language: String,
+    ): String = render("phone-code", language, mapOf("code" to code))
+
     fun renderClientCalled(
         clientName: String,
         counter: String?,

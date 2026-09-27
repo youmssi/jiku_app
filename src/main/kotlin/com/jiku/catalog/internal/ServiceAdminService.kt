@@ -4,6 +4,7 @@ import com.jiku.catalog.ResourceType
 import com.jiku.shared.ClientCharge
 import com.jiku.shared.ServiceDeletedEvent
 import com.jiku.shared.TenantCurrency
+import com.jiku.shared.VerificationGate
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
@@ -26,6 +27,7 @@ class ServiceAdminService(
     private val configs: ServiceConfigRepository,
     private val eventPublisher: ApplicationEventPublisher,
     private val tenantCurrency: TenantCurrency,
+    private val verification: VerificationGate,
 ) {
     @Transactional(readOnly = true)
     fun list(): List<ServiceResponse> = services.findAll().map { it.toResponse() }
@@ -45,6 +47,8 @@ class ServiceAdminService(
                 paymentRule = request.paymentRule
                 price = priceFor(request.paymentRule, request.priceMinor, tenantCurrency::ofCurrentTenant)
             }
+        // A paid service makes clients pay: the organization must be verified (référentiel §9).
+        if (service.clientCharge() != null) verification.requireVerified()
         return services.save(service).toResponse()
     }
 
@@ -63,8 +67,11 @@ class ServiceAdminService(
             val rule = request.paymentRule ?: service.paymentRule
             // Switching between paid rules keeps the current amount unless a new one is given.
             val amount = if (rule == PaymentRule.FREE) request.priceMinor else request.priceMinor ?: service.price?.amountMinor
+            val before = service.clientCharge()
             service.price = priceFor(rule, amount, tenantCurrency::ofCurrentTenant)
             service.paymentRule = rule
+            val after = service.clientCharge()
+            if (after != null && after != before) verification.requireVerified()
         }
         return services.save(service).toResponse()
     }

@@ -12,6 +12,8 @@ import com.jiku.catalog.internal.ServiceConfigUpdate
 import com.jiku.catalog.internal.ServiceCreateRequest
 import com.jiku.catalog.internal.SlotEngine
 import com.jiku.shared.TenantContext
+import com.jiku.support.TestDates.MONDAY
+import com.jiku.support.TestDates.TUESDAY
 import com.jiku.ticket.TicketingModuleApi
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -19,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import java.time.Instant
-import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
@@ -59,14 +60,14 @@ class DayLineNextConcurrencyTest {
     fun clearContext() = TenantContext.clear()
 
     private val tenant = "dayline-next-race"
-    private val dayStart = Instant.parse("2026-11-02T00:00:00Z")
-    private val dayEnd = Instant.parse("2026-11-03T00:00:00Z")
+    private val dayStart = Instant.parse("${MONDAY}T00:00:00Z")
+    private val dayEnd = Instant.parse("${TUESDAY}T00:00:00Z")
 
     @Test
     fun `two simultaneous next calls never hand out the same person`() {
         TenantContext.set(tenant)
         val serviceId = serviceWithMorning()
-        val slot = Instant.parse("2026-11-02T09:00:00Z")
+        val slot = Instant.parse("${MONDAY}T09:00:00Z")
 
         // Trois personnes en attente : trois postes appellent en même temps.
         (0..2).forEach { i ->
@@ -77,7 +78,7 @@ class DayLineNextConcurrencyTest {
             val at = slot.plusSeconds(1800L * index).minusSeconds(300)
             assertEquals(
                 com.jiku.ticket.LineOutcome.OK,
-                ticketing.arriveByCode(serviceId, code, at, dayStart, dayEnd, rankDay = LocalDate.parse("2026-11-02")).outcome,
+                ticketing.arriveByCode(serviceId, code, at, dayStart, dayEnd, rankDay = MONDAY).outcome,
             )
         }
 
@@ -114,7 +115,7 @@ class DayLineNextConcurrencyTest {
     fun `two simultaneous first arrivals get distinct sequential day ranks`() {
         TenantContext.set(tenant)
         val serviceId = serviceWithMorning()
-        val slot = Instant.parse("2026-11-02T09:00:00Z")
+        val slot = Instant.parse("${MONDAY}T09:00:00Z")
 
         engine.bookClient(serviceId, slot, "Alpha", "+224600000040")
         engine.bookClient(serviceId, slot.plusSeconds(1800), "Beta", "+224600000041")
@@ -142,7 +143,7 @@ class DayLineNextConcurrencyTest {
                             at,
                             dayStart,
                             dayEnd,
-                            rankDay = LocalDate.parse("2026-11-02"),
+                            rankDay = MONDAY,
                         )
                     result.ticket?.dayRank?.let { ranks += it }
                 } finally {

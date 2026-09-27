@@ -2,6 +2,8 @@ package com.jiku.catalog
 
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
+import com.jiku.support.TestDates.MONDAY
+import com.jiku.support.TestDates.TUESDAY
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -38,7 +40,7 @@ class EventOccurrenceTest {
                     .header("Authorization", "Bearer $token")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(
-                        """{"startsAt":"2026-11-02T09:00:00Z","endsAt":"2026-11-02T12:00:00Z","capacity":80}""",
+                        """{"startsAt":"${MONDAY}T09:00:00Z","endsAt":"${MONDAY}T12:00:00Z","capacity":80}""",
                     ),
             ).andExpect(status().isCreated())
             .andExpect(jsonPath("$.capacity").value(80))
@@ -58,7 +60,7 @@ class EventOccurrenceTest {
                 post("/api/v1/events/${UUID.randomUUID()}/occurrences")
                     .header("Authorization", "Bearer $token")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content("""{"startsAt":"2026-11-02T09:00:00Z"}"""),
+                    .content("""{"startsAt":"${MONDAY}T09:00:00Z"}"""),
             ).andExpect(status().isNotFound())
 
         val eventId = createEvent(token)
@@ -70,7 +72,7 @@ class EventOccurrenceTest {
                 post("/api/v1/events/$eventId/occurrences")
                     .header("Authorization", "Bearer $token")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content("""{"startsAt":"2026-11-03T09:00:00Z"}"""),
+                    .content("""{"startsAt":"${TUESDAY}T09:00:00Z"}"""),
             ).andExpect(status().isConflict())
     }
 
@@ -95,7 +97,7 @@ class EventOccurrenceTest {
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(
-                            """{"name":"Séminaire","timezone":"Africa/Conakry","startDateTime":"2026-11-02T09:00:00Z","invitationChannels":["EMAIL"]}""",
+                            """{"name":"Séminaire","timezone":"Africa/Conakry","startDateTime":"${MONDAY}T09:00:00Z","invitationChannels":["EMAIL"]}""",
                         ),
                 ).andExpect(status().isCreated())
                 .andReturn()

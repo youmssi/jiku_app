@@ -14,6 +14,8 @@ import com.jiku.catalog.internal.SlotEngine
 import com.jiku.invitation.internal.Guest
 import com.jiku.invitation.internal.GuestRepository
 import com.jiku.shared.TenantContext
+import com.jiku.support.TestDates.MONDAY
+import com.jiku.support.TestDates.TUESDAY
 import com.jiku.ticket.LineOutcome
 import com.jiku.ticket.TicketingModuleApi
 import org.junit.jupiter.api.AfterEach
@@ -22,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import java.time.Instant
-import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
 import kotlin.test.assertEquals
@@ -63,8 +64,8 @@ class ServiceDayLineTest {
     @AfterEach
     fun clearContext() = TenantContext.clear()
 
-    private val dayStart = Instant.parse("2026-11-02T00:00:00Z")
-    private val dayEnd = Instant.parse("2026-11-03T00:00:00Z")
+    private val dayStart = Instant.parse("${MONDAY}T00:00:00Z")
+    private val dayEnd = Instant.parse("${TUESDAY}T00:00:00Z")
 
     @Test
     fun `an appointment travels the whole day line from arrival to done`() {
@@ -72,20 +73,20 @@ class ServiceDayLineTest {
         TenantContext.set(tenant)
         val serviceId = serviceWithMorning()
 
-        engine.bookClient(serviceId, Instant.parse("2026-11-02T09:00:00Z"), "Fatou", "+224600000000")
+        engine.bookClient(serviceId, Instant.parse("${MONDAY}T09:00:00Z"), "Fatou", "+224600000000")
         val code = dayLine(serviceId).single().ticketCode
 
         // Personne en attente, rien à appeler.
-        assertNull(ticketing.callNext(serviceId, dayStart, dayEnd, Instant.parse("2026-11-02T09:00:00Z"), 10))
+        assertNull(ticketing.callNext(serviceId, dayStart, dayEnd, Instant.parse("${MONDAY}T09:00:00Z"), 10))
 
         val arrived =
             ticketing.arriveByCode(
                 serviceId,
                 code,
-                Instant.parse("2026-11-02T08:55:00Z"),
+                Instant.parse("${MONDAY}T08:55:00Z"),
                 dayStart,
                 dayEnd,
-                rankDay = LocalDate.parse("2026-11-02"),
+                rankDay = MONDAY,
             )
         assertEquals(LineOutcome.OK, arrived.outcome)
         assertEquals(1, assertNotNull(arrived.ticket).dayRank)
@@ -111,16 +112,16 @@ class ServiceDayLineTest {
         TenantContext.set(tenant)
         val serviceId = serviceWithMorning()
 
-        engine.bookClient(serviceId, Instant.parse("2026-11-02T09:00:00Z"), "Aminata", "+224600000001")
+        engine.bookClient(serviceId, Instant.parse("${MONDAY}T09:00:00Z"), "Aminata", "+224600000001")
         val code = dayLine(serviceId).single().ticketCode
 
         ticketing.arriveByCode(
             serviceId,
             code,
-            Instant.parse("2026-11-02T08:55:00Z"),
+            Instant.parse("${MONDAY}T08:55:00Z"),
             dayStart,
             dayEnd,
-            rankDay = LocalDate.parse("2026-11-02"),
+            rankDay = MONDAY,
         )
         ticketing.callByCode(serviceId, code)
 
@@ -139,7 +140,7 @@ class ServiceDayLineTest {
         val tenant = "dayline-ranks"
         TenantContext.set(tenant)
         val serviceId = serviceWithMorning()
-        val slot = Instant.parse("2026-11-02T09:00:00Z")
+        val slot = Instant.parse("${MONDAY}T09:00:00Z")
 
         engine.bookClient(serviceId, slot, "Mariam", "+224600000002")
         engine.bookClient(serviceId, slot.plusSeconds(1800), "Binta", "+224600000003")
@@ -157,7 +158,7 @@ class ServiceDayLineTest {
                     slot.minusSeconds(300),
                     dayStart,
                     dayEnd,
-                    rankDay = LocalDate.parse("2026-11-02"),
+                    rankDay = MONDAY,
                 ).outcome,
         )
         assertEquals(
@@ -169,7 +170,7 @@ class ServiceDayLineTest {
                     slot.plusSeconds(1500),
                     dayStart,
                     dayEnd,
-                    rankDay = LocalDate.parse("2026-11-02"),
+                    rankDay = MONDAY,
                 ).outcome,
         )
         assertEquals(
@@ -181,7 +182,7 @@ class ServiceDayLineTest {
                     slot.plusSeconds(3000),
                     dayStart,
                     dayEnd,
-                    rankDay = LocalDate.parse("2026-11-02"),
+                    rankDay = MONDAY,
                 ).outcome,
         )
 
@@ -196,7 +197,7 @@ class ServiceDayLineTest {
                 slot.plusSeconds(3600),
                 dayStart,
                 dayEnd,
-                rankDay = LocalDate.parse("2026-11-02"),
+                rankDay = MONDAY,
             )
         assertEquals(LineOutcome.WRONG_STATE, again.outcome)
         assertEquals("WAITING", assertNotNull(again.ticket).status)
@@ -208,7 +209,7 @@ class ServiceDayLineTest {
         TenantContext.set(tenant)
         val serviceId = serviceWithMorning()
 
-        val slot = Instant.parse("2026-11-02T09:00:00Z")
+        val slot = Instant.parse("${MONDAY}T09:00:00Z")
         engine.bookClient(serviceId, slot, "A", "+224600000005")
         engine.bookClient(serviceId, slot.plusSeconds(1800), "B", "+224600000006")
         val codes = dayLine(serviceId).map { it.ticketCode }
@@ -217,8 +218,8 @@ class ServiceDayLineTest {
         assertNull(ticketing.callNext(serviceId, dayStart, dayEnd, slot.plusSeconds(1920), 10))
 
         // « A » (créneau 09:00) arrive à 08:55 ; « B » (créneau 09:30) à 09:32.
-        ticketing.arriveByCode(serviceId, codes[0], slot.minusSeconds(300), dayStart, dayEnd, rankDay = LocalDate.parse("2026-11-02"))
-        ticketing.arriveByCode(serviceId, codes[1], slot.plusSeconds(1920), dayStart, dayEnd, rankDay = LocalDate.parse("2026-11-02"))
+        ticketing.arriveByCode(serviceId, codes[0], slot.minusSeconds(300), dayStart, dayEnd, rankDay = MONDAY)
+        ticketing.arriveByCode(serviceId, codes[1], slot.plusSeconds(1920), dayStart, dayEnd, rankDay = MONDAY)
 
         // À 09:32 le créneau de B est en cours et B est arrivé : B prime sur A.
         val first = assertNotNull(ticketing.callNext(serviceId, dayStart, dayEnd, slot.plusSeconds(1920), 10))
@@ -238,7 +239,7 @@ class ServiceDayLineTest {
         val tenant = "dayline-order"
         TenantContext.set(tenant)
         val serviceId = serviceWithMorning()
-        val slot = Instant.parse("2026-11-02T09:00:00Z")
+        val slot = Instant.parse("${MONDAY}T09:00:00Z")
 
         engine.bookClient(serviceId, slot, "Alpha", "+224600000007")
         engine.bookClient(serviceId, slot.plusSeconds(1800), "Charlie", "+224600000008")
@@ -251,10 +252,10 @@ class ServiceDayLineTest {
             clientName = "Binta",
             clientPhone = "+224600000009",
             professionalName = null,
-            arrivedAt = Instant.parse("2026-11-02T09:10:00Z"),
+            arrivedAt = Instant.parse("${MONDAY}T09:10:00Z"),
             dayStart = dayStart,
             dayEnd = dayEnd,
-            rankDay = LocalDate.parse("2026-11-02"),
+            rankDay = MONDAY,
         )
 
         val line = dayLine(serviceId)

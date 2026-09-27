@@ -89,6 +89,34 @@ class ManualPaymentService(
     }
 
     /**
+     * A commission batch paid by transfer (JIKU-178), for as long as online
+     * payment is off: the organizer pays the payee quoting the reference, the
+     * platform desk confirms, and the batch goes live through the same
+     * fulfillment an online payment uses.
+     */
+    @Transactional
+    fun requestCommission(
+        batch: CommissionBatch,
+        totalMinor: Long,
+    ): ManualPaymentInstructions {
+        val payment =
+            payments.save(
+                Payment(
+                    eventId = batch.eventId,
+                    tier = Payment.COMMISSION_TIER,
+                    amountMinor = totalMinor,
+                    currency = batch.currency,
+                    provider = PROVIDER_MANUAL,
+                    kind = Payment.KIND_COMMISSION,
+                    guests = batch.size.toLong(),
+                ).apply { commissionBatchId = batch.id },
+            )
+        payment.providerReference = generateReference()
+        payment.updatedAt = Instant.now()
+        return instructionsFor(payments.save(payment))
+    }
+
+    /**
      * Demande de prépaiement d'abonnement (JIKU-90), même circuit « concierge »
      * que l'activation : une référence lisible, un paiement manuel en attente,
      * confirmé ensuite par le bureau admin. Idempotent : une demande ouverte

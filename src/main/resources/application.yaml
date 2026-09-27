@@ -256,6 +256,25 @@ api:
         paths: [/feedback, /feedback/ratings]
         max-requests: ${RATE_LIMIT_FEEDBACK_MAX_REQUESTS:10}
         window: ${RATE_LIMIT_FEEDBACK_WINDOW:PT1M}
+      ticket-sale-page:
+        # Public sale page of an event (JIKU-177): browsed and refreshed while the
+        # buyer decides; a scraper reads far faster.
+        paths: [/public/orgs/*/events/*]
+        max-requests: ${RATE_LIMIT_TICKET_SALE_PAGE_MAX_REQUESTS:60}
+        window: ${RATE_LIMIT_TICKET_SALE_PAGE_WINDOW:PT1M}
+      ticket-order:
+        # Placing an order holds places: a buyer places one, maybe two after a
+        # mistake. Tight, so nobody can empty an event with unpaid orders.
+        paths: [/public/orgs/*/events/*/orders]
+        max-requests: ${RATE_LIMIT_TICKET_ORDER_MAX_REQUESTS:5}
+        window: ${RATE_LIMIT_TICKET_ORDER_WINDOW:PT10M}
+      order-link:
+        # A buyer follows its order (declare the payment, open the tickets) by its
+        # link; per link, like invitations.
+        paths: [/orders/**]
+        token-segment: 1
+        max-requests: ${RATE_LIMIT_ORDER_LINK_MAX_REQUESTS:30}
+        window: ${RATE_LIMIT_ORDER_LINK_WINDOW:PT1M}
 
 error-tracking:
   # Unhandled-error reporting (JIKU-70). The DSN is the switch: blank — the default
@@ -485,3 +504,50 @@ notification:
     complaint-rate-threshold: ${NOTIFICATION_COMPLAINT_RATE_THRESHOLD:0.005}
     undeliverable-hard-bounces: ${NOTIFICATION_UNDELIVERABLE_HARD_BOUNCES:2}
     ops-alert-email: ${NOTIFICATION_OPS_ALERT_EMAIL:}
+
+# Verification des organisations (JIKU-175, référentiel métier §9).
+sales:
+  commission:
+    # Commission on tickets sold (JIKU-178, ADR 104 §8, ADR 105 decision 4): the
+    # rate of each ticket's price, paid by batch before selling. A batch never
+    # covers more places than the category has left.
+    rate: ${SALES_COMMISSION_RATE:0.03}
+    batch-size: ${SALES_COMMISSION_BATCH_SIZE:50}
+    # How long the unused part of a paid batch stays as a credit on the account.
+    credit-validity: ${SALES_COMMISSION_CREDIT_VALIDITY:P365D}
+    # When batches of past events are closed (credit and amounts owed computed).
+    close-cron: ${SALES_COMMISSION_CLOSE_CRON:0 15 * * * *}
+  orders:
+    # Tickets one order may hold, across its categories (JIKU-177).
+    max-tickets: ${SALES_ORDER_MAX_TICKETS:10}
+    # How often unpaid orders past their hold give their places back.
+    expiry-cron: ${SALES_ORDER_EXPIRY_CRON:30 * * * * *}
+  order-hold:
+    # How long an unpaid order keeps its places. Each organization picks its own
+    # value between min and max in its settings; default applies until it does.
+    default: ${SALES_ORDER_HOLD_DEFAULT:PT30M}
+    min: ${SALES_ORDER_HOLD_MIN:PT10M}
+    max: ${SALES_ORDER_HOLD_MAX:PT72H}
+
+verification:
+  # Time the documents of an approved request are kept before deletion; a
+  # rejected request's documents are deleted at once.
+  document-retention: ${VERIFICATION_DOCUMENT_RETENTION:30d}
+  max-file-bytes: ${VERIFICATION_MAX_FILE_BYTES:2097152}
+  max-files: ${VERIFICATION_MAX_FILES:3}
+  code-ttl: ${VERIFICATION_CODE_TTL:10m}
+  max-codes-per-window: ${VERIFICATION_MAX_CODES_PER_WINDOW:5}
+  code-window: ${VERIFICATION_CODE_WINDOW:1h}
+  max-code-attempts: ${VERIFICATION_MAX_CODE_ATTEMPTS:5}
+  purge-cron: ${VERIFICATION_PURGE_CRON:0 30 3 * * *}
+
+# Private document storage (S3-compatible: Cloudflare R2 in production, MinIO
+# locally). Leave the endpoint empty to keep verification uploads off.
+storage:
+  documents:
+    endpoint: ${DOCUMENT_STORAGE_ENDPOINT:}
+    region: ${DOCUMENT_STORAGE_REGION:auto}
+    bucket: ${DOCUMENT_STORAGE_BUCKET:}
+    access-key-id: ${DOCUMENT_STORAGE_ACCESS_KEY_ID:}
+    secret-access-key: ${DOCUMENT_STORAGE_SECRET_ACCESS_KEY:}
+    url-ttl: ${DOCUMENT_STORAGE_URL_TTL:5m}

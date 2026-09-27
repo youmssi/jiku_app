@@ -3,6 +3,7 @@ package com.jiku.catalog
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.invitation.internal.InvitationTokenService
+import com.jiku.support.TestDates.EVENT_YEAR
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -161,7 +162,7 @@ class EventCancellationTest {
                         .content(
                             """
                             {"name":"$name","timezone":"Africa/Abidjan",
-                             "startDateTime":"2026-12-01T18:00:00Z",
+                             "startDateTime":"${EVENT_YEAR}-12-01T18:00:00Z",
                              "invitationChannels":["EMAIL"]}
                             """.trimIndent(),
                         ),

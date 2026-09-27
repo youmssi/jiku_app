@@ -49,6 +49,10 @@ class Payment(
     @GeneratedValue(strategy = GenerationType.UUID)
     var id: UUID? = null
 
+    /** The commission batch this payment buys (JIKU-178); null for any other kind. */
+    @Column(name = "commission_batch_id", updatable = false)
+    var commissionBatchId: UUID? = null
+
     @Column(name = "provider_reference")
     var providerReference: String? = null
 
@@ -68,6 +72,10 @@ class Payment(
         const val KIND_PACK = "PACK"
         const val KIND_PACK_EXTRA = "PACK_EXTRA"
         const val KIND_WHATSAPP_NUMBER = "WHATSAPP_NUMBER"
+        const val KIND_COMMISSION = "COMMISSION"
+
+        /** The [tier] label of a commission batch payment. */
+        const val COMMISSION_TIER = "COMMISSION"
 
         /** The [tier] label of an Organizer Pack or pack extra payment. */
         const val PACK_TIER = "PACK"

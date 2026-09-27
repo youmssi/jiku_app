@@ -1,8 +1,11 @@
 package com.jiku.catalog.internal
 
+import com.jiku.shared.GroupSessionGate
 import com.jiku.shared.ReminderChannel
 import com.jiku.shared.ReminderOffsets
+import org.springframework.http.HttpStatus
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 import org.springframework.stereotype.Service as SpringService
 
@@ -17,11 +20,13 @@ class ServiceConfigService(
     private val configs: ServiceConfigRepository,
     private val gridDefaults: SlotGridProperties,
     private val serviceDefaults: ServiceDefaultsProperties,
+    private val groupSessions: GroupSessionGate,
 ) {
     /** Options effectives du service : renseignées ou défaut. */
     @Transactional(readOnly = true)
     fun effective(serviceId: UUID): EffectiveServiceConfig {
         val config = configs.findById(serviceId).orElse(null)
+        val maxClientsPerSlot = groupSessions.maxClientsPerSlot()
         return EffectiveServiceConfig(
             confirmationMode = config?.confirmationMode ?: serviceDefaults.confirmationMode,
             stepMinutes = config?.stepMinutes ?: gridDefaults.stepMinutes,
@@ -36,6 +41,9 @@ class ServiceConfigService(
             reminderChannel = config?.reminderChannel ?: serviceDefaults.reminderChannel,
             reminderOffsetsMinutes =
                 ReminderOffsets.parse(config?.reminderOffsetsMinutes) ?: serviceDefaults.reminderOffsetsMinutes,
+            // A plan downgrade never lets a session keep more clients than the new plan allows.
+            clientsPerSlot = (config?.clientsPerSlot ?: 1).coerceAtMost(maxClientsPerSlot),
+            maxClientsPerSlot = maxClientsPerSlot,
         )
     }
 
@@ -67,6 +75,19 @@ class ServiceConfigService(
             }
         }
         update.reminderOffsetsMinutes?.let { config.reminderOffsetsMinutes = ReminderOffsets.encode(it) }
+        update.clientsPerSlot?.let { clients ->
+            if (clients < 1) {
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "A slot serves at least one client")
+            }
+            val max = groupSessions.maxClientsPerSlot()
+            if (clients > max) {
+                throw ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Your plan serves at most $max client(s) per slot; a larger group needs a higher plan",
+                )
+            }
+            config.clientsPerSlot = clients
+        }
         configs.save(config)
         return effective(serviceId)
     }

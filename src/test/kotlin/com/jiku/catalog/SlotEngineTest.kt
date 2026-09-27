@@ -14,6 +14,7 @@ import com.jiku.catalog.internal.ServiceReservationStatus
 import com.jiku.catalog.internal.SlotEngine
 import com.jiku.catalog.internal.SlotUnavailableException
 import com.jiku.shared.TenantContext
+import com.jiku.support.TestDates.MONDAY
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -21,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import java.time.Instant
-import java.time.LocalDate
 import java.time.LocalTime
 import java.util.UUID
 import java.util.concurrent.Callable
@@ -33,7 +33,7 @@ import kotlin.test.assertTrue
 /**
  * Moteur de créneaux et réservation atomique (JIKU-85). Fuseau des tests :
  * Africa/Conakry, sans heure d'été, donc une heure locale égale son instant UTC.
- * Le lundi 2026-11-02 sert de journée de référence.
+ * Le prochain lundi (`TestDates.MONDAY`) sert de journée de référence.
  */
 @SpringBootTest
 @Import(TestcontainersConfiguration::class)
@@ -59,7 +59,7 @@ class SlotEngineTest {
     @AfterEach
     fun clearContext() = TenantContext.clear()
 
-    private val monday = LocalDate.of(2026, 11, 2)
+    private val monday = MONDAY
 
     private fun addResource(
         name: String,
@@ -106,10 +106,10 @@ class SlotEngineTest {
         assertEquals(8, opens.size)
 
         // Réservation confirmée : la case de 09:00 disparaît des créneaux ouverts.
-        engine.reserveConfirmed(serviceId, Instant.parse("2026-11-02T09:00:00Z"))
+        engine.reserveConfirmed(serviceId, Instant.parse("${MONDAY}T09:00:00Z"))
         val after = engine.openSlots(serviceId, monday)
-        assertTrue(after.none { it.startsAt == Instant.parse("2026-11-02T09:00:00Z") })
-        assertTrue(after.any { it.startsAt == Instant.parse("2026-11-02T09:30:00Z") })
+        assertTrue(after.none { it.startsAt == Instant.parse("${MONDAY}T09:00:00Z") })
+        assertTrue(after.any { it.startsAt == Instant.parse("${MONDAY}T09:30:00Z") })
     }
 
     @Test
@@ -125,7 +125,7 @@ class SlotEngineTest {
             )
 
         assertEquals(8, engine.openSlots(serviceId, monday).size)
-        val outcome = engine.reserveConfirmed(serviceId, Instant.parse("2026-11-02T09:00:00Z"))
+        val outcome = engine.reserveConfirmed(serviceId, Instant.parse("${MONDAY}T09:00:00Z"))
         assertEquals(2, outcome.resourceIds.size)
 
         // Personne disponible ce jour-là → plus aucun créneau, même si le lieu est libre.
@@ -135,7 +135,7 @@ class SlotEngineTest {
 
         assertTrue(engine.openSlots(serviceId, monday).isEmpty())
         assertThrows<SlotUnavailableException> {
-            engine.reserveConfirmed(serviceId, Instant.parse("2026-11-02T10:00:00Z"))
+            engine.reserveConfirmed(serviceId, Instant.parse("${MONDAY}T10:00:00Z"))
         }
     }
 
@@ -144,7 +144,7 @@ class SlotEngineTest {
         val tenant = "slot-tenant-parallel"
         addResource("Cabine Unique", ResourceType.LOCATION, tenant)
         val serviceId = addService("Solo", tenant, listOf(ResourceType.LOCATION to 1))
-        val slot = Instant.parse("2026-11-02T11:00:00Z")
+        val slot = Instant.parse("${MONDAY}T11:00:00Z")
 
         val threads = 8
         val pool = Executors.newFixedThreadPool(threads)
@@ -178,7 +178,7 @@ class SlotEngineTest {
         val tenant = "slot-tenant-hold"
         addResource("Cabine Hold", ResourceType.LOCATION, tenant)
         val serviceId = addService("Sur demande", tenant, listOf(ResourceType.LOCATION to 1))
-        val slot = Instant.parse("2026-11-02T12:00:00Z")
+        val slot = Instant.parse("${MONDAY}T12:00:00Z")
 
         // Sur demande : la case est bloquée en attente, puis un second appel échoue.
         val held = engine.reserve(serviceId, slot)

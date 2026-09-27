@@ -72,6 +72,12 @@ class SecurityConfig(
                 // Profil public d'organisation : une page découverte par identifiant,
                 // comme une carte de visite. Lecture seule, rien d'identifiant.
                 it.requestMatchers(HttpMethod.GET, "${apiProperties.basePath}/public/orgs/*").permitAll()
+                // Vente publique de billets (JIKU-177) : la page de vente et la commande
+                // se trouvent par l'identifiant public ; la commande se suit ensuite par
+                // son lien signé, sans compte, comme une invitation.
+                it.requestMatchers(HttpMethod.GET, "${apiProperties.basePath}/public/orgs/*/events/*").permitAll()
+                it.requestMatchers(HttpMethod.POST, "${apiProperties.basePath}/public/orgs/*/events/*/orders").permitAll()
+                it.requestMatchers("${apiProperties.basePath}/orders/**").permitAll()
                 // Console de ligne du jour du personnel (JIKU-88) : le personnel n'a
                 // pas de compte, il est authentifié par le lien signé du comptoir porté
                 // dans le chemin, comme les validateurs sous /checkin.

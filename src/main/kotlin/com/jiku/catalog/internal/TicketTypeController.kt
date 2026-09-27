@@ -2,6 +2,7 @@ package com.jiku.catalog.internal
 
 import com.jiku.shared.TenantCurrency
 import com.jiku.shared.TicketTypeUsageGate
+import com.jiku.shared.VerificationGate
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
@@ -62,6 +63,7 @@ class TicketTypeService(
     private val events: EventRepository,
     private val guests: TicketTypeUsageGate,
     private val tenantCurrency: TenantCurrency,
+    private val verification: VerificationGate,
 ) {
     @Transactional(readOnly = true)
     fun list(eventId: UUID): List<TicketTypeResponse> = types.findByEventIdOrderByPositionAsc(eventId).map { it.toResponse() }
@@ -72,6 +74,8 @@ class TicketTypeService(
         request: UpsertTicketTypeRequest,
     ): TicketTypeResponse {
         requireEvent(eventId)
+        // A priced category makes clients pay: the organization must be verified (référentiel §9).
+        if ((request.priceMinor ?: 0) > 0) verification.requireVerified()
         val type =
             TicketType(eventId = eventId, label = request.label.trim(), colorHex = request.colorHex).apply {
                 maxCapacity = request.maxCapacity
@@ -100,6 +104,7 @@ class TicketTypeService(
         if (type.confirmedCount > 0 && type.price?.amountMinor != request.priceMinor) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "The price of a category cannot change once tickets are confirmed")
         }
+        if ((request.priceMinor ?: 0) > 0 && request.priceMinor != type.price?.amountMinor) verification.requireVerified()
         type.price = request.priceMinor?.let { Price(it, tenantCurrency.ofCurrentTenant()) }
         type.label = request.label.trim()
         type.colorHex = request.colorHex

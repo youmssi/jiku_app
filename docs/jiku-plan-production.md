@@ -1,6 +1,6 @@
 # Jikū — Ce qu'il manque pour la production, et le plan de travail
 
-**Date :** 2026-09-24, état mis à jour le 2026-09-26
+**Date :** 2026-09-24, état mis à jour le 2026-09-27
 **Référence :** ADR 104 (ticket, paiement, canaux, tarification).
 
 Ce document répond à une question : **que faut-il encore faire pour que le
@@ -26,9 +26,9 @@ connecté (niveau 3), Wave en direct.
 
 ## 2. Ce qui manque
 
-État vérifié dans le code le 2026-09-26. Les phases 0 à 5 du plan ci-dessous
-sont construites pour le produit ; il reste la phase 6, les séances collectives
-et la mise en production.
+État vérifié dans le code le 2026-09-27. Les phases 0 à 6 du plan ci-dessous
+sont construites pour le produit, vente publique de billets comprise ; il reste
+la mise en production (§2.2), dont le scan des vulnérabilités en CI.
 
 ### 2.1 Produit
 
@@ -47,11 +47,11 @@ et la mise en production.
 | Opérateur avec périmètre, équipe, console unique | ✅ Prêt | JIKU-116, JIKU-162, JIKU-163 |
 | Plusieurs monnaies (GNF, FCFA, USD) | ✅ Prêt | ADR 105, JIKU-137, JIKU-138 |
 | Votre propre numéro WhatsApp (Embedded Signup) | ✅ Prêt | JIKU-154, JIKU-155, JIKU-156 |
-| **Séances collectives** (plusieurs clients par créneau) | ❌ Manque | vendues dans Teams (10) et Organisation (30), non construites |
-| **Vérification des organisateurs** | ❌ Manque | phase 6.0 |
-| **Vente publique de billets** (commande, page d'achat) | ❌ Manque | phase 6.1, 6.2 |
-| **Commission de 3 % par tranche** | ❌ Manque | phase 6.3 |
-| Traduction anglaise des écrans services, liens validateur, bureau admin | 🟡 En cours | JIKU-166 et JIKU-167 fusionnées |
+| Séances collectives (plusieurs clients par créneau) | ✅ Prêt | JIKU-174 : Solo 1, Teams 10, Organisation 30 |
+| Vérification des organisateurs | ✅ Prêt | JIKU-175, JIKU-176 : personnelle ou entreprise, documents sur R2, file de revue, badge public |
+| Vente publique de billets (commande, page d'achat) | ✅ Prêt | JIKU-177 : places gardées, paiement déclaré puis confirmé, onglet Commandes |
+| Commission de 3 % par tranche | ✅ Prêt | JIKU-178 : tranche offerte, à crédit, jamais de pause le jour J, avoir de 12 mois |
+| Traduction anglaise de tous les écrans | ✅ Prêt | JIKU-166, JIKU-167, JIKU-172, JIKU-173 |
 
 ### 2.2 Mise en production
 
@@ -59,7 +59,7 @@ et la mise en production.
 |---|---|---|
 | Hébergement toujours actif | ❌ | offre payante Render (≈ 25 USD / mois) ou runbook Hetzner (`docs/deploy.md`) |
 | Domaine de marque | ❌ | web, API et e-mails encore sur `mrvin100.de` ; SPF et DKIM à refaire pour Resend et Brevo |
-| Branche `main` et mise en production | 🟡 | `main` existe mais a un historique séparé de `develop` : publier par une branche de version qui enregistre `main` sans changer les fichiers de `develop` |
+| Branche `main` et mise en production | ✅ | `main` partage l'historique de `develop` depuis la version du 2026-09-26 ; une version est une PR `develop` → `main` fusionnée par commit de fusion |
 | Moyen de paiement sur le compte WhatsApp Business | ❌ | exigé par Meta avant le 30 septembre 2026, sinon l'envoi s'arrête |
 | Statut Tech Provider Meta, modèles de messages approuvés | ⏳ | nécessaire pour « votre propre numéro » et les invitations interactives |
 | Compte marchand CinetPay en production | ⏳ | clés, URL de notification, délai de reversement à négocier |
@@ -136,10 +136,10 @@ l'ordre.
 
 | Tranche | Dépôt | Contenu |
 |---|---|---|
-| 6.0 | app, web | Vérification des organisateurs : légère (obligatoire avant la première vente) et complète (facultative, badge bleu), validation dans le back-office, mentions de responsabilité sur les pages publiques |
-| 6.1 | app | Commande : quantités par catégorie, jauge atomique (module `allocation`), expiration des commandes non payées |
+| 6.0 | app, web | Vérification des organisateurs (JIKU-175) : personnelle ou entreprise, obligatoire dès qu'un paiement intervient, facultative sinon ; documents dans un stockage privé (Cloudflare R2), validation dans le back-office, badge et mentions sur les pages publiques |
+| 6.1 | app | Commande (JIKU-177) : quantités par catégorie, places prises d'un coup sous les deux jauges (événement et catégorie), au plus 10 billets par commande. Le client déclare son paiement (référence Mobile Money), l'organisation confirme (billets émis au nom de l'acheteur, transférables) ou refuse avec un motif. Une commande non déclarée rend ses places après le délai choisi par l'organisation (30 min par défaut, de 10 min à 72 h) ; une commande déclarée n'expire plus |
 | 6.2 | web | Page publique de l'événement et parcours d'achat, paiement aux niveaux 1 et 2 |
-| 6.3 | app, web | Commission de 3 % payée par tranche avant la vente (circuit 1), vente en pause quand la tranche est épuisée, avoir pour la part non consommée |
+| 6.3 | app, web | Commission (JIKU-178) : 3 % du prix, payée par tranche de 50 billets d'une catégorie avant la vente, jamais plus que ses places restantes. Première tranche offerte, une tranche à crédit (réglée avec le paiement suivant), vente en pause quand les tranches sont épuisées sauf le jour de l'événement (le dépassement est dû après). À la clôture, la part payée non consommée devient un avoir de 12 mois déduit des paiements de commission suivants |
 
 ### Après le lancement
 

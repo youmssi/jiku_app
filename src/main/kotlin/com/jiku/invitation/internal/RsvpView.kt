@@ -36,6 +36,11 @@ data class RsvpView(
     val transferredTo: String? = null,
     /** Questions personnalisées posées au moment de confirmer (JIKU-77). */
     val questions: List<RsvpQuestion> = emptyList(),
+    /**
+     * The organizer's approved verification (COMPANY, PERSONAL) or null: pages that
+     * ask for a payment show a badge, or a warning when it is null (référentiel §9).
+     */
+    val organizerVerification: String? = null,
     /** What the guest owes the organization and how to pay it (JIKU-110); null when the ticket is free. */
     val payment: RsvpPayment? = null,
     /** When the event starts, so the guest page can write it in the guest's own language. */

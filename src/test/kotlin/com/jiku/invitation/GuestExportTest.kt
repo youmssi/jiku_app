@@ -3,6 +3,7 @@ package com.jiku.invitation
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.invitation.internal.InvitationTokenService
+import com.jiku.support.TestDates.EVENT_YEAR
 import org.hamcrest.Matchers.containsString
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -104,7 +105,7 @@ class GuestExportTest {
                         .content(
                             """
                             {"name":"Gala","timezone":"Africa/Abidjan",
-                            "startDateTime":"2026-12-01T18:00:00Z","invitationChannels":["EMAIL"]}
+                            "startDateTime":"${EVENT_YEAR}-12-01T18:00:00Z","invitationChannels":["EMAIL"]}
                             """.trimIndent(),
                         ),
                 ).andExpect(status().isCreated())

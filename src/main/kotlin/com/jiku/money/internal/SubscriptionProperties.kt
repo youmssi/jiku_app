@@ -42,6 +42,11 @@ data class SubscriptionProperties(
     val grace: Duration = Duration.ofDays(3),
     /** WhatsApp appointment reminders a free plan includes each calendar month (ADR 105). */
     val freePlanWhatsAppReminders: Int = 50,
+    /**
+     * Clients one resource may serve in the same slot, by plan name (référentiel
+     * métier §3). A plan missing here serves one client at a time.
+     */
+    val clientsPerSlot: Map<String, Int> = mapOf("Solo" to 1, "Solo Plus" to 1, "Teams" to 10, "Organisation" to 30),
 ) {
     fun period(months: Int): Period? = periods.firstOrNull { it.months == months }
 }

@@ -4,6 +4,7 @@ import com.jiku.catalog.EventInfo
 import com.jiku.catalog.EventModuleApi
 import com.jiku.catalog.InvitationChannel
 import com.jiku.shared.TenantContext
+import com.jiku.shared.VerificationGate
 import com.jiku.tenant.TenantModuleApi
 import com.jiku.ticket.TicketInfo
 import com.jiku.ticket.TicketingModuleApi
@@ -30,6 +31,7 @@ class RsvpService(
     private val tenants: TenantModuleApi,
     private val ticketing: TicketingModuleApi,
     private val eventPublisher: ApplicationEventPublisher,
+    private val verification: VerificationGate,
 ) {
     @Transactional(readOnly = true)
     fun view(guestId: UUID): RsvpView = buildView(loadGuest(guestId))
@@ -267,6 +269,7 @@ class RsvpService(
             eventEnd = event?.endDateTime,
             eventTimezone = event?.timezone,
             categoryName = guest.ticketTypeId?.let { typeId -> events.ticketTypes(eventId).firstOrNull { it.id == typeId }?.label },
+            organizerVerification = verification.verifiedKind(),
         )
     }
 

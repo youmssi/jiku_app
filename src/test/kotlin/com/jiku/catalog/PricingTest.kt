@@ -5,6 +5,7 @@ import com.jiku.TestcontainersConfiguration
 import com.jiku.catalog.internal.TicketTypeRepository
 import com.jiku.shared.TenantContext
 import com.jiku.support.OrganizerApi
+import com.jiku.support.TestVerifications
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -27,6 +28,9 @@ class PricingTest {
     lateinit var mockMvc: MockMvc
 
     @Autowired
+    lateinit var verifications: TestVerifications
+
+    @Autowired
     lateinit var ticketTypes: TicketTypeRepository
 
     private val api by lazy { OrganizerApi(mockMvc) }
@@ -34,6 +38,7 @@ class PricingTest {
     @Test
     fun `a sold category is priced in the organization's currency, a free one has no price`() {
         val token = api.register()
+        verifications.approve(api.tenantId(token))
         val eventId = api.createEvent(token)
 
         api
@@ -51,6 +56,7 @@ class PricingTest {
     @Test
     fun `a category's price is frozen once a ticket is confirmed`() {
         val token = api.register()
+        verifications.approve(api.tenantId(token))
         val eventId = api.createEvent(token)
         val typeId =
             JsonPath.read<String>(
@@ -85,6 +91,7 @@ class PricingTest {
     @Test
     fun `a negative or zero price is refused`() {
         val token = api.register()
+        verifications.approve(api.tenantId(token))
         val eventId = api.createEvent(token)
 
         api
@@ -95,6 +102,7 @@ class PricingTest {
     @Test
     fun `a service's payment rule and price change together`() {
         val token = api.register()
+        verifications.approve(api.tenantId(token))
         val created =
             api
                 .post(
@@ -124,6 +132,7 @@ class PricingTest {
     @Test
     fun `a service whose rule and price disagree is refused`() {
         val token = api.register()
+        verifications.approve(api.tenantId(token))
 
         api
             .post(token, "/api/v1/services", """{"name":"Coupe","timezone":"Africa/Conakry","paymentRule":"BEFORE"}""")

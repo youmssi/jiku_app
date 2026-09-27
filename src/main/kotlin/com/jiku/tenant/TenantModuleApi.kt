@@ -41,4 +41,27 @@ interface TenantModuleApi {
         tenantId: UUID,
         username: String?,
     ): TenantInfo
+
+    /** Verification requests of every tenant in [status] (PENDING, APPROVED, REJECTED), oldest first (JIKU-175). */
+    fun adminListVerifications(
+        status: String,
+        limit: Int,
+    ): List<AdminVerificationView>
+
+    /** Short-lived links to a request's documents; empty once they are deleted. */
+    fun adminVerificationDocuments(id: UUID): List<VerificationDocumentLink>
+
+    /** Approves or rejects a pending request; a rejection needs a [reason] and deletes the documents. */
+    fun adminDecideVerification(
+        id: UUID,
+        approve: Boolean,
+        reason: String?,
+        adminId: UUID?,
+    ): AdminVerificationView
+
+    /**
+     * How long an unpaid ticket order of [tenantId] keeps its places (JIKU-177):
+     * the organization's own choice, or the platform default.
+     */
+    fun orderHold(tenantId: UUID): java.time.Duration
 }

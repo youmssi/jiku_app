@@ -8,6 +8,7 @@ import com.jiku.money.internal.PaymentInitiationRequest
 import com.jiku.money.internal.PaymentInstruction
 import com.jiku.money.internal.PaymentOutcome
 import com.jiku.money.internal.PaymentProvider
+import com.jiku.support.TestDates.EVENT_YEAR
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -221,7 +222,7 @@ class PaymentCallbackTest {
                         .content(
                             """
                             {"name":"Routed Event","timezone":"Africa/Conakry",
-                             "startDateTime":"2026-12-01T18:00:00Z","invitationChannels":["EMAIL"]}
+                             "startDateTime":"${EVENT_YEAR}-12-01T18:00:00Z","invitationChannels":["EMAIL"]}
                             """.trimIndent(),
                         ),
                 ).andExpect(status().isCreated())

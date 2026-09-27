@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.invitation.internal.InvitationTokenService
 import com.jiku.support.OrganizerApi
+import com.jiku.support.TestVerifications
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -29,6 +30,9 @@ class TicketPaymentFlowTest {
     lateinit var mockMvc: MockMvc
 
     @Autowired
+    lateinit var verifications: TestVerifications
+
+    @Autowired
     lateinit var invitationTokens: InvitationTokenService
 
     private val api by lazy { OrganizerApi(mockMvc) }
@@ -36,6 +40,7 @@ class TicketPaymentFlowTest {
     @Test
     fun `a sold event ticket opens the door only once the payment is confirmed`() {
         val token = api.register()
+        verifications.approve(api.tenantId(token))
         api
             .put(token, "/api/v1/settings/payment-methods", """{"payeeName":"Gala Org","orangeMoneyNumber":"+224 620 00 00 00"}""")
             .andExpect(status().isOk())
@@ -104,6 +109,7 @@ class TicketPaymentFlowTest {
     @Test
     fun `a free event ticket owes nothing and cannot be marked paid`() {
         val token = api.register()
+        verifications.approve(api.tenantId(token))
         val eventId = api.createEvent(token)
         api.publish(token, eventId)
         val guestId = api.importGuest(token, eventId, "Moussa")
@@ -128,6 +134,7 @@ class TicketPaymentFlowTest {
     @Test
     fun `a service paid before cannot start until paid`() {
         val token = api.register()
+        verifications.approve(api.tenantId(token))
         val serviceId = createService(token, """"paymentRule":"BEFORE","priceMinor":100000""")
         val code = walkIn(token, serviceId)
 
@@ -145,6 +152,7 @@ class TicketPaymentFlowTest {
     @Test
     fun `a service paid after falls due when it ends`() {
         val token = api.register()
+        verifications.approve(api.tenantId(token))
         val serviceId = createService(token, """"paymentRule":"AFTER_SERVICE","priceMinor":20000""")
         val code = walkIn(token, serviceId)
 

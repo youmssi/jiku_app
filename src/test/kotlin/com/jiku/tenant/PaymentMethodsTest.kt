@@ -2,6 +2,7 @@ package com.jiku.tenant
 
 import com.jiku.TestcontainersConfiguration
 import com.jiku.support.OrganizerApi
+import com.jiku.support.TestVerifications
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -22,11 +23,15 @@ class PaymentMethodsTest {
     @Autowired
     lateinit var mockMvc: MockMvc
 
+    @Autowired
+    lateinit var verifications: TestVerifications
+
     private val api by lazy { OrganizerApi(mockMvc) }
 
     @Test
     fun `payment methods are saved, shown on the profile, and cleared when blank`() {
         val token = api.register()
+        verifications.approve(api.tenantId(token))
         api
             .get(token, "/api/v1/settings/payment-methods")
             .andExpect(status().isOk())
@@ -55,6 +60,7 @@ class PaymentMethodsTest {
     @Test
     fun `a Mobile Money number needs the payee name the client will see`() {
         val token = api.register()
+        verifications.approve(api.tenantId(token))
 
         api
             .put(token, "/api/v1/settings/payment-methods", """{"mtnMomoNumber":"+224 660 00 00 00"}""")
@@ -64,6 +70,7 @@ class PaymentMethodsTest {
     @Test
     fun `a payment link must be secure`() {
         val token = api.register()
+        verifications.approve(api.tenantId(token))
 
         api
             .put(token, "/api/v1/settings/payment-methods", """{"paymentLinkUrl":"http://pay.example/nimba"}""")
