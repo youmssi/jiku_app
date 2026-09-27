@@ -61,10 +61,10 @@ class OpenCardInboundService(
             reply.values +
                 listOfNotNull(
                     reply.eventStart?.let { start ->
-                        "when" to "\n" + catalog.formatDate(reply.language, "date.reminder", start, zone)
+                        "when" to "\n" + catalog.shortWhen(reply.language, start, zone)
                     },
                     reply.answerBy?.let { deadline ->
-                        val date = catalog.formatDate(reply.language, "date.reminder", deadline, zone)
+                        val date = catalog.shortWhen(reply.language, deadline, zone, weekday = false)
                         "deadline" to "\n\n" + catalog.text(reply.language, "whatsapp.card.answerBy", mapOf("date" to date))
                     },
                 )
