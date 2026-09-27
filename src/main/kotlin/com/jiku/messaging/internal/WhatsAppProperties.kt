@@ -56,5 +56,11 @@ data class WhatsAppProperties(
          */
         val appId: String = "",
         val embeddedSignupConfigId: String = "",
+        /**
+         * The Meta id of the Jikū number dedicated to cards (JIKU-185, ADR 106),
+         * under the same app and token as the platform number. Messages to it run
+         * the card conversation; blank keeps it off.
+         */
+        val cardsPhoneNumberId: String = "",
     )
 }

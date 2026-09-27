@@ -36,7 +36,6 @@ class TicketNotices(
         val tenant = tenants.findTenant(UUID.fromString(tenantId))
         val language = MessageLanguage.forCountry(tenant?.country)
         val token = tokenService.issue(guestId, event.id, tenantId)
-        val prefix = if (language == MessageLanguage.FRENCH) "" else "/$language"
         val category = guest.ticketTypeId?.let { typeId -> events.ticketTypes(event.id).firstOrNull { it.id == typeId }?.label }
         return TicketConfirmedNotice(
             guestId = guestId,
@@ -53,9 +52,21 @@ class TicketNotices(
             organizerName = event.brand.name ?: tenant?.displayName ?: event.name,
             primaryColor = event.brand.primaryColor ?: tenant?.primaryColor ?: DEFAULT_COLOR,
             logoUrl = event.brand.logoUrl ?: tenant?.logoUrl,
-            ticketUrl = "${properties.appBaseUrl}$prefix/invitation/$token/ticket",
+            ticketUrl = links(token, language).ticketUrl,
             language = language,
             channel = channel,
+            qrImageUrl = links(token, language).qrImageUrl,
+        )
+    }
+
+    /** The ticket page and the QR code image of a signed ticket [token], in [language]. */
+    fun links(
+        token: String,
+        language: String,
+    ): TicketLinks {
+        val prefix = if (language == MessageLanguage.FRENCH) "" else "/$language"
+        return TicketLinks(
+            ticketUrl = "${properties.appBaseUrl}$prefix/invitation/$token/ticket",
             qrImageUrl = "${properties.apiPublicUrl}${api.basePath}/rsvp/$token/qr.png",
         )
     }
@@ -64,3 +75,8 @@ class TicketNotices(
         const val DEFAULT_COLOR = "#1E293B"
     }
 }
+
+data class TicketLinks(
+    val ticketUrl: String,
+    val qrImageUrl: String,
+)

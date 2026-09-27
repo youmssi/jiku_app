@@ -32,6 +32,7 @@ import javax.crypto.spec.SecretKeySpec
 class WhatsAppWebhookController(
     private val properties: WhatsAppProperties,
     private val inbound: WhatsAppInboundService,
+    private val cards: OpenCardInboundService,
     private val numbers: WhatsAppBusinessNumberRepository,
     private val tenantTransaction: TenantTransaction,
     private val objectMapper: ObjectMapper,
@@ -66,6 +67,10 @@ class WhatsAppWebhookController(
         }
         for (message in WhatsAppWebhookParser.messages(objectMapper.readTree(rawBody))) {
             try {
+                if (cards.isCardsNumber(message.businessNumberId)) {
+                    cards.handle(message)
+                    continue
+                }
                 val tenantId = message.businessNumberId?.let { numbers.findById(it).orElse(null) }?.tenantId
                 if (tenantId == null) {
                     inbound.handle(message)
@@ -111,6 +116,8 @@ data class InboundWhatsApp(
     val buttonId: String? = null,
     val text: String? = null,
     val businessNumberId: String? = null,
+    /** The name the sender shows in WhatsApp (`contacts[].profile.name`), when Meta gives it. */
+    val profileName: String? = null,
 )
 
 /**
@@ -125,7 +132,20 @@ object WhatsAppWebhookParser {
             entry.path("changes").flatMap { change ->
                 val value = change.path("value")
                 val businessNumberId = value.path("metadata").path("phone_number_id").textOrNull()
-                value.path("messages").mapNotNull { message(it)?.copy(businessNumberId = businessNumberId) }
+                val names =
+                    value
+                        .path("contacts")
+                        .mapNotNull { contact ->
+                            val id = contact.path("wa_id").asString("").filter { it.isDigit() }
+                            contact
+                                .path("profile")
+                                .path("name")
+                                .textOrNull()
+                                ?.let { id to it.trim() }
+                        }.toMap()
+                value.path("messages").mapNotNull { node ->
+                    message(node)?.let { it.copy(businessNumberId = businessNumberId, profileName = names[it.from]) }
+                }
             }
         }
 
