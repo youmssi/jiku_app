@@ -1,7 +1,7 @@
 plugins {
     kotlin("jvm") version "2.3.21"
     kotlin("plugin.spring") version "2.3.21"
-    id("org.springframework.boot") version "4.1.0"
+    id("org.springframework.boot") version "4.1.1"
     id("io.spring.dependency-management") version "1.1.7"
     kotlin("plugin.jpa") version "2.3.21"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
@@ -11,7 +11,13 @@ plugins {
 group = "com.jiku"
 version = "0.0.1-SNAPSHOT"
 
-extra["springModulithVersion"] = "2.1.0"
+extra["springModulithVersion"] = "2.1.1"
+
+// Spring Boot 4.1.1 still manages Tomcat 11.0.24, which has critical CVEs
+// (CVE-2026-65182, CVE-2026-65905, CVE-2026-68525) fixed in 11.0.25. Drop this
+// override once a Boot release manages a fixed Tomcat: the CI dependency scan
+// fails the build if the managed version is vulnerable again.
+extra["tomcat.version"] = "11.0.26"
 
 java {
     toolchain {
