@@ -30,7 +30,7 @@ import javax.imageio.ImageIO
 /**
  * JIKU-194: the organizer picks the look of an event's guest-facing surfaces,
  * one of three styles, and may add a banner photo. The photo is served publicly
- * once the event is published, and the public views carry both.
+ * from the upload on, and the public views carry both.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -59,7 +59,7 @@ class EventLookTest {
     }
 
     @Test
-    fun `a banner photo is stored, served publicly once published, and removed`() {
+    fun `a banner photo is stored, served publicly, and removed`() {
         val token = api.register()
         val eventId = api.createEvent(token)
         val photo = png(1200, 600)
@@ -73,9 +73,6 @@ class EventLookTest {
                 "$.bannerUrl",
             )
         val path = url.substringAfter("http://localhost:8080")
-        mockMvc.perform(get(path)).andExpect(status().isNotFound())
-
-        api.publish(token, eventId)
         mockMvc
             .perform(get(path))
             .andExpect(status().isOk())
@@ -83,6 +80,7 @@ class EventLookTest {
             .andExpect(header().string("Cache-Control", containsString("immutable")))
             .andExpect(content().bytes(photo))
 
+        api.publish(token, eventId)
         val code =
             JsonPath.read<String>(
                 api

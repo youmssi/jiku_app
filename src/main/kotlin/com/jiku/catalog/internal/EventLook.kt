@@ -56,13 +56,13 @@ interface PublicBanner {
 interface EventBannerRepository : JpaRepository<EventBanner, UUID> {
     /**
      * Native, so the tenant filter does not apply: a guest's page has no tenant.
-     * Only the banner of an event people can see is served.
+     * A draft's banner is served too, so the organizer previews the card before
+     * publishing; the event's id is random, and the photo is meant to be shared.
      */
     @Query(
         nativeQuery = true,
         value =
-            "SELECT b.content AS content, b.content_type AS contentType FROM event_banner b " +
-                "JOIN event e ON e.id = b.event_id WHERE b.event_id = :eventId AND e.status <> 'DRAFT'",
+            "SELECT b.content AS content, b.content_type AS contentType FROM event_banner b WHERE b.event_id = :eventId",
     )
     fun findPublic(
         @Param("eventId") eventId: UUID,

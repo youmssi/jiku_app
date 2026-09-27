@@ -156,8 +156,8 @@ dessinés par Jikū, pas librement. La maquette validée est
   - JPEG ou PNG, 1 Mo au plus ;
   - 600 × 300 pixels au moins ;
   - l'image est vérifiée à la lecture.
-- La photo est servie publiquement, avec un cache long versionné, pour un
-  événement publié seulement.
+- La photo est servie publiquement, avec un cache long versionné, dès l'envoi :
+  l'organisateur voit sa carte avant de publier.
 - Les vues publiques (page de réponse, billet) portent `cardStyle` et
   `bannerUrl`.
 - Le premier message WhatsApp de la carte porte l'image dessinée par le site
