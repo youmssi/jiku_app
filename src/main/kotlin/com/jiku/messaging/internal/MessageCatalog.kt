@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.Properties
 import java.util.concurrent.ConcurrentHashMap
 
@@ -51,6 +52,30 @@ class MessageCatalog(
             .format(instant.atZone(zone))
 
     /**
+     * [instant] in [zone], short enough to read at a glance (JIKU-188): "sam. 14
+     * nov. · 19 h", the year only when it is not obvious, the minutes only when
+     * they are not zero. Without [weekday], "7 nov. · 20 h".
+     */
+    fun shortWhen(
+        language: String,
+        instant: Instant,
+        zone: ZoneId,
+        weekday: Boolean = true,
+        now: Instant = Instant.now(),
+    ): String {
+        val at = instant.atZone(zone)
+        val today = now.atZone(zone).toLocalDate()
+        val withYear =
+            ChronoUnit.DAYS.between(today, at.toLocalDate()) > YEAR_SHOWN_AFTER_DAYS || at.year < today.year
+        val dayKey = (if (weekday) "date.short.weekday" else "date.short.day") + (if (withYear) "Year" else "")
+        val timeKey = if (at.minute == 0) "date.short.hour" else "date.short.hourMinutes"
+        val locale = MessageLanguage.locale(language)
+        val day = DateTimeFormatter.ofPattern(text(language, dayKey), locale).format(at)
+        val time = DateTimeFormatter.ofPattern(text(language, timeKey), locale).format(at)
+        return "$day · $time"
+    }
+
+    /**
      * The full email document for [name]: the layout around the language's
      * partial, with the layout-only parts (language, preheader, footer, and the
      * [brand] shown above the card, already HTML) filled in. The message variables
@@ -93,3 +118,6 @@ class MessageCatalog(
             ClassPathResource(it).inputStream.bufferedReader(Charsets.UTF_8).use { reader -> reader.readText() }
         }
 }
+
+/** Beyond this many days ahead, a short date writes out its year. */
+private const val YEAR_SHOWN_AFTER_DAYS = 330L
