@@ -21,6 +21,7 @@ class GuestRetentionJob(
     private val events: EventModuleApi,
     private val guests: GuestRepository,
     private val erasureService: GuestErasureService,
+    private val openResponses: OpenResponseRepository,
     private val properties: RetentionProperties,
 ) {
     private val log = LoggerFactory.getLogger(GuestRetentionJob::class.java)
@@ -43,6 +44,11 @@ class GuestRetentionJob(
                     if (erasureService.eraseGuest(requireNotNull(guest.id), ErasureReason.RETENTION_POLICY)) {
                         anonymized++
                     }
+                }
+                // "Maybe" and "no" answers of an open invitation hold a name and a number too.
+                openResponses.findByEventIdOrderByUpdatedAtDesc(candidate.eventId).filterNot { it.erased }.forEach {
+                    it.erase()
+                    openResponses.save(it)
                 }
             }
         }

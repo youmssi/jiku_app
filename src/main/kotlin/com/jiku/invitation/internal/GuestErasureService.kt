@@ -19,6 +19,7 @@ import java.util.UUID
 class GuestErasureService(
     private val guests: GuestRepository,
     private val erasureLogs: GuestErasureLogRepository,
+    private val openResponses: OpenResponseRepository,
 ) {
     @Transactional
     fun eraseGuest(
@@ -34,6 +35,10 @@ class GuestErasureService(
             guest.personalDataErased = true
             guest.erasedAt = Instant.now()
             guests.save(guest)
+        }
+        openResponses.findByGuestId(guestId).filterNot { it.erased }.forEach {
+            it.erase()
+            openResponses.save(it)
         }
         erasureLogs.save(GuestErasureLog(guestId = guestId, eventId = guest.eventId, reason = reason))
         return true

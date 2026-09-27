@@ -57,6 +57,10 @@ class OrganizerPackFlowTest {
     @Test
     fun `a pack covers every event for the month, extra guests are bought ahead and owed ones renew with it`() {
         val token = api.register()
+        val freeEvent = api.createEvent(token)
+        TenantContext.set(api.tenantId(token))
+        assertEquals(false, allowanceGate.paidTier(UUID.fromString(freeEvent)))
+        TenantContext.clear()
         api
             .get(token, "/api/v1/billing/pack")
             .andExpect(status().isOk())
@@ -109,6 +113,7 @@ class OrganizerPackFlowTest {
         assertEquals(Long.MAX_VALUE, allowanceGate.allowanceCeiling(UUID.fromString(today), 0))
         assertEquals(0, allowanceGate.allowanceCeiling(UUID.fromString(later), 0))
         assertEquals(true, allowanceGate.interactiveCovered(UUID.fromString(later)))
+        assertEquals(true, allowanceGate.paidTier(UUID.fromString(later)))
     }
 
     private fun eventStartingAt(

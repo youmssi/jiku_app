@@ -28,6 +28,10 @@ jiku:
     meta:
       access-token: ${WHATSAPP_META_ACCESS_TOKEN:}
       phone-number-id: ${WHATSAPP_META_PHONE_NUMBER_ID:}
+      # The Jikū number dedicated to cards (JIKU-185, ADR 106): its Meta phone
+      # number id, under the same app and token. Blank keeps the card
+      # conversation off; cards are then answered on their web page only.
+      cards-phone-number-id: ${WHATSAPP_META_CARDS_PHONE_NUMBER_ID:}
       base-url: ${WHATSAPP_META_BASE_URL:https://graph.facebook.com/v21.0}
       # Approved template for business-initiated sends; blank sends plain text
       # (only reaches recipients inside the 24h customer-service window).
@@ -275,6 +279,19 @@ api:
         token-segment: 1
         max-requests: ${RATE_LIMIT_ORDER_LINK_MAX_REQUESTS:30}
         window: ${RATE_LIMIT_ORDER_LINK_WINDOW:PT1M}
+      open-invitation-page:
+        # A shared card's page (JIKU-184): opened, refreshed, shared again. Per
+        # code, so one popular card does not starve the others.
+        paths: [/open/*]
+        token-segment: 1
+        max-requests: ${RATE_LIMIT_OPEN_INVITATION_PAGE_MAX_REQUESTS:120}
+        window: ${RATE_LIMIT_OPEN_INVITATION_PAGE_WINDOW:PT1M}
+      open-invitation-response:
+        # Answers to a card, per address. Mobile networks put many people behind
+        # one address, so it allows a group answering at once, not a script.
+        paths: [/open/*/responses]
+        max-requests: ${RATE_LIMIT_OPEN_INVITATION_RESPONSE_MAX_REQUESTS:30}
+        window: ${RATE_LIMIT_OPEN_INVITATION_RESPONSE_WINDOW:PT10M}
 
 error-tracking:
   # Unhandled-error reporting (JIKU-70). The DSN is the switch: blank — the default
@@ -528,6 +545,15 @@ sales:
     default: ${SALES_ORDER_HOLD_DEFAULT:PT30M}
     min: ${SALES_ORDER_HOLD_MIN:PT10M}
     max: ${SALES_ORDER_HOLD_MAX:PT72H}
+
+# Invitation ouverte (JIKU-184, ADR 106).
+open-invitation:
+  # Companions an organizer may allow per answer, at most, and the default.
+  max-companions: ${OPEN_INVITATION_MAX_COMPANIONS:10}
+  default-companions: ${OPEN_INVITATION_DEFAULT_COMPANIONS:5}
+  # The Jikū WhatsApp number dedicated to cards, digits only. Blank: answers go
+  # through the web page only.
+  whatsapp-number: ${OPEN_INVITATION_WHATSAPP_NUMBER:}
 
 verification:
   # Time the documents of an approved request are kept before deletion; a

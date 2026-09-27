@@ -75,13 +75,13 @@ class EventModuleApiService(
     @Transactional
     override fun reserveAttendanceSlots(
         eventId: UUID,
-        ticketTypeId: UUID,
+        ticketTypeId: UUID?,
         quantity: Int,
     ): Boolean {
-        require(quantity > 0) { "An order takes at least one place" }
+        require(quantity > 0) { "A reservation takes at least one place" }
         val event = events.findById(eventId).orElse(null) ?: return false
         if (events.reserveSlots(eventId, attendanceLimit(event), quantity) != 1) return false
-        if (ticketTypes.reserveSlots(ticketTypeId, quantity) == 1) return true
+        if (ticketTypeId == null || ticketTypes.reserveSlots(ticketTypeId, quantity) == 1) return true
         events.releaseSlots(eventId, quantity)
         return false
     }
@@ -89,11 +89,11 @@ class EventModuleApiService(
     @Transactional
     override fun releaseAttendanceSlots(
         eventId: UUID,
-        ticketTypeId: UUID,
+        ticketTypeId: UUID?,
         quantity: Int,
     ) {
         events.releaseSlots(eventId, quantity)
-        ticketTypes.releaseSlots(ticketTypeId, quantity)
+        if (ticketTypeId != null) ticketTypes.releaseSlots(ticketTypeId, quantity)
     }
 
     @Transactional

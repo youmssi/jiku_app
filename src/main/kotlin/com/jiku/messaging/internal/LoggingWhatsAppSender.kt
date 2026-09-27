@@ -48,4 +48,34 @@ class WhatsAppSenderConfig {
             buttonsTemplateName = properties.meta.buttonsTemplateName.ifBlank { null },
             imageTemplateName = properties.meta.imageTemplateName.ifBlank { null },
         )
+
+    /**
+     * The sender of the cards number (JIKU-185): session messages only, since
+     * it only ever answers a person who just wrote. Logs like the platform
+     * sender when the transport is `log` or the number is not configured.
+     */
+    @Bean
+    fun cardsWhatsAppSender(
+        builder: RestClient.Builder,
+        properties: WhatsAppProperties,
+    ): CardsWhatsAppSender =
+        CardsWhatsAppSender(
+            if (properties.transport == "meta" && properties.meta.cardsPhoneNumberId.isNotBlank()) {
+                MetaCloudWhatsAppSender.build(
+                    builder = builder.clone(),
+                    accessToken = properties.meta.accessToken,
+                    phoneNumberId = properties.meta.cardsPhoneNumberId,
+                    baseUrl = properties.meta.baseUrl,
+                    templateName = null,
+                    templateLanguage = properties.meta.templateLanguage,
+                )
+            } else {
+                LoggingWhatsAppSender()
+            },
+        )
 }
+
+/** Sends from the Jikū number dedicated to cards (JIKU-185), apart from the platform number. */
+class CardsWhatsAppSender(
+    val sender: WhatsAppSender,
+)
