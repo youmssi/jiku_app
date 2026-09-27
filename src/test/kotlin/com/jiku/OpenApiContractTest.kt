@@ -15,8 +15,8 @@ import tools.jackson.databind.SerializationFeature
 import tools.jackson.databind.json.JsonMapper
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.test.fail
 
 /**
  * JIKU-72: keeps the committed OpenAPI contract honest.
@@ -61,12 +61,40 @@ class OpenApiContractTest {
             Files.exists(CONTRACT_PATH),
             "$CONTRACT_PATH is missing. Generate it with ./gradlew regenerateOpenApi",
         )
-        assertEquals(
-            Files.readString(CONTRACT_PATH).replace("\r\n", "\n").trim(),
-            live.trim(),
-            "The committed OpenAPI contract is stale. Run ./gradlew regenerateOpenApi, commit " +
-                "openapi/openapi.json, and regenerate the frontend types (web/openapi/README.md).",
-        )
+        val committed = Files.readString(CONTRACT_PATH).replace("\r\n", "\n").trim()
+        if (committed != live.trim()) {
+            fail(
+                "The committed OpenAPI contract is stale. Run ./gradlew regenerateOpenApi, commit " +
+                    "openapi/openapi.json, and regenerate the frontend types (web/openapi/README.md).\n" +
+                    changedRegion(committed.lines(), live.trim().lines()),
+            )
+        }
+    }
+
+    /**
+     * Only the lines between the first and the last difference: the whole
+     * document is too long for a CI log, which would cut the part that matters.
+     */
+    private fun changedRegion(
+        committed: List<String>,
+        live: List<String>,
+    ): String {
+        var start = 0
+        while (start < committed.size && start < live.size && committed[start] == live[start]) start++
+        var end = 0
+        while (end < committed.size - start &&
+            end < live.size - start &&
+            committed[committed.size - 1 - end] == live[live.size - 1 - end]
+        ) {
+            end++
+        }
+
+        fun region(lines: List<String>) =
+            lines
+                .subList(start, lines.size - end)
+                .take(DIFF_LINES)
+                .joinToString("\n")
+        return "Differs from line ${start + 1}.\n--- committed\n${region(committed)}\n+++ live\n${region(live)}"
     }
 
     @Test
@@ -116,6 +144,7 @@ class OpenApiContractTest {
 
     private companion object {
         const val REGENERATE = "jiku.openapi.regenerate"
+        const val DIFF_LINES = 80
         val CONTRACT_PATH: Path = Path.of("openapi", "openapi.json")
         val MAPPER: ObjectMapper =
             JsonMapper
