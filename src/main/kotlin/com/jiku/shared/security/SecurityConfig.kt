@@ -78,6 +78,9 @@ class SecurityConfig(
                 it.requestMatchers(HttpMethod.GET, "${apiProperties.basePath}/public/orgs/*/events/*").permitAll()
                 it.requestMatchers(HttpMethod.POST, "${apiProperties.basePath}/public/orgs/*/events/*/orders").permitAll()
                 it.requestMatchers("${apiProperties.basePath}/orders/**").permitAll()
+                // Invitation ouverte (JIKU-184) : la carte partagée dans les groupes et
+                // la réponse se trouvent par le code de l'invitation, sans compte.
+                it.requestMatchers("${apiProperties.basePath}/open/**").permitAll()
                 // Console de ligne du jour du personnel (JIKU-88) : le personnel n'a
                 // pas de compte, il est authentifié par le lien signé du comptoir porté
                 // dans le chemin, comme les validateurs sous /checkin.

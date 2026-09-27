@@ -26,6 +26,7 @@ class InvitationSendingService(
     private val guests: GuestRepository,
     private val events: EventModuleApi,
     private val allowanceGate: UsageAllowanceGate,
+    private val openResponses: OpenResponseRepository,
 ) {
     @Transactional
     fun queue(
@@ -127,11 +128,13 @@ class InvitationSendingService(
         committed: Set<UUID>,
         batchGuestIds: Set<UUID>,
     ) {
-        val ceiling = allowanceGate.allowanceCeiling(eventId, committed.size.toLong())
+        // People counted by the event's open invitation (JIKU-184) share its allowance.
+        val openHeads = openResponses.committedHeads(eventId)
+        val ceiling = allowanceGate.allowanceCeiling(eventId, committed.size + openHeads)
         val projected = committed + batchGuestIds
         val addsNewGuests = projected.size > committed.size
-        if (addsNewGuests && projected.size > ceiling) {
-            val remaining = (ceiling - committed.size).coerceAtLeast(0)
+        if (addsNewGuests && projected.size + openHeads > ceiling) {
+            val remaining = (ceiling - committed.size - openHeads).coerceAtLeast(0)
             throw ResponseStatusException(
                 HttpStatus.PAYMENT_REQUIRED,
                 "This event's guest allowance ($ceiling) would be exceeded. " +

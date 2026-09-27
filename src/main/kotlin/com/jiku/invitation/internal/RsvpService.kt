@@ -270,6 +270,7 @@ class RsvpService(
             eventTimezone = event?.timezone,
             categoryName = guest.ticketTypeId?.let { typeId -> events.ticketTypes(eventId).firstOrNull { it.id == typeId }?.label },
             organizerVerification = verification.verifiedKind(),
+            companions = guest.companions,
         )
     }
 

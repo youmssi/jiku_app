@@ -50,6 +50,8 @@ data class RsvpView(
     val eventTimezone: String? = null,
     /** The ticket category this guest holds, when the event has several. */
     val categoryName: String? = null,
+    /** People admitted with this guest on the same ticket, from an open invitation (JIKU-184). */
+    val companions: Int = 0,
 )
 
 /**

@@ -77,9 +77,16 @@ class Guest(
     /** The ticket order this guest's ticket comes from; null for an invited guest. */
     @Column(name = "order_id", updatable = false)
     var orderId: UUID? = null
+
+    /** People coming with this guest on the same ticket, from an open invitation (JIKU-184). */
+    @Column(name = "companions", nullable = false)
+    var companions: Int = 0
 }
 
 enum class GuestOrigin {
     INVITED,
     PURCHASED,
+
+    /** Answered "yes" to an open invitation shared in groups (JIKU-184). */
+    OPEN,
 }

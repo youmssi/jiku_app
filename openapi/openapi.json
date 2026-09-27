@@ -2809,6 +2809,183 @@
         },
         "type" : "object"
       },
+      "OpenInvitationCounts" : {
+        "properties" : {
+          "expected" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "maybe" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "no" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "yes" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "OpenInvitationSettingsRequest" : {
+        "properties" : {
+          "closesAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "enabled" : {
+            "type" : "boolean"
+          },
+          "maxCompanions" : {
+            "format" : "int32",
+            "minimum" : 0,
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
+          "welcomeMessage" : {
+            "maxLength" : 500,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type" : "object"
+      },
+      "OpenInvitationView" : {
+        "properties" : {
+          "accepting" : {
+            "type" : "boolean"
+          },
+          "closedReason" : {
+            "enum" : [
+              "DISABLED",
+              "CLOSED",
+              "NOT_PUBLISHED",
+              "CANCELLED",
+              "ENDED",
+              "FULL"
+            ],
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "closesAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "counts" : {
+            "$ref" : "#/components/schemas/OpenInvitationCounts"
+          },
+          "enabled" : {
+            "type" : "boolean"
+          },
+          "eventId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "maxCompanions" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "maxCompanionsAllowed" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "remainingPlaces" : {
+            "format" : "int32",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
+          "welcomeMessage" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "whatsappNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type" : "object"
+      },
+      "OpenResponseRequest" : {
+        "properties" : {
+          "answer" : {
+            "enum" : [
+              "YES",
+              "MAYBE",
+              "NO"
+            ],
+            "type" : "string"
+          },
+          "companions" : {
+            "format" : "int32",
+            "maximum" : 100,
+            "minimum" : 0,
+            "type" : "integer"
+          },
+          "name" : {
+            "maxLength" : 120,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "phone" : {
+            "maxLength" : 32,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "name",
+          "phone"
+        ],
+        "type" : "object"
+      },
+      "OpenResponseView" : {
+        "properties" : {
+          "answer" : {
+            "enum" : [
+              "YES",
+              "MAYBE",
+              "NO"
+            ],
+            "type" : "string"
+          },
+          "companions" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "ticketToken" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type" : "object"
+      },
       "OpenedBatchView" : {
         "properties" : {
           "batchId" : {
@@ -3221,6 +3398,44 @@
           "totalMinor" : {
             "format" : "int64",
             "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "OrganizerOpenResponseView" : {
+        "properties" : {
+          "answer" : {
+            "enum" : [
+              "YES",
+              "MAYBE",
+              "NO"
+            ],
+            "type" : "string"
+          },
+          "channel" : {
+            "enum" : [
+              "WEB",
+              "WHATSAPP"
+            ],
+            "type" : "string"
+          },
+          "companions" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "updatedAt" : {
+            "format" : "date-time",
+            "type" : "string"
           }
         },
         "type" : "object"
@@ -4030,6 +4245,94 @@
         },
         "type" : "object"
       },
+      "PublicOpenInvitationView" : {
+        "properties" : {
+          "accepting" : {
+            "type" : "boolean"
+          },
+          "closedReason" : {
+            "enum" : [
+              "DISABLED",
+              "CLOSED",
+              "NOT_PUBLISHED",
+              "CANCELLED",
+              "ENDED",
+              "FULL"
+            ],
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "eventEnd" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "eventLocation" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "eventName" : {
+            "type" : "string"
+          },
+          "eventStart" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "eventTimezone" : {
+            "type" : "string"
+          },
+          "logoUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "maxCompanions" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "organizerName" : {
+            "type" : "string"
+          },
+          "organizerVerification" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "primaryColor" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "welcomeMessage" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "whatsappNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type" : "object"
+      },
       "PublicOrgProfileView" : {
         "properties" : {
           "bannerUrl" : {
@@ -4729,6 +5032,10 @@
               "string",
               "null"
             ]
+          },
+          "companions" : {
+            "format" : "int32",
+            "type" : "integer"
           },
           "erased" : {
             "type" : "boolean"
@@ -10624,6 +10931,143 @@
         ]
       }
     },
+    "/api/v1/events/{eventId}/open-invitation" : {
+      "get" : {
+        "operationId" : "openInvitationSettings",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OpenInvitationView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "open-invitation-controller"
+        ]
+      },
+      "put" : {
+        "operationId" : "openInvitationUpdate",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OpenInvitationSettingsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OpenInvitationView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "open-invitation-controller"
+        ]
+      }
+    },
+    "/api/v1/events/{eventId}/open-invitation/responses" : {
+      "get" : {
+        "operationId" : "openInvitationResponses",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/OrganizerOpenResponseView"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "open-invitation-controller"
+        ]
+      }
+    },
+    "/api/v1/events/{eventId}/open-invitation/responses/{responseId}" : {
+      "delete" : {
+        "operationId" : "openInvitationRemove",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          },
+          {
+            "in" : "path",
+            "name" : "responseId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [
+          "open-invitation-controller"
+        ]
+      }
+    },
     "/api/v1/events/{eventId}/orders" : {
       "get" : {
         "operationId" : "ticketOrderList",
@@ -12383,6 +12827,76 @@
         },
         "tags" : [
           "resend-email-feedback-controller"
+        ]
+      }
+    },
+    "/api/v1/open/{code}" : {
+      "get" : {
+        "operationId" : "publicOpenInvitationView",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "code",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PublicOpenInvitationView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "public-open-invitation-controller"
+        ]
+      }
+    },
+    "/api/v1/open/{code}/responses" : {
+      "post" : {
+        "operationId" : "publicOpenInvitationRespond",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "code",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OpenResponseRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OpenResponseView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "public-open-invitation-controller"
         ]
       }
     },
