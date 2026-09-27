@@ -1,5 +1,6 @@
 package com.jiku.money.internal
 
+import com.jiku.money.ManualPaymentInstructions
 import com.jiku.shared.TenantContext
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.access.prepost.PreAuthorize
@@ -24,7 +25,10 @@ data class OpenedBatchView(
     val size: Int,
     val totalMinor: Long,
     val currency: String,
+    /** The online payment to follow, when the batch is paid online. */
     val payment: PaymentInitiationResult?,
+    /** What to transfer and the reference to quote, when the batch is paid by transfer. */
+    val instructions: ManualPaymentInstructions? = null,
 )
 
 /** Opens a batch and, when it must be paid, starts its payment in the same transaction. */
@@ -32,6 +36,7 @@ data class OpenedBatchView(
 class CommissionCheckout(
     private val commission: CommissionService,
     private val payments: PaymentService,
+    private val manualPayments: ManualPaymentService,
 ) {
     @Transactional
     fun open(
@@ -39,8 +44,15 @@ class CommissionCheckout(
         request: OpenBatchRequest,
     ): OpenedBatchView {
         val opened = commission.open(eventId, request)
+        val due = opened.totalMinor > 0
+        val instructions =
+            if (due && request.manual) {
+                manualPayments.requestCommission(opened.batch, opened.totalMinor).also { opened.batch.paymentId = it.paymentId }
+            } else {
+                null
+            }
         val payment =
-            if (opened.totalMinor > 0) {
+            if (due && !request.manual) {
                 payments.checkoutCommission(opened.batch, opened.totalMinor).also { opened.batch.paymentId = it.paymentId }
             } else {
                 null
@@ -54,6 +66,7 @@ class CommissionCheckout(
             totalMinor = opened.totalMinor,
             currency = batch.currency,
             payment = payment,
+            instructions = instructions,
         )
     }
 }

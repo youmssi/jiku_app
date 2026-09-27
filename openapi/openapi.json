@@ -12961,6 +12961,9 @@
               "CREDIT",
               "PAY"
             ]
+          },
+          "manual" : {
+            "type" : "boolean"
           }
         }
       },
@@ -13004,6 +13007,16 @@
             "oneOf" : [
               {
                 "$ref" : "#/components/schemas/PaymentInitiationResult"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          },
+          "instructions" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/ManualPaymentInstructions"
               },
               {
                 "type" : "null"

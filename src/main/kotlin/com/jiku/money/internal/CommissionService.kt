@@ -74,6 +74,8 @@ data class CommissionQuote(
 data class OpenBatchRequest(
     val ticketTypeId: UUID,
     val mode: CommissionBatchMode,
+    /** Pay by transfer confirmed by the platform desk rather than online. */
+    val manual: Boolean = false,
 )
 
 /** A batch just opened: live at once, or waiting for [totalMinor] to be paid. */

@@ -3,6 +3,7 @@ package com.jiku.money
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.money.internal.CommissionService
+import com.jiku.money.internal.ManualPaymentService
 import com.jiku.shared.TenantContext
 import com.jiku.support.OrganizerApi
 import com.jiku.support.TestVerifications
@@ -52,6 +53,9 @@ class CommissionFlowTest {
 
     @Autowired
     lateinit var commission: CommissionService
+
+    @Autowired
+    lateinit var manualPayments: ManualPaymentService
 
     private val api by lazy { OrganizerApi(mockMvc) }
 
@@ -142,6 +146,27 @@ class CommissionFlowTest {
             .andExpect(jsonPath("$.owedMinor").value(4500))
             .andExpect(jsonPath("$.freeBatchAvailable").value(false))
             .andExpect(jsonPath("$.creditBatchAvailable").value(false))
+    }
+
+    @Test
+    fun `a batch paid by transfer goes live once the platform desk confirms it`() {
+        val sale = openSale()
+        openBatch(sale, "FREE").andExpect(status().isOk())
+        val opened =
+            api
+                .post(
+                    sale.token,
+                    "/api/v1/events/${sale.eventId}/commission/batches",
+                    """{"ticketTypeId":"${sale.typeId}","mode":"PAY","manual":true}""",
+                ).andExpect(jsonPath("$.status").value("PENDING_PAYMENT"))
+                .andExpect(jsonPath("$.instructions.amountMinor").value(3000))
+                .andExpect(jsonPath("$.instructions.reference").exists())
+                .andReturn()
+                .response.contentAsString
+        overview(sale).andExpect(jsonPath("$.categories[0].covered").value(2))
+
+        manualPayments.confirm(UUID.fromString(JsonPath.read(opened, "$.instructions.paymentId")))
+        overview(sale).andExpect(jsonPath("$.categories[0].covered").value(4))
     }
 
     @Test
