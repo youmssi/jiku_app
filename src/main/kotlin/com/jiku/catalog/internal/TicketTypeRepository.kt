@@ -29,6 +29,27 @@ interface TicketTypeRepository : JpaRepository<TicketType, UUID> {
         @Param("id") id: UUID,
     ): Int
 
+    /** [reserveSlot] for [quantity] places at once: all of them, or none. */
+    @Modifying
+    @Query(
+        "UPDATE TicketType t SET t.confirmedCount = t.confirmedCount + :quantity " +
+            "WHERE t.id = :id AND (t.maxCapacity IS NULL OR t.confirmedCount + :quantity <= t.maxCapacity)",
+    )
+    fun reserveSlots(
+        @Param("id") id: UUID,
+        @Param("quantity") quantity: Int,
+    ): Int
+
+    @Modifying
+    @Query(
+        "UPDATE TicketType t SET t.confirmedCount = CASE WHEN t.confirmedCount >= :quantity " +
+            "THEN t.confirmedCount - :quantity ELSE 0 END WHERE t.id = :id",
+    )
+    fun releaseSlots(
+        @Param("id") id: UUID,
+        @Param("quantity") quantity: Int,
+    ): Int
+
     @Modifying
     @Query("UPDATE TicketType t SET t.confirmedCount = t.confirmedCount - 1 WHERE t.id = :id AND t.confirmedCount > 0")
     fun releaseSlot(

@@ -20,7 +20,10 @@ class TenantModuleApiService(
     private val memberships: OrganizerMembershipRepository,
     private val accessGate: TenantAccessGateAdapter,
     private val verificationAdmin: VerificationAdminService,
+    private val salesSettings: SalesSettingsService,
 ) : TenantModuleApi {
+    override fun orderHold(tenantId: UUID): java.time.Duration = salesSettings.orderHold(tenantId)
+
     @Transactional(readOnly = true)
     override fun findTenant(tenantId: UUID): TenantInfo? = tenants.findById(tenantId).map { it.toTenantInfo() }.orElse(null)
 

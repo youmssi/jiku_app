@@ -58,4 +58,10 @@ interface TenantModuleApi {
         reason: String?,
         adminId: UUID?,
     ): AdminVerificationView
+
+    /**
+     * How long an unpaid ticket order of [tenantId] keeps its places (JIKU-177):
+     * the organization's own choice, or the platform default.
+     */
+    fun orderHold(tenantId: UUID): java.time.Duration
 }

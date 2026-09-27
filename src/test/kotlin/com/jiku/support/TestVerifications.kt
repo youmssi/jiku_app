@@ -31,4 +31,9 @@ class TestVerifications(
             )
         }
     }
+
+    /** Withdraws every approval, as if the organization had never been verified. */
+    fun revoke(tenantId: String) {
+        TenantContext.withTenant(tenantId) { verifications.deleteAll() }
+    }
 }
