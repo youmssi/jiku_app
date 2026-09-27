@@ -2850,6 +2850,12 @@
               "null"
             ]
           },
+          "notifyOnCancel" : {
+            "type" : [
+              "boolean",
+              "null"
+            ]
+          },
           "welcomeMessage" : {
             "maxLength" : 500,
             "minLength" : 0,
@@ -2864,6 +2870,9 @@
       "OpenInvitationView" : {
         "properties" : {
           "accepting" : {
+            "type" : "boolean"
+          },
+          "cancelNoticeIncluded" : {
             "type" : "boolean"
           },
           "closedReason" : {
@@ -2907,6 +2916,9 @@
           "maxCompanionsAllowed" : {
             "format" : "int32",
             "type" : "integer"
+          },
+          "notifyOnCancel" : {
+            "type" : "boolean"
           },
           "remainingPlaces" : {
             "format" : "int32",
@@ -4259,6 +4271,13 @@
               "ENDED",
               "FULL"
             ],
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "closesAt" : {
+            "format" : "date-time",
             "type" : [
               "string",
               "null"

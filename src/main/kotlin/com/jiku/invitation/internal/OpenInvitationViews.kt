@@ -28,6 +28,8 @@ data class OpenInvitationSettingsRequest(
     @field:Size(max = 500) val welcomeMessage: String? = null,
     @field:Min(0) val maxCompanions: Int? = null,
     val closesAt: Instant? = null,
+    /** Free tier only: tell the people who answered, by WhatsApp, if the event is cancelled. Null keeps the current choice. */
+    val notifyOnCancel: Boolean? = null,
 )
 
 data class OpenResponseRequest(
@@ -77,6 +79,10 @@ data class OpenInvitationView(
     /** Places left under the event's capacity; null when it has none. */
     val remainingPlaces: Int?,
     val counts: OpenInvitationCounts,
+    /** The organizer's choice to tell the people who answered, by WhatsApp, if the event is cancelled. */
+    val notifyOnCancel: Boolean,
+    /** Whether the event's tier includes that message, whatever the choice. */
+    val cancelNoticeIncluded: Boolean,
     /** The dedicated WhatsApp number a card opens, digits only; null when answers go through the web only. */
     val whatsappNumber: String?,
 )
@@ -96,6 +102,8 @@ data class PublicOpenInvitationView(
     /** The organizer's approved verification (COMPANY, PERSONAL) or null. */
     val organizerVerification: String?,
     val maxCompanions: Int,
+    /** The last moment to answer, when the organizer set one. */
+    val closesAt: Instant?,
     val accepting: Boolean,
     val closedReason: OpenClosedReason?,
     val whatsappNumber: String?,

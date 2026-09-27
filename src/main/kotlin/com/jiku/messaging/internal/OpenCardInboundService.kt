@@ -56,11 +56,16 @@ class OpenCardInboundService(
     fun onReply(reply: OpenCardReply) {
         val phone = whatsAppDigits(reply.phone)
         if (optOuts.existsById(phone)) return
+        val zone = ZoneId.of(reply.eventTimezone ?: "UTC")
         val values =
             reply.values +
                 listOfNotNull(
                     reply.eventStart?.let { start ->
-                        "when" to "\n" + catalog.formatDate(reply.language, "date.reminder", start, ZoneId.of(reply.eventTimezone ?: "UTC"))
+                        "when" to "\n" + catalog.formatDate(reply.language, "date.reminder", start, zone)
+                    },
+                    reply.answerBy?.let { deadline ->
+                        val date = catalog.formatDate(reply.language, "date.reminder", deadline, zone)
+                        "deadline" to "\n\n" + catalog.text(reply.language, "whatsapp.card.answerBy", mapOf("date" to date))
                     },
                 )
         val buttons = reply.buttons.map { WhatsAppButton(it.id, catalog.text(reply.language, it.titleKey)) }

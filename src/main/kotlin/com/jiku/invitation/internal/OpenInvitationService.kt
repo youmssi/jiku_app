@@ -84,6 +84,7 @@ class OpenInvitationService(
                     welcomeMessage = request.welcomeMessage?.trim()?.takeIf { it.isNotEmpty() }
                     maxCompanions = companions
                     closesAt = request.closesAt
+                    request.notifyOnCancel?.let { notifyOnCancel = it }
                 }
         return organizerView(openInvitations.save(invitation), event, now)
     }
@@ -135,6 +136,7 @@ class OpenInvitationService(
             primaryColor = event.brand.primaryColor ?: tenant?.primaryColor,
             organizerVerification = verification.verifiedKind(),
             maxCompanions = invitation.maxCompanions,
+            closesAt = invitation.closesAt,
             accepting = closed == null,
             closedReason = closed,
             whatsappNumber = whatsappNumber(),
@@ -291,6 +293,8 @@ class OpenInvitationService(
                     no = all.count { it.answer == OpenAnswer.NO },
                     expected = all.sumOf { it.heads },
                 ),
+            notifyOnCancel = invitation.notifyOnCancel,
+            cancelNoticeIncluded = allowanceGate.paidTier(invitation.eventId),
             whatsappNumber = whatsappNumber(),
         )
     }

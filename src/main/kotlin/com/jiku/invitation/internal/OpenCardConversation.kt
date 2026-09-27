@@ -100,6 +100,7 @@ class OpenCardConversation(
                         "when" to "",
                         "where" to (view.eventLocation?.let { "\n$it" } ?: ""),
                         "welcome" to (view.welcomeMessage?.let { "\n\n$it" } ?: ""),
+                        "deadline" to "",
                     ),
                 buttons =
                     listOf(
@@ -109,6 +110,7 @@ class OpenCardConversation(
                     ),
                 eventStart = view.eventStart,
                 eventTimezone = view.eventTimezone,
+                answerBy = view.closesAt,
             ),
         )
     }

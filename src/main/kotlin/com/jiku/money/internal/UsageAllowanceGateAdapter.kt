@@ -51,4 +51,11 @@ class UsageAllowanceGateAdapter(
         val record = usageRecords.findByEventId(eventId) ?: return true
         return record.unlockedAllowance <= properties.freeTierGuests || record.interactiveAllowance >= record.unlockedAllowance
     }
+
+    @Transactional(readOnly = true)
+    override fun paidTier(eventId: UUID): Boolean {
+        if (organizerPack.isActive()) return true
+        val paidAllowance = usageRecords.findByEventId(eventId)?.unlockedAllowance ?: return false
+        return paidAllowance > properties.freeTierGuests
+    }
 }

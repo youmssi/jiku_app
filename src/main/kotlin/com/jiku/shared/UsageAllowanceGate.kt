@@ -41,4 +41,11 @@ interface UsageAllowanceGate {
      * it. Otherwise the invitation goes out as a plain link.
      */
     fun interactiveCovered(eventId: UUID): Boolean
+
+    /**
+     * Whether the event is on a paid tier: unlocked beyond the free guests, or
+     * covered by an active Organizer Pack. Paid tiers include the WhatsApp
+     * messages the free tier leaves to the organizer's choice (JIKU-187).
+     */
+    fun paidTier(eventId: UUID): Boolean
 }

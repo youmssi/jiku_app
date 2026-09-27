@@ -19,7 +19,8 @@ data class OpenCardInbound(
  * What to answer on the cards number (JIKU-185), inside the conversation the
  * person just opened, which Meta does not charge. [key] and each button's
  * title key name texts of the message catalog, rendered in [language]; when
- * [eventStart] is set, it is written in [eventTimezone] as `when`.
+ * [eventStart] is set, it is written in [eventTimezone] as `when`, and
+ * [answerBy] likewise as `deadline` (JIKU-187).
  */
 data class OpenCardReply(
     val phone: String,
@@ -30,6 +31,7 @@ data class OpenCardReply(
     val imageUrl: String? = null,
     val eventStart: Instant? = null,
     val eventTimezone: String? = null,
+    val answerBy: Instant? = null,
 )
 
 data class OpenCardButton(
