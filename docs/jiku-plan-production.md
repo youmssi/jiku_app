@@ -187,7 +187,7 @@ marquées « à discuter ».
 | Période | Semaines | Contenu | Condition pour démarrer | État |
 |---|---|---|---|---|
 | Maintenant | S40 (28 sept. → 4 oct.) | Prérequis de production urgents : moyen de paiement WhatsApp Business (**avant le 30 sept.**), numéro WhatsApp des cartes, R2, instance Render 1 Go | — | À faire (équipe Jikū) |
-| Maintenant | S40 → S41 | JIKU-188 allègement visuel sur les 6 écrans prioritaires | Décisions §JIKU-188 | À discuter |
+| Maintenant | S40 → S41 | JIKU-188 allègement visuel sur les 6 écrans prioritaires | Décisions prises le 2026-09-27 | En cours |
 | Octobre | S41 → S44 (5 → 1er nov.) | Pilote de l'invitation ouverte : 10 à 20 hôtes, suivi des indicateurs ADR 106 | Numéro des cartes validé chez Meta | Prêt à lancer |
 | Octobre | S41 → S42 | JIKU-189 carte de service, redirection ; JIKU-190 rendez-vous direct | — (sans message WhatsApp, ne dépend pas du pilote) | Prêt |
 | Fin octobre | S44 | Bilan du pilote, feu vert de l'étape 1 : taux de réponse ≥ 35 %, ≥ 60 % via WhatsApp, coût par réponse sous le plafond | Pilote terminé | À discuter |
@@ -199,10 +199,9 @@ marquées « à discuter ».
 
 Points à discuter, dans l'ordre où ils bloquent :
 
-1. Décisions de JIKU-188 (heure en français, portée) : début S40.
-2. Critères chiffrés du pilote et plafond de coût par réponse : avant S41.
-3. Numéro partagé ou non pour la conversation guidée (JIKU-192) : avant S45.
-4. Quotas de conversations et prix des relances (JIKU-193) : fin S44, avec les
+1. Critères chiffrés du pilote et plafond de coût par réponse : avant S41.
+2. Numéro partagé ou non pour la conversation guidée (JIKU-192) : avant S45.
+3. Quotas de conversations et prix des relances (JIKU-193) : fin S44, avec les
    coûts réels du pilote.
-5. Ordre des paliers après le lancement : en décembre, avec le bilan de l'étape 2.
+4. Ordre des paliers après le lancement : en décembre, avec le bilan de l'étape 2.
 

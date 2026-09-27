@@ -12,7 +12,7 @@ story : on présente les options, on ne devine pas.
 
 | Story | Titre | Dépôt | Dépend de | État |
 |---|---|---|---|---|
-| JIKU-188 | Allègement visuel : règles de densité et formats courts | web | — | À valider |
+| JIKU-188 | Allègement visuel : règles de densité et formats courts | app, web | — | Validée le 2026-09-27 |
 | JIKU-189 | Carte de service, mode redirection | app, web | — | Prête |
 | JIKU-190 | Carte de service, mode rendez-vous direct | app, web | JIKU-189 | Prête |
 | JIKU-191 | Conversation guidée : les questions de l'organisation | app, web | JIKU-189 | À valider |
@@ -103,13 +103,12 @@ détail), mais elle n'est plus affichée d'office.
 - Accessibilité inchangée ou meilleure : chaque abréviation a son texte complet
   pour les lecteurs d'écran.
 
-### [INTERACTIVE STEP] À valider
+### Décisions (2026-09-27)
 
-- **Heure en français : `19 h` ou `19:00` ?**
-  - Recommandation : `19 h` dans les phrases et sur les visuels, `19:00` dans les tableaux.
-- **Portée : toutes les pages d'un coup, ou d'abord les 6 écrans ci-dessus ?**
-  - Recommandation : les 6 écrans d'abord, puis les autres module par module, à
-    chaque story qui les touche.
+- **Heure en français :** `19 h` sur les visuels, dans les phrases et dans les
+  messages ; `19:00` reste dans les tableaux.
+- **Portée :** les 6 écrans ci-dessus d'abord ; les autres écrans suivent les
+  mêmes règles à chaque story qui les touche.
 
 ---
 
@@ -272,8 +271,8 @@ bas.
 
 | Sujet | Story | Options | Recommandation |
 |---|---|---|---|
-| Heure en français | JIKU-188 | `19 h` / `19:00` | `19 h` sur les visuels, `19:00` dans les tableaux |
-| Portée de l'allègement | JIKU-188 | Tout d'un coup / 6 écrans d'abord | 6 écrans d'abord |
+| Heure en français | JIKU-188 | `19 h` / `19:00` | **Décidé :** `19 h` sur les visuels, `19:00` dans les tableaux |
+| Portée de l'allègement | JIKU-188 | Tout d'un coup / 6 écrans d'abord | **Décidé :** 6 écrans d'abord |
 | Nombre de questions guidées | JIKU-191 | 3 / 5 | 3 |
 | Texte libre en fin de conversation | JIKU-191 | Oui / Non | Non au lancement |
 | Numéro partagé pour la conversation guidée | JIKU-192 | A : non / B : oui avec quota | A |
