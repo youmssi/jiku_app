@@ -163,7 +163,7 @@ to CI so high/critical CVEs fail the build, matching the frontend's `pnpm audit`
 | F-3 | High (ops) | Dev-default `JWT_SECRET` and payment/webhook secrets must be overridden outside local | **Blocking for prod deploy:** set strong `JWT_SECRET`, `NOTIFICATION_WEBHOOK_SECRET`, `BILLING_PAYMENT_WEBHOOK_SECRET` in the deploy environment. Enforced by convention + this checklist. |
 | F-4 | Low | Rate-limit counters are per-instance | Accepted at single-replica MVP scale; move to a shared store before horizontal scaling |
 | F-5 | Moderate | `postcss` transitive advisory (build-time) | Accepted; clear on next `next` bump |
-| F-6 | Low | No backend CVE scan in CI | Recommended: add OWASP dependency-check to CI |
+| F-6 | Low | No backend CVE scan in CI | **Resolved (JIKU-180):** CI scans the runnable jar with Trivy and fails on any high or critical advisory with a fix; the web CI runs `pnpm audit` on production dependencies. Accepted risks go to `.trivyignore` with their reason. |
 
 No high/critical **code** vulnerabilities were found. The one operational blocker
 (F-3) is a deployment-time secret-configuration step, not a code defect.
