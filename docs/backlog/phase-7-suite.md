@@ -18,6 +18,7 @@ story : on présente les options, on ne devine pas.
 | JIKU-191 | Conversation guidée : les questions de l'organisation | app, web | JIKU-189 | À valider |
 | JIKU-192 | Conversation guidée sur le numéro de l'organisation | app, web | JIKU-191 | À valider |
 | JIKU-193 | Mesure des cartes et quota de conversations | app, web | JIKU-192 | À valider |
+| JIKU-194 | Version premium : trois styles au choix et photo de bandeau | app, web | JIKU-188 | Validée le 2026-09-27 |
 
 ---
 
@@ -109,6 +110,68 @@ détail), mais elle n'est plus affichée d'office.
   messages ; `19:00` reste dans les tableaux.
 - **Portée :** les 6 écrans ci-dessus d'abord ; les autres écrans suivent les
   mêmes règles à chaque story qui les touche.
+
+---
+
+## JIKU-194 — Version premium : trois styles au choix et photo de bandeau
+
+**Pourquoi.** Après l'allègement (JIKU-188), les écrans les plus vus restent
+génériques : tout est centré, il n'y a pas d'image et la hiérarchie est faible.
+Une invitation porte une émotion ; son rendu doit être à la hauteur de
+l'événement, quel que soit l'organisateur.
+
+**Décision (2026-09-27).** L'organisateur choisit, mais parmi des styles
+dessinés par Jikū, pas librement. La maquette validée est
+`claude.ai/artifact/PVnd3U2vLfZ489YBCjWteo`.
+
+- **Trois styles :**
+  - **Élégant** : Cormorant Garamond ;
+  - **Moderne** : Archivo condensée, capitales ; c'est le style par défaut ;
+  - **Festif** : Bricolage Grotesque, arrondis.
+
+  Chaque style garde la couleur et le logo de l'organisation. Les tailles, les
+  espacements et les contrastes sont verrouillés.
+- **Photo de bandeau facultative, mise en avant.** Le navigateur la
+  redimensionne à environ 300 Ko et Jikū l'assombrit pour que le texte reste
+  lisible. Sans photo, la carte prend un fond de la couleur de marque, jamais un
+  vide.
+- **Un seul choix, appliqué partout** : la carte, l'aperçu du lien, l'image en
+  tête du premier message WhatsApp, la page de réponse et le billet.
+
+### Écrans
+
+| Écran | Ce qui change |
+|---|---|
+| Carte à partager | Affiche : photo et titre sur 60 % de la hauteur, « 14 » en gros, QR sur 30 % de la surface |
+| Aperçu du lien | Marque de l'organisateur, « via Jikū » en signature |
+| Conversation WhatsApp | Image de la carte en tête du premier message |
+| Page de réponse | Bandeau pleine largeur, titre à gauche, pastilles date et lieu, trois grandes cartes de réponse, bouton fixe sous le pouce ; nom et numéro à l'étape suivante |
+| Billet | Pastille « Valide », talon daté, nom avec accompagnants, calendrier ; mode sombre selon le téléphone |
+| Onglet organisateur | Un chiffre principal avec la jauge, aperçu réel de la carte, choix du style et de la photo |
+
+### Critères d'acceptation
+
+- `PUT /events/{id}/look` enregistre le style.
+- `PUT` et `DELETE /events/{id}/banner` gèrent la photo :
+  - JPEG ou PNG, 1 Mo au plus ;
+  - 600 × 300 pixels au moins ;
+  - l'image est vérifiée à la lecture.
+- La photo est servie publiquement, avec un cache long versionné, pour un
+  événement publié seulement.
+- Les vues publiques (page de réponse, billet) portent `cardStyle` et
+  `bannerUrl`.
+- Le premier message WhatsApp de la carte porte l'image dessinée par le site
+  (`/api/cards/{code}`).
+- Isolation entre organisations sur le style et la photo.
+- Les trois styles passent les règles de JIKU-188 : budget de texte, formats
+  courts.
+
+### Hors de cette story
+
+- Ajout à Apple Wallet et Google Wallet : il faut des certificats d'émetteur.
+  Ce sera une story à part.
+- Styles supplémentaires ou police importée : réservés plus tard aux formules
+  payantes.
 
 ---
 

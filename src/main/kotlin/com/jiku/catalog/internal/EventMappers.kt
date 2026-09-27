@@ -40,7 +40,7 @@ fun Event.toResponse(): EventResponse =
             },
     )
 
-fun Event.toEventInfo(): EventInfo =
+fun Event.toEventInfo(bannerUrl: String? = null): EventInfo =
     EventInfo(
         id = requireNotNull(id),
         tenantId = requireNotNull(tenantId),
@@ -54,7 +54,7 @@ fun Event.toEventInfo(): EventInfo =
         transferDeadline = settings.transferDeadline,
         invitationChannels = invitationChannels.toSet(),
         deliveryMode = settings.deliveryMode,
-        brand = EventBrand(settings.brandName, settings.brandLogoUrl, settings.brandColor),
+        brand = EventBrand(settings.brandName, settings.brandLogoUrl, settings.brandColor, cardStyle, bannerUrl),
     )
 
 fun EventSettingsDto.toEmbeddable(): EventSettings =

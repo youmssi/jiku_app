@@ -52,6 +52,10 @@ data class RsvpView(
     val categoryName: String? = null,
     /** People admitted with this guest on the same ticket, from an open invitation (JIKU-184). */
     val companions: Int = 0,
+    /** How the ticket looks (JIKU-194): ELEGANT, MODERN or FESTIVE. */
+    val cardStyle: String = "MODERN",
+    /** The event's banner photo; null without one. */
+    val bannerUrl: String? = null,
 )
 
 /**

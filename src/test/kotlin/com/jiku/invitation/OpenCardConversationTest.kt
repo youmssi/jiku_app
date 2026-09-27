@@ -58,7 +58,10 @@ class OpenCardConversationTest {
 
         val phone = randomDigits()
         webhook(from = phone, name = "Awa Diallo", text = "Bonjour, je réponds à l'invitation ${open.code}").andExpect(status().isOk())
-        awaitSent(output, "to=+$phone buttons=[OI:Y:${open.code}, OI:M:${open.code}, OI:N:${open.code}] image=null")
+        awaitSent(
+            output,
+            "to=+$phone buttons=[OI:Y:${open.code}, OI:M:${open.code}, OI:N:${open.code}] image=http://localhost:3000/api/cards/${open.code}",
+        )
 
         webhook(from = phone, name = "Awa Diallo", button = "OI:Y:${open.code}").andExpect(status().isOk())
         awaitSent(output, "to=+$phone buttons=[OI:C0:${open.code}, OI:C1:${open.code}, OI:C2:${open.code}] image=null")
