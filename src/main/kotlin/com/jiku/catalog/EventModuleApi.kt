@@ -49,24 +49,25 @@ interface EventModuleApi {
     )
 
     /**
-     * Reserves [quantity] places of one category at once for a ticket order
-     * (JIKU-177), under the event's and the category's capacities together. All
-     * or nothing: two buyers racing for the last places never both get them, and
-     * a partial take is never left behind.
+     * Reserves [quantity] places at once, under the event's capacity and, when
+     * [ticketTypeId] is set, the category's too: a ticket order (JIKU-177) or an
+     * open-invitation "yes" with its companions (JIKU-184). All or nothing: two
+     * people racing for the last places never both get them, and a partial take
+     * is never left behind.
      */
     fun reserveAttendanceSlots(
         eventId: UUID,
-        ticketTypeId: UUID,
+        ticketTypeId: UUID?,
         quantity: Int,
     ): Boolean
 
     /** Places left under the event's capacity (overbooking included); null when it has none. */
     fun remainingAttendance(eventId: UUID): Int?
 
-    /** Gives back [quantity] places of an order that expired or was refused. */
+    /** Gives back [quantity] places taken by [reserveAttendanceSlots]. */
     fun releaseAttendanceSlots(
         eventId: UUID,
-        ticketTypeId: UUID,
+        ticketTypeId: UUID?,
         quantity: Int,
     )
 
