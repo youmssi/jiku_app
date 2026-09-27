@@ -22,7 +22,7 @@
         "tags" : [
           "vocabulary-controller"
         ],
-        "operationId" : "list",
+        "operationId" : "vocabularyList",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -43,7 +43,7 @@
         "tags" : [
           "vocabulary-controller"
         ],
-        "operationId" : "save",
+        "operationId" : "vocabularySave",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -79,7 +79,7 @@
         "tags" : [
           "templates-controller"
         ],
-        "operationId" : "detail",
+        "operationId" : "templatesDetail",
         "parameters" : [
           {
             "name" : "name",
@@ -107,7 +107,7 @@
         "tags" : [
           "templates-controller"
         ],
-        "operationId" : "save_1",
+        "operationId" : "templatesSave",
         "parameters" : [
           {
             "name" : "name",
@@ -147,7 +147,7 @@
         "tags" : [
           "sales-settings-controller"
         ],
-        "operationId" : "get",
+        "operationId" : "salesSettingsGet",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -165,7 +165,7 @@
         "tags" : [
           "sales-settings-controller"
         ],
-        "operationId" : "update",
+        "operationId" : "salesSettingsUpdate",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -195,7 +195,7 @@
         "tags" : [
           "provider-settings-controller"
         ],
-        "operationId" : "updateWhatsApp",
+        "operationId" : "providerSettingsUpdateWhatsApp",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -225,7 +225,7 @@
         "tags" : [
           "provider-settings-controller"
         ],
-        "operationId" : "updateEmail",
+        "operationId" : "providerSettingsUpdateEmail",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -255,7 +255,7 @@
         "tags" : [
           "payment-methods-controller"
         ],
-        "operationId" : "get_1",
+        "operationId" : "paymentMethodsGet",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -273,7 +273,7 @@
         "tags" : [
           "payment-methods-controller"
         ],
-        "operationId" : "update_1",
+        "operationId" : "paymentMethodsUpdate",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -303,7 +303,7 @@
         "tags" : [
           "service-controller"
         ],
-        "operationId" : "configuration",
+        "operationId" : "serviceConfiguration",
         "parameters" : [
           {
             "name" : "id",
@@ -332,7 +332,7 @@
         "tags" : [
           "service-controller"
         ],
-        "operationId" : "updateConfiguration",
+        "operationId" : "serviceUpdateConfiguration",
         "parameters" : [
           {
             "name" : "id",
@@ -373,7 +373,7 @@
         "tags" : [
           "org-controller"
         ],
-        "operationId" : "updateUsername",
+        "operationId" : "orgUpdateUsername",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -403,7 +403,7 @@
         "tags" : [
           "operator-controller"
         ],
-        "operationId" : "update_2",
+        "operationId" : "operatorUpdate",
         "parameters" : [
           {
             "name" : "operatorId",
@@ -444,7 +444,7 @@
         "tags" : [
           "member-controller"
         ],
-        "operationId" : "changeRole",
+        "operationId" : "memberChangeRole",
         "parameters" : [
           {
             "name" : "userId",
@@ -485,7 +485,7 @@
         "tags" : [
           "legal-identity-controller"
         ],
-        "operationId" : "get_2",
+        "operationId" : "legalIdentityGet",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -503,7 +503,7 @@
         "tags" : [
           "legal-identity-controller"
         ],
-        "operationId" : "update_3",
+        "operationId" : "legalIdentityUpdate",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -533,7 +533,7 @@
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "get_3",
+        "operationId" : "eventGet",
         "parameters" : [
           {
             "name" : "id",
@@ -562,7 +562,7 @@
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "update_4",
+        "operationId" : "eventUpdate",
         "parameters" : [
           {
             "name" : "id",
@@ -601,7 +601,7 @@
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "delete",
+        "operationId" : "eventDelete",
         "parameters" : [
           {
             "name" : "id",
@@ -625,7 +625,7 @@
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "setQuorum",
+        "operationId" : "eventSetQuorum",
         "parameters" : [
           {
             "name" : "id",
@@ -666,7 +666,7 @@
         "tags" : [
           "ticket-type-controller"
         ],
-        "operationId" : "update_5",
+        "operationId" : "ticketTypeUpdate",
         "parameters" : [
           {
             "name" : "eventId",
@@ -714,7 +714,7 @@
         "tags" : [
           "ticket-type-controller"
         ],
-        "operationId" : "delete_1",
+        "operationId" : "ticketTypeDelete",
         "parameters" : [
           {
             "name" : "eventId",
@@ -747,7 +747,7 @@
         "tags" : [
           "branding-controller"
         ],
-        "operationId" : "get_4",
+        "operationId" : "brandingGet",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -765,7 +765,7 @@
         "tags" : [
           "branding-controller"
         ],
-        "operationId" : "update_6",
+        "operationId" : "brandingUpdate",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -795,7 +795,7 @@
         "tags" : [
           "admin-whats-app-controller"
         ],
-        "operationId" : "updatePricing",
+        "operationId" : "adminWhatsAppUpdatePricing",
         "parameters" : [
           {
             "name" : "category",
@@ -835,7 +835,7 @@
         "tags" : [
           "admin-billing-settings-controller"
         ],
-        "operationId" : "settings",
+        "operationId" : "adminBillingSettingsSettings",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -853,7 +853,7 @@
         "tags" : [
           "admin-billing-settings-controller"
         ],
-        "operationId" : "update_7",
+        "operationId" : "adminBillingSettingsUpdate",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -883,7 +883,7 @@
         "tags" : [
           "whats-app-webhook-controller"
         ],
-        "operationId" : "verifySubscription",
+        "operationId" : "whatsAppWebhookVerifySubscription",
         "parameters" : [
           {
             "name" : "hub.mode",
@@ -927,7 +927,7 @@
         "tags" : [
           "whats-app-webhook-controller"
         ],
-        "operationId" : "receiveMessages",
+        "operationId" : "whatsAppWebhookReceiveMessages",
         "parameters" : [
           {
             "name" : "X-Hub-Signature-256",
@@ -960,7 +960,7 @@
         "tags" : [
           "verification-controller"
         ],
-        "operationId" : "submit",
+        "operationId" : "verificationSubmit",
         "parameters" : [
           {
             "name" : "kind",
@@ -1043,7 +1043,7 @@
         "tags" : [
           "verification-controller"
         ],
-        "operationId" : "requestPhoneCode",
+        "operationId" : "verificationRequestPhoneCode",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1073,7 +1073,7 @@
         "tags" : [
           "verification-controller"
         ],
-        "operationId" : "confirmPhone",
+        "operationId" : "verificationConfirmPhone",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1103,7 +1103,7 @@
         "tags" : [
           "templates-controller"
         ],
-        "operationId" : "preview",
+        "operationId" : "templatesPreview",
         "parameters" : [
           {
             "name" : "name",
@@ -1143,7 +1143,7 @@
         "tags" : [
           "provider-settings-controller"
         ],
-        "operationId" : "testSend",
+        "operationId" : "providerSettingsTestSend",
         "parameters" : [
           {
             "name" : "channel",
@@ -1183,7 +1183,7 @@
         "tags" : [
           "provider-settings-controller"
         ],
-        "operationId" : "embeddedSignupConfig",
+        "operationId" : "providerSettingsEmbeddedSignupConfig",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -1201,7 +1201,7 @@
         "tags" : [
           "provider-settings-controller"
         ],
-        "operationId" : "completeEmbeddedSignup",
+        "operationId" : "providerSettingsCompleteEmbeddedSignup",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1231,7 +1231,7 @@
         "tags" : [
           "service-controller"
         ],
-        "operationId" : "list_1",
+        "operationId" : "serviceList",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -1252,7 +1252,7 @@
         "tags" : [
           "service-controller"
         ],
-        "operationId" : "create",
+        "operationId" : "serviceCreate",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1282,7 +1282,7 @@
         "tags" : [
           "service-staff-controller"
         ],
-        "operationId" : "list_2",
+        "operationId" : "serviceStaffList",
         "parameters" : [
           {
             "name" : "serviceId",
@@ -1314,7 +1314,7 @@
         "tags" : [
           "service-staff-controller"
         ],
-        "operationId" : "create_1",
+        "operationId" : "serviceStaffCreate",
         "parameters" : [
           {
             "name" : "serviceId",
@@ -1355,7 +1355,7 @@
         "tags" : [
           "service-day-line-controller"
         ],
-        "operationId" : "walkIn",
+        "operationId" : "serviceDayLineWalkIn",
         "parameters" : [
           {
             "name" : "serviceId",
@@ -1396,7 +1396,7 @@
         "tags" : [
           "service-day-line-controller"
         ],
-        "operationId" : "present",
+        "operationId" : "serviceDayLinePresent",
         "parameters" : [
           {
             "name" : "serviceId",
@@ -1435,7 +1435,7 @@
         "tags" : [
           "service-day-line-controller"
         ],
-        "operationId" : "markPaid",
+        "operationId" : "serviceDayLineMarkPaid",
         "parameters" : [
           {
             "name" : "serviceId",
@@ -1484,7 +1484,7 @@
         "tags" : [
           "service-day-line-controller"
         ],
-        "operationId" : "noShow",
+        "operationId" : "serviceDayLineNoShow",
         "parameters" : [
           {
             "name" : "serviceId",
@@ -1523,7 +1523,7 @@
         "tags" : [
           "service-day-line-controller"
         ],
-        "operationId" : "finish",
+        "operationId" : "serviceDayLineFinish",
         "parameters" : [
           {
             "name" : "serviceId",
@@ -1562,7 +1562,7 @@
         "tags" : [
           "service-day-line-controller"
         ],
-        "operationId" : "call",
+        "operationId" : "serviceDayLineCall",
         "parameters" : [
           {
             "name" : "serviceId",
@@ -1609,7 +1609,7 @@
         "tags" : [
           "service-day-line-controller"
         ],
-        "operationId" : "arrive",
+        "operationId" : "serviceDayLineArrive",
         "parameters" : [
           {
             "name" : "serviceId",
@@ -1648,7 +1648,7 @@
         "tags" : [
           "service-day-line-controller"
         ],
-        "operationId" : "rejectRequest",
+        "operationId" : "serviceDayLineRejectRequest",
         "parameters" : [
           {
             "name" : "serviceId",
@@ -1681,7 +1681,7 @@
         "tags" : [
           "service-day-line-controller"
         ],
-        "operationId" : "acceptRequest",
+        "operationId" : "serviceDayLineAcceptRequest",
         "parameters" : [
           {
             "name" : "serviceId",
@@ -1714,7 +1714,7 @@
         "tags" : [
           "service-day-line-controller"
         ],
-        "operationId" : "next",
+        "operationId" : "serviceDayLineNext",
         "parameters" : [
           {
             "name" : "serviceId",
@@ -1753,7 +1753,7 @@
         "tags" : [
           "service-controller"
         ],
-        "operationId" : "requirements",
+        "operationId" : "serviceRequirements",
         "parameters" : [
           {
             "name" : "id",
@@ -1785,7 +1785,7 @@
         "tags" : [
           "service-controller"
         ],
-        "operationId" : "addRequirement",
+        "operationId" : "serviceAddRequirement",
         "parameters" : [
           {
             "name" : "id",
@@ -1826,7 +1826,7 @@
         "tags" : [
           "rsvp-controller"
         ],
-        "operationId" : "transfer",
+        "operationId" : "rsvpTransfer",
         "parameters" : [
           {
             "name" : "token",
@@ -1866,7 +1866,7 @@
         "tags" : [
           "rsvp-controller"
         ],
-        "operationId" : "erase",
+        "operationId" : "rsvpErase",
         "parameters" : [
           {
             "name" : "token",
@@ -1896,7 +1896,7 @@
         "tags" : [
           "rsvp-controller"
         ],
-        "operationId" : "decline",
+        "operationId" : "rsvpDecline",
         "parameters" : [
           {
             "name" : "token",
@@ -1926,7 +1926,7 @@
         "tags" : [
           "rsvp-controller"
         ],
-        "operationId" : "confirm",
+        "operationId" : "rsvpConfirm",
         "parameters" : [
           {
             "name" : "token",
@@ -1956,7 +1956,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "list_3",
+        "operationId" : "resourceList",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -1977,7 +1977,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "create_2",
+        "operationId" : "resourceCreate",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2007,7 +2007,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "unavailability",
+        "operationId" : "resourceUnavailability",
         "parameters" : [
           {
             "name" : "id",
@@ -2039,7 +2039,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "addUnavailability",
+        "operationId" : "resourceAddUnavailability",
         "parameters" : [
           {
             "name" : "id",
@@ -2080,7 +2080,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "availability",
+        "operationId" : "resourceAvailability",
         "parameters" : [
           {
             "name" : "id",
@@ -2112,7 +2112,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "addAvailability",
+        "operationId" : "resourceAddAvailability",
         "parameters" : [
           {
             "name" : "id",
@@ -2153,7 +2153,7 @@
         "tags" : [
           "short-link-public-controller"
         ],
-        "operationId" : "takeTicket",
+        "operationId" : "shortLinkPublicTakeTicket",
         "parameters" : [
           {
             "name" : "code",
@@ -2193,7 +2193,7 @@
         "tags" : [
           "short-link-public-controller"
         ],
-        "operationId" : "book",
+        "operationId" : "shortLinkPublicBook",
         "parameters" : [
           {
             "name" : "code",
@@ -2233,7 +2233,7 @@
         "tags" : [
           "public-ticket-order-controller"
         ],
-        "operationId" : "place",
+        "operationId" : "publicTicketOrderPlace",
         "parameters" : [
           {
             "name" : "username",
@@ -2282,7 +2282,7 @@
         "tags" : [
           "prospect-lead-controller"
         ],
-        "operationId" : "register",
+        "operationId" : "prospectLeadRegister",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2312,7 +2312,7 @@
         "tags" : [
           "org-controller"
         ],
-        "operationId" : "create_3",
+        "operationId" : "orgCreate",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2342,7 +2342,7 @@
         "tags" : [
           "public-ticket-order-controller"
         ],
-        "operationId" : "declare",
+        "operationId" : "publicTicketOrderDeclare",
         "parameters" : [
           {
             "name" : "token",
@@ -2382,7 +2382,7 @@
         "tags" : [
           "operator-controller"
         ],
-        "operationId" : "team",
+        "operationId" : "operatorTeam",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -2400,7 +2400,7 @@
         "tags" : [
           "operator-controller"
         ],
-        "operationId" : "create_4",
+        "operationId" : "operatorCreate",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2430,7 +2430,7 @@
         "tags" : [
           "operator-controller"
         ],
-        "operationId" : "revoke",
+        "operationId" : "operatorRevoke",
         "parameters" : [
           {
             "name" : "operatorId",
@@ -2461,7 +2461,7 @@
         "tags" : [
           "email-feedback-controller"
         ],
-        "operationId" : "receive",
+        "operationId" : "emailFeedbackReceive",
         "parameters" : [
           {
             "name" : "X-Webhook-Secret",
@@ -2494,7 +2494,7 @@
         "tags" : [
           "resend-email-feedback-controller"
         ],
-        "operationId" : "receive_1",
+        "operationId" : "resendEmailFeedbackReceive",
         "parameters" : [
           {
             "name" : "svix-id",
@@ -2543,7 +2543,7 @@
         "tags" : [
           "member-controller"
         ],
-        "operationId" : "invitations",
+        "operationId" : "memberInvitations",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -2564,7 +2564,7 @@
         "tags" : [
           "member-controller"
         ],
-        "operationId" : "invite",
+        "operationId" : "memberInvite",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2594,7 +2594,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "walkIn_1",
+        "operationId" : "lineStaffWalkIn",
         "parameters" : [
           {
             "name" : "token",
@@ -2634,7 +2634,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "walkIn_2",
+        "operationId" : "lineStaffWalkIn_1",
         "parameters" : [
           {
             "name" : "token",
@@ -2683,7 +2683,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "present_1",
+        "operationId" : "lineStaffPresent",
         "parameters" : [
           {
             "name" : "token",
@@ -2721,7 +2721,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "present_2",
+        "operationId" : "lineStaffPresent_1",
         "parameters" : [
           {
             "name" : "token",
@@ -2768,7 +2768,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "markPaid_1",
+        "operationId" : "lineStaffMarkPaid",
         "parameters" : [
           {
             "name" : "token",
@@ -2816,7 +2816,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "markPaid_2",
+        "operationId" : "lineStaffMarkPaid_1",
         "parameters" : [
           {
             "name" : "token",
@@ -2873,7 +2873,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "noShow_1",
+        "operationId" : "lineStaffNoShow_1",
         "parameters" : [
           {
             "name" : "token",
@@ -2920,7 +2920,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "noShow_2",
+        "operationId" : "lineStaffNoShow",
         "parameters" : [
           {
             "name" : "token",
@@ -2958,7 +2958,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "finish_1",
+        "operationId" : "lineStaffFinish",
         "parameters" : [
           {
             "name" : "token",
@@ -2996,7 +2996,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "finish_2",
+        "operationId" : "lineStaffFinish_1",
         "parameters" : [
           {
             "name" : "token",
@@ -3043,7 +3043,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "call_1",
+        "operationId" : "lineStaffCall",
         "parameters" : [
           {
             "name" : "token",
@@ -3089,7 +3089,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "call_2",
+        "operationId" : "lineStaffCall_1",
         "parameters" : [
           {
             "name" : "token",
@@ -3144,7 +3144,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "arrive_1",
+        "operationId" : "lineStaffArrive",
         "parameters" : [
           {
             "name" : "token",
@@ -3182,7 +3182,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "arrive_2",
+        "operationId" : "lineStaffArrive_1",
         "parameters" : [
           {
             "name" : "token",
@@ -3229,7 +3229,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "rejectRequest_1",
+        "operationId" : "lineStaffRejectRequest_1",
         "parameters" : [
           {
             "name" : "token",
@@ -3270,7 +3270,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "rejectRequest_2",
+        "operationId" : "lineStaffRejectRequest",
         "parameters" : [
           {
             "name" : "token",
@@ -3302,7 +3302,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "acceptRequest_1",
+        "operationId" : "lineStaffAcceptRequest",
         "parameters" : [
           {
             "name" : "token",
@@ -3334,7 +3334,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "acceptRequest_2",
+        "operationId" : "lineStaffAcceptRequest_1",
         "parameters" : [
           {
             "name" : "token",
@@ -3375,7 +3375,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "next_1",
+        "operationId" : "lineStaffNext_1",
         "parameters" : [
           {
             "name" : "token",
@@ -3422,7 +3422,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "next_2",
+        "operationId" : "lineStaffNext",
         "parameters" : [
           {
             "name" : "token",
@@ -3460,7 +3460,7 @@
         "tags" : [
           "feedback-controller"
         ],
-        "operationId" : "submit_1",
+        "operationId" : "feedbackSubmit",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3490,7 +3490,7 @@
         "tags" : [
           "feedback-controller"
         ],
-        "operationId" : "rate",
+        "operationId" : "feedbackRate",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3520,7 +3520,7 @@
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "list_4",
+        "operationId" : "eventList",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -3541,7 +3541,7 @@
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "create_5",
+        "operationId" : "eventCreate",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3571,7 +3571,7 @@
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "publish",
+        "operationId" : "eventPublish",
         "parameters" : [
           {
             "name" : "id",
@@ -3602,7 +3602,7 @@
         "tags" : [
           "event-controller"
         ],
-        "operationId" : "cancel",
+        "operationId" : "eventCancel",
         "parameters" : [
           {
             "name" : "id",
@@ -3642,7 +3642,7 @@
         "tags" : [
           "validator-controller"
         ],
-        "operationId" : "list_5",
+        "operationId" : "validatorList",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3674,7 +3674,7 @@
         "tags" : [
           "validator-controller"
         ],
-        "operationId" : "create_6",
+        "operationId" : "validatorCreate",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3715,7 +3715,7 @@
         "tags" : [
           "validator-controller"
         ],
-        "operationId" : "revoke_1",
+        "operationId" : "validatorRevoke",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3755,7 +3755,7 @@
         "tags" : [
           "ticket-type-controller"
         ],
-        "operationId" : "list_6",
+        "operationId" : "ticketTypeList",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3787,7 +3787,7 @@
         "tags" : [
           "ticket-type-controller"
         ],
-        "operationId" : "create_7",
+        "operationId" : "ticketTypeCreate",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3828,7 +3828,7 @@
         "tags" : [
           "event-question-controller"
         ],
-        "operationId" : "list_7",
+        "operationId" : "eventQuestionList",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3860,7 +3860,7 @@
         "tags" : [
           "event-question-controller"
         ],
-        "operationId" : "create_8",
+        "operationId" : "eventQuestionCreate",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3901,7 +3901,7 @@
         "tags" : [
           "payment-controller"
         ],
-        "operationId" : "initiate",
+        "operationId" : "paymentInitiate",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3942,7 +3942,7 @@
         "tags" : [
           "manual-payment-controller"
         ],
-        "operationId" : "current",
+        "operationId" : "manualPaymentCurrent",
         "parameters" : [
           {
             "name" : "eventId",
@@ -3971,7 +3971,7 @@
         "tags" : [
           "manual-payment-controller"
         ],
-        "operationId" : "request",
+        "operationId" : "manualPaymentRequest",
         "parameters" : [
           {
             "name" : "eventId",
@@ -4012,7 +4012,7 @@
         "tags" : [
           "ticket-order-controller"
         ],
-        "operationId" : "reject",
+        "operationId" : "ticketOrderReject",
         "parameters" : [
           {
             "name" : "eventId",
@@ -4062,7 +4062,7 @@
         "tags" : [
           "ticket-order-controller"
         ],
-        "operationId" : "confirm_1",
+        "operationId" : "ticketOrderConfirm",
         "parameters" : [
           {
             "name" : "eventId",
@@ -4102,7 +4102,7 @@
         "tags" : [
           "event-occurrence-controller"
         ],
-        "operationId" : "list_8",
+        "operationId" : "eventOccurrenceList",
         "parameters" : [
           {
             "name" : "eventId",
@@ -4134,7 +4134,7 @@
         "tags" : [
           "event-occurrence-controller"
         ],
-        "operationId" : "create_9",
+        "operationId" : "eventOccurrenceCreate",
         "parameters" : [
           {
             "name" : "eventId",
@@ -4175,7 +4175,7 @@
         "tags" : [
           "invitation-controller"
         ],
-        "operationId" : "send",
+        "operationId" : "invitationSend",
         "parameters" : [
           {
             "name" : "eventId",
@@ -4234,7 +4234,7 @@
         "tags" : [
           "guest-controller"
         ],
-        "operationId" : "import",
+        "operationId" : "guestImport",
         "parameters" : [
           {
             "name" : "eventId",
@@ -4283,7 +4283,7 @@
         "tags" : [
           "commission-controller"
         ],
-        "operationId" : "open",
+        "operationId" : "commissionOpen",
         "parameters" : [
           {
             "name" : "eventId",
@@ -4324,7 +4324,7 @@
         "tags" : [
           "check-in-controller"
         ],
-        "operationId" : "markPaid_3",
+        "operationId" : "checkInMarkPaid",
         "parameters" : [
           {
             "name" : "eventId",
@@ -4373,7 +4373,7 @@
         "tags" : [
           "check-in-controller"
         ],
-        "operationId" : "scan",
+        "operationId" : "checkInScan",
         "parameters" : [
           {
             "name" : "eventId",
@@ -4414,7 +4414,7 @@
         "tags" : [
           "check-in-controller"
         ],
-        "operationId" : "manual",
+        "operationId" : "checkInManual",
         "parameters" : [
           {
             "name" : "eventId",
@@ -4455,7 +4455,7 @@
         "tags" : [
           "operator-check-in-controller"
         ],
-        "operationId" : "markPaid_4",
+        "operationId" : "operatorCheckInMarkPaid",
         "parameters" : [
           {
             "name" : "token",
@@ -4503,7 +4503,7 @@
         "tags" : [
           "operator-check-in-controller"
         ],
-        "operationId" : "markPaid_5",
+        "operationId" : "operatorCheckInMarkPaid_1",
         "parameters" : [
           {
             "name" : "token",
@@ -4560,7 +4560,7 @@
         "tags" : [
           "operator-check-in-controller"
         ],
-        "operationId" : "sync",
+        "operationId" : "operatorCheckInSync",
         "parameters" : [
           {
             "name" : "token",
@@ -4603,7 +4603,7 @@
         "tags" : [
           "operator-check-in-controller"
         ],
-        "operationId" : "sync_1",
+        "operationId" : "operatorCheckInSync_1",
         "parameters" : [
           {
             "name" : "token",
@@ -4655,7 +4655,7 @@
         "tags" : [
           "operator-check-in-controller"
         ],
-        "operationId" : "scan_1",
+        "operationId" : "operatorCheckInScan",
         "parameters" : [
           {
             "name" : "token",
@@ -4695,7 +4695,7 @@
         "tags" : [
           "operator-check-in-controller"
         ],
-        "operationId" : "scan_2",
+        "operationId" : "operatorCheckInScan_1",
         "parameters" : [
           {
             "name" : "token",
@@ -4744,7 +4744,7 @@
         "tags" : [
           "operator-check-in-controller"
         ],
-        "operationId" : "manual_1",
+        "operationId" : "operatorCheckInManual_1",
         "parameters" : [
           {
             "name" : "token",
@@ -4793,7 +4793,7 @@
         "tags" : [
           "operator-check-in-controller"
         ],
-        "operationId" : "manual_2",
+        "operationId" : "operatorCheckInManual",
         "parameters" : [
           {
             "name" : "token",
@@ -4833,7 +4833,7 @@
         "tags" : [
           "own-whats-app-number-controller"
         ],
-        "operationId" : "requestOwnNumber",
+        "operationId" : "ownWhatsAppNumberRequestOwnNumber",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4863,7 +4863,7 @@
         "tags" : [
           "own-whats-app-number-controller"
         ],
-        "operationId" : "checkoutOwnNumber",
+        "operationId" : "ownWhatsAppNumberCheckoutOwnNumber",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4893,7 +4893,7 @@
         "tags" : [
           "subscription-controller"
         ],
-        "operationId" : "request_1",
+        "operationId" : "subscriptionRequest",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4923,7 +4923,7 @@
         "tags" : [
           "subscription-controller"
         ],
-        "operationId" : "checkout",
+        "operationId" : "subscriptionCheckout",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4953,7 +4953,7 @@
         "tags" : [
           "payment-callback-controller"
         ],
-        "operationId" : "callback",
+        "operationId" : "paymentCallbackCallback",
         "parameters" : [
           {
             "name" : "X-Signature",
@@ -4986,7 +4986,7 @@
         "tags" : [
           "payment-callback-controller"
         ],
-        "operationId" : "providerCallback",
+        "operationId" : "paymentCallbackProviderCallback",
         "parameters" : [
           {
             "name" : "provider",
@@ -5027,7 +5027,7 @@
         "tags" : [
           "organizer-pack-controller"
         ],
-        "operationId" : "requestPack",
+        "operationId" : "organizerPackRequestPack",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5057,7 +5057,7 @@
         "tags" : [
           "organizer-pack-controller"
         ],
-        "operationId" : "requestPackExtra",
+        "operationId" : "organizerPackRequestPackExtra",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5087,7 +5087,7 @@
         "tags" : [
           "organizer-pack-controller"
         ],
-        "operationId" : "checkoutPackExtra",
+        "operationId" : "organizerPackCheckoutPackExtra",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5117,7 +5117,7 @@
         "tags" : [
           "organizer-pack-controller"
         ],
-        "operationId" : "checkoutPack",
+        "operationId" : "organizerPackCheckoutPack",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5147,7 +5147,7 @@
         "tags" : [
           "invoice-controller"
         ],
-        "operationId" : "creditNote",
+        "operationId" : "invoiceCreditNote",
         "parameters" : [
           {
             "name" : "invoiceId",
@@ -5178,7 +5178,7 @@
         "tags" : [
           "invoice-controller"
         ],
-        "operationId" : "issueForPayment",
+        "operationId" : "invoiceIssueForPayment",
         "parameters" : [
           {
             "name" : "paymentId",
@@ -5209,7 +5209,7 @@
         "tags" : [
           "auth-controller"
         ],
-        "operationId" : "verifyEmail",
+        "operationId" : "authVerifyEmail",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5232,7 +5232,7 @@
         "tags" : [
           "auth-controller"
         ],
-        "operationId" : "resendVerification",
+        "operationId" : "authResendVerification",
         "responses" : {
           "200" : {
             "description" : "OK"
@@ -5245,7 +5245,7 @@
         "tags" : [
           "auth-controller"
         ],
-        "operationId" : "switchOrg",
+        "operationId" : "authSwitchOrg",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5275,7 +5275,7 @@
         "tags" : [
           "auth-controller"
         ],
-        "operationId" : "resetPassword",
+        "operationId" : "authResetPassword",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5298,7 +5298,7 @@
         "tags" : [
           "auth-controller"
         ],
-        "operationId" : "register_1",
+        "operationId" : "authRegister",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5328,7 +5328,7 @@
         "tags" : [
           "auth-controller"
         ],
-        "operationId" : "refresh",
+        "operationId" : "authRefresh",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5358,7 +5358,7 @@
         "tags" : [
           "auth-controller"
         ],
-        "operationId" : "login",
+        "operationId" : "authLogin",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5388,7 +5388,7 @@
         "tags" : [
           "member-invitation-accept-controller"
         ],
-        "operationId" : "accept",
+        "operationId" : "memberInvitationAcceptAccept",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5418,7 +5418,7 @@
         "tags" : [
           "auth-controller"
         ],
-        "operationId" : "google",
+        "operationId" : "authGoogle",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5448,7 +5448,7 @@
         "tags" : [
           "auth-controller"
         ],
-        "operationId" : "forgotPassword",
+        "operationId" : "authForgotPassword",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5471,7 +5471,7 @@
         "tags" : [
           "appointment-public-controller"
         ],
-        "operationId" : "takeTicket_1",
+        "operationId" : "appointmentPublicTakeTicket",
         "parameters" : [
           {
             "name" : "token",
@@ -5511,7 +5511,7 @@
         "tags" : [
           "appointment-public-controller"
         ],
-        "operationId" : "book_1",
+        "operationId" : "appointmentPublicBook",
         "parameters" : [
           {
             "name" : "token",
@@ -5551,7 +5551,7 @@
         "tags" : [
           "admin-whats-app-controller"
         ],
-        "operationId" : "contentOverride",
+        "operationId" : "adminWhatsAppContentOverride",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -5569,7 +5569,7 @@
         "tags" : [
           "admin-whats-app-controller"
         ],
-        "operationId" : "setContentOverride",
+        "operationId" : "adminWhatsAppSetContentOverride",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5599,7 +5599,7 @@
         "tags" : [
           "admin-verification-controller"
         ],
-        "operationId" : "reject_1",
+        "operationId" : "adminVerificationReject",
         "parameters" : [
           {
             "name" : "id",
@@ -5640,7 +5640,7 @@
         "tags" : [
           "admin-verification-controller"
         ],
-        "operationId" : "approve",
+        "operationId" : "adminVerificationApprove",
         "parameters" : [
           {
             "name" : "id",
@@ -5671,7 +5671,7 @@
         "tags" : [
           "admin-trial-controller"
         ],
-        "operationId" : "list_9",
+        "operationId" : "adminTrialList",
         "parameters" : [
           {
             "name" : "status",
@@ -5728,7 +5728,7 @@
         "tags" : [
           "admin-trial-controller"
         ],
-        "operationId" : "grant",
+        "operationId" : "adminTrialGrant",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5758,7 +5758,7 @@
         "tags" : [
           "admin-trial-controller"
         ],
-        "operationId" : "end",
+        "operationId" : "adminTrialEnd",
         "parameters" : [
           {
             "name" : "id",
@@ -5799,7 +5799,7 @@
         "tags" : [
           "admin-tenant-controller"
         ],
-        "operationId" : "suspend",
+        "operationId" : "adminTenantSuspend",
         "parameters" : [
           {
             "name" : "id",
@@ -5840,7 +5840,7 @@
         "tags" : [
           "admin-tenant-controller"
         ],
-        "operationId" : "reactivate",
+        "operationId" : "adminTenantReactivate",
         "parameters" : [
           {
             "name" : "id",
@@ -5881,7 +5881,7 @@
         "tags" : [
           "admin-prospect-lead-controller"
         ],
-        "operationId" : "markContacted",
+        "operationId" : "adminProspectLeadMarkContacted",
         "parameters" : [
           {
             "name" : "id",
@@ -5912,7 +5912,7 @@
         "tags" : [
           "admin-payment-controller"
         ],
-        "operationId" : "reject_2",
+        "operationId" : "adminPaymentReject",
         "parameters" : [
           {
             "name" : "id",
@@ -5953,7 +5953,7 @@
         "tags" : [
           "admin-payment-controller"
         ],
-        "operationId" : "confirm_2",
+        "operationId" : "adminPaymentConfirm",
         "parameters" : [
           {
             "name" : "id",
@@ -5994,7 +5994,7 @@
         "tags" : [
           "admin-feedback-controller"
         ],
-        "operationId" : "updateStatus",
+        "operationId" : "adminFeedbackUpdateStatus",
         "parameters" : [
           {
             "name" : "id",
@@ -6035,7 +6035,7 @@
         "tags" : [
           "admin-diagnostics-controller"
         ],
-        "operationId" : "triggerError",
+        "operationId" : "adminDiagnosticsTriggerError",
         "responses" : {
           "200" : {
             "description" : "OK"
@@ -6048,7 +6048,7 @@
         "tags" : [
           "admin-auth-controller"
         ],
-        "operationId" : "refresh_1",
+        "operationId" : "adminAuthRefresh",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -6078,7 +6078,7 @@
         "tags" : [
           "admin-auth-controller"
         ],
-        "operationId" : "login_1",
+        "operationId" : "adminAuthLogin",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -6108,7 +6108,7 @@
         "tags" : [
           "admin-agreement-controller"
         ],
-        "operationId" : "list_10",
+        "operationId" : "adminAgreementList",
         "parameters" : [
           {
             "name" : "status",
@@ -6176,7 +6176,7 @@
         "tags" : [
           "admin-agreement-controller"
         ],
-        "operationId" : "create_10",
+        "operationId" : "adminAgreementCreate",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -6206,7 +6206,7 @@
         "tags" : [
           "admin-agreement-controller"
         ],
-        "operationId" : "renew",
+        "operationId" : "adminAgreementRenew",
         "parameters" : [
           {
             "name" : "id",
@@ -6247,7 +6247,7 @@
         "tags" : [
           "admin-agreement-controller"
         ],
-        "operationId" : "interrupt",
+        "operationId" : "adminAgreementInterrupt",
         "parameters" : [
           {
             "name" : "id",
@@ -6288,7 +6288,7 @@
         "tags" : [
           "service-controller"
         ],
-        "operationId" : "get_5",
+        "operationId" : "serviceGet",
         "parameters" : [
           {
             "name" : "id",
@@ -6317,7 +6317,7 @@
         "tags" : [
           "service-controller"
         ],
-        "operationId" : "delete_2",
+        "operationId" : "serviceDelete",
         "parameters" : [
           {
             "name" : "id",
@@ -6339,7 +6339,7 @@
         "tags" : [
           "service-controller"
         ],
-        "operationId" : "update_8",
+        "operationId" : "serviceUpdate",
         "parameters" : [
           {
             "name" : "id",
@@ -6380,7 +6380,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "get_6",
+        "operationId" : "resourceGet",
         "parameters" : [
           {
             "name" : "id",
@@ -6409,7 +6409,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "update_9",
+        "operationId" : "resourceUpdate",
         "parameters" : [
           {
             "name" : "id",
@@ -6450,7 +6450,7 @@
         "tags" : [
           "guest-controller"
         ],
-        "operationId" : "setTicketType",
+        "operationId" : "guestSetTicketType",
         "parameters" : [
           {
             "name" : "eventId",
@@ -6500,7 +6500,7 @@
         "tags" : [
           "guest-controller"
         ],
-        "operationId" : "setExclusion",
+        "operationId" : "guestSetExclusion",
         "parameters" : [
           {
             "name" : "eventId",
@@ -6550,7 +6550,7 @@
         "tags" : [
           "verification-controller"
         ],
-        "operationId" : "overview",
+        "operationId" : "verificationOverview",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -6570,7 +6570,7 @@
         "tags" : [
           "templates-controller"
         ],
-        "operationId" : "list_11",
+        "operationId" : "templatesList",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -6593,7 +6593,7 @@
         "tags" : [
           "provider-settings-controller"
         ],
-        "operationId" : "overview_1",
+        "operationId" : "providerSettingsOverview",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -6613,7 +6613,7 @@
         "tags" : [
           "service-day-line-controller"
         ],
-        "operationId" : "view",
+        "operationId" : "serviceDayLineView",
         "parameters" : [
           {
             "name" : "serviceId",
@@ -6652,7 +6652,7 @@
         "tags" : [
           "service-day-line-controller"
         ],
-        "operationId" : "pendingRequests",
+        "operationId" : "serviceDayLinePendingRequests",
         "parameters" : [
           {
             "name" : "serviceId",
@@ -6694,7 +6694,7 @@
         "tags" : [
           "service-controller"
         ],
-        "operationId" : "bookingLink",
+        "operationId" : "serviceBookingLink",
         "parameters" : [
           {
             "name" : "id",
@@ -6725,7 +6725,7 @@
         "tags" : [
           "rsvp-controller"
         ],
-        "operationId" : "view_1",
+        "operationId" : "rsvpView",
         "parameters" : [
           {
             "name" : "token",
@@ -6755,7 +6755,7 @@
         "tags" : [
           "rsvp-controller"
         ],
-        "operationId" : "qrCode",
+        "operationId" : "rsvpQrCode",
         "parameters" : [
           {
             "name" : "token",
@@ -6786,7 +6786,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "free",
+        "operationId" : "resourceFree",
         "parameters" : [
           {
             "name" : "id",
@@ -6835,7 +6835,7 @@
         "tags" : [
           "short-link-public-controller"
         ],
-        "operationId" : "view_2",
+        "operationId" : "shortLinkPublicView",
         "parameters" : [
           {
             "name" : "code",
@@ -6873,7 +6873,7 @@
         "tags" : [
           "short-link-public-controller"
         ],
-        "operationId" : "lineTicket",
+        "operationId" : "shortLinkPublicLineTicket",
         "parameters" : [
           {
             "name" : "code",
@@ -6911,7 +6911,7 @@
         "tags" : [
           "short-link-public-controller"
         ],
-        "operationId" : "status",
+        "operationId" : "shortLinkPublicStatus",
         "parameters" : [
           {
             "name" : "code",
@@ -6947,7 +6947,7 @@
         "tags" : [
           "short-link-public-controller"
         ],
-        "operationId" : "cancel_1",
+        "operationId" : "shortLinkPublicCancel",
         "parameters" : [
           {
             "name" : "code",
@@ -6978,7 +6978,7 @@
         "tags" : [
           "public-org-controller"
         ],
-        "operationId" : "profile",
+        "operationId" : "publicOrgProfile",
         "parameters" : [
           {
             "name" : "username",
@@ -7008,7 +7008,7 @@
         "tags" : [
           "public-ticket-order-controller"
         ],
-        "operationId" : "sale",
+        "operationId" : "publicTicketOrderSale",
         "parameters" : [
           {
             "name" : "username",
@@ -7047,7 +7047,7 @@
         "tags" : [
           "org-controller"
         ],
-        "operationId" : "profile_1",
+        "operationId" : "orgProfile",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -7067,7 +7067,7 @@
         "tags" : [
           "public-ticket-order-controller"
         ],
-        "operationId" : "view_3",
+        "operationId" : "publicTicketOrderView",
         "parameters" : [
           {
             "name" : "token",
@@ -7097,7 +7097,7 @@
         "tags" : [
           "operator-console-controller"
         ],
-        "operationId" : "console",
+        "operationId" : "operatorConsoleConsole",
         "parameters" : [
           {
             "name" : "token",
@@ -7127,7 +7127,7 @@
         "tags" : [
           "operator-console-controller"
         ],
-        "operationId" : "resolve",
+        "operationId" : "operatorConsoleResolve",
         "parameters" : [
           {
             "name" : "code",
@@ -7157,7 +7157,7 @@
         "tags" : [
           "member-controller"
         ],
-        "operationId" : "members",
+        "operationId" : "memberMembers",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -7180,7 +7180,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "pendingRequests_1",
+        "operationId" : "lineStaffPendingRequests",
         "parameters" : [
           {
             "name" : "token",
@@ -7221,7 +7221,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "pendingRequests_2",
+        "operationId" : "lineStaffPendingRequests_1",
         "parameters" : [
           {
             "name" : "token",
@@ -7271,7 +7271,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "view_4",
+        "operationId" : "lineStaffView",
         "parameters" : [
           {
             "name" : "token",
@@ -7309,7 +7309,7 @@
         "tags" : [
           "line-staff-controller"
         ],
-        "operationId" : "view_5",
+        "operationId" : "lineStaffView_1",
         "parameters" : [
           {
             "name" : "token",
@@ -7356,7 +7356,7 @@
         "tags" : [
           "line-code-controller"
         ],
-        "operationId" : "resolve_1",
+        "operationId" : "lineCodeResolve",
         "parameters" : [
           {
             "name" : "code",
@@ -7386,7 +7386,7 @@
         "tags" : [
           "health-controller"
         ],
-        "operationId" : "health",
+        "operationId" : "healthHealth",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -7409,7 +7409,7 @@
         "tags" : [
           "feedback-controller"
         ],
-        "operationId" : "prompt",
+        "operationId" : "feedbackPrompt",
         "parameters" : [
           {
             "name" : "moment",
@@ -7440,7 +7440,7 @@
         "tags" : [
           "billing-controller"
         ],
-        "operationId" : "usage",
+        "operationId" : "billingUsage",
         "parameters" : [
           {
             "name" : "eventId",
@@ -7471,7 +7471,7 @@
         "tags" : [
           "ticket-order-controller"
         ],
-        "operationId" : "list_12",
+        "operationId" : "ticketOrderList",
         "parameters" : [
           {
             "name" : "eventId",
@@ -7520,7 +7520,7 @@
         "tags" : [
           "invitation-controller"
         ],
-        "operationId" : "statuses",
+        "operationId" : "invitationStatuses",
         "parameters" : [
           {
             "name" : "eventId",
@@ -7554,7 +7554,7 @@
         "tags" : [
           "guest-controller"
         ],
-        "operationId" : "list_13",
+        "operationId" : "guestList",
         "parameters" : [
           {
             "name" : "eventId",
@@ -7588,7 +7588,7 @@
         "tags" : [
           "guest-controller"
         ],
-        "operationId" : "export",
+        "operationId" : "guestExport",
         "parameters" : [
           {
             "name" : "eventId",
@@ -7612,7 +7612,7 @@
         "tags" : [
           "dashboard-controller"
         ],
-        "operationId" : "get_7",
+        "operationId" : "dashboardGet",
         "parameters" : [
           {
             "name" : "eventId",
@@ -7643,7 +7643,7 @@
         "tags" : [
           "commission-controller"
         ],
-        "operationId" : "overview_2",
+        "operationId" : "commissionOverview",
         "parameters" : [
           {
             "name" : "eventId",
@@ -7674,7 +7674,7 @@
         "tags" : [
           "commission-controller"
         ],
-        "operationId" : "quote",
+        "operationId" : "commissionQuote",
         "parameters" : [
           {
             "name" : "eventId",
@@ -7714,7 +7714,7 @@
         "tags" : [
           "check-in-controller"
         ],
-        "operationId" : "stats",
+        "operationId" : "checkInStats",
         "parameters" : [
           {
             "name" : "eventId",
@@ -7745,7 +7745,7 @@
         "tags" : [
           "check-in-controller"
         ],
-        "operationId" : "search",
+        "operationId" : "checkInSearch",
         "parameters" : [
           {
             "name" : "eventId",
@@ -7787,7 +7787,7 @@
         "tags" : [
           "event-tier-quotes-controller"
         ],
-        "operationId" : "quotes",
+        "operationId" : "eventTierQuotesQuotes",
         "parameters" : [
           {
             "name" : "eventId",
@@ -7821,7 +7821,7 @@
         "tags" : [
           "attendance-certificate-controller"
         ],
-        "operationId" : "register_2",
+        "operationId" : "attendanceCertificateRegister",
         "parameters" : [
           {
             "name" : "eventId",
@@ -7853,7 +7853,7 @@
         "tags" : [
           "attendance-certificate-controller"
         ],
-        "operationId" : "certificate",
+        "operationId" : "attendanceCertificateCertificate",
         "parameters" : [
           {
             "name" : "eventId",
@@ -7894,7 +7894,7 @@
         "tags" : [
           "analytics-controller"
         ],
-        "operationId" : "get_8",
+        "operationId" : "analyticsGet",
         "parameters" : [
           {
             "name" : "eventId",
@@ -7925,7 +7925,7 @@
         "tags" : [
           "operator-check-in-controller"
         ],
-        "operationId" : "stats_1",
+        "operationId" : "operatorCheckInStats_1",
         "parameters" : [
           {
             "name" : "token",
@@ -7964,7 +7964,7 @@
         "tags" : [
           "operator-check-in-controller"
         ],
-        "operationId" : "stats_2",
+        "operationId" : "operatorCheckInStats",
         "parameters" : [
           {
             "name" : "token",
@@ -7994,7 +7994,7 @@
         "tags" : [
           "operator-check-in-controller"
         ],
-        "operationId" : "search_1",
+        "operationId" : "operatorCheckInSearch_1",
         "parameters" : [
           {
             "name" : "token",
@@ -8044,7 +8044,7 @@
         "tags" : [
           "operator-check-in-controller"
         ],
-        "operationId" : "search_2",
+        "operationId" : "operatorCheckInSearch",
         "parameters" : [
           {
             "name" : "token",
@@ -8085,7 +8085,7 @@
         "tags" : [
           "operator-check-in-controller"
         ],
-        "operationId" : "roster",
+        "operationId" : "operatorCheckInRoster",
         "parameters" : [
           {
             "name" : "token",
@@ -8118,7 +8118,7 @@
         "tags" : [
           "operator-check-in-controller"
         ],
-        "operationId" : "roster_1",
+        "operationId" : "operatorCheckInRoster_1",
         "parameters" : [
           {
             "name" : "token",
@@ -8160,7 +8160,7 @@
         "tags" : [
           "operator-check-in-controller"
         ],
-        "operationId" : "context",
+        "operationId" : "operatorCheckInContext",
         "parameters" : [
           {
             "name" : "token",
@@ -8190,7 +8190,7 @@
         "tags" : [
           "operator-check-in-controller"
         ],
-        "operationId" : "context_1",
+        "operationId" : "operatorCheckInContext_1",
         "parameters" : [
           {
             "name" : "token",
@@ -8229,7 +8229,7 @@
         "tags" : [
           "own-whats-app-number-controller"
         ],
-        "operationId" : "ownNumberView",
+        "operationId" : "ownWhatsAppNumberOwnNumberView",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -8249,7 +8249,7 @@
         "tags" : [
           "billing-tiers-controller"
         ],
-        "operationId" : "tiers",
+        "operationId" : "billingTiersTiers",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -8269,7 +8269,7 @@
         "tags" : [
           "billing-tiers-controller"
         ],
-        "operationId" : "customQuote",
+        "operationId" : "billingTiersCustomQuote",
         "parameters" : [
           {
             "name" : "guestCount",
@@ -8309,7 +8309,7 @@
         "tags" : [
           "subscription-controller"
         ],
-        "operationId" : "view_6",
+        "operationId" : "subscriptionView",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -8329,7 +8329,7 @@
         "tags" : [
           "billing-history-controller"
         ],
-        "operationId" : "history",
+        "operationId" : "billingHistoryHistory",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -8352,7 +8352,7 @@
         "tags" : [
           "billing-history-controller"
         ],
-        "operationId" : "status_1",
+        "operationId" : "billingHistoryStatus",
         "parameters" : [
           {
             "name" : "paymentId",
@@ -8383,7 +8383,7 @@
         "tags" : [
           "billing-history-controller"
         ],
-        "operationId" : "receipt",
+        "operationId" : "billingHistoryReceipt",
         "parameters" : [
           {
             "name" : "paymentId",
@@ -8414,7 +8414,7 @@
         "tags" : [
           "organizer-pack-controller"
         ],
-        "operationId" : "packView",
+        "operationId" : "organizerPackPackView",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -8434,7 +8434,7 @@
         "tags" : [
           "invoice-controller"
         ],
-        "operationId" : "list_14",
+        "operationId" : "invoiceList",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -8457,7 +8457,7 @@
         "tags" : [
           "invoice-controller"
         ],
-        "operationId" : "get_9",
+        "operationId" : "invoiceGet",
         "parameters" : [
           {
             "name" : "invoiceId",
@@ -8488,7 +8488,7 @@
         "tags" : [
           "invoice-controller"
         ],
-        "operationId" : "document",
+        "operationId" : "invoiceDocument",
         "parameters" : [
           {
             "name" : "invoiceId",
@@ -8520,7 +8520,7 @@
         "tags" : [
           "auth-controller"
         ],
-        "operationId" : "me",
+        "operationId" : "authMe",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -8540,7 +8540,7 @@
         "tags" : [
           "member-invitation-accept-controller"
         ],
-        "operationId" : "preview_1",
+        "operationId" : "memberInvitationAcceptPreview",
         "parameters" : [
           {
             "name" : "token",
@@ -8570,7 +8570,7 @@
         "tags" : [
           "appointment-public-controller"
         ],
-        "operationId" : "view_7",
+        "operationId" : "appointmentPublicView",
         "parameters" : [
           {
             "name" : "token",
@@ -8608,7 +8608,7 @@
         "tags" : [
           "appointment-public-controller"
         ],
-        "operationId" : "lineTicket_1",
+        "operationId" : "appointmentPublicLineTicket",
         "parameters" : [
           {
             "name" : "token",
@@ -8646,7 +8646,7 @@
         "tags" : [
           "appointment-public-controller"
         ],
-        "operationId" : "status_2",
+        "operationId" : "appointmentPublicStatus",
         "parameters" : [
           {
             "name" : "token",
@@ -8682,7 +8682,7 @@
         "tags" : [
           "appointment-public-controller"
         ],
-        "operationId" : "cancel_2",
+        "operationId" : "appointmentPublicCancel",
         "parameters" : [
           {
             "name" : "token",
@@ -8713,7 +8713,7 @@
         "tags" : [
           "admin-whats-app-controller"
         ],
-        "operationId" : "pricing",
+        "operationId" : "adminWhatsAppPricing",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -8736,7 +8736,7 @@
         "tags" : [
           "admin-verification-controller"
         ],
-        "operationId" : "list_15",
+        "operationId" : "adminVerificationList",
         "parameters" : [
           {
             "name" : "status",
@@ -8780,7 +8780,7 @@
         "tags" : [
           "admin-verification-controller"
         ],
-        "operationId" : "documents",
+        "operationId" : "adminVerificationDocuments",
         "parameters" : [
           {
             "name" : "id",
@@ -8814,7 +8814,7 @@
         "tags" : [
           "admin-trial-controller"
         ],
-        "operationId" : "stats_3",
+        "operationId" : "adminTrialStats",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -8834,7 +8834,7 @@
         "tags" : [
           "admin-tenant-controller"
         ],
-        "operationId" : "list_16",
+        "operationId" : "adminTenantList",
         "parameters" : [
           {
             "name" : "query",
@@ -8884,7 +8884,7 @@
         "tags" : [
           "admin-tenant-controller"
         ],
-        "operationId" : "events",
+        "operationId" : "adminTenantEvents",
         "parameters" : [
           {
             "name" : "id",
@@ -8926,7 +8926,7 @@
         "tags" : [
           "admin-prospect-lead-controller"
         ],
-        "operationId" : "list_17",
+        "operationId" : "adminProspectLeadList",
         "parameters" : [
           {
             "name" : "status",
@@ -8959,7 +8959,7 @@
         "tags" : [
           "admin-payment-controller"
         ],
-        "operationId" : "list_18",
+        "operationId" : "adminPaymentList",
         "parameters" : [
           {
             "name" : "status",
@@ -9029,7 +9029,7 @@
         "tags" : [
           "admin-feedback-controller"
         ],
-        "operationId" : "list_19",
+        "operationId" : "adminFeedbackList",
         "parameters" : [
           {
             "name" : "kind",
@@ -9087,7 +9087,7 @@
         "tags" : [
           "admin-feedback-controller"
         ],
-        "operationId" : "ratings",
+        "operationId" : "adminFeedbackRatings",
         "parameters" : [
           {
             "name" : "days",
@@ -9122,7 +9122,7 @@
         "tags" : [
           "admin-billing-catalog-controller"
         ],
-        "operationId" : "catalog",
+        "operationId" : "adminBillingCatalogCatalog",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -9142,7 +9142,7 @@
         "tags" : [
           "admin-audit-controller"
         ],
-        "operationId" : "list_20",
+        "operationId" : "adminAuditList",
         "parameters" : [
           {
             "name" : "action",
@@ -9192,7 +9192,7 @@
         "tags" : [
           "provider-settings-controller"
         ],
-        "operationId" : "remove",
+        "operationId" : "providerSettingsRemove",
         "parameters" : [
           {
             "name" : "channel",
@@ -9222,7 +9222,7 @@
         "tags" : [
           "service-staff-controller"
         ],
-        "operationId" : "revoke_2",
+        "operationId" : "serviceStaffRevoke",
         "parameters" : [
           {
             "name" : "serviceId",
@@ -9255,7 +9255,7 @@
         "tags" : [
           "service-controller"
         ],
-        "operationId" : "removeRequirement",
+        "operationId" : "serviceRemoveRequirement",
         "parameters" : [
           {
             "name" : "id",
@@ -9288,7 +9288,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "removeUnavailability",
+        "operationId" : "resourceRemoveUnavailability",
         "parameters" : [
           {
             "name" : "id",
@@ -9321,7 +9321,7 @@
         "tags" : [
           "resource-controller"
         ],
-        "operationId" : "removeAvailability",
+        "operationId" : "resourceRemoveAvailability",
         "parameters" : [
           {
             "name" : "id",
@@ -9354,7 +9354,7 @@
         "tags" : [
           "member-controller"
         ],
-        "operationId" : "remove_1",
+        "operationId" : "memberRemove",
         "parameters" : [
           {
             "name" : "userId",
@@ -9378,7 +9378,7 @@
         "tags" : [
           "member-controller"
         ],
-        "operationId" : "revoke_3",
+        "operationId" : "memberRevoke",
         "parameters" : [
           {
             "name" : "invitationId",
@@ -9402,7 +9402,7 @@
         "tags" : [
           "event-question-controller"
         ],
-        "operationId" : "delete_3",
+        "operationId" : "eventQuestionDelete",
         "parameters" : [
           {
             "name" : "eventId",
@@ -9435,7 +9435,7 @@
         "tags" : [
           "event-occurrence-controller"
         ],
-        "operationId" : "delete_4",
+        "operationId" : "eventOccurrenceDelete",
         "parameters" : [
           {
             "name" : "eventId",
@@ -9468,7 +9468,7 @@
         "tags" : [
           "guest-controller"
         ],
-        "operationId" : "remove_2",
+        "operationId" : "guestRemove",
         "parameters" : [
           {
             "name" : "eventId",
