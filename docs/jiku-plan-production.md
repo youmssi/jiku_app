@@ -1,7 +1,7 @@
 # Jikū — Ce qu'il manque pour la production, et le plan de travail
 
 **Date :** 2026-09-24, état mis à jour le 2026-09-27
-**Référence :** ADR 104 (ticket, paiement, canaux, tarification).
+**Référence :** ADR 104 (ticket, paiement, canaux, tarification), ADR 106 (cartes partageables).
 
 Ce document répond à une question : **que faut-il encore faire pour que le
 périmètre de Jikū soit complet et prêt pour la production ?** Il distingue ce
@@ -28,7 +28,7 @@ connecté (niveau 3), Wave en direct.
 
 État vérifié dans le code le 2026-09-27. Les phases 0 à 6 du plan ci-dessous
 sont construites pour le produit, vente publique de billets comprise ; il reste
-la mise en production (§2.2), dont le scan des vulnérabilités en CI.
+la mise en production (§2.2). La phase 7 (cartes partageables, ADR 106) est en cours.
 
 ### 2.1 Produit
 
@@ -64,7 +64,7 @@ la mise en production (§2.2), dont le scan des vulnérabilités en CI.
 | Statut Tech Provider Meta, modèles de messages approuvés | ⏳ | nécessaire pour « votre propre numéro » et les invitations interactives |
 | Compte marchand CinetPay en production | ⏳ | clés, URL de notification, délai de reversement à négocier |
 | Secrets de production (constat F-3) | ⏳ | à poser et vérifier avant la bascule |
-| Scan des vulnérabilités du backend en CI (constat F-6) | ❌ | recommandé par la revue de sécurité, pas encore branché |
+| Scan des vulnérabilités en CI (constat F-6) | ✅ | Trivy sur le jar du backend, `pnpm audit` sur le web (JIKU-180) |
 | Validation de la revue de sécurité | ⏳ | case non cochée |
 | Recette utilisateur (UAT) | ⏳ | plan rédigé, validations non cochées |
 | Identité légale sur les factures | ❌ | `BILLING_SELLER_NAME`, adresse et identifiant fiscal vides ; entreprise à immatriculer |
@@ -140,6 +140,17 @@ l'ordre.
 | 6.1 | app | Commande (JIKU-177) : quantités par catégorie, places prises d'un coup sous les deux jauges (événement et catégorie), au plus 10 billets par commande. Le client déclare son paiement (référence Mobile Money), l'organisation confirme (billets émis au nom de l'acheteur, transférables) ou refuse avec un motif. Une commande non déclarée rend ses places après le délai choisi par l'organisation (30 min par défaut, de 10 min à 72 h) ; une commande déclarée n'expire plus |
 | 6.2 | web | Page publique de l'événement et parcours d'achat, paiement aux niveaux 1 et 2 |
 | 6.3 | app, web | Commission (JIKU-178) : 3 % du prix, payée par tranche de 50 billets d'une catégorie avant la vente, jamais plus que ses places restantes. Première tranche offerte, une tranche à crédit (réglée avec le paiement suivant), vente en pause quand les tranches sont épuisées sauf le jour de l'événement (le dépassement est dû après). À la clôture, la part payée non consommée devient un avoir de 12 mois déduit des paiements de commission suivants |
+
+### Phase 7 — Cartes partageables (ADR 106)
+
+| Tranche | Dépôt | Contenu |
+|---|---|---|
+| 7.0 | app | ADR 106 : les couches (distribution, métiers, socle ticket), le moteur de cartes, les étapes et leurs feux verts (JIKU-183) |
+| 7.1 | app | Invitation ouverte, parcours web : code court public, réponse Je viens / Peut-être / Non avec accompagnants, une réponse par numéro, billet QR pour chaque « Je viens » sous la jauge, « Je viens » et accompagnants comptés dans le palier, décompte et liste pour l'organisateur (JIKU-184) |
+| 7.2 | app | Invitation ouverte, parcours WhatsApp sur un numéro Jikū dédié : message avec le code, boutons, accompagnants, billet dans la discussion (JIKU-185) |
+| 7.3 | web | Onglet invitation ouverte (réglages, décompte en direct, liste), partage WhatsApp, carte téléchargeable avec QR, page publique avec aperçu de lien (JIKU-186) |
+| 7.4 | app, web | Cartes de service pour les organisations vérifiées, sur leur propre numéro : redirection vers la page de service, prise de rendez-vous, conversation guidée par quelques questions à choix |
+| 7.5 | app, web | API Jikū pour les intégrateurs : clés, notifications, facturation à l'usage, première intégration de démonstration (après feu vert, ADR 106 §6) |
 
 ### Après le lancement
 
