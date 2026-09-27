@@ -1,6 +1,6 @@
 # Jikū — Ce qu'il manque pour la production, et le plan de travail
 
-**Date :** 2026-09-24, état mis à jour le 2026-09-27
+**Date :** 2026-09-24, état et chronogramme mis à jour le 2026-09-27
 **Référence :** ADR 104 (ticket, paiement, canaux, tarification), ADR 106 (cartes partageables).
 
 Ce document répond à une question : **que faut-il encore faire pour que le
@@ -28,7 +28,9 @@ connecté (niveau 3), Wave en direct.
 
 État vérifié dans le code le 2026-09-27. Les phases 0 à 6 du plan ci-dessous
 sont construites pour le produit, vente publique de billets comprise ; il reste
-la mise en production (§2.2). La phase 7 (cartes partageables, ADR 106) est en cours.
+la mise en production (§2.2). Dans la phase 7 (cartes partageables, ADR 106),
+l'invitation ouverte est en production depuis le 2026-09-27 ; la suite est
+décrite dans `docs/backlog/phase-7-suite.md` et datée au §5.
 
 ### 2.1 Produit
 
@@ -52,6 +54,7 @@ la mise en production (§2.2). La phase 7 (cartes partageables, ADR 106) est en 
 | Vente publique de billets (commande, page d'achat) | ✅ Prêt | JIKU-177 : places gardées, paiement déclaré puis confirmé, onglet Commandes |
 | Commission de 3 % par tranche | ✅ Prêt | JIKU-178 : tranche offerte, à crédit, jamais de pause le jour J, avoir de 12 mois |
 | Traduction anglaise de tous les écrans | ✅ Prêt | JIKU-166, JIKU-167, JIKU-172, JIKU-173 |
+| Invitation ouverte (web et WhatsApp), date limite, annulation annoncée | ✅ Prêt | JIKU-184 à JIKU-187 ; numéro WhatsApp des cartes à créer |
 
 ### 2.2 Mise en production
 
@@ -149,8 +152,12 @@ l'ordre.
 | 7.1 | app | Invitation ouverte, parcours web : code court public, réponse Je viens / Peut-être / Non avec accompagnants, une réponse par numéro, billet QR pour chaque « Je viens » sous la jauge, « Je viens » et accompagnants comptés dans le palier, décompte et liste pour l'organisateur (JIKU-184) |
 | 7.2 | app | Invitation ouverte, parcours WhatsApp sur un numéro Jikū dédié : message avec le code, boutons, accompagnants, billet dans la discussion (JIKU-185) |
 | 7.3 | web | Onglet invitation ouverte (réglages, décompte en direct, liste), partage WhatsApp, carte téléchargeable avec QR, page publique avec aperçu de lien (JIKU-186) |
-| 7.4 | app, web | Cartes de service pour les organisations vérifiées, sur leur propre numéro : redirection vers la page de service, prise de rendez-vous, conversation guidée par quelques questions à choix |
-| 7.5 | app, web | API Jikū pour les intégrateurs : clés, notifications, facturation à l'usage, première intégration de démonstration (après feu vert, ADR 106 §6) |
+| 7.4 | app, web | Invitation ouverte : date limite affichée, annulation annoncée par WhatsApp (incluse en payant, au choix en gratuit) (JIKU-187) |
+| 7.5 | web | Allègement visuel : formats courts, icônes plutôt qu'étiquettes, aide à la demande, budget de texte vérifié en CI (JIKU-188) |
+| 7.6 | app, web | Cartes de service, redirection puis rendez-vous direct, pour les organisations vérifiées (JIKU-189, JIKU-190) |
+| 7.7 | app, web | Conversation guidée sur le numéro de l'organisation : questions à choix, créneau, ticket dans la discussion (JIKU-191, JIKU-192) |
+| 7.8 | app, web | Mesure des cartes, quota de conversations, relances aux prospects (JIKU-193) |
+| 7.9 | app, web | API Jikū pour les intégrateurs : clés, notifications, facturation à l'usage, première intégration de démonstration (après feu vert, ADR 106 §6) |
 
 ### Après le lancement
 
@@ -170,3 +177,32 @@ d'orientation, écran d'appel.
 - Nouvelles variables d'environnement documentées dans `.env.example`.
 - Aucun nom de prestataire dans le code métier : uniquement dans son
   adaptateur et sa configuration.
+
+## 5. Chronogramme
+
+Semaines de 2026 (lundi au dimanche). Une date n'est un engagement que pour la
+ligne « Maintenant » ; les suivantes dépendent des feux verts et des décisions
+marquées « à discuter ».
+
+| Période | Semaines | Contenu | Condition pour démarrer | État |
+|---|---|---|---|---|
+| Maintenant | S40 (28 sept. → 4 oct.) | Prérequis de production urgents : moyen de paiement WhatsApp Business (**avant le 30 sept.**), numéro WhatsApp des cartes, R2, instance Render 1 Go | — | À faire (équipe Jikū) |
+| Maintenant | S40 → S41 | JIKU-188 allègement visuel sur les 6 écrans prioritaires | Décisions §JIKU-188 | À discuter |
+| Octobre | S41 → S44 (5 → 1er nov.) | Pilote de l'invitation ouverte : 10 à 20 hôtes, suivi des indicateurs ADR 106 | Numéro des cartes validé chez Meta | Prêt à lancer |
+| Octobre | S41 → S42 | JIKU-189 carte de service, redirection ; JIKU-190 rendez-vous direct | — (sans message WhatsApp, ne dépend pas du pilote) | Prêt |
+| Fin octobre | S44 | Bilan du pilote, feu vert de l'étape 1 : taux de réponse ≥ 35 %, ≥ 60 % via WhatsApp, coût par réponse sous le plafond | Pilote terminé | À discuter |
+| Novembre | S45 → S47 | JIKU-191 questions guidées ; JIKU-192 conversation sur le numéro de l'organisation | Feu vert étape 1, décisions §JIKU-191 et §JIKU-192 | À discuter |
+| Novembre | S48 | JIKU-193 mesure, quotas et relances | Grille de prix fixée à partir du pilote | À discuter |
+| Décembre | S49 → S52 | Pilote des cartes de service avec 5 à 10 entreprises vérifiées ; feu vert de l'étape 2 | JIKU-189 à JIKU-193 en production | À discuter |
+| 2027, T1 | — | Paliers après le lancement : relances d'invitation ouverte (payant), avis après service, écran d'appel, agences multiples | Ordre à fixer selon les retours du pilote | À discuter |
+| 2027, T2 → T3 | — | Étape 3 : API Jikū pour les intégrateurs (7.9) | Un ou deux intégrateurs payants, ou une demande entrante réelle | À discuter |
+
+Points à discuter, dans l'ordre où ils bloquent :
+
+1. Décisions de JIKU-188 (heure en français, portée) : début S40.
+2. Critères chiffrés du pilote et plafond de coût par réponse : avant S41.
+3. Numéro partagé ou non pour la conversation guidée (JIKU-192) : avant S45.
+4. Quotas de conversations et prix des relances (JIKU-193) : fin S44, avec les
+   coûts réels du pilote.
+5. Ordre des paliers après le lancement : en décembre, avec le bilan de l'étape 2.
+
