@@ -10,6 +10,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import tools.jackson.core.util.DefaultIndenter
 import tools.jackson.core.util.DefaultPrettyPrinter
+import tools.jackson.databind.JsonNode
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.databind.SerializationFeature
 import tools.jackson.databind.json.JsonMapper
@@ -120,8 +121,11 @@ class OpenApiContractTest {
      * Pretty-printed with sorted keys and a fixed `\n` newline so the committed
      * file has one stable shape everywhere.
      *
-     * Both halves matter. Sorted keys because springdoc does not guarantee map
-     * ordering, so an unsorted document would look changed on every regeneration.
+     * Both halves matter. Sorted keys because springdoc does not guarantee
+     * ordering: a schema's properties backed by getters rather than constructor
+     * parameters come in reflection order, which changes between JVM runs, so an
+     * unsorted document would look changed from one run to the next. The keys of
+     * every object are sorted, at every depth, and so is each `required` list.
      * The explicit newline because Jackson's default pretty printer uses the
      * *platform* separator — a contract generated on Windows would then never
      * match one generated on the Linux runner, and this guard would fail in CI
@@ -138,9 +142,36 @@ class OpenApiContractTest {
         return MAPPER
             .writer()
             .with(PRINTER)
-            .writeValueAsString(MAPPER.readTree(body))
+            .writeValueAsString(sorted(MAPPER.readTree(body)))
             .replace("\r\n", "\n")
     }
+
+    /** [node] with every object's keys in order and every `required` list sorted. */
+    private fun sorted(node: JsonNode): JsonNode =
+        when {
+            node.isObject -> {
+                val copy = MAPPER.createObjectNode()
+                node.propertyNames().sorted().forEach { name ->
+                    val value = node.get(name)
+                    copy.set(
+                        name,
+                        if (name == "required" && value.isArray) {
+                            MAPPER.createArrayNode().apply {
+                                for (field in value.values().map { it.asString() }.sorted()) add(field)
+                            }
+                        } else {
+                            sorted(value)
+                        },
+                    )
+                }
+                copy
+            }
+            node.isArray ->
+                MAPPER.createArrayNode().apply {
+                    for (child in node.values()) add(sorted(child))
+                }
+            else -> node
+        }
 
     private companion object {
         const val REGENERATE = "jiku.openapi.regenerate"
