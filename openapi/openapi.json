@@ -1525,6 +1525,44 @@
         },
         "type" : "object"
       },
+      "EventLookRequest" : {
+        "properties" : {
+          "cardStyle" : {
+            "enum" : [
+              "ELEGANT",
+              "MODERN",
+              "FESTIVE"
+            ],
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required" : [
+          "cardStyle"
+        ],
+        "type" : "object"
+      },
+      "EventLookView" : {
+        "properties" : {
+          "bannerUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "cardStyle" : {
+            "enum" : [
+              "ELEGANT",
+              "MODERN",
+              "FESTIVE"
+            ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "EventOccurrenceResponse" : {
         "properties" : {
           "capacity" : {
@@ -4262,6 +4300,15 @@
           "accepting" : {
             "type" : "boolean"
           },
+          "bannerUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "cardStyle" : {
+            "type" : "string"
+          },
           "closedReason" : {
             "enum" : [
               "DISABLED",
@@ -5046,6 +5093,15 @@
       },
       "RsvpView" : {
         "properties" : {
+          "bannerUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "cardStyle" : {
+            "type" : "string"
+          },
           "categoryName" : {
             "type" : [
               "string",
@@ -10130,6 +10186,84 @@
         ]
       }
     },
+    "/api/v1/events/{eventId}/banner" : {
+      "delete" : {
+        "operationId" : "eventLookRemoveBanner",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EventLookView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "event-look-controller"
+        ]
+      },
+      "put" : {
+        "operationId" : "eventLookReplaceBanner",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "properties" : {
+                  "file" : {
+                    "format" : "binary",
+                    "type" : "string"
+                  }
+                },
+                "required" : [
+                  "file"
+                ],
+                "type" : "object"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EventLookView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "event-look-controller"
+        ]
+      }
+    },
     "/api/v1/events/{eventId}/billing/quotes" : {
       "get" : {
         "operationId" : "eventTierQuotesQuotes",
@@ -10841,6 +10975,76 @@
         },
         "tags" : [
           "invitation-controller"
+        ]
+      }
+    },
+    "/api/v1/events/{eventId}/look" : {
+      "get" : {
+        "operationId" : "eventLookGet",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EventLookView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "event-look-controller"
+        ]
+      },
+      "put" : {
+        "operationId" : "eventLookUpdate",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/EventLookRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EventLookView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "event-look-controller"
         ]
       }
     },
@@ -14228,6 +14432,38 @@
         },
         "tags" : [
           "prospect-lead-controller"
+        ]
+      }
+    },
+    "/api/v1/public/events/{eventId}/banner" : {
+      "get" : {
+        "operationId" : "publicEventBannerBanner",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "format" : "byte",
+                  "type" : "string"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "public-event-banner-controller"
         ]
       }
     },

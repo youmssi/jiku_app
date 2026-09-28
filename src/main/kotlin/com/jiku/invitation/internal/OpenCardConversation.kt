@@ -39,6 +39,7 @@ class OpenCardConversation(
     private val tenants: TenantModuleApi,
     private val ticketNotices: TicketNotices,
     private val publisher: ApplicationEventPublisher,
+    private val properties: OpenInvitationProperties,
 ) {
     @Async("invitationExecutor")
     @EventListener
@@ -111,9 +112,17 @@ class OpenCardConversation(
                 eventStart = view.eventStart,
                 eventTimezone = view.eventTimezone,
                 answerBy = view.closesAt,
+                imageUrl = cardImageUrl(code),
             ),
         )
     }
+
+    /** The card image the web app draws for [code], shown at the top of the first message (JIKU-194). */
+    private fun cardImageUrl(code: String): String? =
+        properties.cardImageBaseUrl
+            .trimEnd('/')
+            .takeIf { it.isNotEmpty() }
+            ?.let { "$it/api/cards/$code" }
 
     /** "Coming": the place is held at once, then the companions are asked, or the ticket sent when none are allowed. */
     private fun holdYes(
