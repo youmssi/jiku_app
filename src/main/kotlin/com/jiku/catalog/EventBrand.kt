@@ -9,4 +9,8 @@ data class EventBrand(
     val name: String? = null,
     val logoUrl: String? = null,
     val primaryColor: String? = null,
+    /** How the guest-facing surfaces look (JIKU-194). */
+    val cardStyle: CardStyle = CardStyle.MODERN,
+    /** The public link of the event's banner photo; null without one. */
+    val bannerUrl: String? = null,
 )

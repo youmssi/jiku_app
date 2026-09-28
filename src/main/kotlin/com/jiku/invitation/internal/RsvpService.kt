@@ -271,6 +271,8 @@ class RsvpService(
             categoryName = guest.ticketTypeId?.let { typeId -> events.ticketTypes(eventId).firstOrNull { it.id == typeId }?.label },
             organizerVerification = verification.verifiedKind(),
             companions = guest.companions,
+            cardStyle = event?.brand?.cardStyle?.name ?: "MODERN",
+            bannerUrl = event?.brand?.bannerUrl,
         )
     }
 

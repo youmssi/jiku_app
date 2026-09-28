@@ -1,5 +1,6 @@
 package com.jiku.catalog.internal
 
+import com.jiku.catalog.CardStyle
 import com.jiku.catalog.InvitationChannel
 import com.jiku.shared.BaseTenantEntity
 import jakarta.persistence.CollectionTable
@@ -70,6 +71,15 @@ class Event(
     @Enumerated(EnumType.STRING)
     @Column(name = "channel", nullable = false)
     var invitationChannels: MutableSet<InvitationChannel> = mutableSetOf()
+
+    /** How the guest-facing surfaces look (JIKU-194). */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "card_style", nullable = false, length = 16)
+    var cardStyle: CardStyle = CardStyle.MODERN
+
+    /** When the banner photo was last replaced; null without one. It versions the photo's public link. */
+    @Column(name = "banner_updated_at")
+    var bannerUpdatedAt: Instant? = null
 
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now()

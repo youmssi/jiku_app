@@ -18,9 +18,10 @@ class EventModuleApiService(
     private val eventService: EventService,
     private val ticketTypes: TicketTypeRepository,
     private val questions: EventQuestionRepository,
+    private val look: EventLookService,
 ) : EventModuleApi {
     @Transactional(readOnly = true)
-    override fun findEvent(eventId: UUID): EventInfo? = events.findById(eventId).map { it.toEventInfo() }.orElse(null)
+    override fun findEvent(eventId: UUID): EventInfo? = events.findById(eventId).map { it.toEventInfo(look.bannerUrl(it)) }.orElse(null)
 
     @Transactional(readOnly = true)
     override fun eventsPastRetention(cutoff: Instant): List<RetentionCandidate> =

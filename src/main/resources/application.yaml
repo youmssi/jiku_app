@@ -470,6 +470,12 @@ catalog:
     # from the operator's short code; revocation is immediate and independent
     # of this window.
     validity: ${OPERATOR_LINK_VALIDITY:P30D}
+  banner:
+    # Photo de bandeau d'un événement (JIKU-194), servie par cette API.
+    api-public-url: ${API_PUBLIC_URL:http://localhost:8080}
+    max-bytes: ${CATALOG_BANNER_MAX_BYTES:1048576}
+    min-width: ${CATALOG_BANNER_MIN_WIDTH:600}
+    min-height: ${CATALOG_BANNER_MIN_HEIGHT:300}
   slot:
     # Grille fixe du moteur de créneaux (JIKU-85) : les valeurs par défaut,
     # que la configuration par service (JIKU-86) remplacera service par service.
@@ -554,6 +560,9 @@ open-invitation:
   # The Jikū WhatsApp number dedicated to cards, digits only. Blank: answers go
   # through the web page only.
   whatsapp-number: ${OPEN_INVITATION_WHATSAPP_NUMBER:}
+  # The web app's public URL: the WhatsApp card message shows the card image it
+  # draws (JIKU-194). Blank: the message goes without an image.
+  card-image-base-url: ${SERVER_BASE_URL:http://localhost:3000}
 
 verification:
   # Time the documents of an approved request are kept before deletion; a

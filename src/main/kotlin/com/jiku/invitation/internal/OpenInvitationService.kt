@@ -134,6 +134,8 @@ class OpenInvitationService(
             organizerName = event.brand.name ?: tenant?.displayName ?: event.name,
             logoUrl = event.brand.logoUrl ?: tenant?.logoUrl,
             primaryColor = event.brand.primaryColor ?: tenant?.primaryColor,
+            cardStyle = event.brand.cardStyle.name,
+            bannerUrl = event.brand.bannerUrl,
             organizerVerification = verification.verifiedKind(),
             maxCompanions = invitation.maxCompanions,
             closesAt = invitation.closesAt,

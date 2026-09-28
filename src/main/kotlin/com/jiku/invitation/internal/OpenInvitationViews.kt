@@ -21,6 +21,11 @@ data class OpenInvitationProperties(
      * page only.
      */
     val whatsappNumber: String = "",
+    /**
+     * The web app's public URL (JIKU-194): the WhatsApp card message shows the
+     * card image it draws at `/api/cards/{code}`. Blank: the message has no image.
+     */
+    val cardImageBaseUrl: String = "",
 )
 
 data class OpenInvitationSettingsRequest(
@@ -99,6 +104,10 @@ data class PublicOpenInvitationView(
     val organizerName: String,
     val logoUrl: String?,
     val primaryColor: String?,
+    /** How the page, the card and the ticket look (JIKU-194): ELEGANT, MODERN or FESTIVE. */
+    val cardStyle: String,
+    /** The event's banner photo; null without one. */
+    val bannerUrl: String?,
     /** The organizer's approved verification (COMPANY, PERSONAL) or null. */
     val organizerVerification: String?,
     val maxCompanions: Int,
