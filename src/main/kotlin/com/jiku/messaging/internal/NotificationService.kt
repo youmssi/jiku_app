@@ -9,6 +9,7 @@ import com.jiku.shared.ReminderAllowanceGate
 import com.jiku.shared.ReminderChannel
 import com.jiku.shared.ReminderDue
 import com.jiku.shared.TicketConfirmedNotice
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.ZoneId
 import java.util.UUID
@@ -51,6 +52,8 @@ class NotificationService(
     private val optOuts: WhatsAppOptOutRepository,
     private val reminderAllowance: ReminderAllowanceGate,
 ) {
+    private val log = LoggerFactory.getLogger(NotificationService::class.java)
+
     fun deliverInvitation(event: GuestInvitedEvent): DeliveryOutcome =
         deliverWithRetry(sendAction(event)) { status, attempt, error ->
             record(event.invitationId, event.channel, event.recipient, status, attempt, error)
@@ -264,7 +267,13 @@ class NotificationService(
     private fun sms(
         to: String,
         text: String,
-    ): () -> Unit = { smsSender.send(SmsMessage(to = to, body = text)) }
+    ): () -> Unit =
+        {
+            val body = SmsText.toGsm7(text)
+            val segments = SmsText.segments(body)
+            if (segments > 1) log.info("SMS takes {} segments ({} characters)", segments, body.length)
+            smsSender.send(SmsMessage(to = to, body = body))
+        }
 
     private fun deliverWithRetry(
         send: () -> Unit,
