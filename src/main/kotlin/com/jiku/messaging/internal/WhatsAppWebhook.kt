@@ -26,6 +26,8 @@ import javax.crypto.spec.SecretKeySpec
  * secret. A verified call is always acknowledged, even when nothing in it is
  * ours, so Meta does not retry it. A message to an organization's own number
  * (ADR 105) is handled for that organization and answered from its number.
+ * What Meta reports about templates, numbers and accounts (JIKU-209) goes to
+ * [WhatsAppHealthService].
  */
 @RestController
 @RequestMapping("/whatsapp/webhook")
@@ -36,6 +38,7 @@ class WhatsAppWebhookController(
     private val numbers: WhatsAppBusinessNumberRepository,
     private val tenantTransaction: TenantTransaction,
     private val objectMapper: ObjectMapper,
+    private val health: WhatsAppHealthService,
 ) {
     private val log = LoggerFactory.getLogger(WhatsAppWebhookController::class.java)
 
@@ -65,7 +68,15 @@ class WhatsAppWebhookController(
         if (!MetaWebhookSignature.verify(properties.meta.appSecret, rawBody, signature)) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid webhook signature")
         }
-        for (message in WhatsAppWebhookParser.messages(objectMapper.readTree(rawBody))) {
+        val root = objectMapper.readTree(rawBody)
+        for (event in WhatsAppAccountEventParser.events(root)) {
+            try {
+                apply(event)
+            } catch (ex: RuntimeException) {
+                log.warn("WhatsApp account event {} could not be handled", event, ex)
+            }
+        }
+        for (message in WhatsAppWebhookParser.messages(root)) {
             try {
                 if (cards.isCardsNumber(message.businessNumberId)) {
                     cards.handle(message)
@@ -80,6 +91,19 @@ class WhatsAppWebhookController(
             } catch (ex: RuntimeException) {
                 log.warn("WhatsApp reply from {} could not be handled", message.from, ex)
             }
+        }
+    }
+
+    private fun apply(event: WhatsAppAccountEvent) {
+        when (event) {
+            is WhatsAppAccountEvent.TemplateStatus ->
+                health.onTemplateStatus(event.wabaId, event.name, event.language, event.status, event.reason)
+            is WhatsAppAccountEvent.TemplateQuality -> health.onTemplateQuality(event.wabaId, event.name, event.language, event.quality)
+            is WhatsAppAccountEvent.TemplateCategory ->
+                health.onTemplateCategory(event.wabaId, event.name, event.language, event.category)
+            is WhatsAppAccountEvent.NumberQuality ->
+                health.onPhoneNumberQuality(event.wabaId, event.displayPhoneNumber, event.event, event.limit)
+            is WhatsAppAccountEvent.Account -> health.onAccountUpdate(event.wabaId, event.event, event.detail)
         }
     }
 }
@@ -177,4 +201,116 @@ object WhatsAppWebhookParser {
     }
 
     private fun JsonNode.textOrNull(): String? = asString("").takeIf { it.isNotBlank() }
+}
+
+/** What Meta reports about a WhatsApp Business Account [wabaId], its templates and numbers (JIKU-209). */
+sealed interface WhatsAppAccountEvent {
+    val wabaId: String
+
+    data class TemplateStatus(
+        override val wabaId: String,
+        val name: String,
+        val language: String,
+        val status: String,
+        val reason: String?,
+    ) : WhatsAppAccountEvent
+
+    data class TemplateQuality(
+        override val wabaId: String,
+        val name: String,
+        val language: String,
+        val quality: String,
+    ) : WhatsAppAccountEvent
+
+    data class TemplateCategory(
+        override val wabaId: String,
+        val name: String,
+        val language: String,
+        val category: String,
+    ) : WhatsAppAccountEvent
+
+    data class NumberQuality(
+        override val wabaId: String,
+        val displayPhoneNumber: String?,
+        val event: String,
+        val limit: String?,
+    ) : WhatsAppAccountEvent
+
+    data class Account(
+        override val wabaId: String,
+        val event: String,
+        val detail: String?,
+    ) : WhatsAppAccountEvent
+}
+
+/**
+ * Reads account events out of a webhook call: `entry[].id` is the WhatsApp
+ * Business Account and each `changes[].field` names the event. Unknown fields,
+ * and events missing what they need, are skipped.
+ */
+object WhatsAppAccountEventParser {
+    fun events(root: JsonNode): List<WhatsAppAccountEvent> =
+        root.path("entry").flatMap { entry ->
+            val wabaId = entry.path("id").text()
+            if (wabaId == null) {
+                emptyList()
+            } else {
+                entry.path("changes").mapNotNull { change -> event(wabaId, change.path("field").asString(""), change.path("value")) }
+            }
+        }
+
+    private fun event(
+        wabaId: String,
+        field: String,
+        value: JsonNode,
+    ): WhatsAppAccountEvent? {
+        val name = value.path("message_template_name").text()
+        val language = value.path("message_template_language").text()
+        return when (field) {
+            "message_template_status_update" ->
+                template(name, language, value.path("event").text()) { n, l, status ->
+                    WhatsAppAccountEvent.TemplateStatus(wabaId, n, l, status, value.path("reason").text())
+                }
+            "message_template_quality_update" ->
+                template(name, language, value.path("new_quality_score").text()) { n, l, quality ->
+                    WhatsAppAccountEvent.TemplateQuality(wabaId, n, l, quality)
+                }
+            "template_category_update" ->
+                template(name, language, value.path("new_category").text()) { n, l, category ->
+                    WhatsAppAccountEvent.TemplateCategory(wabaId, n, l, category)
+                }
+            "phone_number_quality_update" ->
+                value.path("event").text()?.let {
+                    WhatsAppAccountEvent.NumberQuality(
+                        wabaId,
+                        value.path("display_phone_number").text(),
+                        it,
+                        value.path("current_limit").text() ?: value.path("max_daily_conversations_per_business").text(),
+                    )
+                }
+            "account_update" ->
+                value.path("event").text()?.let {
+                    WhatsAppAccountEvent.Account(wabaId, it, accountDetail(value))
+                }
+            else -> null
+        }
+    }
+
+    private fun template(
+        name: String?,
+        language: String?,
+        value: String?,
+        build: (String, String, String) -> WhatsAppAccountEvent,
+    ): WhatsAppAccountEvent? = if (name == null || language == null || value == null) null else build(name, language, value)
+
+    private fun accountDetail(value: JsonNode): String? =
+        listOfNotNull(
+            value.path("violation_info").path("violation_type").text(),
+            value.path("ban_info").path("waba_ban_state").text(),
+            value.path("restriction_info").takeIf { it.isArray && !it.isEmpty }?.joinToString(", ") {
+                it.path("restriction_type").asString("")
+            },
+        ).joinToString("; ").ifBlank { null }
+
+    private fun JsonNode.text(): String? = if (isValueNode) asString("").trim().takeIf { it.isNotEmpty() } else null
 }

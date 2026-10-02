@@ -37,6 +37,7 @@ class WhatsAppSenderConfig {
     fun metaCloudWhatsAppSender(
         builder: RestClient.Builder,
         properties: WhatsAppProperties,
+        health: WhatsAppHealthService,
     ): WhatsAppSender =
         MetaCloudWhatsAppSender.build(
             builder = builder,
@@ -47,6 +48,8 @@ class WhatsAppSenderConfig {
             templateLanguage = properties.meta.templateLanguage,
             buttonsTemplateName = properties.meta.buttonsTemplateName.ifBlank { null },
             imageTemplateName = properties.meta.imageTemplateName.ifBlank { null },
+            wabaId = properties.meta.businessAccountId.ifBlank { null },
+            gate = health,
         )
 
     /**

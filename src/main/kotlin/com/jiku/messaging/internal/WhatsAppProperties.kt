@@ -30,7 +30,16 @@ data class WhatsAppProperties(
      */
     val marketingMarkers: String =
         "promo,réduction,solde,gratuit,offre spéciale,cadeau,bon plan,code promo,achetez maintenant",
+    val health: Health = Health(),
 ) {
+    /** How Jikū reacts to what Meta reports about its templates and numbers (JIKU-209). */
+    data class Health(
+        /** How long a paused template stays unused before Jikū tries it again (Meta pauses for 3 h, then 6 h). */
+        val pauseHours: Long = 3,
+        /** Stop using a template Meta moved to MARKETING: it costs several times more and is capped per recipient. */
+        val blockMarketingTemplates: Boolean = true,
+    )
+
     data class Meta(
         val accessToken: String = "",
         val phoneNumberId: String = "",
@@ -62,5 +71,12 @@ data class WhatsAppProperties(
          * the card conversation; blank keeps it off.
          */
         val cardsPhoneNumberId: String = "",
+        /**
+         * The WhatsApp Business Account of the platform number (JIKU-209): Meta
+         * reports template pauses per account, so the platform sender checks its
+         * templates under this id. Blank skips the check; Meta's own refusals
+         * still queue the message.
+         */
+        val businessAccountId: String = "",
     )
 }

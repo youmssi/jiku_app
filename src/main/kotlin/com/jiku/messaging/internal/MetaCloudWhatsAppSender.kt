@@ -23,6 +23,12 @@ import java.time.Duration
  * Instances are built per credential set: the platform's own (env-configured)
  * or a tenant's (organizer-provided in the org settings), both through
  * [MetaCloudWhatsAppSender.build].
+ *
+ * With a [gate] and the [wabaId] of the account, a template Meta paused,
+ * disabled or moved to marketing is not tried, and Meta's refusals that will
+ * not clear within seconds (paused template, blocked account, rate limits)
+ * raise [WhatsAppUnavailableException] so the message waits or goes by SMS
+ * (JIKU-209).
  */
 class MetaCloudWhatsAppSender internal constructor(
     private val client: RestClient,
@@ -31,8 +37,12 @@ class MetaCloudWhatsAppSender internal constructor(
     private val templateLanguage: String,
     private val buttonsTemplateName: String? = null,
     private val imageTemplateName: String? = null,
+    private val wabaId: String? = null,
+    private val gate: WhatsAppTemplateGate? = null,
 ) : WhatsAppSender {
     override fun send(message: WhatsAppMessage) {
+        val template = templateFor(message)
+        if (template != null && wabaId != null) gate?.assertUsable(wabaId, template, templateLanguage)
         val body = payload(message)
         try {
             client
@@ -42,6 +52,13 @@ class MetaCloudWhatsAppSender internal constructor(
                 .retrieve()
                 .toBodilessEntity()
         } catch (e: HttpStatusCodeException) {
+            val code = errorCode(e.responseBodyAsString)
+            if (code != null) {
+                gate?.onSendRefused(wabaId, template, templateLanguage, code)
+                if (code in WAIT_CODES) {
+                    throw WhatsAppUnavailableException("WhatsApp refused the message to ${message.to} for now (Meta error $code)")
+                }
+            }
             throw WhatsAppDeliveryException(
                 "WhatsApp Cloud API rejected message to ${message.to} (${e.statusCode}): ${e.responseBodyAsString}",
                 e,
@@ -50,6 +67,21 @@ class MetaCloudWhatsAppSender internal constructor(
             throw WhatsAppDeliveryException("WhatsApp Cloud API unreachable for ${message.to}", e)
         }
     }
+
+    /** The approved template [payload] uses for [message], or null for a session message. */
+    private fun templateFor(message: WhatsAppMessage): String? =
+        when {
+            message.buttons.isNotEmpty() -> buttonsTemplateName?.takeIf { it.isNotBlank() }
+            message.imageUrl != null -> imageTemplateName?.takeIf { it.isNotBlank() }
+            else -> templateName?.takeIf { it.isNotBlank() }
+        }
+
+    private fun errorCode(body: String): Int? =
+        ERROR_CODE
+            .find(body)
+            ?.groupValues
+            ?.get(1)
+            ?.toIntOrNull()
 
     private fun payload(message: WhatsAppMessage): Map<String, Any> {
         val bodyParameter = mapOf("type" to "body", "parameters" to listOf(mapOf("type" to "text", "text" to message.body)))
@@ -116,6 +148,16 @@ class MetaCloudWhatsAppSender internal constructor(
     ): Map<String, Any> = mapOf("messaging_product" to "whatsapp", "to" to to, "type" to type, type to content)
 
     companion object {
+        private val ERROR_CODE = Regex("\"code\"\\s*:\\s*(\\d+)")
+
+        /**
+         * Meta refusals that clear with time, not with a retry a second later:
+         * template paused (132015) or disabled (132016), account locked (131031)
+         * or blocked for policy (368), and the throughput, spam, per-recipient
+         * and account rate limits (130429, 131048, 131056, 80007).
+         */
+        private val WAIT_CODES = setOf(132015, 132016, 131031, 368, 130429, 131048, 131056, 80007)
+
         internal fun build(
             builder: RestClient.Builder,
             accessToken: String,
@@ -125,6 +167,8 @@ class MetaCloudWhatsAppSender internal constructor(
             templateLanguage: String,
             buttonsTemplateName: String? = null,
             imageTemplateName: String? = null,
+            wabaId: String? = null,
+            gate: WhatsAppTemplateGate? = null,
         ): MetaCloudWhatsAppSender {
             check(accessToken.isNotBlank()) { "WhatsApp Cloud API access token is not set" }
             check(phoneNumberId.isNotBlank()) { "WhatsApp Cloud API phone number id is not set" }
@@ -138,7 +182,16 @@ class MetaCloudWhatsAppSender internal constructor(
                     .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
                     .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .build()
-            return MetaCloudWhatsAppSender(client, phoneNumberId, templateName, templateLanguage, buttonsTemplateName, imageTemplateName)
+            return MetaCloudWhatsAppSender(
+                client,
+                phoneNumberId,
+                templateName,
+                templateLanguage,
+                buttonsTemplateName,
+                imageTemplateName,
+                wabaId,
+                gate,
+            )
         }
     }
 }

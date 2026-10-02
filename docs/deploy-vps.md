@@ -80,6 +80,7 @@ curl -sSL https://dokploy.com/install.sh | sh
    | `API_PUBLIC_URL` | `https://api.<domaine>` |
    | `MAIL_TRANSPORT` | `usesend` (+ `USESEND_API_KEY`, `USESEND_WEBHOOK_SECRET`) |
    | `UMAMI_APP_SECRET` | secret fort (statistiques de visite) |
+   | `WHATSAPP_META_BUSINESS_ACCOUNT_ID` | compte WhatsApp Business du numéro de la plateforme |
    | `OBSERVABILITY_*`, `MESSAGING_DAILY_*` | voir l'étape 9 bis |
 
    Dokploy écrit ces variables dans le `.env` lu par le conteneur `api`.
@@ -145,7 +146,7 @@ l'image à la construction : les changer impose une nouvelle image.
 
 | Fournisseur | Adresse à changer |
 |---|---|
-| Meta (WhatsApp) | Webhook → `https://api.<domaine>/api/v1/...` (même chemin qu'avant) |
+| Meta (WhatsApp) | Webhook → `https://api.<domaine>/api/v1/whatsapp/webhook`, abonné à `messages`, `message_template_status_update`, `message_template_quality_update`, `template_category_update`, `phone_number_quality_update` et `account_update` (JIKU-209) |
 | CinetPay | URL de notification et de retour |
 | useSend | Webhook `.../api/v1/notifications/email-feedback/usesend` |
 | Google (connexion) | Origines JavaScript autorisées : `https://<domaine>` |

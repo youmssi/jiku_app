@@ -19,6 +19,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-205 | Test de charge du jour J | app | — |
 | JIKU-206 | SMS dans l'alphabet GSM-7 (un segment au lieu de deux ou trois) | app | — |
 | JIKU-207 | Pause des e-mails d'une organisation dont la liste rebondit | app | JIKU-200 |
+| JIKU-209 | Santé WhatsApp : modèles, numéros et compte suivis depuis Meta | app | — |
 
 ---
 
@@ -165,3 +166,31 @@ l'expéditeur de la plateforme et que ses rebonds définitifs dépassent
 par jour et par organisation. La pause se lève seule quand les rebonds sortent
 de la fenêtre. Une organisation qui envoie par son propre fournisseur n'est pas
 concernée.
+
+---
+
+## JIKU-209 — Santé WhatsApp : modèles, numéros et compte
+
+**Pourquoi.** Meta met en pause un modèle mal noté (3 h, puis 6 h, puis
+désactivé), le reclasse en marketing, baisse la limite d'un numéro signalé ou
+restreint un compte. Sans le savoir, Jikū continuait d'envoyer : chaque message
+échouait un par un, le jour de l'événement.
+
+**Comportement.**
+
+| Ce que Meta signale | Ce que fait Jikū |
+|---|---|
+| Modèle en pause | Le modèle n'est plus utilisé pendant `WHATSAPP_TEMPLATE_PAUSE_HOURS` (3 h) ; les invitations attendent, les rappels « WhatsApp ou SMS » partent par SMS ; alerte |
+| Modèle désactivé, refusé, en suppression | Plus utilisé jusqu'à une nouvelle approbation ; alerte |
+| Modèle reclassé en marketing | Plus utilisé tant qu'il n'est pas de nouveau utilitaire (`WHATSAPP_BLOCK_MARKETING_TEMPLATES`) ; alerte |
+| Qualité d'un modèle jaune ou rouge | Alerte |
+| Numéro signalé ou limite abaissée | Alerte |
+| Compte en infraction, restreint, banni | Alerte |
+| Refus à l'envoi : modèle en pause, compte bloqué, limites de débit | Le message attend au lieu d'être réessayé trois fois en une seconde |
+
+Une alerte part une fois par jour et par sujet. Le webhook WhatsApp existant
+doit être abonné aux champs `message_template_status_update`,
+`message_template_quality_update`, `template_category_update`,
+`phone_number_quality_update` et `account_update`, et
+`WHATSAPP_META_BUSINESS_ACCOUNT_ID` doit contenir le compte du numéro de la
+plateforme.
