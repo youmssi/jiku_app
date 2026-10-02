@@ -22,6 +22,56 @@ de restauration, et c'est l'information qu'on ne retrouve plus une heure après.
 
 ---
 
+## Base sur le serveur (ADR 107) — retour à une minute donnée avec WAL-G
+
+Depuis la bascule sur le serveur unique, PostgreSQL envoie son journal à
+Cloudflare R2 en continu et une sauvegarde complète chaque nuit. On peut
+revenir à n'importe quelle minute couverte. La procédure ci-dessous a été
+répétée le 2026-10-02 sur une base de test : sauvegarde, écriture après la
+sauvegarde, restauration dans un volume neuf, données retrouvées (écriture
+postérieure comprise, rejouée depuis le journal).
+
+On restaure **à côté** (nouveau volume, nouveau conteneur), on vérifie, puis on
+bascule.
+
+1. Lister les sauvegardes complètes disponibles :
+   ```
+   docker compose -f docker-compose.vps.yml exec -u postgres postgres-backup wal-g backup-list
+   ```
+2. Restaurer la dernière sauvegarde complète précédant l'incident dans un
+   volume neuf (`LATEST`, ou le nom affiché à l'étape 1) :
+   ```
+   docker volume create jiku_pgdata_restore
+   docker run --rm -u root --env-file .env.walg \
+     -v jiku_pgdata_restore:/var/lib/postgresql --entrypoint bash jiku-postgres -c '
+       mkdir -p /var/lib/postgresql/18/docker
+       chown -R postgres:postgres /var/lib/postgresql
+       chmod 700 /var/lib/postgresql/18/docker
+       su postgres -c "wal-g backup-fetch /var/lib/postgresql/18/docker LATEST"
+       su postgres -c "touch /var/lib/postgresql/18/docker/recovery.signal"
+       cat >> /var/lib/postgresql/18/docker/postgresql.auto.conf <<CONF
+   restore_command = '"'"'wal-g wal-fetch %f %p'"'"'
+   recovery_target_time = '"'"'2026-10-02 10:32:00+00'"'"'
+   recovery_target_action = '"'"'promote'"'"'
+   CONF'
+   ```
+   `.env.walg` contient les variables `AWS_*` et `WALG_S3_PREFIX` du service
+   (les mêmes valeurs que `WALG_*` dans Dokploy). Sans `recovery_target_time`,
+   PostgreSQL rejoue tout le journal disponible (dernier état connu).
+3. Démarrer un PostgreSQL de vérification sur ce volume et contrôler :
+   ```
+   docker run -d --name pg-restore --env-file .env.walg \
+     -v jiku_pgdata_restore:/var/lib/postgresql jiku-postgres
+   docker exec -u postgres pg-restore psql -U jiku -d jiku -c "SELECT count(*) FROM tenant;"
+   docker logs pg-restore 2>&1 | grep -i "recovery complete"
+   ```
+4. Basculer : arrêter l'application dans Dokploy, remplacer le volume `pgdata`
+   par le volume restauré (ou copier son contenu), redémarrer, vérifier
+   `https://api.<domaine>/actuator/health/readiness`.
+5. Noter dans `docs/backup.md` la date, la durée et le point de restauration.
+
+---
+
 ## Cas 1 — Mauvaise migration ou suppression accidentelle (le cas courant)
 
 Neon fait de la restauration à un instant donné (PITR). C'est le chemin le plus
