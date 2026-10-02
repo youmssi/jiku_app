@@ -79,11 +79,14 @@ curl -sSL https://dokploy.com/install.sh | sh
    | `SERVER_BASE_URL`, `CORS_ALLOWED_ORIGINS` | `https://<domaine>` |
    | `API_PUBLIC_URL` | `https://api.<domaine>` |
    | `MAIL_TRANSPORT` | `usesend` (+ `USESEND_API_KEY`, `USESEND_WEBHOOK_SECRET`) |
+   | `UMAMI_APP_SECRET` | secret fort (statistiques de visite) |
+   | `OBSERVABILITY_*`, `MESSAGING_DAILY_*` | voir l'étape 9 bis |
 
    Dokploy écrit ces variables dans le `.env` lu par le conteneur `api`.
 3. **Domains** :
    - `api.<domaine>` → service `api`, port `8080` ;
-   - `<domaine>` et `www.<domaine>` → service `web`, port `3000`.
+   - `<domaine>` et `www.<domaine>` → service `web`, port `3000` ;
+   - `stats.<domaine>` → service `umami`, port `3000`.
 4. **Certificats** : Cloudflare → SSL/TLS → Origin Server → créer un certificat
    d'origine (15 ans) pour `<domaine>` et `*.<domaine>`, puis l'ajouter dans
    Dokploy (Settings → Certificates) et l'associer aux domaines. Cloudflare en
@@ -158,6 +161,26 @@ Réglages GitHub du dépôt `jiku_app` (et pareil pour `jiku_web`) :
 
 Une fusion sur `main` construit l'image, la publie sur GHCR, déclenche Dokploy,
 puis vérifie que l'API est prête. Ordre inchangé : l'API d'abord, le web ensuite.
+
+## 9 bis. Surveillance et statistiques
+
+1. **Grafana Cloud** (offre gratuite) → Connections → OpenTelemetry : noter les
+   adresses OTLP et l'en-tête d'authentification, puis dans Dokploy :
+   `OBSERVABILITY_ENVIRONMENT=production`,
+   `OBSERVABILITY_OTLP_TRACES_ENABLED=true`, `OBSERVABILITY_OTLP_TRACES_ENDPOINT`,
+   `OBSERVABILITY_OTLP_METRICS_ENABLED=true`, `OBSERVABILITY_OTLP_METRICS_ENDPOINT`,
+   `OBSERVABILITY_OTLP_AUTHORIZATION`. Créer une alerte sur le taux d'erreurs
+   HTTP 5xx et sur la mémoire du conteneur `api`.
+2. **Plafonds de dépenses** : `MESSAGING_DAILY_WHATSAPP_USD_ALERT` (par exemple
+   `20`) et `MESSAGING_DAILY_SMS_COUNT_ALERT` (par exemple `500`). L'alerte part
+   chaque matin vers `NOTIFICATION_SALES_EMAIL`. Poser aussi une alerte de budget
+   AWS et un plafond de dépense chez Meta.
+3. **Umami** : ouvrir `https://stats.<domaine>`, changer le mot de passe
+   `admin` / `umami` par défaut, ajouter le site, puis dans les variables du dépôt
+   web : `NEXT_PUBLIC_UMAMI_SRC=https://stats.<domaine>/script.js` et
+   `NEXT_PUBLIC_UMAMI_WEBSITE_ID`. La base `umami` est créée avec le volume ; sur
+   un volume plus ancien, la créer une fois :
+   `docker compose -f docker-compose.vps.yml exec postgres psql -U jiku -d jiku -c "CREATE DATABASE umami;"`.
 
 ## 10. Après deux semaines sans incident
 
