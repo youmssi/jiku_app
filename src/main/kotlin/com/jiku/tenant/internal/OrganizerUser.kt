@@ -1,6 +1,8 @@
 package com.jiku.tenant.internal
 
+import com.jiku.shared.MarketingConsent
 import jakarta.persistence.Column
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -41,4 +43,8 @@ class OrganizerUser(
 
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now()
+
+    /** Consent to Jikū's news and tips (JIKU-201), never assumed. */
+    @Embedded
+    var marketingConsent: MarketingConsent = MarketingConsent()
 }
