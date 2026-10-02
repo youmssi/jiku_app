@@ -93,6 +93,8 @@ data class CompleteEmbeddedSignupRequest(
 data class ProviderSettingsResponse(
     val email: EmailProviderView,
     val whatsapp: WhatsAppProviderView,
+    /** The organization's use of the Jikū WhatsApp number and its limits (JIKU-212). */
+    val platformWhatsApp: PlatformWhatsAppUsage? = null,
 )
 
 data class TestSendRequest(

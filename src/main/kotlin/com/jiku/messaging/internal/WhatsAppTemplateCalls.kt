@@ -8,6 +8,9 @@ import org.springframework.stereotype.Component
  * Fills the dedicated WhatsApp templates (JIKU-210): each message's
  * parameters, in the order its text in `whatsapp-templates/meta/dedicated.json`
  * expects, with a wording of the guest's language for a value that is missing.
+ * The organization's own words (its name, the event's name) lose any web
+ * address (JIKU-212): the only links Jikū sends are its own, so the Jikū number
+ * cannot carry someone else's phishing page.
  */
 @Component
 class WhatsAppTemplateCalls(
@@ -97,9 +100,18 @@ class WhatsAppTemplateCalls(
         language: String,
     ) = parameter(value, catalog.text(language, "whatsapp.anyone"))
 
-    private fun organizer(value: String) = parameter(value, "Jikū")
+    private fun organizer(value: String) = parameter(withoutLinks(value), "Jikū")
 
-    private fun event(value: String) = parameter(value, "-")
+    private fun event(value: String) = parameter(withoutLinks(value), "-")
+
+    private fun withoutLinks(value: String) = value.replace(LINK, " ")
+
+    private companion object {
+        val LINK =
+            Regex(
+                "(?i)\\b(?:https?://|www\\.)\\S+|\\b[a-z0-9-]+(?:\\.[a-z0-9-]+)*\\.(?:com|net|org|info|xyz|top|link|click|site|online|app|io|me|ly|gl|co|gn|ci|sn)(?:/\\S*)?\\b",
+            )
+    }
 
     /** French writes a weekday in lower case mid-sentence ("le mardi 3 novembre"); English keeps its capital. */
     private fun date(
