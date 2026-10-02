@@ -19,6 +19,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-205 | Test de charge du jour J | app | — |
 | JIKU-206 | SMS dans l'alphabet GSM-7 (un segment au lieu de deux ou trois) | app | — |
 | JIKU-207 | Pause des e-mails d'une organisation dont la liste rebondit | app | JIKU-200 |
+| JIKU-209 | Santé WhatsApp : modèles, numéros et compte suivis depuis Meta | app | — |
 
 ---
 
