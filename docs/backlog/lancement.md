@@ -147,3 +147,31 @@ Un script k6 simule l'entrée d'un événement : 500 scans en 5 minutes par
 réponses sous 500 ms, moins de 1 % d'erreurs. Documenté dans
 `docs/runbooks/load-test.md`, à lancer sur l'environnement de recette avant le
 pilote.
+
+---
+
+## JIKU-209 — Santé WhatsApp : modèles, numéros et compte
+
+**Pourquoi.** Meta met en pause un modèle mal noté (3 h, puis 6 h, puis
+désactivé), le reclasse en marketing, baisse la limite d'un numéro signalé ou
+restreint un compte. Sans le savoir, Jikū continuait d'envoyer : chaque message
+échouait un par un, le jour de l'événement.
+
+**Comportement.**
+
+| Ce que Meta signale | Ce que fait Jikū |
+|---|---|
+| Modèle en pause | Le modèle n'est plus utilisé pendant `WHATSAPP_TEMPLATE_PAUSE_HOURS` (3 h) ; les invitations attendent, les rappels « WhatsApp ou SMS » partent par SMS ; alerte |
+| Modèle désactivé, refusé, en suppression | Plus utilisé jusqu'à une nouvelle approbation ; alerte |
+| Modèle reclassé en marketing | Plus utilisé tant qu'il n'est pas de nouveau utilitaire (`WHATSAPP_BLOCK_MARKETING_TEMPLATES`) ; alerte |
+| Qualité d'un modèle jaune ou rouge | Alerte |
+| Numéro signalé ou limite abaissée | Alerte |
+| Compte en infraction, restreint, banni | Alerte |
+| Refus à l'envoi : modèle en pause, compte bloqué, limites de débit | Le message attend au lieu d'être réessayé trois fois en une seconde |
+
+Une alerte part une fois par jour et par sujet. Le webhook WhatsApp existant
+doit être abonné aux champs `message_template_status_update`,
+`message_template_quality_update`, `template_category_update`,
+`phone_number_quality_update` et `account_update`, et
+`WHATSAPP_META_BUSINESS_ACCOUNT_ID` doit contenir le compte du numéro de la
+plateforme.

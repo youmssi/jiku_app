@@ -291,6 +291,12 @@ class NotificationService(
                 // in a tight retry that cannot possibly help within milliseconds.
                 record(NotificationLog.STATUS_QUEUED, attempt, ex.message)
                 return DeliveryOutcome(delivered = false, attempts = attempt, error = null, queued = true)
+            } catch (ex: WhatsAppUnavailableException) {
+                // A paused template, a blocked account or a Meta rate limit
+                // clears in hours, not seconds (JIKU-209): queued like a quota,
+                // and a reminder that allows SMS goes by SMS.
+                record(NotificationLog.STATUS_QUEUED, attempt, ex.message)
+                return DeliveryOutcome(delivered = false, attempts = attempt, error = null, queued = true)
             } catch (ex: EmailQuotaExceededException) {
                 // Same reasoning as the WhatsApp quota case above, for the email
                 // routing daily caps (JIKU-62) — queued until tomorrow's reset.
