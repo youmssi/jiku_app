@@ -51,17 +51,19 @@ class MetaCloudWhatsAppSender internal constructor(
         val language: String,
     )
 
-    override fun send(message: WhatsAppMessage) {
+    override fun send(message: WhatsAppMessage): String? {
         val chosen = templateFor(message)
         if (chosen != null && wabaId != null) gate?.assertUsable(wabaId, chosen.name, chosen.language)
         val body = payload(message)
         try {
-            client
-                .post()
-                .uri("/{phoneNumberId}/messages", phoneNumberId)
-                .body(body)
-                .retrieve()
-                .toBodilessEntity()
+            val response =
+                client
+                    .post()
+                    .uri("/{phoneNumberId}/messages", phoneNumberId)
+                    .body(body)
+                    .retrieve()
+                    .body(String::class.java)
+            return response?.let { MESSAGE_ID.find(it)?.groupValues?.get(1) }
         } catch (e: HttpStatusCodeException) {
             val code = errorCode(e.responseBodyAsString)
             if (code != null) {
@@ -195,6 +197,7 @@ class MetaCloudWhatsAppSender internal constructor(
     ): Map<String, Any> = mapOf("messaging_product" to "whatsapp", "to" to to, "type" to type, type to content)
 
     companion object {
+        private val MESSAGE_ID = Regex("\"id\"\\s*:\\s*\"(wamid\\.[^\"]+)\"")
         private val ERROR_CODE = Regex("\"code\"\\s*:\\s*(\\d+)")
 
         /**

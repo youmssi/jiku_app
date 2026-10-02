@@ -73,6 +73,14 @@ jiku:
     # What Meta reports about templates and numbers (JIKU-209): a paused
     # template is left alone this long, and one Meta moves to MARKETING is no
     # longer used.
+    # An organization whose guests keep writing STOP, or whose messages Meta
+    # cannot deliver, is paused on the Jikū number (JIKU-211): rates over a
+    # rolling window, once it sent MIN_SAMPLE messages; 0 turns a rate off.
+    reputation:
+      window-days: ${WHATSAPP_REPUTATION_WINDOW_DAYS:7}
+      min-sample: ${WHATSAPP_REPUTATION_MIN_SAMPLE:50}
+      stop-rate: ${WHATSAPP_REPUTATION_STOP_RATE:0.02}
+      failure-rate: ${WHATSAPP_REPUTATION_FAILURE_RATE:0.2}
     health:
       pause-hours: ${WHATSAPP_TEMPLATE_PAUSE_HOURS:3}
       block-marketing-templates: ${WHATSAPP_BLOCK_MARKETING_TEMPLATES:true}

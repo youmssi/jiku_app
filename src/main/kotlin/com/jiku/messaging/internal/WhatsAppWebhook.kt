@@ -39,6 +39,7 @@ class WhatsAppWebhookController(
     private val tenantTransaction: TenantTransaction,
     private val objectMapper: ObjectMapper,
     private val health: WhatsAppHealthService,
+    private val deliveries: WhatsAppDeliveryStatusService,
 ) {
     private val log = LoggerFactory.getLogger(WhatsAppWebhookController::class.java)
 
@@ -74,6 +75,13 @@ class WhatsAppWebhookController(
                 apply(event)
             } catch (ex: RuntimeException) {
                 log.warn("WhatsApp account event {} could not be handled", event, ex)
+            }
+        }
+        for (update in WhatsAppWebhookParser.statuses(root)) {
+            try {
+                deliveries.onStatus(update)
+            } catch (ex: RuntimeException) {
+                log.warn("WhatsApp status {} for {} could not be handled", update.status, update.wamid, ex)
             }
         }
         for (message in WhatsAppWebhookParser.messages(root)) {
@@ -169,6 +177,24 @@ object WhatsAppWebhookParser {
                         }.toMap()
                 value.path("messages").mapNotNull { node ->
                     message(node)?.let { it.copy(businessNumberId = businessNumberId, profileName = names[it.from]) }
+                }
+            }
+        }
+
+    /** What became of the messages Jikū sent (`statuses[]`, JIKU-211): sent, delivered, read or failed with Meta's error. */
+    fun statuses(root: JsonNode): List<WhatsAppStatusUpdate> =
+        root.path("entry").flatMap { entry ->
+            entry.path("changes").flatMap { change ->
+                change.path("value").path("statuses").mapNotNull { node ->
+                    val id = node.path("id").textOrNull() ?: return@mapNotNull null
+                    val status = node.path("status").textOrNull() ?: return@mapNotNull null
+                    val error = node.path("errors").path(0)
+                    WhatsAppStatusUpdate(
+                        wamid = id,
+                        status = status,
+                        errorCode = error.path("code").takeIf { it.isNumber }?.asInt(),
+                        errorTitle = error.path("title").textOrNull(),
+                    )
                 }
             }
         }

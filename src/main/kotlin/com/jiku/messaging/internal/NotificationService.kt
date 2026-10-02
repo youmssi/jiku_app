@@ -54,6 +54,8 @@ class NotificationService(
     private val reminderAllowance: ReminderAllowanceGate,
     private val emailPause: TenantEmailPause,
     private val templateCalls: WhatsAppTemplateCalls,
+    private val deliveries: WhatsAppDeliveryStatusService,
+    private val whatsAppPause: TenantWhatsAppPause,
 ) {
     private val log = LoggerFactory.getLogger(NotificationService::class.java)
 
@@ -208,7 +210,12 @@ class NotificationService(
                     referenceId,
                     ReminderChannel.WHATSAPP,
                     phone,
-                    whatsApp(WhatsAppMessage(phone, text, template = template), referenceId, null),
+                    whatsApp(
+                        WhatsAppMessage(phone, text, template = template),
+                        referenceId,
+                        null,
+                        smsFallback = text.takeIf { channel == ReminderChannel.WHATSAPP_OR_SMS },
+                    ),
                 ).also { if (it.delivered) onWhatsAppSent() }
             } else {
                 record(referenceId, ReminderChannel.WHATSAPP.name, phone, NotificationLog.STATUS_FAILED, 0, FREE_REMINDERS_USED)
@@ -254,6 +261,7 @@ class NotificationService(
         referenceId: UUID,
         eventId: UUID?,
         thread: WhatsAppThreadStart? = null,
+        smsFallback: String? = null,
     ): () -> Unit =
         {
             val phone = whatsAppDigits(message.to)
@@ -263,8 +271,10 @@ class NotificationService(
             val resolved = providers.whatsApp()
             val category = contentGuard.classify(message.body)
             contentGuard.assertAllowed(category)
+            if (!resolved.tenantOverride) whatsAppPause.assertNotPaused(TenantContext.get())
             conversationCounter.assertWithinBudget(resolved.tenantOverride)
-            resolved.sender.send(message)
+            val wamid = resolved.sender.send(message)
+            wamid?.let { deliveries.record(it, referenceId, message.to, resolved.tenantOverride, thread != null, smsFallback) }
             costTracker.record(referenceId, eventId, resolved.tenantOverride, category)
             thread?.let { threads.save(WhatsAppThread(it.invitationId, it.tenantId, phone, it.language)) }
         }
@@ -321,6 +331,11 @@ class NotificationService(
                 return DeliveryOutcome(delivered = false, attempts = attempt, error = lastError)
             } catch (ex: TenantEmailPausedException) {
                 // Retrying within seconds cannot lower the bounce rate.
+                lastError = ex.message
+                record(NotificationLog.STATUS_FAILED, attempt, lastError)
+                return DeliveryOutcome(delivered = false, attempts = attempt, error = lastError)
+            } catch (ex: TenantWhatsAppPausedException) {
+                // Retrying cannot lower the organization's STOP or failure rate (JIKU-211).
                 lastError = ex.message
                 record(NotificationLog.STATUS_FAILED, attempt, lastError)
                 return DeliveryOutcome(delivered = false, attempts = attempt, error = lastError)

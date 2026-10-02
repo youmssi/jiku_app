@@ -3,6 +3,7 @@ package com.jiku.messaging
 import com.jiku.messaging.internal.InboundWhatsApp
 import com.jiku.messaging.internal.MetaWebhookSignature
 import com.jiku.messaging.internal.WhatsAppReplyPayload
+import com.jiku.messaging.internal.WhatsAppStatusUpdate
 import com.jiku.messaging.internal.WhatsAppWebhookParser
 import org.junit.jupiter.api.Test
 import tools.jackson.databind.json.JsonMapper
@@ -70,5 +71,23 @@ class WhatsAppWebhookParsingTest {
         )
         assertNull(WhatsAppReplyPayload.parse("RSVP_YES:not-a-uuid"))
         assertNull(WhatsAppReplyPayload.parse("SOMETHING:$invitationId"))
+    }
+
+    @Test
+    fun `reads delivery statuses with Meta's error`() {
+        val body =
+            """{"object":"whatsapp_business_account","entry":[{"changes":[{"field":"messages","value":{"statuses":[""" +
+                """{"id":"wamid.A","status":"delivered","recipient_id":"224620000001"},""" +
+                """{"id":"wamid.B","status":"failed","errors":[{"code":131026,"title":"Message undeliverable"}]},""" +
+                """{"status":"read"}]}}]}]}"""
+
+        assertEquals(
+            listOf(
+                WhatsAppStatusUpdate("wamid.A", "delivered"),
+                WhatsAppStatusUpdate("wamid.B", "failed", 131026, "Message undeliverable"),
+            ),
+            WhatsAppWebhookParser.statuses(mapper.readTree(body)),
+        )
+        assertTrue(WhatsAppWebhookParser.messages(mapper.readTree(body)).isEmpty())
     }
 }

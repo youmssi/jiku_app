@@ -5,8 +5,11 @@ import com.jiku.messaging.internal.NotificationService
 import com.jiku.messaging.internal.SmsMessage
 import com.jiku.messaging.internal.SmsSender
 import com.jiku.messaging.internal.WhatsAppDeliveryException
+import com.jiku.messaging.internal.WhatsAppDeliveryStatusService
 import com.jiku.messaging.internal.WhatsAppMessage
 import com.jiku.messaging.internal.WhatsAppSender
+import com.jiku.messaging.internal.WhatsAppSentMessageRepository
+import com.jiku.messaging.internal.WhatsAppStatusUpdate
 import com.jiku.shared.ReminderChannel
 import com.jiku.shared.ReminderDue
 import com.jiku.shared.TenantContext
@@ -41,6 +44,7 @@ class ReminderChannelTest {
                 .AtomicBoolean(false)
         val whatsApps = CopyOnWriteArrayList<WhatsAppMessage>()
         val smses = CopyOnWriteArrayList<SmsMessage>()
+        val wamids = CopyOnWriteArrayList<String>()
     }
 
     @TestConfiguration
@@ -51,9 +55,10 @@ class ReminderChannelTest {
         @Bean
         fun whatsAppSender(providers: Providers): WhatsAppSender =
             object : WhatsAppSender {
-                override fun send(message: WhatsAppMessage) {
+                override fun send(message: WhatsAppMessage): String? {
                     if (providers.whatsAppFails.get()) throw WhatsAppDeliveryException("unreachable")
                     providers.whatsApps += message
+                    return "wamid.${UUID.randomUUID()}".also { providers.wamids += it }
                 }
             }
 
@@ -72,11 +77,18 @@ class ReminderChannelTest {
     @Autowired
     lateinit var providers: Providers
 
+    @Autowired
+    lateinit var deliveries: WhatsAppDeliveryStatusService
+
+    @Autowired
+    lateinit var sentMessages: WhatsAppSentMessageRepository
+
     @BeforeEach
     fun reset() {
         providers.whatsAppFails.set(false)
         providers.whatsApps.clear()
         providers.smses.clear()
+        providers.wamids.clear()
     }
 
     @Test
@@ -103,6 +115,48 @@ class ReminderChannelTest {
         assertTrue(send(ReminderChannel.SMS).delivered)
         assertTrue(providers.whatsApps.isEmpty())
         assertEquals(1, providers.smses.size)
+    }
+
+    @Test
+    fun `a reminder Meta later cannot deliver goes by SMS once, when its channel allows it`() {
+        assertTrue(send(ReminderChannel.WHATSAPP_OR_SMS).delivered)
+        val wamid = providers.wamids.single()
+
+        deliveries.onStatus(WhatsAppStatusUpdate(wamid, "failed", 131026, "Message undeliverable"))
+        deliveries.onStatus(WhatsAppStatusUpdate(wamid, "failed", 131026, "Message undeliverable"))
+
+        assertEquals("+224620000002", providers.smses.single().to)
+        assertTrue(
+            providers.smses
+                .single()
+                .body
+                .startsWith("Bonjour Kadiatou"),
+        )
+        val message = sentMessages.findById(wamid).orElseThrow()
+        assertEquals("FAILED", message.status)
+        assertEquals(131026, message.errorCode)
+    }
+
+    @Test
+    fun `a WhatsApp-only reminder Meta cannot deliver is recorded failed, without SMS`() {
+        send(ReminderChannel.WHATSAPP)
+
+        deliveries.onStatus(WhatsAppStatusUpdate(providers.wamids.single(), "failed", 131049, "Not delivered"))
+
+        assertTrue(providers.smses.isEmpty())
+        assertEquals("FAILED", sentMessages.findById(providers.wamids.single()).orElseThrow().status)
+    }
+
+    @Test
+    fun `a late status never steps a message back`() {
+        send(ReminderChannel.WHATSAPP)
+        val wamid = providers.wamids.single()
+
+        deliveries.onStatus(WhatsAppStatusUpdate(wamid, "read"))
+        deliveries.onStatus(WhatsAppStatusUpdate(wamid, "delivered"))
+        deliveries.onStatus(WhatsAppStatusUpdate("wamid.unknown", "failed", 1, "x"))
+
+        assertEquals("READ", sentMessages.findById(wamid).orElseThrow().status)
     }
 
     private fun send(channel: ReminderChannel) =

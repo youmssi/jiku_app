@@ -16,13 +16,14 @@ import org.springframework.web.client.RestClient
 class LoggingWhatsAppSender : WhatsAppSender {
     private val log = LoggerFactory.getLogger(LoggingWhatsAppSender::class.java)
 
-    override fun send(message: WhatsAppMessage) {
+    override fun send(message: WhatsAppMessage): String? {
         log.info(
             "WhatsApp queued (transport=log, not delivered): to={} buttons={} image={}",
             message.to,
             message.buttons.map { it.id },
             message.imageUrl,
         )
+        return null
     }
 }
 

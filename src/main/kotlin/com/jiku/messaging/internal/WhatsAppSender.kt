@@ -77,5 +77,6 @@ data class WhatsAppButton(
  * Further providers (Twilio, 360dialog, …) plug in as additional adapters.
  */
 interface WhatsAppSender {
-    fun send(message: WhatsAppMessage)
+    /** Sends [message]; returns the id the provider gave it, which later delivery statuses refer to, when it has one. */
+    fun send(message: WhatsAppMessage): String?
 }
