@@ -1,6 +1,8 @@
 package com.jiku.backoffice.internal
 
+import com.jiku.shared.MarketingConsent
 import jakarta.persistence.Column
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -65,6 +67,10 @@ class ProspectLead(
 
     @Column(name = "contacted_at")
     var contactedAt: Instant? = null
+
+    /** Consent to Jikū's news and tips (JIKU-201), never assumed. */
+    @Embedded
+    var marketingConsent: MarketingConsent = MarketingConsent()
 }
 
 /**

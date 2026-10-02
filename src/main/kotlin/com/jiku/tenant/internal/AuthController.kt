@@ -7,6 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -53,6 +54,14 @@ class AuthController(
     @GetMapping("/me")
     @PreAuthorize("hasRole('USER')")
     fun me(authentication: Authentication): MeResponse = authService.me(authentication.name, TenantContext.get().orEmpty())
+
+    @PutMapping("/me/marketing-consent")
+    @PreAuthorize("hasRole('USER')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun updateMarketingConsent(
+        authentication: Authentication,
+        @Valid @RequestBody request: MarketingConsentRequest,
+    ) = authService.updateMarketingConsent(authentication.name, request)
 
     // Public and deliberately mute about whether the address has an account.
     @PostMapping("/forgot-password")

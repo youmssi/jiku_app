@@ -1,6 +1,7 @@
 package com.jiku.tenant.internal
 
 import com.jiku.shared.JwtService
+import com.jiku.shared.MarketingConsent
 import com.jiku.shared.security.TokenRoles
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
@@ -42,7 +43,13 @@ class AuthService(
                         email = request.email,
                         passwordHash = requireNotNull(passwordEncoder.encode(request.password)),
                         fullName = request.fullName?.trim()?.takeIf { it.isNotEmpty() },
-                    ),
+                    ).apply {
+                        marketingConsent.record(
+                            request.marketingConsent,
+                            request.marketingConsentVersion,
+                            MarketingConsent.SOURCE_SIGNUP,
+                        )
+                    },
                 )
             val membership = orgName?.let { createOrganizationFor(user, it, request.country) }
             accountTokens.sendEmailVerification(user)
@@ -172,6 +179,19 @@ class AuthService(
         return tokensFor(user, membership)
     }
 
+    /** Gives or withdraws consent to Jikū's news and tips (JIKU-201). */
+    @Transactional
+    fun updateMarketingConsent(
+        userId: String,
+        request: MarketingConsentRequest,
+    ) {
+        requireUser(userId).marketingConsent.record(
+            request.granted,
+            request.textVersion,
+            MarketingConsent.SOURCE_SETTINGS,
+        )
+    }
+
     @Transactional(readOnly = true)
     fun me(
         userId: String,
@@ -191,6 +211,7 @@ class AuthService(
             fullName = user.fullName,
             tenantId = activeTenantId,
             role = activeRole,
+            marketingConsent = user.marketingConsent.granted,
             memberships =
                 all.map {
                     MembershipView(

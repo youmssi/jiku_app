@@ -1,5 +1,6 @@
 package com.jiku.backoffice.internal
 
+import com.jiku.shared.MarketingConsent
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
@@ -104,6 +105,11 @@ class ProspectLeadService(
                 source = request.source?.trim()?.ifBlank { null }
             }
 
+        lead.marketingConsent.record(
+            request.marketingConsent,
+            request.marketingConsentVersion,
+            MarketingConsent.SOURCE_PROSPECT,
+        )
         val saved = leads.save(lead)
         log.info("Prospect lead registered: sector={} source={}", saved.sector, saved.source ?: "-")
         return ProspectLeadAck(id = requireNotNull(saved.id))
@@ -142,6 +148,7 @@ class ProspectLeadService(
             weeklyVolume = weeklyVolume,
             note = note,
             source = source,
+            marketingConsent = marketingConsent.granted,
             status = status.name,
             createdAt = createdAt,
             contactedAt = contactedAt,
@@ -179,6 +186,10 @@ data class ProspectLeadRequest(
     val note: String? = null,
     @field:Size(max = 100)
     val source: String? = null,
+    /** Unchecked by default (JIKU-201); the version names the wording shown. */
+    val marketingConsent: Boolean = false,
+    @field:Size(max = 32)
+    val marketingConsentVersion: String? = null,
 )
 
 /** Accusé minimal : le formulaire public n'a pas besoin d'en savoir plus. */
@@ -197,6 +208,7 @@ data class ProspectLeadView(
     val weeklyVolume: String?,
     val note: String?,
     val source: String?,
+    val marketingConsent: Boolean,
     val status: String,
     val createdAt: Instant,
     val contactedAt: Instant?,

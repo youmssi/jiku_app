@@ -18,6 +18,15 @@ data class RegisterRequest(
     // Country of the organization created with the account (JIKU-107), ISO
     // 3166-1 alpha-2. Optional: absent means the default market.
     @field:Size(min = 2, max = 2) val country: String? = null,
+    // Unchecked by default (JIKU-201); the version names the wording shown.
+    val marketingConsent: Boolean = false,
+    @field:Size(max = 32) val marketingConsentVersion: String? = null,
+)
+
+/** Gives or withdraws consent to Jikū's news and tips from the account settings. */
+data class MarketingConsentRequest(
+    val granted: Boolean,
+    @field:Size(max = 32) val textVersion: String? = null,
 )
 
 data class LoginRequest(
@@ -76,4 +85,6 @@ data class MeResponse(
     val tenantId: String,
     val role: String,
     val memberships: List<MembershipView>,
+    /** Whether the person agreed to receive Jikū's news and tips (JIKU-201). */
+    val marketingConsent: Boolean = false,
 )

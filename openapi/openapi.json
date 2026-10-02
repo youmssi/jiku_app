@@ -2731,6 +2731,22 @@
         },
         "type" : "object"
       },
+      "MarketingConsentRequest" : {
+        "properties" : {
+          "granted" : {
+            "type" : "boolean"
+          },
+          "textVersion" : {
+            "maxLength" : 32,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type" : "object"
+      },
       "MeResponse" : {
         "properties" : {
           "email" : {
@@ -2741,6 +2757,9 @@
               "string",
               "null"
             ]
+          },
+          "marketingConsent" : {
+            "type" : "boolean"
           },
           "memberships" : {
             "items" : {
@@ -4177,6 +4196,17 @@
               "null"
             ]
           },
+          "marketingConsent" : {
+            "type" : "boolean"
+          },
+          "marketingConsentVersion" : {
+            "maxLength" : 32,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
           "note" : {
             "maxLength" : 1000,
             "minLength" : 0,
@@ -4253,6 +4283,9 @@
           "id" : {
             "format" : "uuid",
             "type" : "string"
+          },
+          "marketingConsent" : {
+            "type" : "boolean"
           },
           "note" : {
             "type" : [
@@ -4715,6 +4748,17 @@
           },
           "fullName" : {
             "maxLength" : 255,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "marketingConsent" : {
+            "type" : "boolean"
+          },
+          "marketingConsentVersion" : {
+            "maxLength" : 32,
             "minLength" : 0,
             "type" : [
               "string",
@@ -8855,6 +8899,29 @@
               }
             },
             "description" : "OK"
+          }
+        },
+        "tags" : [
+          "auth-controller"
+        ]
+      }
+    },
+    "/api/v1/auth/me/marketing-consent" : {
+      "put" : {
+        "operationId" : "authUpdateMarketingConsent",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MarketingConsentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
           }
         },
         "tags" : [
