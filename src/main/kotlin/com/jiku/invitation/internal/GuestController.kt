@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -24,11 +25,24 @@ class GuestController(
     private val guestService: GuestService,
     private val guestExportService: GuestExportService,
 ) {
+    /**
+     * [consentAttested] is the organizer's statement that these people agreed
+     * to hear from it (JIKU-213); without it, they are imported but not invited
+     * by WhatsApp from the Jikū number.
+     */
     @PostMapping("/import", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     fun import(
         @PathVariable eventId: UUID,
         @RequestParam("file") file: MultipartFile,
-    ): GuestImportResult = guestService.import(eventId, file)
+        @RequestParam("consentAttested", required = false, defaultValue = "false") consentAttested: Boolean,
+    ): GuestImportResult = guestService.import(eventId, file, consentAttested, currentUser())
+
+    @PostMapping("/consent-attestation")
+    fun attestConsent(
+        @PathVariable eventId: UUID,
+    ): ConsentAttestationResult = guestService.attestConsent(eventId, currentUser())
+
+    private fun currentUser(): String? = SecurityContextHolder.getContext().authentication?.name
 
     @GetMapping
     fun list(

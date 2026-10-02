@@ -38,6 +38,11 @@ data class GuestInvitedEvent(
      * invitation then carries accept and decline buttons.
      */
     val interactive: Boolean = false,
+    /**
+     * The organizer stated the guest agreed to hear from it (JIKU-213). A
+     * WhatsApp invitation from the Jikū number is only sent with it.
+     */
+    val consentAttested: Boolean = true,
 ) {
     companion object {
         const val CHANNEL_EMAIL = "EMAIL"

@@ -122,6 +122,7 @@ class RsvpTest {
         mockMvc
             .perform(
                 multipart("/api/v1/events/$eventId/guests/import")
+                    .param("consentAttested", "true")
                     .file(MockMultipartFile("file", "guests.csv", "text/csv", csv.toByteArray()))
                     .header("Authorization", "Bearer $accessToken"),
             ).andExpect(status().isOk())

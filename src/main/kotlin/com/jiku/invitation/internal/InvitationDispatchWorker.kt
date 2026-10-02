@@ -106,6 +106,7 @@ class InvitationDispatchWorker(
                     event?.deliveryMode == DeliveryMode.INTERACTIVE &&
                         channelName == GuestInvitedEvent.CHANNEL_WHATSAPP &&
                         allowanceGate.interactiveCovered(invitation.eventId),
+                consentAttested = guest.consentAttestedAt != null,
             ),
         )
     }

@@ -69,6 +69,14 @@ class Guest(
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now()
 
+    /**
+     * When the organizer stated that this guest agreed to hear from it
+     * (JIKU-213). A guest who signed up, booked or bought is covered by their
+     * own action; an imported guest only once the organizer says so.
+     */
+    @Column(name = "consent_attested_at")
+    var consentAttestedAt: Instant? = Instant.now()
+
     /** Invited by the organization, or a buyer holding a ticket of a paid order (JIKU-177). */
     @Enumerated(EnumType.STRING)
     @Column(name = "origin", nullable = false, updatable = false, length = 16)

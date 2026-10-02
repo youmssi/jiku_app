@@ -23,6 +23,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-210 | Un modèle WhatsApp par usage, signé Jikū, en français et en anglais | app | JIKU-209 |
 | JIKU-211 | Statuts de livraison WhatsApp, repli SMS et réputation par organisation | app | JIKU-210 |
 | JIKU-212 | Plafonds sur le numéro Jikū : non vérifiés, volume mensuel, liens | app, web | JIKU-211 |
+| JIKU-213 | Consentement des invités importés, prouvé et exigé pour WhatsApp | app, web | JIKU-212 |
 
 ---
 
@@ -268,3 +269,27 @@ et une organisation qui envoie beaucoup doit porter sa propre réputation
 - Les réglages de l'organisation montrent son usage et ses plafonds.
 - Les mots de l'organisation (son nom, le nom de l'événement) perdent toute
   adresse web dans les messages WhatsApp : les seuls liens envoyés sont ceux de Jikū.
+
+---
+
+## JIKU-213 — Consentement des invités importés
+
+**Pourquoi.** Meta exige l'accord d'une personne avant qu'une entreprise lui
+écrive la première. Les invités importés viennent du fichier de l'organisation :
+Jikū n'avait aucune trace de cet accord.
+
+**Comportement.**
+
+- À l'import, l'organisateur coche « Ces personnes ont accepté de recevoir mes
+  invitations » (`consentAttested`). La déclaration est enregistrée comme preuve :
+  qui, quand, quel événement, combien d'invités.
+- Sans cette déclaration, les invités sont importés mais ne reçoivent pas
+  d'invitation WhatsApp depuis le numéro Jikū : l'envoi échoue avec un motif
+  clair. L'e-mail reste possible.
+- `POST /events/{id}/guests/consent-attestation` déclare l'accord pour les invités
+  déjà importés de l'événement.
+- Les personnes qui s'inscrivent, réservent ou achètent elles-mêmes sont
+  couvertes par leur geste. Les invités importés avant cette story sont
+  considérés comme couverts.
+- Une organisation sur son propre numéro reste responsable de ses envois
+  (conditions générales) et n'est pas bloquée.

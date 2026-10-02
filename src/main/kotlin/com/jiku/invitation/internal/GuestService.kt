@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.server.ResponseStatusException
+import java.time.Instant
 import java.util.UUID
 
 /**
@@ -26,6 +27,7 @@ class GuestService(
     private val properties: GuestImportProperties,
     private val notifications: NotificationModuleApi,
     private val ticketing: TicketingModuleApi,
+    private val attestations: GuestConsentAttestationRepository,
 ) {
     @Transactional(readOnly = true)
     fun list(eventId: UUID): List<GuestResponse> {
@@ -127,13 +129,17 @@ class GuestService(
             paymentStatus = ticket?.paymentStatus,
             amountDueMinor = ticket?.amountDueMinor,
             amountDueCurrency = ticket?.amountDueCurrency,
+            consentAttested = consentAttestedAt != null,
         )
 
     @Transactional
     fun import(
         eventId: UUID,
         file: MultipartFile,
+        consentAttested: Boolean = false,
+        attestedBy: String? = null,
     ): GuestImportResult {
+        val attestedAt = if (consentAttested) Instant.now() else null
         events.findEvent(eventId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found")
 
         val failures = mutableListOf<RowIssue>()
@@ -220,13 +226,40 @@ class GuestService(
                         lastName = requireNotNull(lastName),
                         email = email,
                         phoneNumber = phone,
-                    ).apply { ticketTypeId = typeId },
+                    ).apply {
+                        ticketTypeId = typeId
+                        consentAttestedAt = attestedAt
+                    },
                 )
                 imported++
             }
         }
 
-        return GuestImportResult(imported, duplicates, failures.size, failures, warnings)
+        if (consentAttested && imported > 0) {
+            attestations.save(GuestConsentAttestation(eventId, attestedBy, GuestConsentAttestation.SOURCE_IMPORT, imported))
+        }
+        return GuestImportResult(imported, duplicates, failures.size, failures, warnings, consentAttested)
+    }
+
+    /**
+     * The organizer states that the event's guests imported without the
+     * statement agreed to hear from it (JIKU-213), so WhatsApp invitations
+     * from the Jikū number can reach them. Recorded as proof.
+     */
+    @Transactional
+    fun attestConsent(
+        eventId: UUID,
+        attestedBy: String?,
+    ): ConsentAttestationResult {
+        events.findEvent(eventId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found")
+        val now = Instant.now()
+        val pending = guests.findByEventIdAndPersonalDataErasedFalse(eventId).filter { it.consentAttestedAt == null }
+        pending.forEach { it.consentAttestedAt = now }
+        guests.saveAll(pending)
+        if (pending.isNotEmpty()) {
+            attestations.save(GuestConsentAttestation(eventId, attestedBy, GuestConsentAttestation.SOURCE_EXISTING, pending.size))
+        }
+        return ConsentAttestationResult(pending.size)
     }
 
     private fun validateRow(

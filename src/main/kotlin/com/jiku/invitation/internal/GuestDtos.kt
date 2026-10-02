@@ -15,6 +15,8 @@ data class GuestImportResult(
     val failed: Int,
     val failures: List<RowIssue>,
     val warnings: List<RowIssue>,
+    /** Whether the organizer stated these guests agreed to hear from it (JIKU-213). */
+    val consentAttested: Boolean = false,
 )
 
 data class GuestResponse(
@@ -39,6 +41,8 @@ data class GuestResponse(
     val paymentStatus: TicketPaymentStatus? = null,
     val amountDueMinor: Long? = null,
     val amountDueCurrency: String? = null,
+    /** Whether the guest agreed to hear from the organizer (JIKU-213): needed for a WhatsApp invitation from the Jikū number. */
+    val consentAttested: Boolean = true,
 )
 
 data class SetGuestExclusionRequest(
