@@ -27,6 +27,19 @@ interface NotificationLogRepository : JpaRepository<NotificationLog, UUID> {
         @Param("to") to: Instant,
     ): Long
 
+    /** Delivered messages of one organization on one channel since [since] (JIKU-207 email pause). */
+    @Query(
+        nativeQuery = true,
+        value =
+            "SELECT COUNT(*) FROM notification_log WHERE tenant_id = :tenantId AND channel = :channel " +
+                "AND status = 'SENT' AND created_at >= :since",
+    )
+    fun countSentByTenantAndChannelSince(
+        @Param("tenantId") tenantId: String,
+        @Param("channel") channel: String,
+        @Param("since") since: Instant,
+    ): Long
+
     fun findByReferenceId(referenceId: UUID): List<NotificationLog>
 
     fun countByStatus(status: String): Long
