@@ -7,6 +7,8 @@ import com.jiku.catalog.QuestionInfo
 import com.jiku.catalog.QuorumInfo
 import com.jiku.catalog.RetentionCandidate
 import com.jiku.catalog.TicketTypeInfo
+import com.jiku.shared.TenantMilestones
+import com.jiku.shared.tenantMilestones
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -216,4 +218,7 @@ class EventModuleApiService(
     private companion object {
         const val MAX_SEARCH_RESULTS = 50
     }
+
+    @Transactional(readOnly = true)
+    override fun adminFirstEventAt(): TenantMilestones = tenantMilestones(events.firstCreatedAtByTenant())
 }

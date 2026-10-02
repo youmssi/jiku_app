@@ -1,5 +1,6 @@
 package com.jiku.catalog
 
+import com.jiku.shared.TenantMilestones
 import java.time.Instant
 import java.util.UUID
 
@@ -140,4 +141,7 @@ interface EventModuleApi {
      * absent from the result.
      */
     fun adminEventNames(eventIds: Collection<UUID>): Map<UUID, String>
+
+    /** When each organization created its first event, across tenants (JIKU-202, back-office follow-up). */
+    fun adminFirstEventAt(): TenantMilestones
 }

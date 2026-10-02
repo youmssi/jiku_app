@@ -87,9 +87,12 @@ décrochent.
 | Motif | Règle |
 |---|---|
 | Sans événement | Organisation créée il y a plus de 48 h, aucun événement ni service |
-| Sans invités | Événement créé il y a plus de 48 h, aucun invité |
-| Vérification incomplète | Vérification commencée et non soumise depuis plus de 48 h |
-| Essai qui se termine | Essai qui se termine dans 3 jours ou moins |
+| Sans invités | Premier événement créé il y a plus de 48 h, aucun invité dans l'organisation |
+| Vérification refusée | Dernière vérification refusée, à soumettre de nouveau |
+| Essai qui se termine | Essai actif qui se termine dans 3 jours ou moins, aucun paiement |
+
+Une vérification commencée mais non soumise n'est pas enregistrée par le
+produit ; c'est donc le refus qui déclenche la relance.
 
 Chaque ligne : organisation, propriétaire, téléphone et e-mail, motif, date,
 accord marketing. Une relance peut être marquée « faite » (avec la date).

@@ -64,4 +64,10 @@ interface TenantModuleApi {
      * the organization's own choice, or the platform default.
      */
     fun orderHold(tenantId: UUID): java.time.Duration
+
+    /**
+     * Every active organization with its owner and verification state, across
+     * tenants, for the back-office follow-up list (JIKU-202).
+     */
+    fun adminActivationProfiles(): List<TenantActivationProfile>
 }

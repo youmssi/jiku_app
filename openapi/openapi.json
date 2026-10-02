@@ -13,6 +13,31 @@
         ],
         "type" : "object"
       },
+      "ActivationFunnel" : {
+        "properties" : {
+          "firstEventOrService" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "firstPayment" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "firstSend" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "signedUp" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "windowDays" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
       "AdminAuthResponse" : {
         "properties" : {
           "accessToken" : {
@@ -1969,6 +1994,65 @@
               "string",
               "null"
             ]
+          }
+        },
+        "type" : "object"
+      },
+      "FollowUpEntry" : {
+        "properties" : {
+          "marketingConsent" : {
+            "type" : "boolean"
+          },
+          "organizationName" : {
+            "type" : "string"
+          },
+          "ownerEmail" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "ownerName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "phone" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "reason" : {
+            "enum" : [
+              "NO_ACTIVITY",
+              "NO_GUESTS",
+              "VERIFICATION_REJECTED",
+              "TRIAL_ENDING"
+            ],
+            "type" : "string"
+          },
+          "since" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "tenantId" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "FollowUpOverview" : {
+        "properties" : {
+          "entries" : {
+            "items" : {
+              "$ref" : "#/components/schemas/FollowUpEntry"
+            },
+            "type" : "array"
+          },
+          "funnel" : {
+            "$ref" : "#/components/schemas/ActivationFunnel"
           }
         },
         "type" : "object"
@@ -7718,6 +7802,64 @@
         },
         "tags" : [
           "admin-feedback-controller"
+        ]
+      }
+    },
+    "/api/v1/admin/follow-ups" : {
+      "get" : {
+        "operationId" : "adminFollowUpOverview",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FollowUpOverview"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "admin-follow-up-controller"
+        ]
+      }
+    },
+    "/api/v1/admin/follow-ups/{tenantId}/{reason}/done" : {
+      "post" : {
+        "operationId" : "adminFollowUpMarkDone",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "tenantId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          },
+          {
+            "in" : "path",
+            "name" : "reason",
+            "required" : true,
+            "schema" : {
+              "enum" : [
+                "NO_ACTIVITY",
+                "NO_GUESTS",
+                "VERIFICATION_REJECTED",
+                "TRIAL_ENDING"
+              ],
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [
+          "admin-follow-up-controller"
         ]
       }
     },

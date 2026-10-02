@@ -6,6 +6,8 @@ import com.jiku.invitation.GuestInfo
 import com.jiku.invitation.GuestStats
 import com.jiku.invitation.InvitationModuleApi
 import com.jiku.invitation.SentInvitationCounts
+import com.jiku.shared.TenantMilestones
+import com.jiku.shared.tenantMilestones
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -67,6 +69,9 @@ class InvitationModuleApiService(
                 pending = invitations.countByEventIdAndChannelAndStatus(eventId, channel, InvitationStatus.PENDING),
             )
         }
+
+    @Transactional(readOnly = true)
+    override fun adminFirstGuestAt(): TenantMilestones = tenantMilestones(guests.firstCreatedAtByTenant())
 }
 
 private fun Guest.toInfo(): GuestInfo =
