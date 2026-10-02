@@ -19,6 +19,13 @@ extra["springModulithVersion"] = "2.1.1"
 // fails the build if the managed version is vulnerable again.
 extra["tomcat.version"] = "11.0.26"
 
+// Spring Boot 4.1.1 manages Jackson 3.1.5 and 2.21.5, which carry denial-of-service
+// and deserialization CVEs (CVE-2026-68497, CVE-2026-89407, CVE-2026-89425,
+// CVE-2026-91776, CVE-2026-91777) fixed in 3.1.7 and 2.21.7. Drop these overrides
+// once a Boot release manages fixed versions.
+extra["jackson-bom.version"] = "3.1.7"
+extra["jackson-2-bom.version"] = "2.21.7"
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(25)

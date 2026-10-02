@@ -60,7 +60,8 @@ décrite dans `docs/backlog/phase-7-suite.md` et datée au §5.
 
 | Élément | État | Constat |
 |---|---|---|
-| Hébergement toujours actif | ❌ | offre payante Render (≈ 25 USD / mois) ou runbook Hetzner (`docs/deploy.md`) |
+| Hébergement toujours actif | ⏳ | un serveur Hetzner avec Dokploy pour le web, l'API et la base (ADR 107, JIKU-203) |
+| Envoi d'e-mails au-delà des offres gratuites | ⏳ | useSend sur AWS SES, seuils de réputation abaissés (ADR 107, JIKU-200) |
 | Domaine de marque | ❌ | web, API et e-mails encore sur `mrvin100.de` ; SPF et DKIM à refaire pour Resend et Brevo |
 | Branche `main` et mise en production | ✅ | `main` partage l'historique de `develop` depuis la version du 2026-09-26 ; une version est une PR `develop` → `main` fusionnée par commit de fusion |
 | Moyen de paiement sur le compte WhatsApp Business | ❌ | exigé par Meta avant le 30 septembre 2026, sinon l'envoi s'arrête |
@@ -85,7 +86,7 @@ l'ordre.
 
 | Tranche | Dépôt | Contenu |
 |---|---|---|
-| 0.1 | infra | Hébergement toujours actif de l'API (offre payante Render, ou le runbook Hetzner déjà écrit) |
+| 0.1 | infra | Hébergement toujours actif : web, API et base sur un serveur (ADR 107, `docs/backlog/lancement.md`) |
 | 0.2 | infra | Domaine de marque pour le web, l'API et l'envoi d'e-mails (SPF, DKIM chez Resend et Brevo) |
 | 0.3 | app, web | Création de `main`, règle « `develop` → `main` = mise en production », vérification post-déploiement active |
 | 0.4 | app | Scan des vulnérabilités en CI (constat F-6), secrets de production posés (F-3), revue de sécurité validée |
