@@ -353,6 +353,32 @@ management:
         http.server.requests: true
       slo:
         http.server.requests: 100ms,250ms,500ms,1s,2s
+  # Traces and metrics over OTLP to an external backend such as Grafana Cloud
+  # (ADR 107): monitoring lives off the server it watches. Both exports stay off
+  # until their endpoint is configured; the Authorization header carries the
+  # backend's credentials (e.g. "Basic <base64 instance:token>").
+  tracing:
+    export:
+      enabled: ${OBSERVABILITY_OTLP_TRACES_ENABLED:false}
+    sampling:
+      probability: ${OBSERVABILITY_OTLP_TRACES_SAMPLING:0.1}
+  opentelemetry:
+    resource-attributes:
+      service.name: jiku-api
+      deployment.environment: ${OBSERVABILITY_ENVIRONMENT:local}
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OBSERVABILITY_OTLP_TRACES_ENDPOINT:}
+          headers:
+            Authorization: ${OBSERVABILITY_OTLP_AUTHORIZATION:}
+  otlp:
+    metrics:
+      export:
+        enabled: ${OBSERVABILITY_OTLP_METRICS_ENABLED:false}
+        url: ${OBSERVABILITY_OTLP_METRICS_ENDPOINT:http://localhost:4318/v1/metrics}
+        headers:
+          Authorization: ${OBSERVABILITY_OTLP_AUTHORIZATION:}
 admin:
   agreements:
     # Daily sweep marking past-end enterprise agreements EXPIRED (JIKU-43).
@@ -505,6 +531,12 @@ catalog:
     walk-ins-allowed: ${CATALOG_SERVICE_WALK_INS_ALLOWED:true}
 
 notification:
+  # Daily ceilings on the platform's message costs (ADR 107); 0 turns one off.
+  # Yesterday's figures are checked each morning and an ops alert goes to the
+  # sales/ops mailbox when a ceiling is exceeded.
+  spend-alert:
+    whatsapp-daily-usd: ${MESSAGING_DAILY_WHATSAPP_USD_ALERT:0}
+    sms-daily-count: ${MESSAGING_DAILY_SMS_COUNT_ALERT:0}
   sales:
     # Mailbox notified of new manual activation requests (JIKU-41); blank keeps
     # requests visible only in the admin payments desk.

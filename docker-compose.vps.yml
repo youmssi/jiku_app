@@ -41,7 +41,10 @@ services:
       - shared_buffers=${POSTGRES_SHARED_BUFFERS:-512MB}
       - -c
       - max_connections=${POSTGRES_MAX_CONNECTIONS:-60}
-    volumes: ["pgdata:/var/lib/postgresql"]
+    volumes:
+      - pgdata:/var/lib/postgresql
+      # Runs only when the volume is created: the Umami database next to Jikū's.
+      - ./deploy/postgres/init:/docker-entrypoint-initdb.d:ro
     mem_limit: ${POSTGRES_MEMORY_LIMIT:-2g}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME:-jiku} -d ${DATABASE_NAME:-jiku}"]
@@ -96,6 +99,21 @@ services:
       API_TIMEOUT_MS: ${WEB_API_TIMEOUT_MS:-15000}
     mem_limit: ${WEB_MEMORY_LIMIT:-768m}
     depends_on: [api]
+    networks: [default, dokploy-network]
+
+  # Privacy-friendly visit statistics for the public site (ADR 107): no cookies,
+  # its own database in the same PostgreSQL. The web image loads its script
+  # once NEXT_PUBLIC_UMAMI_SRC and NEXT_PUBLIC_UMAMI_WEBSITE_ID are set.
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${DATABASE_USERNAME:-jiku}:${DATABASE_PASSWORD:?set DATABASE_PASSWORD}@postgres:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET:?set UMAMI_APP_SECRET}
+    mem_limit: ${UMAMI_MEMORY_LIMIT:-384m}
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks: [default, dokploy-network]
 
 volumes:

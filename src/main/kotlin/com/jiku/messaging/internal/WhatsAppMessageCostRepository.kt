@@ -36,4 +36,16 @@ interface WhatsAppMessageCostRepository : JpaRepository<WhatsAppMessageCost, UUI
     ): Long
 
     fun countByEventId(eventId: UUID): Long
+
+    /** What the shared platform number cost over a period, across tenants (ADR 107 spend alert). */
+    @Query(
+        value =
+            "SELECT COALESCE(SUM(cost_usd_minor), 0) FROM whatsapp_message_cost " +
+                "WHERE pool = 'PLATFORM' AND created_at >= :from AND created_at < :to",
+        nativeQuery = true,
+    )
+    fun sumPlatformUsdMinorBetween(
+        @Param("from") from: Instant,
+        @Param("to") to: Instant,
+    ): Long
 }

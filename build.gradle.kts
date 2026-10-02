@@ -47,6 +47,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     implementation("io.micrometer:micrometer-registry-prometheus")
+    // Traces and metrics over OTLP (ADR 107); export stays off until an endpoint is configured.
+    implementation("org.springframework.boot:spring-boot-starter-opentelemetry")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
     implementation("org.flywaydb:flyway-database-postgresql")
     implementation("org.jetbrains.kotlin:kotlin-reflect")

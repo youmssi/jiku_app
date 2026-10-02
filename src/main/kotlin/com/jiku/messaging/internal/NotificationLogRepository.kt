@@ -14,6 +14,19 @@ interface NotificationLogRepository : JpaRepository<NotificationLog, UUID> {
     )
     fun firstSentAtByTenant(): List<Array<Any?>>
 
+    /** Delivered messages on one channel over a period, across tenants (ADR 107 spend alert). */
+    @Query(
+        nativeQuery = true,
+        value =
+            "SELECT COUNT(*) FROM notification_log WHERE channel = :channel AND status = 'SENT' " +
+                "AND created_at >= :from AND created_at < :to",
+    )
+    fun countSentByChannelBetween(
+        @Param("channel") channel: String,
+        @Param("from") from: Instant,
+        @Param("to") to: Instant,
+    ): Long
+
     fun findByReferenceId(referenceId: UUID): List<NotificationLog>
 
     fun countByStatus(status: String): Long
