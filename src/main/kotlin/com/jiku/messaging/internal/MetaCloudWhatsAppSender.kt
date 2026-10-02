@@ -29,6 +29,11 @@ import java.time.Duration
  * not clear within seconds (paused template, blocked account, rate limits)
  * raise [WhatsAppUnavailableException] so the message waits or goes by SMS
  * (JIKU-209).
+ *
+ * With a [templatePrefix], a message that names its dedicated template
+ * (JIKU-210) goes out as that template, `<prefix><kind>` in the message's
+ * language, with its own parameters, QR header and reply buttons. A
+ * [WhatsAppMessage.session] message is always sent as a session message.
  */
 class MetaCloudWhatsAppSender internal constructor(
     private val client: RestClient,
@@ -39,10 +44,16 @@ class MetaCloudWhatsAppSender internal constructor(
     private val imageTemplateName: String? = null,
     private val wabaId: String? = null,
     private val gate: WhatsAppTemplateGate? = null,
+    private val templatePrefix: String? = null,
 ) : WhatsAppSender {
+    private data class Chosen(
+        val name: String,
+        val language: String,
+    )
+
     override fun send(message: WhatsAppMessage) {
-        val template = templateFor(message)
-        if (template != null && wabaId != null) gate?.assertUsable(wabaId, template, templateLanguage)
+        val chosen = templateFor(message)
+        if (chosen != null && wabaId != null) gate?.assertUsable(wabaId, chosen.name, chosen.language)
         val body = payload(message)
         try {
             client
@@ -54,7 +65,7 @@ class MetaCloudWhatsAppSender internal constructor(
         } catch (e: HttpStatusCodeException) {
             val code = errorCode(e.responseBodyAsString)
             if (code != null) {
-                gate?.onSendRefused(wabaId, template, templateLanguage, code)
+                gate?.onSendRefused(wabaId, chosen?.name, chosen?.language ?: templateLanguage, code)
                 if (code in WAIT_CODES) {
                     throw WhatsAppUnavailableException("WhatsApp refused the message to ${message.to} for now (Meta error $code)")
                 }
@@ -68,13 +79,48 @@ class MetaCloudWhatsAppSender internal constructor(
         }
     }
 
+    private fun dedicated(message: WhatsAppMessage): WhatsAppTemplateCall? =
+        message.template?.takeIf { !message.session && !templatePrefix.isNullOrBlank() }
+
     /** The approved template [payload] uses for [message], or null for a session message. */
-    private fun templateFor(message: WhatsAppMessage): String? =
-        when {
-            message.buttons.isNotEmpty() -> buttonsTemplateName?.takeIf { it.isNotBlank() }
-            message.imageUrl != null -> imageTemplateName?.takeIf { it.isNotBlank() }
-            else -> templateName?.takeIf { it.isNotBlank() }
-        }
+    private fun templateFor(message: WhatsAppMessage): Chosen? {
+        dedicated(message)?.let { return Chosen(templatePrefix + it.kind.key, it.language) }
+        if (message.session) return null
+        val name =
+            when {
+                message.buttons.isNotEmpty() -> buttonsTemplateName
+                message.imageUrl != null -> imageTemplateName
+                else -> templateName
+            }
+        return name?.takeIf { it.isNotBlank() }?.let { Chosen(it, templateLanguage) }
+    }
+
+    /** The dedicated template: its body parameters, the QR header and a payload per reply button. */
+    private fun dedicatedPayload(
+        message: WhatsAppMessage,
+        call: WhatsAppTemplateCall,
+    ): Map<String, Any> {
+        val header = message.imageUrl?.let { headerComponent(mapOf("type" to "image", "image" to mapOf("link" to it))) }
+        val body = mapOf("type" to "body", "parameters" to call.parameters.map { mapOf("type" to "text", "text" to it) })
+        val buttons =
+            message.buttons.mapIndexed { index, button ->
+                mapOf(
+                    "type" to "button",
+                    "sub_type" to "quick_reply",
+                    "index" to index.toString(),
+                    "parameters" to listOf(mapOf("type" to "payload", "payload" to button.id)),
+                )
+            }
+        return session(
+            message.to,
+            "template",
+            mapOf(
+                "name" to templatePrefix + call.kind.key,
+                "language" to mapOf("code" to call.language),
+                "components" to listOfNotNull(header, body) + buttons,
+            ),
+        )
+    }
 
     private fun errorCode(body: String): Int? =
         ERROR_CODE
@@ -84,10 +130,11 @@ class MetaCloudWhatsAppSender internal constructor(
             ?.toIntOrNull()
 
     private fun payload(message: WhatsAppMessage): Map<String, Any> {
+        dedicated(message)?.let { return dedicatedPayload(message, it) }
         val bodyParameter = mapOf("type" to "body", "parameters" to listOf(mapOf("type" to "text", "text" to message.body)))
         val header = message.imageUrl?.let { mapOf("type" to "image", "image" to mapOf("link" to it)) }
         return when {
-            message.buttons.isNotEmpty() && !buttonsTemplateName.isNullOrBlank() ->
+            message.buttons.isNotEmpty() && !message.session && !buttonsTemplateName.isNullOrBlank() ->
                 template(
                     message.to,
                     buttonsTemplateName,
@@ -117,12 +164,12 @@ class MetaCloudWhatsAppSender internal constructor(
                     ) + listOfNotNull(header?.let { "header" to it }),
                 )
 
-            header != null && !imageTemplateName.isNullOrBlank() ->
+            header != null && !message.session && !imageTemplateName.isNullOrBlank() ->
                 template(message.to, imageTemplateName, listOf(headerComponent(header), bodyParameter))
 
             message.imageUrl != null -> session(message.to, "image", mapOf("link" to message.imageUrl, "caption" to message.body))
 
-            !templateName.isNullOrBlank() -> template(message.to, templateName, listOf(bodyParameter))
+            !message.session && !templateName.isNullOrBlank() -> template(message.to, templateName, listOf(bodyParameter))
 
             else -> session(message.to, "text", mapOf("body" to message.body))
         }
@@ -169,6 +216,7 @@ class MetaCloudWhatsAppSender internal constructor(
             imageTemplateName: String? = null,
             wabaId: String? = null,
             gate: WhatsAppTemplateGate? = null,
+            templatePrefix: String? = null,
         ): MetaCloudWhatsAppSender {
             check(accessToken.isNotBlank()) { "WhatsApp Cloud API access token is not set" }
             check(phoneNumberId.isNotBlank()) { "WhatsApp Cloud API phone number id is not set" }
@@ -191,6 +239,7 @@ class MetaCloudWhatsAppSender internal constructor(
                 imageTemplateName,
                 wabaId,
                 gate,
+                templatePrefix,
             )
         }
     }

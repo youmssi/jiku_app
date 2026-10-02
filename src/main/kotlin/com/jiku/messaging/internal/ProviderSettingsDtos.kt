@@ -19,6 +19,8 @@ data class MetaCloudCredentials(
     val imageTemplateName: String? = null,
     /** Set when the number came through Embedded Signup (ADR 105). */
     val wabaId: String? = null,
+    /** The dedicated templates (JIKU-210) were created in this account, under this prefix. */
+    val dedicatedTemplatePrefix: String? = null,
     val displayPhoneNumber: String? = null,
     val verifiedName: String? = null,
     /** The two-step verification PIN the number was registered with. */
