@@ -263,6 +263,7 @@ class NotificationService(
         eventId: UUID?,
         thread: WhatsAppThreadStart? = null,
         smsFallback: String? = null,
+        consentAttested: Boolean = true,
     ): () -> Unit =
         {
             val phone = whatsAppDigits(message.to)
@@ -273,6 +274,12 @@ class NotificationService(
             val category = contentGuard.classify(message.body)
             contentGuard.assertAllowed(category)
             if (!resolved.tenantOverride) {
+                if (!consentAttested) {
+                    throw WhatsAppConsentMissingException(
+                        "The organizer has not confirmed that this guest agreed to hear from it: " +
+                            "confirm consent for the event's guests, or invite them by email",
+                    )
+                }
                 whatsAppPause.assertNotPaused(TenantContext.get())
                 platformLimits.assertWithinLimits()
             }
@@ -335,6 +342,10 @@ class NotificationService(
                 return DeliveryOutcome(delivered = false, attempts = attempt, error = lastError)
             } catch (ex: TenantEmailPausedException) {
                 // Retrying within seconds cannot lower the bounce rate.
+                lastError = ex.message
+                record(NotificationLog.STATUS_FAILED, attempt, lastError)
+                return DeliveryOutcome(delivered = false, attempts = attempt, error = lastError)
+            } catch (ex: WhatsAppConsentMissingException) {
                 lastError = ex.message
                 record(NotificationLog.STATUS_FAILED, attempt, lastError)
                 return DeliveryOutcome(delivered = false, attempts = attempt, error = lastError)
@@ -424,6 +435,7 @@ class NotificationService(
                     event.invitationId,
                     event.eventId,
                     WhatsAppThreadStart(event.invitationId, event.tenantId, event.language),
+                    consentAttested = event.consentAttested,
                 )
             }
 

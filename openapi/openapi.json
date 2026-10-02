@@ -995,6 +995,15 @@
         ],
         "type" : "object"
       },
+      "ConsentAttestationResult" : {
+        "properties" : {
+          "attestedGuests" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
       "CreateAgreementRequest" : {
         "properties" : {
           "amountMinor" : {
@@ -2128,6 +2137,9 @@
       },
       "GuestImportResult" : {
         "properties" : {
+          "consentAttested" : {
+            "type" : "boolean"
+          },
           "failed" : {
             "format" : "int32",
             "type" : "integer"
@@ -2240,6 +2252,9 @@
               "string",
               "null"
             ]
+          },
+          "consentAttested" : {
+            "type" : "boolean"
           },
           "email" : {
             "type" : [
@@ -11041,6 +11056,37 @@
         ]
       }
     },
+    "/api/v1/events/{eventId}/guests/consent-attestation" : {
+      "post" : {
+        "operationId" : "guestAttestConsent",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ConsentAttestationResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "guest-controller"
+        ]
+      }
+    },
     "/api/v1/events/{eventId}/guests/export" : {
       "get" : {
         "operationId" : "guestExport",
@@ -11076,6 +11122,15 @@
             "schema" : {
               "format" : "uuid",
               "type" : "string"
+            }
+          },
+          {
+            "in" : "query",
+            "name" : "consentAttested",
+            "required" : false,
+            "schema" : {
+              "default" : false,
+              "type" : "boolean"
             }
           }
         ],

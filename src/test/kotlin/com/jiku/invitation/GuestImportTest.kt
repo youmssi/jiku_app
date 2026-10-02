@@ -43,6 +43,7 @@ class GuestImportTest {
         mockMvc
             .perform(
                 multipart("/api/v1/events/$eventId/guests/import")
+                    .param("consentAttested", "true")
                     .file(file)
                     .header("Authorization", "Bearer $token"),
             ).andExpect(status().isOk())
