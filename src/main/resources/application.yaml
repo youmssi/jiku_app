@@ -2,10 +2,15 @@ jiku:
   mail:
     # Email delivery transport: log (default — records sends without delivering,
     # so a fresh clone works with zero setup), smtp (Mailpit from docker-compose
-    # locally, or any SMTP relay), resend (production HTTPS API; Render blocks
-    # outbound SMTP), brevo (standalone Brevo transactional API), or routing
-    # (Resend first, Brevo fallback once Resend's daily cap is hit — JIKU-62).
+    # locally, or any SMTP relay), usesend (production: useSend on AWS SES,
+    # ADR 107), resend (Resend HTTPS API), brevo (standalone Brevo transactional
+    # API), or routing (Resend first, Brevo fallback once Resend's daily cap is
+    # hit — JIKU-62).
     transport: ${MAIL_TRANSPORT:log}
+    usesend:
+      api-key: ${USESEND_API_KEY:}
+      # useSend cloud by default; a self-hosted instance's URL ends in /api.
+      base-url: ${USESEND_BASE_URL:https://app.usesend.com/api}
     resend:
       api-key: ${RESEND_API_KEY:}
       base-url: ${RESEND_BASE_URL:https://api.resend.com}
@@ -520,11 +525,15 @@ notification:
     # Svix signing secret (whsec_…) from the Resend webhook configuration; the
     # Resend-specific endpoint rejects everything until this is set.
     resend-webhook-secret: ${RESEND_WEBHOOK_SECRET:}
-    # Rolling window and alert thresholds (industry guidance: well under 5% bounce,
-    # under 0.5% complaint). Optional ops address emailed when a threshold breaks.
+    # Signing secret of the useSend webhook; the useSend-specific endpoint rejects
+    # everything until this is set (ADR 107).
+    usesend-webhook-secret: ${USESEND_WEBHOOK_SECRET:}
+    # Rolling window and alert thresholds, kept below AWS SES's own review limits
+    # (5% bounce, 0.1% complaint) because SES judges the whole account (ADR 107).
+    # Optional ops address emailed when a threshold breaks.
     window-hours: ${NOTIFICATION_REPUTATION_WINDOW_HOURS:24}
-    bounce-rate-threshold: ${NOTIFICATION_BOUNCE_RATE_THRESHOLD:0.05}
-    complaint-rate-threshold: ${NOTIFICATION_COMPLAINT_RATE_THRESHOLD:0.005}
+    bounce-rate-threshold: ${NOTIFICATION_BOUNCE_RATE_THRESHOLD:0.02}
+    complaint-rate-threshold: ${NOTIFICATION_COMPLAINT_RATE_THRESHOLD:0.0008}
     undeliverable-hard-bounces: ${NOTIFICATION_UNDELIVERABLE_HARD_BOUNCES:2}
     ops-alert-email: ${NOTIFICATION_OPS_ALERT_EMAIL:}
 

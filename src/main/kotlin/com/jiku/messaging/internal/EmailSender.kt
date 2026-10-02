@@ -23,7 +23,9 @@ class EmailAttachment(
 /**
  * Provider adapter port. The transport is selected with `jiku.mail.transport`:
  * [LoggingEmailSender] (`log`, default), [SmtpEmailSender] (`smtp`, Mailpit
- * locally), or [ResendEmailSender] (`resend`, production). Adapters throw
+ * locally), [UseSendEmailSender] (`usesend`, production, ADR 107),
+ * [ResendEmailSender] (`resend`), [BrevoEmailSender] (`brevo`) or
+ * [RoutingEmailSender] (`routing`). Adapters throw
  * [EmailDeliveryException] on failure so the orchestration retry engages.
  */
 interface EmailSender {
