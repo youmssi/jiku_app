@@ -50,6 +50,7 @@ class WhatsAppSenderConfig {
             imageTemplateName = properties.meta.imageTemplateName.ifBlank { null },
             wabaId = properties.meta.businessAccountId.ifBlank { null },
             gate = health,
+            templatePrefix = properties.meta.templatePrefix.takeIf { properties.meta.dedicatedTemplates },
         )
 
     /**

@@ -6021,6 +6021,75 @@
         },
         "type" : "object"
       },
+      "TemplatePublication" : {
+        "properties" : {
+          "created" : {
+            "type" : "boolean"
+          },
+          "error" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "language" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "TemplateStateView" : {
+        "properties" : {
+          "blockedUntil" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "category" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "language" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "quality" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "reason" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "status" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "updatedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "wabaId" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "TemplateSummary" : {
         "properties" : {
           "channels" : {
@@ -8659,6 +8728,50 @@
         },
         "tags" : [
           "admin-whats-app-controller"
+        ]
+      }
+    },
+    "/api/v1/admin/whatsapp/templates" : {
+      "get" : {
+        "operationId" : "adminWhatsAppTemplateList",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/TemplateStateView"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "admin-whats-app-template-controller"
+        ]
+      },
+      "post" : {
+        "operationId" : "adminWhatsAppTemplatePublish",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/TemplatePublication"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "admin-whats-app-template-controller"
         ]
       }
     },

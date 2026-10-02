@@ -152,6 +152,21 @@ l'image à la construction : les changer impose une nouvelle image.
 | Google (connexion) | Origines JavaScript autorisées : `https://<domaine>` |
 | Moniteur de disponibilité | `https://api.<domaine>/api/v1/health` |
 
+## 8 bis. Modèles WhatsApp (JIKU-210)
+
+Une fois l'API en ligne, avec `WHATSAPP_META_BUSINESS_ACCOUNT_ID` et
+`WHATSAPP_META_ACCESS_TOKEN` renseignés, créer les modèles en tant
+qu'administrateur de la plateforme :
+
+```
+curl -X POST https://api.<domaine>/api/v1/admin/whatsapp/templates -H "Authorization: Bearer <jeton admin>"
+```
+
+La réponse liste chaque modèle (`created` ou l'erreur de Meta). Meta les relit
+en quelques minutes à 48 h ; `GET` sur la même adresse montre leur statut une
+fois le webhook abonné (JIKU-209). Tant qu'un modèle n'est pas approuvé, les
+messages concernés attendent dans la file.
+
 ## 9. Déploiements suivants
 
 Réglages GitHub du dépôt `jiku_app` (et pareil pour `jiku_web`) :

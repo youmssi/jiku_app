@@ -108,7 +108,7 @@ class WhatsAppInboundService(
         values: Map<String, String> = emptyMap(),
     ) {
         try {
-            providers.whatsApp().sender.send(WhatsAppMessage(to = "+$phone", body = catalog.text(language, key, values)))
+            providers.whatsApp().sender.send(WhatsAppMessage(to = "+$phone", body = catalog.text(language, key, values), session = true))
         } catch (ex: RuntimeException) {
             log.warn("WhatsApp answer {} to {} could not be sent", key, phone, ex)
         }

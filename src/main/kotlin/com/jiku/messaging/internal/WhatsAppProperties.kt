@@ -43,8 +43,15 @@ data class WhatsAppProperties(
     data class Meta(
         val accessToken: String = "",
         val phoneNumberId: String = "",
-        val baseUrl: String = "https://graph.facebook.com/v21.0",
-        /** Approved template for business-initiated sends; blank sends plain text. */
+        val baseUrl: String = "https://graph.facebook.com/v25.0",
+        /**
+         * Send each message with its own approved template (JIKU-210), named
+         * `<templatePrefix><kind>` and created in French and English with
+         * `POST /admin/whatsapp/templates`. Off, the single templates below are used.
+         */
+        val dedicatedTemplates: Boolean = true,
+        val templatePrefix: String = "jiku_",
+        /** Single approved template for business-initiated sends when dedicated templates are off; blank sends plain text. */
         val templateName: String = "",
         val templateLanguage: String = "fr",
         /**

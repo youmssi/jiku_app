@@ -20,6 +20,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-206 | SMS dans l'alphabet GSM-7 (un segment au lieu de deux ou trois) | app | — |
 | JIKU-207 | Pause des e-mails d'une organisation dont la liste rebondit | app | JIKU-200 |
 | JIKU-209 | Santé WhatsApp : modèles, numéros et compte suivis depuis Meta | app | — |
+| JIKU-210 | Un modèle WhatsApp par usage, signé Jikū, en français et en anglais | app | JIKU-209 |
 
 ---
 
@@ -194,3 +195,29 @@ doit être abonné aux champs `message_template_status_update`,
 `phone_number_quality_update` et `account_update`, et
 `WHATSAPP_META_BUSINESS_ACCOUNT_ID` doit contenir le compte du numéro de la
 plateforme.
+
+---
+
+## JIKU-210 — Un modèle WhatsApp par usage
+
+**Pourquoi.** Un seul modèle générique (« Message de votre organisateur :
+{{1}} ») portait tous les envois. Meta ne relit pas le contenu de la variable :
+c'est le premier motif de reclassement en marketing, et une pause de ce modèle
+coupait WhatsApp pour toutes les organisations. Le texte parlait aussi au nom de
+l'organisation, ce que la règle « un compte par entreprise » de Meta vise.
+
+**Comportement.**
+
+- Six modèles, en français et en anglais, catégorie utilitaire, texte fixe signé
+  Jikū (« … vous envoie cette invitation par Jikū ») et pied « Jikū · Répondez
+  STOP… » : invitation avec lien, invitation avec boutons, billet avec QR code,
+  annulation, rappel de rendez-vous, « c'est votre tour ».
+- Chaque message part avec son modèle, dans la langue de l'invité ; une pause ne
+  touche plus qu'un usage (JIKU-209).
+- `POST /api/v1/admin/whatsapp/templates` crée les modèles dans le compte de la
+  plateforme ; `GET` montre ce que Meta en dit. L'Embedded Signup les crée dans
+  le compte d'une organisation.
+- Une réponse à quelqu'un qui vient d'écrire part toujours en message de session.
+- Le texte WhatsApp personnalisé par une organisation (JIKU-91) ne s'applique
+  plus aux modèles : il reste utilisé pour les SMS et les messages de session.
+- API Graph de Meta passée de v21.0 à v25.0.

@@ -1,0 +1,332 @@
+{
+  "invitation_v1": {
+    "parameters": [
+      "guestName",
+      "organizerName",
+      "eventName",
+      "eventWhen",
+      "invitationUrl"
+    ],
+    "fr": [
+      {
+        "type": "BODY",
+        "text": "Bonjour {{1}},\n\n{{2}} vous invite à {{3}}, {{4}}, et vous envoie cette invitation par Jikū.\n\nConfirmez votre présence en ouvrant ce lien : {{5}}\n\nMerci et à bientôt !",
+        "example": {
+          "body_text": [
+            [
+              "Awa",
+              "Famille Diallo",
+              "Mariage d'Awa et Moussa",
+              "samedi 12 octobre à 18 h",
+              "https://jiku.app/r/AbC123"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · Répondez STOP pour ne plus rien recevoir"
+      }
+    ],
+    "en": [
+      {
+        "type": "BODY",
+        "text": "Hello {{1}},\n\n{{2}} invites you to {{3}}, {{4}}, and sends you this invitation through Jikū.\n\nConfirm whether you can come by opening this link: {{5}}\n\nThank you and see you soon!",
+        "example": {
+          "body_text": [
+            [
+              "Awa",
+              "The Diallo family",
+              "Awa and Moussa's wedding",
+              "Saturday 12 October at 6 pm",
+              "https://jiku.app/r/AbC123"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · Reply STOP to stop these messages"
+      }
+    ]
+  },
+  "invitation_rsvp_v1": {
+    "parameters": [
+      "guestName",
+      "organizerName",
+      "eventName",
+      "eventWhen"
+    ],
+    "fr": [
+      {
+        "type": "BODY",
+        "text": "Bonjour {{1}},\n\n{{2}} vous invite à {{3}}, {{4}}, et vous envoie cette invitation par Jikū.\n\nMerci de répondre avec les boutons ci-dessous.",
+        "example": {
+          "body_text": [
+            [
+              "Awa",
+              "Famille Diallo",
+              "Mariage d'Awa et Moussa",
+              "samedi 12 octobre à 18 h"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · Répondez STOP pour ne plus rien recevoir"
+      },
+      {
+        "type": "BUTTONS",
+        "buttons": [
+          {
+            "type": "QUICK_REPLY",
+            "text": "Je serai présent"
+          },
+          {
+            "type": "QUICK_REPLY",
+            "text": "Je ne viendrai pas"
+          }
+        ]
+      }
+    ],
+    "en": [
+      {
+        "type": "BODY",
+        "text": "Hello {{1}},\n\n{{2}} invites you to {{3}}, {{4}}, and sends you this invitation through Jikū.\n\nPlease answer with the buttons below.",
+        "example": {
+          "body_text": [
+            [
+              "Awa",
+              "The Diallo family",
+              "Awa and Moussa's wedding",
+              "Saturday 12 October at 6 pm"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · Reply STOP to stop these messages"
+      },
+      {
+        "type": "BUTTONS",
+        "buttons": [
+          {
+            "type": "QUICK_REPLY",
+            "text": "I'll be there"
+          },
+          {
+            "type": "QUICK_REPLY",
+            "text": "I can't make it"
+          }
+        ]
+      }
+    ]
+  },
+  "ticket_v1": {
+    "parameters": [
+      "guestName",
+      "eventName",
+      "eventWhen",
+      "organizerName",
+      "ticketUrl"
+    ],
+    "image": true,
+    "fr": [
+      {
+        "type": "HEADER",
+        "format": "IMAGE",
+        "example": {
+          "header_handle": [
+            "{{EXAMPLE_IMAGE_HANDLE}}"
+          ]
+        }
+      },
+      {
+        "type": "BODY",
+        "text": "Bonjour {{1}},\n\nVoici votre billet pour {{2}}, {{3}}, de la part de {{4}}.\n\nVotre billet : {{5}}\n\nPrésentez le QR code à l'entrée. Il s'affiche même sans connexion.",
+        "example": {
+          "body_text": [
+            [
+              "Awa",
+              "Mariage d'Awa et Moussa",
+              "samedi 12 octobre à 18 h",
+              "Famille Diallo",
+              "https://jiku.app/t/AbC123"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · Répondez STOP pour ne plus rien recevoir"
+      }
+    ],
+    "en": [
+      {
+        "type": "HEADER",
+        "format": "IMAGE",
+        "example": {
+          "header_handle": [
+            "{{EXAMPLE_IMAGE_HANDLE}}"
+          ]
+        }
+      },
+      {
+        "type": "BODY",
+        "text": "Hello {{1}},\n\nHere is your ticket for {{2}}, {{3}}, from {{4}}.\n\nYour ticket: {{5}}\n\nShow the QR code at the entrance. It opens even without a connection.",
+        "example": {
+          "body_text": [
+            [
+              "Awa",
+              "Awa and Moussa's wedding",
+              "Saturday 12 October at 6 pm",
+              "The Diallo family",
+              "https://jiku.app/t/AbC123"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · Reply STOP to stop these messages"
+      }
+    ]
+  },
+  "event_cancelled_v1": {
+    "parameters": [
+      "guestName",
+      "organizerName",
+      "eventName",
+      "eventWhen"
+    ],
+    "fr": [
+      {
+        "type": "BODY",
+        "text": "Bonjour {{1}},\n\n{{2}} vous informe que {{3}}, {{4}}, est annulé. Votre billet n'est plus valable et vous n'avez rien à faire.\n\nSi l'événement est reprogrammé, vous recevrez une nouvelle invitation.",
+        "example": {
+          "body_text": [
+            [
+              "Awa",
+              "Famille Diallo",
+              "Mariage d'Awa et Moussa",
+              "samedi 12 octobre à 18 h"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · Répondez STOP pour ne plus rien recevoir"
+      }
+    ],
+    "en": [
+      {
+        "type": "BODY",
+        "text": "Hello {{1}},\n\n{{2}} lets you know that {{3}}, {{4}}, is cancelled. Your ticket is no longer valid and you have nothing to do.\n\nIf the event is rescheduled, you will receive a new invitation.",
+        "example": {
+          "body_text": [
+            [
+              "Awa",
+              "The Diallo family",
+              "Awa and Moussa's wedding",
+              "Saturday 12 October at 6 pm"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · Reply STOP to stop these messages"
+      }
+    ]
+  },
+  "appointment_reminder_v1": {
+    "parameters": [
+      "clientName",
+      "professional",
+      "when"
+    ],
+    "fr": [
+      {
+        "type": "BODY",
+        "text": "Bonjour {{1}},\n\nPetit rappel de votre rendez-vous avec {{2}}, {{3}}.\n\nSi vous ne pouvez pas venir, prévenez-les pour libérer le créneau.",
+        "example": {
+          "body_text": [
+            [
+              "Awa",
+              "Dr Camara",
+              "mardi 14 octobre à 9 h 30"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · Répondez STOP pour ne plus rien recevoir"
+      }
+    ],
+    "en": [
+      {
+        "type": "BODY",
+        "text": "Hello {{1}},\n\nA quick reminder of your appointment with {{2}}, {{3}}.\n\nIf you cannot come, let them know so the slot can go to someone else.",
+        "example": {
+          "body_text": [
+            [
+              "Awa",
+              "Dr Camara",
+              "Tuesday 14 October at 9:30 am"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · Reply STOP to stop these messages"
+      }
+    ]
+  },
+  "client_called_v1": {
+    "parameters": [
+      "clientName",
+      "counter"
+    ],
+    "fr": [
+      {
+        "type": "BODY",
+        "text": "Bonjour {{1}},\n\nC'est votre tour. Présentez-vous à : {{2}}, s'il vous plaît.",
+        "example": {
+          "body_text": [
+            [
+              "Awa",
+              "Guichet 3"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · Répondez STOP pour ne plus rien recevoir"
+      }
+    ],
+    "en": [
+      {
+        "type": "BODY",
+        "text": "Hello {{1}},\n\nIt's your turn. Please go to: {{2}}, now.",
+        "example": {
+          "body_text": [
+            [
+              "Awa",
+              "Counter 3"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · Reply STOP to stop these messages"
+      }
+    ]
+  }
+}
