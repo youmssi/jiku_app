@@ -8,6 +8,7 @@ import com.jiku.shared.PhoneCodeRequested
 import com.jiku.shared.ReminderAllowanceGate
 import com.jiku.shared.ReminderChannel
 import com.jiku.shared.ReminderDue
+import com.jiku.shared.TenantContext
 import com.jiku.shared.TicketConfirmedNotice
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -51,6 +52,7 @@ class NotificationService(
     private val threads: WhatsAppThreadRepository,
     private val optOuts: WhatsAppOptOutRepository,
     private val reminderAllowance: ReminderAllowanceGate,
+    private val emailPause: TenantEmailPause,
 ) {
     private val log = LoggerFactory.getLogger(NotificationService::class.java)
 
@@ -261,6 +263,7 @@ class NotificationService(
     private fun email(message: EmailMessage): () -> Unit =
         {
             val resolved = providers.email()
+            if (!resolved.tenantOverride) emailPause.assertNotPaused(TenantContext.get())
             resolved.sender.send(resolved.from, message)
         }
 
@@ -298,6 +301,11 @@ class NotificationService(
                 return DeliveryOutcome(delivered = false, attempts = attempt, error = null, queued = true)
             } catch (ex: WhatsAppOptedOutException) {
                 // The recipient asked for silence: retrying would only ask again.
+                lastError = ex.message
+                record(NotificationLog.STATUS_FAILED, attempt, lastError)
+                return DeliveryOutcome(delivered = false, attempts = attempt, error = lastError)
+            } catch (ex: TenantEmailPausedException) {
+                // Retrying within seconds cannot lower the bounce rate.
                 lastError = ex.message
                 record(NotificationLog.STATUS_FAILED, attempt, lastError)
                 return DeliveryOutcome(delivered = false, attempts = attempt, error = lastError)

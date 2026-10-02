@@ -24,6 +24,14 @@ data class EmailReputationProperties(
     val minSampleSize: Long = 20,
     /** Hard bounces for one address before it is treated as undeliverable. */
     val undeliverableHardBounces: Int = 2,
+    /**
+     * Hard-bounce rate above which one organization's platform email is paused
+     * (JIKU-207); 0 turns the pause off. Sits between the alert threshold and
+     * the SES review limit.
+     */
+    val tenantPauseBounceRate: Double = 0.04,
+    /** Platform emails an organization must have sent in the window before it can be paused. */
+    val tenantPauseMinSample: Long = 50,
     /** Optional address alerted when a platform threshold is breached. */
     val opsAlertEmail: String? = null,
 )
