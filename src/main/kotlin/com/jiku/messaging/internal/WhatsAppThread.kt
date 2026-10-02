@@ -49,9 +49,17 @@ class WhatsAppOptOut(
     val phone: String,
     @Column(name = "opted_out_at", nullable = false)
     val optedOutAt: Instant = Instant.now(),
+    /** The organization whose message the STOP answered (JIKU-211), when known. */
+    @Column(name = "tenant_id")
+    val tenantId: String? = null,
 )
 
-interface WhatsAppOptOutRepository : JpaRepository<WhatsAppOptOut, String>
+interface WhatsAppOptOutRepository : JpaRepository<WhatsAppOptOut, String> {
+    fun countByTenantIdAndOptedOutAtAfter(
+        tenantId: String,
+        since: Instant,
+    ): Long
+}
 
 /** The number as Meta reports a sender: digits only, no leading plus. */
 internal fun whatsAppDigits(phone: String): String = phone.filter { it.isDigit() }

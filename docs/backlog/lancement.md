@@ -21,6 +21,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-207 | Pause des e-mails d'une organisation dont la liste rebondit | app | JIKU-200 |
 | JIKU-209 | Santé WhatsApp : modèles, numéros et compte suivis depuis Meta | app | — |
 | JIKU-210 | Un modèle WhatsApp par usage, signé Jikū, en français et en anglais | app | JIKU-209 |
+| JIKU-211 | Statuts de livraison WhatsApp, repli SMS et réputation par organisation | app | JIKU-210 |
 
 ---
 
@@ -221,3 +222,25 @@ l'organisation, ce que la règle « un compte par entreprise » de Meta vise.
 - Le texte WhatsApp personnalisé par une organisation (JIKU-91) ne s'applique
   plus aux modèles : il reste utilisé pour les SMS et les messages de session.
 - API Graph de Meta passée de v21.0 à v25.0.
+
+---
+
+## JIKU-211 — Statuts de livraison WhatsApp et réputation par organisation
+
+**Pourquoi.** Meta accepte un message tout de suite, puis signale plus tard
+qu'il n'a pas pu le livrer. Jikū ne lisait pas ces statuts : le message restait
+« envoyé », sans repli. Et rien ne distinguait l'organisation dont les invités
+écrivent STOP de celles qui envoient proprement.
+
+**Comportement.**
+
+- Chaque message accepté par Meta est suivi par son identifiant. Un échec
+  signalé ensuite est enregistré pour l'organisation, avec le code de Meta ;
+  une invitation passe en échec (l'organisateur le voit) ; un rappel
+  « WhatsApp ou SMS » part par SMS, une seule fois.
+- Un STOP est rattaché à l'organisation dont le message y répond.
+- Sur le numéro Jikū, une organisation est mise en pause quand, sur 7 jours et
+  après 50 messages, plus de 2 % de ses destinataires ont écrit STOP ou plus de
+  20 % de ses messages n'ont pas pu être livrés. Ses envois WhatsApp échouent
+  avec ce motif (repli SMS là où il est prévu) et l'équipe reçoit une alerte par
+  jour. Une organisation sur son propre numéro n'est pas concernée.
