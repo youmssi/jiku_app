@@ -17,6 +17,8 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-203 | Déploiement sur le serveur : Compose, images, WAL-G, runbooks | app, web | JIKU-199 |
 | JIKU-204 | OpenTelemetry, Umami et alerte de dépenses | app, web | JIKU-203 |
 | JIKU-205 | Test de charge du jour J | app | — |
+| JIKU-206 | SMS dans l'alphabet GSM-7 (un segment au lieu de deux ou trois) | app | — |
+| JIKU-207 | Pause des e-mails d'une organisation dont la liste rebondit | app | JIKU-200 |
 
 ---
 
@@ -44,8 +46,8 @@ files, les nouvelles tentatives et la liste d'exclusion.
 - [ ] Les autres événements, et l'événement de test, sont acceptés sans effet
 - [ ] Les nouvelles variables sont dans `.env.example`
 
-**Hors périmètre.** Pause automatique d'une organisation dont la liste rebondit
-(story à part si le pilote le justifie).
+**Hors périmètre.** Pause automatique d'une organisation dont la liste rebondit :
+JIKU-207.
 
 ---
 
@@ -147,3 +149,19 @@ Un script k6 simule l'entrée d'un événement : 500 scans en 5 minutes par
 réponses sous 500 ms, moins de 1 % d'erreurs. Documenté dans
 `docs/runbooks/load-test.md`, à lancer sur l'environnement de recette avant le
 pilote.
+
+---
+
+## JIKU-207 — Pause des e-mails d'une organisation dont la liste rebondit
+
+**Pourquoi.** SES juge le compte entier : une liste mal tenue peut bloquer les
+invitations de toutes les organisations.
+
+**Comportement.** Quand, sur la fenêtre glissante (24 h), une organisation a
+envoyé au moins `NOTIFICATION_TENANT_PAUSE_MIN_SAMPLE` e-mails (50) par
+l'expéditeur de la plateforme et que ses rebonds définitifs dépassent
+`NOTIFICATION_TENANT_PAUSE_BOUNCE_RATE` (4 %), ses e-mails sont enregistrés en
+échec avec un motif clair, sans nouvelle tentative. Une alerte part une fois
+par jour et par organisation. La pause se lève seule quand les rebonds sortent
+de la fenêtre. Une organisation qui envoie par son propre fournisseur n'est pas
+concernée.

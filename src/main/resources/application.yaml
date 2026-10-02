@@ -567,6 +567,10 @@ notification:
     bounce-rate-threshold: ${NOTIFICATION_BOUNCE_RATE_THRESHOLD:0.02}
     complaint-rate-threshold: ${NOTIFICATION_COMPLAINT_RATE_THRESHOLD:0.0008}
     undeliverable-hard-bounces: ${NOTIFICATION_UNDELIVERABLE_HARD_BOUNCES:2}
+    # Hard-bounce rate above which one organization's platform email is paused
+    # until its bounces leave the window (JIKU-207); 0 turns it off.
+    tenant-pause-bounce-rate: ${NOTIFICATION_TENANT_PAUSE_BOUNCE_RATE:0.04}
+    tenant-pause-min-sample: ${NOTIFICATION_TENANT_PAUSE_MIN_SAMPLE:50}
     ops-alert-email: ${NOTIFICATION_OPS_ALERT_EMAIL:}
 
 # Verification des organisations (JIKU-175, référentiel métier §9).
