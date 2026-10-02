@@ -56,6 +56,7 @@ class NotificationService(
     private val templateCalls: WhatsAppTemplateCalls,
     private val deliveries: WhatsAppDeliveryStatusService,
     private val whatsAppPause: TenantWhatsAppPause,
+    private val platformLimits: WhatsAppPlatformLimits,
 ) {
     private val log = LoggerFactory.getLogger(NotificationService::class.java)
 
@@ -271,7 +272,10 @@ class NotificationService(
             val resolved = providers.whatsApp()
             val category = contentGuard.classify(message.body)
             contentGuard.assertAllowed(category)
-            if (!resolved.tenantOverride) whatsAppPause.assertNotPaused(TenantContext.get())
+            if (!resolved.tenantOverride) {
+                whatsAppPause.assertNotPaused(TenantContext.get())
+                platformLimits.assertWithinLimits()
+            }
             conversationCounter.assertWithinBudget(resolved.tenantOverride)
             val wamid = resolved.sender.send(message)
             wamid?.let { deliveries.record(it, referenceId, message.to, resolved.tenantOverride, thread != null, smsFallback) }

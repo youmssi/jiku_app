@@ -4217,6 +4217,36 @@
         },
         "type" : "object"
       },
+      "PlatformWhatsAppUsage" : {
+        "properties" : {
+          "dailyLimit" : {
+            "format" : "int64",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
+          "monthlyLimit" : {
+            "format" : "int64",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
+          "sentLast30Days" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "sentToday" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "verified" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
       "PriceList" : {
         "properties" : {
           "fcfa" : {
@@ -4405,6 +4435,16 @@
         "properties" : {
           "email" : {
             "$ref" : "#/components/schemas/EmailProviderView"
+          },
+          "platformWhatsApp" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/PlatformWhatsAppUsage"
+              },
+              {
+                "type" : "null"
+              }
+            ]
           },
           "whatsapp" : {
             "$ref" : "#/components/schemas/WhatsAppProviderView"

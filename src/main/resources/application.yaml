@@ -76,6 +76,12 @@ jiku:
     # An organization whose guests keep writing STOP, or whose messages Meta
     # cannot deliver, is paused on the Jikū number (JIKU-211): rates over a
     # rolling window, once it sent MIN_SAMPLE messages; 0 turns a rate off.
+    # What one organization may send through the Jikū number (JIKU-212): a few
+    # messages a day until the team verifies it, and past a 30-day volume it
+    # connects its own number. 0 turns a limit off.
+    limits:
+      unverified-daily: ${WHATSAPP_LIMIT_UNVERIFIED_DAILY:50}
+      monthly-before-own-number: ${WHATSAPP_LIMIT_MONTHLY_BEFORE_OWN_NUMBER:500}
     reputation:
       window-days: ${WHATSAPP_REPUTATION_WINDOW_DAYS:7}
       min-sample: ${WHATSAPP_REPUTATION_MIN_SAMPLE:50}

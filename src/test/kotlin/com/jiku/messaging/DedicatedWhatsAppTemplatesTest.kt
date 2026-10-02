@@ -85,4 +85,23 @@ class DedicatedWhatsAppTemplatesTest {
 
         assertEquals(listOf("Awa", "l'accueil"), calls.clientCalled("Awa", null, "fr").parameters)
     }
+
+    @Test
+    fun `the organization's own words never carry a link`() {
+        val invitation =
+            WhatsAppInvitation(
+                recipientPhone = "+224620000001",
+                recipientName = "Awa",
+                eventName = "Gala gratuit sur https://bit.ly/x1 et www.promo.xyz/win",
+                eventWhen = null,
+                organizerName = "Lots.top Events",
+                invitationUrl = "https://jiku.app/r/abc",
+            )
+
+        val call = calls.invitation(invitation, "fr", withButtons = false)
+
+        assertEquals("Gala gratuit sur et", call.parameters[2])
+        assertEquals("Events", call.parameters[1])
+        assertEquals("https://jiku.app/r/abc", call.parameters[4])
+    }
 }

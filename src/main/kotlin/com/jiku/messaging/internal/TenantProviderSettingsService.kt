@@ -22,9 +22,11 @@ class TenantProviderSettingsService(
     private val resolver: MessagingProviderResolver,
     private val ownNumberGate: OwnWhatsAppNumberGate,
     private val numbers: WhatsAppBusinessNumberRepository,
+    private val platformLimits: WhatsAppPlatformLimits,
 ) {
     @Transactional(readOnly = true)
-    fun overview(): ProviderSettingsResponse = ProviderSettingsResponse(email = emailView(), whatsapp = whatsAppView())
+    fun overview(): ProviderSettingsResponse =
+        ProviderSettingsResponse(email = emailView(), whatsapp = whatsAppView(), platformWhatsApp = platformLimits.usage())
 
     @Transactional
     fun updateEmail(request: UpdateEmailProviderRequest): ProviderSettingsResponse {

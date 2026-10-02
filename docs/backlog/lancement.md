@@ -22,6 +22,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-209 | Santé WhatsApp : modèles, numéros et compte suivis depuis Meta | app | — |
 | JIKU-210 | Un modèle WhatsApp par usage, signé Jikū, en français et en anglais | app | JIKU-209 |
 | JIKU-211 | Statuts de livraison WhatsApp, repli SMS et réputation par organisation | app | JIKU-210 |
+| JIKU-212 | Plafonds sur le numéro Jikū : non vérifiés, volume mensuel, liens | app, web | JIKU-211 |
 
 ---
 
@@ -244,3 +245,26 @@ qu'il n'a pas pu le livrer. Jikū ne lisait pas ces statuts : le message restait
   20 % de ses messages n'ont pas pu être livrés. Ses envois WhatsApp échouent
   avec ce motif (repli SMS là où il est prévu) et l'équipe reçoit une alerte par
   jour. Une organisation sur son propre numéro n'est pas concernée.
+
+---
+
+## JIKU-212 — Plafonds sur le numéro Jikū
+
+**Pourquoi.** Le numéro Jikū parle au nom de Jikū et sa qualité est partagée.
+Une organisation non vérifiée ne doit pas pouvoir l'emprunter pour une campagne,
+et une organisation qui envoie beaucoup doit porter sa propre réputation
+(décision : option A au lancement, option B au-delà d'un volume).
+
+**Comportement.**
+
+| Règle | Défaut | Au-delà |
+|---|---|---|
+| Organisation non vérifiée | 50 messages par jour (`WHATSAPP_LIMIT_UNVERIFIED_DAILY`) | Les messages attendent ; motif « Vérifiez votre organisation » |
+| Toute organisation | 500 messages sur 30 jours (`WHATSAPP_LIMIT_MONTHLY_BEFORE_OWN_NUMBER`) | Les messages attendent ; motif « Connectez votre propre numéro » |
+
+- Une organisation sur son propre numéro n'est pas comptée.
+- Les rappels « WhatsApp ou SMS » partent par SMS quand un plafond est atteint.
+- L'équipe reçoit une alerte par jour et par plafond.
+- Les réglages de l'organisation montrent son usage et ses plafonds.
+- Les mots de l'organisation (son nom, le nom de l'événement) perdent toute
+  adresse web dans les messages WhatsApp : les seuls liens envoyés sont ceux de Jikū.
