@@ -58,3 +58,19 @@ data class TenantLegalIdentityInfo(
     /** ISO 3166-1 alpha-2; selects the tax treatment applied to the invoice. */
     val country: String,
 )
+
+/**
+ * An active organization as the back-office follow-up list sees it (JIKU-202):
+ * who to call, whether they agreed to marketing, and where verification stands
+ * (null when never submitted).
+ */
+data class TenantActivationProfile(
+    val tenantId: String,
+    val name: String,
+    val createdAt: Instant,
+    val ownerName: String?,
+    val ownerEmail: String?,
+    val phone: String?,
+    val ownerMarketingConsent: Boolean,
+    val verificationStatus: String?,
+)

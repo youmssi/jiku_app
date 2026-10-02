@@ -7,6 +7,13 @@ import java.time.Instant
 import java.util.UUID
 
 interface NotificationLogRepository : JpaRepository<NotificationLog, UUID> {
+    /** First delivered message per organization, across tenants, for the back-office follow-up list (JIKU-202). */
+    @Query(
+        nativeQuery = true,
+        value = "SELECT tenant_id, MIN(created_at) FROM notification_log WHERE status = 'SENT' GROUP BY tenant_id",
+    )
+    fun firstSentAtByTenant(): List<Array<Any?>>
+
     fun findByReferenceId(referenceId: UUID): List<NotificationLog>
 
     fun countByStatus(status: String): Long

@@ -7,6 +7,13 @@ import java.time.Instant
 import java.util.UUID
 
 interface TrialGrantRepository : JpaRepository<TrialGrant, UUID> {
+    /** Each organization's earliest active trial end, across tenants (JIKU-202). */
+    @Query(
+        nativeQuery = true,
+        value = "SELECT tenant_id, MIN(expires_at) FROM trial_grant WHERE status = 'ACTIVE' GROUP BY tenant_id",
+    )
+    fun activeTrialEndByTenant(): List<Array<Any?>>
+
     fun findFirstByEventIdAndStatusOrderByCreatedAtDesc(
         eventId: UUID,
         status: TrialStatus,

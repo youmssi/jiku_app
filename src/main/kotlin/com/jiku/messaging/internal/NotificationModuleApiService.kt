@@ -5,6 +5,8 @@ import com.jiku.messaging.NotificationModuleApi
 import com.jiku.messaging.WhatsAppEventCost
 import com.jiku.messaging.WhatsAppOverrideStatus
 import com.jiku.messaging.WhatsAppPricingInfo
+import com.jiku.shared.TenantMilestones
+import com.jiku.shared.tenantMilestones
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -16,6 +18,7 @@ class NotificationModuleApiService(
     private val pricingRepository: WhatsAppPricingRepository,
     private val overrideRepository: WhatsAppContentOverrideRepository,
     private val costRepository: WhatsAppMessageCostRepository,
+    private val notificationLogs: NotificationLogRepository,
 ) : NotificationModuleApi {
     override fun isUndeliverable(email: String): Boolean = reputationService.isUndeliverable(email)
 
@@ -82,4 +85,7 @@ class NotificationModuleApiService(
             costUsdMinor = costRepository.sumUsdMinorByEventId(eventId),
             costGnfMinor = costRepository.sumGnfMinorByEventId(eventId),
         )
+
+    @Transactional(readOnly = true)
+    override fun adminFirstSendAt(): TenantMilestones = tenantMilestones(notificationLogs.firstSentAtByTenant())
 }

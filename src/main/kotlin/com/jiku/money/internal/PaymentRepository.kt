@@ -6,6 +6,13 @@ import org.springframework.data.repository.query.Param
 import java.util.UUID
 
 interface PaymentRepository : JpaRepository<Payment, UUID> {
+    /** First confirmed payment per organization, across tenants, for the back-office follow-up list (JIKU-202). */
+    @Query(
+        nativeQuery = true,
+        value = "SELECT tenant_id, MIN(updated_at) FROM payment WHERE status = 'SUCCEEDED' GROUP BY tenant_id",
+    )
+    fun firstSucceededAtByTenant(): List<Array<Any?>>
+
     /** The current tenant's payments, newest first (billing history — JIKU-35). */
     fun findByOrderByCreatedAtDesc(): List<Payment>
 

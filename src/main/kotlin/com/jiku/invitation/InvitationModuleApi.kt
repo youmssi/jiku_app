@@ -1,5 +1,6 @@
 package com.jiku.invitation
 
+import com.jiku.shared.TenantMilestones
 import java.time.Instant
 import java.util.UUID
 
@@ -35,6 +36,9 @@ interface InvitationModuleApi {
 
     /** Delivery status breakdown per channel for an event's analytics view. */
     fun channelBreakdown(eventId: UUID): List<ChannelBreakdown>
+
+    /** When each organization added its first guest, across tenants (JIKU-202, back-office follow-up). */
+    fun adminFirstGuestAt(): TenantMilestones
 }
 
 /** Successfully sent (status SENT) invitation counts for an event, per channel. */

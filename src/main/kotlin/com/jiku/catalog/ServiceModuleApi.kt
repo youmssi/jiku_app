@@ -1,5 +1,6 @@
 package com.jiku.catalog
 
+import com.jiku.shared.TenantMilestones
 import java.util.UUID
 
 /**
@@ -13,6 +14,9 @@ interface ServiceModuleApi {
      * à être proposés sur le profil public de l'organisation.
      */
     fun publicServiceLinks(tenantId: UUID): List<PublicServiceLink>
+
+    /** When each organization created its first service, across tenants (JIKU-202, back-office follow-up). */
+    fun adminFirstServiceAt(): TenantMilestones
 }
 
 /** Un service présentable publiquement : son nom et son lien court de réservation. */

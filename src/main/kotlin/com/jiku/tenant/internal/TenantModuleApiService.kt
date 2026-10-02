@@ -1,6 +1,8 @@
 package com.jiku.tenant.internal
 
+import com.jiku.shared.nativeInstant
 import com.jiku.tenant.AdminVerificationView
+import com.jiku.tenant.TenantActivationProfile
 import com.jiku.tenant.TenantDirectoryEntry
 import com.jiku.tenant.TenantDirectoryPage
 import com.jiku.tenant.TenantInfo
@@ -120,6 +122,24 @@ class TenantModuleApiService(
         reason: String?,
         adminId: UUID?,
     ): AdminVerificationView = verificationAdmin.decide(id, approve, reason, adminId)
+
+    @Transactional(readOnly = true)
+    override fun adminActivationProfiles(): List<TenantActivationProfile> =
+        tenants
+            .findActivationProfiles()
+            .distinctBy { it[0].toString() }
+            .map { row ->
+                TenantActivationProfile(
+                    tenantId = row[0].toString(),
+                    name = row[1].toString(),
+                    createdAt = nativeInstant(requireNotNull(row[2])),
+                    ownerName = row[3]?.toString(),
+                    ownerEmail = row[4]?.toString(),
+                    phone = row[5]?.toString(),
+                    ownerMarketingConsent = row[6] == true,
+                    verificationStatus = row[7]?.toString(),
+                )
+            }
 
     private companion object {
         const val MAX_PAGE_SIZE = 100
