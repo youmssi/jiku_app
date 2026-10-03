@@ -1,6 +1,8 @@
 package com.jiku.invitation.internal
 
 import com.jiku.shared.BaseTenantEntity
+import com.jiku.shared.LiveScoped
+import com.jiku.shared.LiveTopics
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -31,7 +33,10 @@ class Guest(
     var email: String? = null,
     @Column(name = "phone_number")
     var phoneNumber: String? = null,
-) : BaseTenantEntity() {
+) : BaseTenantEntity(),
+    LiveScoped {
+    override fun liveTopics(): Collection<String> = listOfNotNull(eventId?.let(LiveTopics::event))
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     var id: UUID? = null

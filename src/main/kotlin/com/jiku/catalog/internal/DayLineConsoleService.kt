@@ -1,6 +1,9 @@
 package com.jiku.catalog.internal
 
+import com.jiku.live.LiveModuleApi
+import com.jiku.live.LiveTicket
 import com.jiku.shared.ClientCalled
+import com.jiku.shared.LiveTopics
 import com.jiku.shared.ReminderChannel
 import com.jiku.shared.TenantContext
 import com.jiku.shared.WalkInArrived
@@ -35,7 +38,15 @@ class DayLineConsoleService(
     private val config: ServiceConfigService,
     private val ticketing: TicketingModuleApi,
     private val events: ApplicationEventPublisher,
+    private val live: LiveModuleApi,
 ) {
+    /** Un ticket pour suivre la ligne en direct (JIKU-214) : l'écran se recharge quand elle bouge. */
+    @Transactional(readOnly = true)
+    fun liveTicket(serviceId: UUID): LiveTicket {
+        services.get(serviceId)
+        return live.ticket(LiveTopics.service(serviceId))
+    }
+
     /** La journée demandée ([date] ou aujourd'hui dans le fuseau du service). */
     @Transactional(readOnly = true)
     fun view(

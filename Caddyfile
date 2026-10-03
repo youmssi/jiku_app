@@ -7,6 +7,10 @@
 }
 
 {$API_DOMAIN} {
-	encode gzip
-	reverse_proxy app:8080
+	# Live streams (JIKU-214) go out uncompressed and unbuffered, event by event.
+	@notLive not path */live/stream
+	encode @notLive gzip
+	reverse_proxy app:8080 {
+		flush_interval -1
+	}
 }
