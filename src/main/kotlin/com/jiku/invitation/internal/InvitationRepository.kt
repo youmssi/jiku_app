@@ -4,6 +4,7 @@ import com.jiku.catalog.InvitationChannel
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import java.time.Instant
 import java.util.UUID
 
 interface InvitationRepository : JpaRepository<Invitation, UUID> {
@@ -46,6 +47,21 @@ interface InvitationRepository : JpaRepository<Invitation, UUID> {
      */
     @Query(value = "SELECT id, tenant_id AS tenantId FROM invitation WHERE status = 'QUEUED'", nativeQuery = true)
     fun findGlobalQueued(): List<QueuedInvitationRef>
+
+    /**
+     * Invitations handed to the sender before [before] and still PENDING, across
+     * every tenant (JIKU-215): their send was lost with a restart. One never
+     * handed over counts from its creation.
+     */
+    @Query(
+        value =
+            "SELECT id, tenant_id AS tenantId FROM invitation WHERE status = 'PENDING' " +
+                "AND COALESCE(dispatched_at, created_at) < :before",
+        nativeQuery = true,
+    )
+    fun findGlobalStalePending(
+        @Param("before") before: Instant,
+    ): List<QueuedInvitationRef>
 }
 
 interface QueuedInvitationRef {

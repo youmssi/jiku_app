@@ -11,6 +11,7 @@ import com.jiku.tenant.TenantModuleApi
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
+import java.time.Instant
 import java.util.UUID
 
 /**
@@ -85,6 +86,8 @@ class InvitationDispatchWorker(
                 null
             }
 
+        invitation.dispatchedAt = Instant.now()
+        invitations.save(invitation)
         eventPublisher.publishEvent(
             GuestInvitedEvent(
                 invitationId = invitationId,

@@ -1,6 +1,7 @@
 package com.jiku.ticket.internal
 
 import com.jiku.shared.TenantContext
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.Instant
@@ -19,6 +20,7 @@ class AppointmentReminderJob(
     private val claims: AppointmentReminderClaims,
 ) {
     @Scheduled(cron = "\${appointment.reminder.sweep-cron:0 */5 * * * *}")
+    @SchedulerLock(name = "AppointmentReminderJob.sweep")
     fun sweep() {
         val now = Instant.now()
         for (ref in reminders.findQueuedReminders()) {

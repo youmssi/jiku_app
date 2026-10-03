@@ -2,6 +2,7 @@ package com.jiku.money.internal
 
 import com.jiku.money.ManualPaymentInstructions
 import com.jiku.shared.TenantContext
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Component
@@ -112,6 +113,7 @@ class CommissionCloseJob(
     private val commission: CommissionService,
 ) {
     @Scheduled(cron = "\${sales.commission.close-cron:0 15 * * * *}")
+    @SchedulerLock(name = "CommissionCloseJob.sweep")
     fun sweep() {
         val now = Instant.now()
         for (tenantId in batches.tenantsDueToClose(now)) {

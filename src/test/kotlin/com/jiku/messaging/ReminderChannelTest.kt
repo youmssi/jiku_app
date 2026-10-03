@@ -14,14 +14,20 @@ import com.jiku.shared.ReminderChannel
 import com.jiku.shared.ReminderDue
 import com.jiku.shared.TenantContext
 import com.jiku.support.TestDates.EVENT_YEAR
+import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.TestPropertySource
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.support.TransactionSynchronizationManager
+import org.springframework.transaction.support.TransactionTemplate
+import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
@@ -45,6 +51,7 @@ class ReminderChannelTest {
         val whatsApps = CopyOnWriteArrayList<WhatsAppMessage>()
         val smses = CopyOnWriteArrayList<SmsMessage>()
         val wamids = CopyOnWriteArrayList<String>()
+        val sentInTransaction = CopyOnWriteArrayList<Boolean>()
     }
 
     @TestConfiguration
@@ -57,6 +64,7 @@ class ReminderChannelTest {
             object : WhatsAppSender {
                 override fun send(message: WhatsAppMessage): String? {
                     if (providers.whatsAppFails.get()) throw WhatsAppDeliveryException("unreachable")
+                    providers.sentInTransaction += TransactionSynchronizationManager.isActualTransactionActive()
                     providers.whatsApps += message
                     return "wamid.${UUID.randomUUID()}".also { providers.wamids += it }
                 }
@@ -81,6 +89,14 @@ class ReminderChannelTest {
     lateinit var deliveries: WhatsAppDeliveryStatusService
 
     @Autowired
+    lateinit var events: ApplicationEventPublisher
+
+    @Autowired
+    lateinit var transactionManager: PlatformTransactionManager
+
+    private val transactions by lazy { TransactionTemplate(transactionManager) }
+
+    @Autowired
     lateinit var sentMessages: WhatsAppSentMessageRepository
 
     @BeforeEach
@@ -89,6 +105,7 @@ class ReminderChannelTest {
         providers.whatsApps.clear()
         providers.smses.clear()
         providers.wamids.clear()
+        providers.sentInTransaction.clear()
     }
 
     @Test
@@ -159,21 +176,33 @@ class ReminderChannelTest {
         assertEquals("READ", sentMessages.findById(wamid).orElseThrow().status)
     }
 
-    private fun send(channel: ReminderChannel) =
-        TenantContext.withTenant("reminder-channel-tenant") {
-            notifications.deliverAppointmentReminder(
-                ReminderDue(
-                    reminderId = UUID.randomUUID(),
-                    serviceId = UUID.randomUUID(),
-                    tenantId = "reminder-channel-tenant",
-                    offsetMinutes = 120,
-                    clientName = "Kadiatou",
-                    clientPhone = "+224620000002",
-                    startsAt = Instant.parse("${EVENT_YEAR}-12-01T09:00:00Z"),
-                    professionalName = "Binta",
-                    serviceTimezone = "Africa/Conakry",
-                    channel = channel,
-                ),
-            )
+    @Test
+    fun `a reminder due inside a transaction is sent after it commits, holding no database connection`() {
+        val reminder = due(ReminderChannel.WHATSAPP)
+
+        transactions.executeWithoutResult {
+            events.publishEvent(reminder)
+            assertTrue(providers.whatsApps.isEmpty(), "sent before the transaction committed")
         }
+
+        await().atMost(Duration.ofSeconds(10)).until { providers.whatsApps.isNotEmpty() }
+        assertEquals(listOf(false), providers.sentInTransaction)
+    }
+
+    private fun send(channel: ReminderChannel) =
+        TenantContext.withTenant("reminder-channel-tenant") { notifications.deliverAppointmentReminder(due(channel)) }
+
+    private fun due(channel: ReminderChannel) =
+        ReminderDue(
+            reminderId = UUID.randomUUID(),
+            serviceId = UUID.randomUUID(),
+            tenantId = "reminder-channel-tenant",
+            offsetMinutes = 120,
+            clientName = "Kadiatou",
+            clientPhone = "+224620000002",
+            startsAt = Instant.parse("${EVENT_YEAR}-12-01T09:00:00Z"),
+            professionalName = "Binta",
+            serviceTimezone = "Africa/Conakry",
+            channel = channel,
+        )
 }

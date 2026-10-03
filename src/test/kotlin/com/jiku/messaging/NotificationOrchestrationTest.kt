@@ -5,12 +5,14 @@ import com.jiku.messaging.internal.NotificationLog
 import com.jiku.messaging.internal.NotificationLogRepository
 import com.jiku.shared.GuestInvitedEvent
 import com.jiku.shared.TenantContext
+import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Import
+import java.time.Duration
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -50,8 +52,12 @@ class NotificationOrchestrationTest {
             ),
         )
 
-        // The listener is synchronous, so the audit row is persisted by now.
-        val records = logs.findByReferenceId(invitationId)
+        // Delivery runs in the background (JIKU-215).
+        val records =
+            await()
+                .pollInSameThread()
+                .atMost(Duration.ofSeconds(10))
+                .until({ logs.findByReferenceId(invitationId) }, { it.isNotEmpty() })
         assertEquals(1, records.size, "exactly one delivery attempt should be logged")
         assertTrue(records.all { it.status == NotificationLog.STATUS_SENT })
         assertEquals("guest@example.com", records.first().recipient)

@@ -24,6 +24,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-211 | Statuts de livraison WhatsApp, repli SMS et réputation par organisation | app | JIKU-210 |
 | JIKU-212 | Plafonds sur le numéro Jikū : non vérifiés, volume mensuel, liens | app, web | JIKU-211 |
 | JIKU-213 | Consentement des invités importés, prouvé et exigé pour WhatsApp | app, web | JIKU-212 |
+| JIKU-215 | Envois fiables : files séparées, hors transaction, reprise, tentatives espacées, tâches verrouillées | app | — |
 
 ---
 
@@ -293,3 +294,23 @@ Jikū n'avait aucune trace de cet accord.
   considérés comme couverts.
 - Une organisation sur son propre numéro reste responsable de ses envois
   (conditions générales) et n'est pas bloquée.
+
+---
+
+## JIKU-215 — Envois fiables
+
+**Pourquoi.** Le jour J, un envoi de 300 invitations pouvait retarder le « c'est
+votre tour » d'un client, bloquer des connexions à la base pendant les appels à
+Meta ou au fournisseur d'e-mails, perdre des messages au-delà de 100 tâches en
+attente ou lors d'un redémarrage, et échouer sur une coupure de quelques
+secondes.
+
+**Comportement.**
+
+| Avant | Après |
+|---|---|
+| Un seul pool (2 threads, 100 tâches), refus au-delà | Pool « volume » (8 threads, file sans limite) et pool « urgent » (threads virtuels, 64 à la fois) |
+| Envoi dans la transaction : connexion tenue pendant l'appel au fournisseur | Envoi après validation, en tâche de fond, sans transaction |
+| Envoi perdu au redémarrage | Une invitation restée PENDING plus de 30 min après sa remise est renvoyée par le balayage |
+| 3 tentatives dans la même seconde | Attentes de 2 s puis 8 s ; les messages qui basculent sur SMS réessaient tout de suite |
+| Tâches planifiées l'une après l'autre, en double avec plusieurs serveurs | 4 threads ; verrou ShedLock dans PostgreSQL |

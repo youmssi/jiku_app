@@ -1,9 +1,11 @@
 package com.jiku.messaging.internal
 
 import com.jiku.shared.EventCancellationNotice
-import com.jiku.shared.TenantTransaction
-import org.springframework.context.event.EventListener
+import com.jiku.shared.TenantContext
+import com.jiku.shared.async.Executors
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
+import org.springframework.transaction.event.TransactionalEventListener
 
 /**
  * Delivers one guest's cancellation notice (render, send, retry, audit) in
@@ -13,12 +15,12 @@ import org.springframework.stereotype.Component
  */
 @Component
 class EventCancellationNoticeListener(
-    private val tenantTransaction: TenantTransaction,
     private val notificationService: NotificationService,
 ) {
-    @EventListener
+    @Async(Executors.BULK)
+    @TransactionalEventListener(fallbackExecution = true)
     fun onEventCancellationNotice(notice: EventCancellationNotice) {
-        tenantTransaction.run(notice.tenantId) {
+        TenantContext.withTenant(notice.tenantId) {
             notificationService.deliverCancellation(notice)
         }
     }

@@ -1,6 +1,7 @@
 package com.jiku.messaging.internal
 
 import com.jiku.shared.OpsAlert
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationEventPublisher
@@ -34,6 +35,7 @@ class MessagingSpendAlertJob(
     private val events: ApplicationEventPublisher,
 ) {
     @Scheduled(cron = "\${notification.spend-alert.cron:0 0 7 * * *}", zone = "UTC")
+    @SchedulerLock(name = "MessagingSpendAlertJob.check")
     fun check() {
         check(LocalDate.now(ZoneOffset.UTC).minusDays(1))
     }

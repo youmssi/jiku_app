@@ -8,6 +8,7 @@ import com.jiku.shared.TenantContext
 import com.jiku.shared.WhatsAppReplyOutcome
 import com.jiku.shared.WhatsAppRsvpReply
 import com.jiku.shared.WhatsAppTicketRequest
+import com.jiku.shared.async.Executors
 import com.jiku.tenant.TenantModuleApi
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.event.EventListener
@@ -35,7 +36,7 @@ class WhatsAppReplyHandler(
     private val ticketNotices: TicketNotices,
     private val eventPublisher: ApplicationEventPublisher,
 ) {
-    @Async("invitationExecutor")
+    @Async(Executors.URGENT)
     @EventListener
     fun onRsvpReply(reply: WhatsAppRsvpReply) =
         inTenant(reply.tenantId, reply.invitationId) { guest, event, phone ->
@@ -58,7 +59,7 @@ class WhatsAppReplyHandler(
             }
         }
 
-    @Async("invitationExecutor")
+    @Async(Executors.URGENT)
     @EventListener
     fun onTicketRequest(request: WhatsAppTicketRequest) =
         inTenant(request.tenantId, request.invitationId) { guest, event, phone ->

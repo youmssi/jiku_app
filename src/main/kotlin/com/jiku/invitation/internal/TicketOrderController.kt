@@ -6,6 +6,7 @@ import com.jiku.tenant.TenantInfo
 import com.jiku.tenant.TenantModuleApi
 import io.jsonwebtoken.Claims
 import jakarta.validation.Valid
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.springframework.http.HttpStatus
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.security.access.prepost.PreAuthorize
@@ -135,6 +136,7 @@ class TicketOrderExpiryJob(
     private val service: TicketOrderService,
 ) {
     @Scheduled(cron = "\${sales.orders.expiry-cron:30 * * * * *}")
+    @SchedulerLock(name = "TicketOrderExpiryJob.sweep")
     fun sweep() {
         val now = Instant.now()
         for (tenantId in orders.expiredTenantIds(now)) {

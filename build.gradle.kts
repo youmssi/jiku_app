@@ -58,6 +58,9 @@ dependencies {
     // no resource-server starter, so nothing is auto-configured.
     implementation("org.springframework.security:spring-security-oauth2-jose")
     implementation("org.apache.commons:commons-csv:1.14.1")
+    // Scheduled jobs run once across several API instances (JIKU-215).
+    implementation("net.javacrumbs.shedlock:shedlock-spring:7.10.1")
+    implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:7.10.1")
     // Error tracking (JIKU-70). Core SDK only — the Spring Boot starter is
     // deliberately avoided so nothing is auto-configured and the reporting path
     // stays behind the ErrorTracker port.

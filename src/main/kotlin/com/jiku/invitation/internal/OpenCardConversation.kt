@@ -5,6 +5,7 @@ import com.jiku.shared.OpenCardButton
 import com.jiku.shared.OpenCardInbound
 import com.jiku.shared.OpenCardReply
 import com.jiku.shared.TenantContext
+import com.jiku.shared.async.Executors
 import com.jiku.tenant.TenantModuleApi
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.event.EventListener
@@ -41,7 +42,7 @@ class OpenCardConversation(
     private val publisher: ApplicationEventPublisher,
     private val properties: OpenInvitationProperties,
 ) {
-    @Async("invitationExecutor")
+    @Async(Executors.URGENT)
     @EventListener
     fun onInbound(message: OpenCardInbound) {
         val button = message.buttonId?.let { CardButton.parse(it) }

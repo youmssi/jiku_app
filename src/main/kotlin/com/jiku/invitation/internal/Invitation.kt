@@ -49,6 +49,10 @@ class Invitation(
     @Column(name = "sent_at")
     var sentAt: Instant? = null
 
+    /** When the invitation was last handed to the sender (JIKU-215), so one lost to a restart is handed over again. */
+    @Column(name = "dispatched_at")
+    var dispatchedAt: Instant? = null
+
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now()
 }

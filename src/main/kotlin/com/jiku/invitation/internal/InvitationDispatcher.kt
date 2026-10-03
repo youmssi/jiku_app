@@ -1,5 +1,6 @@
 package com.jiku.invitation.internal
 
+import com.jiku.shared.async.Executors
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 import java.util.UUID
@@ -14,7 +15,7 @@ class InvitationDispatcher(
     private val invitations: InvitationRepository,
     private val worker: InvitationDispatchWorker,
 ) {
-    @Async("invitationExecutor")
+    @Async(Executors.BULK)
     fun dispatchPending(eventId: UUID) {
         invitations.findByEventIdAndStatus(eventId, InvitationStatus.PENDING).forEach { invitation ->
             worker.process(requireNotNull(invitation.id))

@@ -7,6 +7,7 @@ import com.jiku.shared.EventCancelledEvent
 import com.jiku.shared.GuestInvitedEvent
 import com.jiku.shared.MessageLanguage
 import com.jiku.shared.UsageAllowanceGate
+import com.jiku.shared.async.Executors
 import com.jiku.tenant.TenantModuleApi
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.scheduling.annotation.Async
@@ -40,7 +41,7 @@ class EventCancellationNoticeDispatcher(
     private val allowanceGate: UsageAllowanceGate,
     private val eventPublisher: ApplicationEventPublisher,
 ) {
-    @Async("invitationExecutor")
+    @Async(Executors.BULK)
     @TransactionalEventListener
     fun onEventCancelled(cancelled: EventCancelledEvent) {
         // Cancelling without notifying guests is an organizer choice: tickets are
