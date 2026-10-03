@@ -35,6 +35,16 @@ class ReputationTest {
     }
 
     @Test
+    fun `useSend webhook rejects an unsigned delivery`() {
+        mockMvc
+            .perform(
+                post("/api/v1/notifications/email-feedback/usesend")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"type":"email.bounced","data":{"to":["x@example.com"]}}"""),
+            ).andExpect(status().isUnauthorized())
+    }
+
+    @Test
     fun `repeated hard bounces flag an address as undeliverable on import`() {
         val bounced = "bouncer@example.com"
         // Two hard bounces cross the undeliverable threshold (no prior send needed —
@@ -63,6 +73,7 @@ class ReputationTest {
         mockMvc
             .perform(
                 multipart("/api/v1/events/$eventId/guests/import")
+                    .param("consentAttested", "true")
                     .file(MockMultipartFile("file", "guests.csv", "text/csv", csv.toByteArray()))
                     .header("Authorization", "Bearer $token"),
             ).andExpect(status().isOk())

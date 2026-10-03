@@ -84,6 +84,9 @@ class SecurityConfig(
                 // Invitation ouverte (JIKU-184) : la carte partagée dans les groupes et
                 // la réponse se trouvent par le code de l'invitation, sans compte.
                 it.requestMatchers("${apiProperties.basePath}/open/**").permitAll()
+                // Live stream (JIKU-214): the signed ticket in the query, issued by
+                // the screen's own endpoint after its checks, is the credential.
+                it.requestMatchers(HttpMethod.GET, "${apiProperties.basePath}/live/stream").permitAll()
                 // Console de ligne du jour du personnel (JIKU-88) : le personnel n'a
                 // pas de compte, il est authentifié par le lien signé du comptoir porté
                 // dans le chemin, comme les validateurs sous /checkin.

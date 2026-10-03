@@ -8,6 +8,13 @@ import java.time.Instant
 import java.util.UUID
 
 interface EventRepository : JpaRepository<Event, UUID> {
+    /** First event per organization, across tenants, for the back-office follow-up list (JIKU-202). */
+    @Query(
+        nativeQuery = true,
+        value = "SELECT tenant_id, MIN(created_at) FROM event GROUP BY tenant_id",
+    )
+    fun firstCreatedAtByTenant(): List<Array<Any?>>
+
     /**
      * Les événements avec leurs canaux d'invitation en une passe — la version de
      * [org.springframework.data.jpa.repository.JpaRepository.findAll] pour la

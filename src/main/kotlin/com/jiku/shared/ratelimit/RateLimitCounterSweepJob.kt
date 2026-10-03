@@ -1,5 +1,6 @@
 package com.jiku.shared.ratelimit
 
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Scheduled
@@ -24,6 +25,7 @@ class RateLimitCounterSweepJob(
     private val log = LoggerFactory.getLogger(RateLimitCounterSweepJob::class.java)
 
     @Scheduled(cron = "\${api.rate-limit.sweep-cron:0 */10 * * * *}")
+    @SchedulerLock(name = "RateLimitCounterSweepJob.sweep")
     fun sweep() {
         val removed = counters.deleteExpired(clock.instant())
         if (removed > 0) {

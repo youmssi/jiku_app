@@ -29,6 +29,7 @@ class EmbeddedSignupService(
     private val meta: MetaOnboardingClient,
     private val settings: TenantProviderSettingsService,
     private val objectMapper: ObjectMapper,
+    private val publisher: WhatsAppTemplatePublisher,
 ) {
     private val log = LoggerFactory.getLogger(EmbeddedSignupService::class.java)
     private val random = SecureRandom()
@@ -55,7 +56,15 @@ class EmbeddedSignupService(
                 meta.subscribeApp(wabaId, token)
                 val pin = pin()
                 meta.register(phoneNumberId, token, pin)
-                createTemplates(wabaId, token)
+                val dedicated = properties.meta.dedicatedTemplates
+                if (dedicated) {
+                    publisher
+                        .publishDedicated(wabaId, token)
+                        .filterNot { it.created }
+                        .forEach { log.warn("Template {} ({}) not created in account {}: {}", it.name, it.language, wabaId, it.error) }
+                } else {
+                    createTemplates(wabaId, token)
+                }
                 val number = meta.phoneNumber(phoneNumberId, token)
                 MetaCloudCredentials(
                     phoneNumberId = phoneNumberId,
@@ -65,6 +74,7 @@ class EmbeddedSignupService(
                     buttonsTemplateName = properties.meta.buttonsTemplateName.takeIf { it.isNotBlank() },
                     imageTemplateName = properties.meta.imageTemplateName.takeIf { it.isNotBlank() },
                     wabaId = wabaId,
+                    dedicatedTemplatePrefix = properties.meta.templatePrefix.takeIf { dedicated },
                     displayPhoneNumber = number.displayPhoneNumber,
                     verifiedName = number.verifiedName,
                     pin = pin,

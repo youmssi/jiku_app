@@ -41,6 +41,7 @@ class WhatsAppSendingTest {
         mockMvc
             .perform(
                 multipart("/api/v1/events/$eventId/guests/import")
+                    .param("consentAttested", "true")
                     .file(MockMultipartFile("file", "guests.csv", "text/csv", csv.toByteArray()))
                     .header("Authorization", "Bearer $token"),
             ).andExpect(status().isOk())
@@ -71,6 +72,57 @@ class WhatsAppSendingTest {
                 assertEquals("WHATSAPP", channels.first())
                 assertTrue(statuses.all { it == "SENT" }, "status was $statuses")
             }
+    }
+
+    @Test
+    fun `guests imported without the consent statement are not invited by WhatsApp until the organizer confirms it`() {
+        val token = register("Org Consent", "consent@test.example")
+        val eventId = createEvent(token)
+        val csv =
+            """
+            firstName,lastName,email,phone
+            Grace,Hopper,,+2250700000002
+            """.trimIndent()
+        mockMvc
+            .perform(
+                multipart("/api/v1/events/$eventId/guests/import")
+                    .file(MockMultipartFile("file", "guests.csv", "text/csv", csv.toByteArray()))
+                    .header("Authorization", "Bearer $token"),
+            ).andExpect(status().isOk())
+            .andExpect(jsonPath("$.consentAttested").value(false))
+        mockMvc
+            .perform(get("/api/v1/events/$eventId/guests").header("Authorization", "Bearer $token"))
+            .andExpect(jsonPath("$[0].consentAttested").value(false))
+
+        mockMvc
+            .perform(
+                post("/api/v1/events/$eventId/invitations/send")
+                    .param("channels", "WHATSAPP")
+                    .header("Authorization", "Bearer $token"),
+            ).andExpect(status().isOk())
+        await()
+            .atMost(Duration.ofSeconds(15))
+            .pollInterval(Duration.ofMillis(250))
+            .untilAsserted {
+                val body =
+                    mockMvc
+                        .perform(get("/api/v1/events/$eventId/invitations").header("Authorization", "Bearer $token"))
+                        .andReturn()
+                        .response
+                        .contentAsString
+                assertEquals(listOf("FAILED"), JsonPath.read<List<String>>(body, "$[*].status"))
+            }
+
+        mockMvc
+            .perform(post("/api/v1/events/$eventId/guests/consent-attestation").header("Authorization", "Bearer $token"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.attestedGuests").value(1))
+        mockMvc
+            .perform(get("/api/v1/events/$eventId/guests").header("Authorization", "Bearer $token"))
+            .andExpect(jsonPath("$[0].consentAttested").value(true))
+        mockMvc
+            .perform(post("/api/v1/events/$eventId/guests/consent-attestation").header("Authorization", "Bearer $token"))
+            .andExpect(jsonPath("$.attestedGuests").value(0))
     }
 
     private fun createEvent(token: String): String {

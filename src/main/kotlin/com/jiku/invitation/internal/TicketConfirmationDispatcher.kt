@@ -1,6 +1,7 @@
 package com.jiku.invitation.internal
 
 import com.jiku.catalog.EventModuleApi
+import com.jiku.shared.async.Executors
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
@@ -27,7 +28,7 @@ class TicketConfirmationDispatcher(
     private val notices: TicketNotices,
     private val eventPublisher: ApplicationEventPublisher,
 ) {
-    @Async("invitationExecutor")
+    @Async(Executors.BULK)
     @TransactionalEventListener
     fun onTicketConfirmed(confirmed: TicketConfirmed) {
         val guest = guests.findById(confirmed.guestId).orElse(null) ?: return

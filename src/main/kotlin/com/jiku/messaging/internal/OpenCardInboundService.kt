@@ -79,7 +79,7 @@ class OpenCardInboundService(
         imageUrl: String? = null,
     ) {
         try {
-            cards.sender.send(WhatsAppMessage(to = "+$phone", body = body, buttons = buttons, imageUrl = imageUrl))
+            cards.sender.send(WhatsAppMessage(to = "+$phone", body = body, buttons = buttons, imageUrl = imageUrl, session = true))
         } catch (ex: RuntimeException) {
             log.warn("WhatsApp card answer to {} could not be sent", phone, ex)
         }

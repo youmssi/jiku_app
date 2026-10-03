@@ -1,5 +1,6 @@
 package com.jiku.messaging.internal
 
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -20,6 +21,7 @@ class ReputationMonitorJob(
     private val log = LoggerFactory.getLogger(ReputationMonitorJob::class.java)
 
     @Scheduled(cron = "\${notification.reputation.cron:0 0 * * * *}")
+    @SchedulerLock(name = "ReputationMonitorJob.evaluate")
     fun evaluate() {
         val snapshot = reputationService.platformReputation()
         if (!snapshot.bounceBreach && !snapshot.complaintBreach) {

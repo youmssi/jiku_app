@@ -8,7 +8,9 @@ import com.jiku.shared.PhoneCodeRequested
 import com.jiku.shared.ReminderAllowanceGate
 import com.jiku.shared.ReminderChannel
 import com.jiku.shared.ReminderDue
+import com.jiku.shared.TenantContext
 import com.jiku.shared.TicketConfirmedNotice
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.ZoneId
 import java.util.UUID
@@ -50,7 +52,14 @@ class NotificationService(
     private val threads: WhatsAppThreadRepository,
     private val optOuts: WhatsAppOptOutRepository,
     private val reminderAllowance: ReminderAllowanceGate,
+    private val emailPause: TenantEmailPause,
+    private val templateCalls: WhatsAppTemplateCalls,
+    private val deliveries: WhatsAppDeliveryStatusService,
+    private val whatsAppPause: TenantWhatsAppPause,
+    private val platformLimits: WhatsAppPlatformLimits,
 ) {
+    private val log = LoggerFactory.getLogger(NotificationService::class.java)
+
     fun deliverInvitation(event: GuestInvitedEvent): DeliveryOutcome =
         deliverWithRetry(sendAction(event)) { status, attempt, error ->
             record(event.invitationId, event.channel, event.recipient, status, attempt, error)
@@ -79,21 +88,24 @@ class NotificationService(
         notice: TicketConfirmedNotice,
         invitationId: UUID?,
     ): () -> Unit {
-        val text =
-            whatsAppRenderer.renderTicket(
-                WhatsAppInvitation(
-                    recipientPhone = notice.recipient,
-                    recipientName = notice.recipientName,
-                    eventName = notice.eventName,
-                    eventWhen = notice.eventStart?.let { MessageLanguage.formatEventStart(it, notice.eventTimezone, notice.language) },
-                    organizerName = notice.organizerName,
-                    invitationUrl = notice.ticketUrl,
-                ),
-                notice.language,
+        val ticket =
+            WhatsAppInvitation(
+                recipientPhone = notice.recipient,
+                recipientName = notice.recipientName,
+                eventName = notice.eventName,
+                eventWhen = notice.eventStart?.let { MessageLanguage.formatEventStart(it, notice.eventTimezone, notice.language) },
+                organizerName = notice.organizerName,
+                invitationUrl = notice.ticketUrl,
             )
+        val text = whatsAppRenderer.renderTicket(ticket, notice.language)
         val thread = invitationId?.let { WhatsAppThreadStart(it, notice.tenantId, notice.language) }
         return whatsApp(
-            WhatsAppMessage(to = notice.recipient, body = text, imageUrl = notice.qrImageUrl),
+            WhatsAppMessage(
+                to = notice.recipient,
+                body = text,
+                imageUrl = notice.qrImageUrl,
+                template = notice.qrImageUrl?.let { templateCalls.ticket(ticket, notice.language) },
+            ),
             invitationId ?: notice.guestId,
             notice.eventId,
             thread,
@@ -141,24 +153,30 @@ class NotificationService(
      */
     fun deliverAppointmentReminder(due: ReminderDue): DeliveryOutcome {
         val ownNumber = providers.whatsApp().tenantOverride
+        val language = catalog.language(due.tenantId)
+        val reminder = reminder(due, language)
         return deliverToPhone(
             due.reminderId,
             due.clientPhone,
             due.channel,
-            reminderText(due),
+            whatsAppRenderer.renderAppointmentReminder(reminder, language),
+            templateCalls.reminder(reminder, language),
             whatsAppAllowed = ownNumber || reminderAllowance.canSendWhatsAppReminder(due.tenantId),
             onWhatsAppSent = { if (!ownNumber) reminderAllowance.recordWhatsAppReminder(due.tenantId) },
         )
     }
 
     /** "It's your turn" for a client just called in the line (JIKU-114), by the service's channel. */
-    fun deliverClientCalled(called: ClientCalled): DeliveryOutcome =
-        deliverToPhone(
+    fun deliverClientCalled(called: ClientCalled): DeliveryOutcome {
+        val language = catalog.language(called.tenantId)
+        return deliverToPhone(
             called.ticketId,
             called.clientPhone,
             called.channel,
-            whatsAppRenderer.renderClientCalled(called.clientName.orEmpty(), called.counter, catalog.language(called.tenantId)),
+            whatsAppRenderer.renderClientCalled(called.clientName.orEmpty(), called.counter, language),
+            templateCalls.clientCalled(called.clientName, called.counter, language),
         )
+    }
 
     /** Sends an organization its phone verification code, by SMS so any number receives it. */
     fun deliverPhoneCode(requested: PhoneCodeRequested): DeliveryOutcome =
@@ -167,6 +185,7 @@ class NotificationService(
             requested.phone,
             ReminderChannel.SMS,
             whatsAppRenderer.renderPhoneCode(requested.code, catalog.language(requested.tenantId)),
+            template = null,
         )
 
     /**
@@ -182,6 +201,7 @@ class NotificationService(
         phone: String,
         channel: ReminderChannel,
         text: String,
+        template: WhatsAppTemplateCall?,
         whatsAppAllowed: Boolean = true,
         onWhatsAppSent: () -> Unit = {},
     ): DeliveryOutcome {
@@ -191,7 +211,12 @@ class NotificationService(
                     referenceId,
                     ReminderChannel.WHATSAPP,
                     phone,
-                    whatsApp(WhatsAppMessage(phone, text), referenceId, null),
+                    whatsApp(
+                        WhatsAppMessage(phone, text, template = template),
+                        referenceId,
+                        null,
+                        smsFallback = text.takeIf { channel == ReminderChannel.WHATSAPP_OR_SMS },
+                    ),
                 ).also { if (it.delivered) onWhatsAppSent() }
             } else {
                 record(referenceId, ReminderChannel.WHATSAPP.name, phone, NotificationLog.STATUS_FAILED, 0, FREE_REMINDERS_USED)
@@ -213,22 +238,19 @@ class NotificationService(
         phone: String,
         send: () -> Unit,
     ): DeliveryOutcome =
-        deliverWithRetry(send) { status, attempt, error ->
+        deliverWithRetry(send, backoff = false) { status, attempt, error ->
             record(referenceId, channel.name, phone, status, attempt, error)
         }
 
-    private fun reminderText(due: ReminderDue): String {
-        val language = catalog.language(due.tenantId)
-        return whatsAppRenderer.renderAppointmentReminder(
-            WhatsAppReminder(
-                recipientPhone = due.clientPhone,
-                recipientName = due.clientName.orEmpty(),
-                appointmentWhen = catalog.formatDate(language, "date.reminder", due.startsAt, ZoneId.of(due.serviceTimezone)),
-                professionalName = due.professionalName,
-            ),
-            language,
-        )
-    }
+    private fun reminder(
+        due: ReminderDue,
+        language: String,
+    ) = WhatsAppReminder(
+        recipientPhone = due.clientPhone,
+        recipientName = due.clientName.orEmpty(),
+        appointmentWhen = catalog.formatDate(language, "date.reminder", due.startsAt, ZoneId.of(due.serviceTimezone)),
+        professionalName = due.professionalName,
+    )
 
     /**
      * One WhatsApp send with its guardrails: the recipient's STOP (JIKU-143),
@@ -240,6 +262,8 @@ class NotificationService(
         referenceId: UUID,
         eventId: UUID?,
         thread: WhatsAppThreadStart? = null,
+        smsFallback: String? = null,
+        consentAttested: Boolean = true,
     ): () -> Unit =
         {
             val phone = whatsAppDigits(message.to)
@@ -249,8 +273,19 @@ class NotificationService(
             val resolved = providers.whatsApp()
             val category = contentGuard.classify(message.body)
             contentGuard.assertAllowed(category)
+            if (!resolved.tenantOverride) {
+                if (!consentAttested) {
+                    throw WhatsAppConsentMissingException(
+                        "The organizer has not confirmed that this guest agreed to hear from it: " +
+                            "confirm consent for the event's guests, or invite them by email",
+                    )
+                }
+                whatsAppPause.assertNotPaused(TenantContext.get())
+                platformLimits.assertWithinLimits()
+            }
             conversationCounter.assertWithinBudget(resolved.tenantOverride)
-            resolved.sender.send(message)
+            val wamid = resolved.sender.send(message)
+            wamid?.let { deliveries.record(it, referenceId, message.to, resolved.tenantOverride, thread != null, smsFallback) }
             costTracker.record(referenceId, eventId, resolved.tenantOverride, category)
             thread?.let { threads.save(WhatsAppThread(it.invitationId, it.tenantId, phone, it.language)) }
         }
@@ -258,20 +293,29 @@ class NotificationService(
     private fun email(message: EmailMessage): () -> Unit =
         {
             val resolved = providers.email()
+            if (!resolved.tenantOverride) emailPause.assertNotPaused(TenantContext.get())
             resolved.sender.send(resolved.from, message)
         }
 
     private fun sms(
         to: String,
         text: String,
-    ): () -> Unit = { smsSender.send(SmsMessage(to = to, body = text)) }
+    ): () -> Unit =
+        {
+            val body = SmsText.toGsm7(text)
+            val segments = SmsText.segments(body)
+            if (segments > 1) log.info("SMS takes {} segments ({} characters)", segments, body.length)
+            smsSender.send(SmsMessage(to = to, body = body))
+        }
 
     private fun deliverWithRetry(
         send: () -> Unit,
+        backoff: Boolean = true,
         record: (status: String, attempt: Int, error: String?) -> Unit,
     ): DeliveryOutcome {
         var lastError: String? = null
         for (attempt in 1..sendProperties.maxAttempts) {
+            if (attempt > 1 && backoff) Thread.sleep(sendProperties.backoffBefore(attempt))
             try {
                 send()
                 record(NotificationLog.STATUS_SENT, attempt, null)
@@ -282,6 +326,12 @@ class NotificationService(
                 // in a tight retry that cannot possibly help within milliseconds.
                 record(NotificationLog.STATUS_QUEUED, attempt, ex.message)
                 return DeliveryOutcome(delivered = false, attempts = attempt, error = null, queued = true)
+            } catch (ex: WhatsAppUnavailableException) {
+                // A paused template, a blocked account or a Meta rate limit
+                // clears in hours, not seconds (JIKU-209): queued like a quota,
+                // and a reminder that allows SMS goes by SMS.
+                record(NotificationLog.STATUS_QUEUED, attempt, ex.message)
+                return DeliveryOutcome(delivered = false, attempts = attempt, error = null, queued = true)
             } catch (ex: EmailQuotaExceededException) {
                 // Same reasoning as the WhatsApp quota case above, for the email
                 // routing daily caps (JIKU-62) — queued until tomorrow's reset.
@@ -289,6 +339,20 @@ class NotificationService(
                 return DeliveryOutcome(delivered = false, attempts = attempt, error = null, queued = true)
             } catch (ex: WhatsAppOptedOutException) {
                 // The recipient asked for silence: retrying would only ask again.
+                lastError = ex.message
+                record(NotificationLog.STATUS_FAILED, attempt, lastError)
+                return DeliveryOutcome(delivered = false, attempts = attempt, error = lastError)
+            } catch (ex: TenantEmailPausedException) {
+                // Retrying within seconds cannot lower the bounce rate.
+                lastError = ex.message
+                record(NotificationLog.STATUS_FAILED, attempt, lastError)
+                return DeliveryOutcome(delivered = false, attempts = attempt, error = lastError)
+            } catch (ex: WhatsAppConsentMissingException) {
+                lastError = ex.message
+                record(NotificationLog.STATUS_FAILED, attempt, lastError)
+                return DeliveryOutcome(delivered = false, attempts = attempt, error = lastError)
+            } catch (ex: TenantWhatsAppPausedException) {
+                // Retrying cannot lower the organization's STOP or failure rate (JIKU-211).
                 lastError = ex.message
                 record(NotificationLog.STATUS_FAILED, attempt, lastError)
                 return DeliveryOutcome(delivered = false, attempts = attempt, error = lastError)
@@ -352,24 +416,28 @@ class NotificationService(
             }
 
             GuestInvitedEvent.CHANNEL_WHATSAPP -> {
-                val text =
-                    whatsAppRenderer.renderInvitation(
-                        WhatsAppInvitation(
-                            recipientPhone = event.recipient,
-                            recipientName = event.recipientName,
-                            eventName = event.eventName,
-                            eventWhen = event.eventWhen,
-                            organizerName = event.organizerName,
-                            invitationUrl = event.invitationUrl,
-                        ),
-                        event.language,
+                val invitation =
+                    WhatsAppInvitation(
+                        recipientPhone = event.recipient,
+                        recipientName = event.recipientName,
+                        eventName = event.eventName,
+                        eventWhen = event.eventWhen,
+                        organizerName = event.organizerName,
+                        invitationUrl = event.invitationUrl,
                     )
+                val text = whatsAppRenderer.renderInvitation(invitation, event.language)
                 val buttons = if (event.interactive) replyButtons(event.invitationId, event.language) else emptyList()
                 whatsApp(
-                    WhatsAppMessage(to = event.recipient, body = text, buttons = buttons),
+                    WhatsAppMessage(
+                        to = event.recipient,
+                        body = text,
+                        buttons = buttons,
+                        template = templateCalls.invitation(invitation, event.language, withButtons = buttons.isNotEmpty()),
+                    ),
                     event.invitationId,
                     event.eventId,
                     WhatsAppThreadStart(event.invitationId, event.tenantId, event.language),
+                    consentAttested = event.consentAttested,
                 )
             }
 
@@ -414,18 +482,20 @@ class NotificationService(
             }
 
             GuestInvitedEvent.CHANNEL_WHATSAPP -> {
-                val text =
-                    whatsAppRenderer.renderCancellation(
-                        WhatsAppCancellation(
-                            recipientPhone = notice.recipient,
-                            recipientName = notice.recipientName,
-                            eventName = notice.eventName,
-                            eventWhen = notice.eventWhen,
-                            organizerName = notice.organizerName,
-                        ),
-                        notice.language,
+                val cancellation =
+                    WhatsAppCancellation(
+                        recipientPhone = notice.recipient,
+                        recipientName = notice.recipientName,
+                        eventName = notice.eventName,
+                        eventWhen = notice.eventWhen,
+                        organizerName = notice.organizerName,
                     )
-                whatsApp(WhatsAppMessage(notice.recipient, text), notice.invitationId, notice.eventId)
+                val text = whatsAppRenderer.renderCancellation(cancellation, notice.language)
+                whatsApp(
+                    WhatsAppMessage(notice.recipient, text, template = templateCalls.cancellation(cancellation, notice.language)),
+                    notice.invitationId,
+                    notice.eventId,
+                )
             }
 
             else -> throw IllegalArgumentException("Unsupported channel: ${notice.channel}")

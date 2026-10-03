@@ -11,12 +11,14 @@ import com.jiku.messaging.internal.WhatsAppPricing
 import com.jiku.messaging.internal.WhatsAppProperties
 import com.jiku.shared.GuestInvitedEvent
 import com.jiku.shared.TenantContext
+import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Import
+import java.time.Duration
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -85,6 +87,8 @@ class WhatsAppGuardrailsTest {
                 invitationUrl = "http://localhost:3000/invitation/abc",
             ),
         )
+        // Delivery runs in the background (JIKU-215): wait for its audit row.
+        await().pollInSameThread().atMost(Duration.ofSeconds(10)).until { logs.findByReferenceId(invitationId).isNotEmpty() }
     }
 
     @Test

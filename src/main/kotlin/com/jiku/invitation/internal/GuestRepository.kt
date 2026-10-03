@@ -7,6 +7,13 @@ import java.time.Instant
 import java.util.UUID
 
 interface GuestRepository : JpaRepository<Guest, UUID> {
+    /** First guest per organization, across tenants, for the back-office follow-up list (JIKU-202). */
+    @Query(
+        nativeQuery = true,
+        value = "SELECT tenant_id, MIN(created_at) FROM guest GROUP BY tenant_id",
+    )
+    fun firstCreatedAtByTenant(): List<Array<Any?>>
+
     fun findByEventId(eventId: UUID): List<Guest>
 
     /** The guests holding the tickets of a paid order (JIKU-177). */

@@ -10,7 +10,10 @@ import com.jiku.money.BillingTierOption
 import com.jiku.money.PlatformBillingSettingsUpdate
 import com.jiku.money.PlatformBillingSettingsView
 import com.jiku.money.PriceList
+import com.jiku.shared.TenantMilestones
+import com.jiku.shared.tenantMilestones
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 import java.util.UUID
 
@@ -28,6 +31,8 @@ class BillingModuleApiService(
     private val invoiceService: InvoiceService,
     private val platformSettings: PlatformBillingSettingsService,
     private val properties: BillingProperties,
+    private val payments: PaymentRepository,
+    private val trialGrants: TrialGrantRepository,
 ) : BillingModuleApi {
     override fun allowance(eventId: UUID): BillingAllowance = usageService.allowance(eventId)
 
@@ -85,4 +90,10 @@ class BillingModuleApiService(
         update: PlatformBillingSettingsUpdate,
         updatedBy: String?,
     ): PlatformBillingSettingsView = platformSettings.update(update, updatedBy)
+
+    @Transactional(readOnly = true)
+    override fun adminFirstPaymentAt(): TenantMilestones = tenantMilestones(payments.firstSucceededAtByTenant())
+
+    @Transactional(readOnly = true)
+    override fun adminActiveTrialEnds(): TenantMilestones = tenantMilestones(trialGrants.activeTrialEndByTenant())
 }

@@ -1,5 +1,6 @@
 package com.jiku.money
 
+import com.jiku.shared.TenantMilestones
 import java.time.Instant
 import java.util.UUID
 
@@ -102,6 +103,12 @@ interface BillingModuleApi {
         update: PlatformBillingSettingsUpdate,
         updatedBy: String?,
     ): PlatformBillingSettingsView
+
+    /** When each organization's first payment succeeded, across tenants (JIKU-202, back-office follow-up). */
+    fun adminFirstPaymentAt(): TenantMilestones
+
+    /** Each organization's earliest active trial end, across tenants (JIKU-202, back-office follow-up). */
+    fun adminActiveTrialEnds(): TenantMilestones
 }
 
 /** One configured fixed-price tier: what it costs and how many guests it unlocks. */

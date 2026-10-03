@@ -27,6 +27,9 @@ class ProspectLeadTest {
     @Autowired
     lateinit var mockMvc: MockMvc
 
+    @Autowired
+    lateinit var jdbc: org.springframework.jdbc.core.JdbcTemplate
+
     private fun phone() = "+2246${(1000000..9999999).random()}"
 
     private fun body(
@@ -44,6 +47,27 @@ class ProspectLeadTest {
             .perform(post("/api/v1/prospects").contentType(MediaType.APPLICATION_JSON).content(body(phone())))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").isNotEmpty())
+    }
+
+    @Test
+    fun `l'accord marketing n'est enregistré que si la case est cochée`() {
+        val sans = phone()
+        val avec = phone()
+        mockMvc
+            .perform(post("/api/v1/prospects").contentType(MediaType.APPLICATION_JSON).content(body(sans)))
+            .andExpect(status().isCreated())
+        mockMvc
+            .perform(
+                post("/api/v1/prospects")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(body(avec).replace("}", ""","marketingConsent":true,"marketingConsentVersion":"2026-10-02"}""")),
+            ).andExpect(status().isCreated())
+
+        val query = "SELECT marketing_consent, marketing_consent_source FROM prospect_lead WHERE phone = ?"
+        val refus = jdbc.queryForMap(query, sans)
+        val accord = jdbc.queryForMap(query, avec)
+        assert(refus["marketing_consent"] == false && refus["marketing_consent_source"] == null)
+        assert(accord["marketing_consent"] == true && accord["marketing_consent_source"] == "prospect")
     }
 
     @Test

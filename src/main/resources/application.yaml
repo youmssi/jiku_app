@@ -1,11 +1,44 @@
 jiku:
+  # Background executors (JIKU-215): threads for volume work (invitation
+  # batches, tickets, cancellations, reminders) and the cap on urgent work
+  # running at once ("your turn", phone codes, chat answers).
+  async:
+    bulk-threads: ${ASYNC_BULK_THREADS:8}
+    urgent-concurrency: ${ASYNC_URGENT_CONCURRENCY:64}
+  # Live updates (JIKU-214): screens left open (event dashboard, day line, a
+  # client's place) follow a stream that says "this changed" and reload.
+  live:
+    ticket-ttl: ${LIVE_TICKET_TTL:12h}
+    stream-timeout: ${LIVE_STREAM_TIMEOUT:30m}
+    coalesce: ${LIVE_COALESCE:500ms}
+    heartbeat: ${LIVE_HEARTBEAT:25s}
+    max-streams: ${LIVE_MAX_STREAMS:2000}
+  messaging:
+    # How long an organization's pause and verification status are kept in
+    # memory between sends (JIKU-216); 0s asks the database on every send.
+    check-cache-ttl: ${MESSAGING_CHECK_CACHE_TTL:60s}
+    # Sending records (attempts, WhatsApp messages and threads, soft bounces,
+    # daily counters) older than this are deleted nightly (JIKU-216); 0 keeps
+    # them. Hard bounces, complaints, costs and STOPs are always kept.
+    retention:
+      days: ${MESSAGING_RETENTION_DAYS:180}
+      batch-size: ${MESSAGING_RETENTION_BATCH_SIZE:5000}
+      cron: ${MESSAGING_RETENTION_CRON:0 45 3 * * *}
   mail:
     # Email delivery transport: log (default — records sends without delivering,
     # so a fresh clone works with zero setup), smtp (Mailpit from docker-compose
-    # locally, or any SMTP relay), resend (production HTTPS API; Render blocks
-    # outbound SMTP), brevo (standalone Brevo transactional API), or routing
-    # (Resend first, Brevo fallback once Resend's daily cap is hit — JIKU-62).
+    # locally, or any SMTP relay), usesend (production: useSend on AWS SES,
+    # ADR 107), resend (Resend HTTPS API), brevo (standalone Brevo transactional
+    # API), or routing (Resend first, Brevo fallback once Resend's daily cap is
+    # hit — JIKU-62).
     transport: ${MAIL_TRANSPORT:log}
+    # With transport=log, how long each send takes, to imitate a provider in a
+    # load test (JIKU-216). Leave at 0ms otherwise.
+    log-latency: ${MAIL_LOG_LATENCY:0ms}
+    usesend:
+      api-key: ${USESEND_API_KEY:}
+      # useSend cloud by default; a self-hosted instance's URL ends in /api.
+      base-url: ${USESEND_BASE_URL:https://app.usesend.com/api}
     resend:
       api-key: ${RESEND_API_KEY:}
       base-url: ${RESEND_BASE_URL:https://api.resend.com}
@@ -32,7 +65,12 @@ jiku:
       # number id, under the same app and token. Blank keeps the card
       # conversation off; cards are then answered on their web page only.
       cards-phone-number-id: ${WHATSAPP_META_CARDS_PHONE_NUMBER_ID:}
-      base-url: ${WHATSAPP_META_BASE_URL:https://graph.facebook.com/v21.0}
+      base-url: ${WHATSAPP_META_BASE_URL:https://graph.facebook.com/v25.0}
+      # One approved template per use (JIKU-210), named <prefix><kind> in French
+      # and English; POST /admin/whatsapp/templates creates them in the
+      # platform account. Off, the single templates below are used instead.
+      dedicated-templates: ${WHATSAPP_META_DEDICATED_TEMPLATES:true}
+      template-prefix: ${WHATSAPP_META_TEMPLATE_PREFIX:jiku_}
       # Approved template for business-initiated sends; blank sends plain text
       # (only reaches recipients inside the 24h customer-service window).
       template-name: ${WHATSAPP_META_TEMPLATE_NAME:}
@@ -53,10 +91,33 @@ jiku:
       # secret above also exchanges the signup code. Blank keeps it off.
       app-id: ${WHATSAPP_META_APP_ID:}
       embedded-signup-config-id: ${WHATSAPP_META_EMBEDDED_SIGNUP_CONFIG_ID:}
+      # The WhatsApp Business Account of the platform number (JIKU-209), so a
+      # template Meta pauses is no longer used. Blank skips that check.
+      business-account-id: ${WHATSAPP_META_BUSINESS_ACCOUNT_ID:}
     # Cost/quota/category guardrails (JIKU-61).
     conversation-safety-threshold: ${WHATSAPP_CONVERSATION_SAFETY_THRESHOLD:220}
     usd-to-gnf-rate: ${WHATSAPP_USD_TO_GNF_RATE:8760}
     marketing-markers: ${WHATSAPP_MARKETING_MARKERS:promo,réduction,solde,gratuit,offre spéciale,cadeau,bon plan,code promo,achetez maintenant}
+    # What Meta reports about templates and numbers (JIKU-209): a paused
+    # template is left alone this long, and one Meta moves to MARKETING is no
+    # longer used.
+    # An organization whose guests keep writing STOP, or whose messages Meta
+    # cannot deliver, is paused on the Jikū number (JIKU-211): rates over a
+    # rolling window, once it sent MIN_SAMPLE messages; 0 turns a rate off.
+    # What one organization may send through the Jikū number (JIKU-212): a few
+    # messages a day until the team verifies it, and past a 30-day volume it
+    # connects its own number. 0 turns a limit off.
+    limits:
+      unverified-daily: ${WHATSAPP_LIMIT_UNVERIFIED_DAILY:50}
+      monthly-before-own-number: ${WHATSAPP_LIMIT_MONTHLY_BEFORE_OWN_NUMBER:500}
+    reputation:
+      window-days: ${WHATSAPP_REPUTATION_WINDOW_DAYS:7}
+      min-sample: ${WHATSAPP_REPUTATION_MIN_SAMPLE:50}
+      stop-rate: ${WHATSAPP_REPUTATION_STOP_RATE:0.02}
+      failure-rate: ${WHATSAPP_REPUTATION_FAILURE_RATE:0.2}
+    health:
+      pause-hours: ${WHATSAPP_TEMPLATE_PAUSE_HOURS:3}
+      block-marketing-templates: ${WHATSAPP_BLOCK_MARKETING_TEMPLATES:true}
   sms:
     # SMS delivery transport (JIKU-112): log (default — records sends without
     # delivering) or nimba (Nimba SMS, with the credentials below).
@@ -93,6 +154,20 @@ logging:
     correlation: "[%X{requestId:-}] [%X{tenantId:-}] "
 
 spring:
+  # Requests, scheduled jobs and the default task executor run on virtual
+  # threads (JIKU-216): a request waiting on Meta, the email provider or the
+  # database no longer holds one of Tomcat's 200 threads. The database pool
+  # (DATABASE_POOL_SIZE) stays the limit on concurrent queries.
+  threads:
+    virtual:
+      enabled: ${VIRTUAL_THREADS_ENABLED:true}
+  # Scheduled jobs no longer wait for each other (JIKU-215): the retention
+  # purge at night would otherwise hold up the reminder sweep. Used only when
+  # virtual threads are off; with them, each job runs on its own thread.
+  task:
+    scheduling:
+      pool:
+        size: ${SCHEDULING_POOL_SIZE:4}
   config:
     import: optional:file:.env[.properties]
   application:
@@ -348,6 +423,32 @@ management:
         http.server.requests: true
       slo:
         http.server.requests: 100ms,250ms,500ms,1s,2s
+  # Traces and metrics over OTLP to an external backend such as Grafana Cloud
+  # (ADR 107): monitoring lives off the server it watches. Both exports stay off
+  # until their endpoint is configured; the Authorization header carries the
+  # backend's credentials (e.g. "Basic <base64 instance:token>").
+  tracing:
+    export:
+      enabled: ${OBSERVABILITY_OTLP_TRACES_ENABLED:false}
+    sampling:
+      probability: ${OBSERVABILITY_OTLP_TRACES_SAMPLING:0.1}
+  opentelemetry:
+    resource-attributes:
+      service.name: jiku-api
+      deployment.environment: ${OBSERVABILITY_ENVIRONMENT:local}
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OBSERVABILITY_OTLP_TRACES_ENDPOINT:}
+          headers:
+            Authorization: ${OBSERVABILITY_OTLP_AUTHORIZATION:}
+  otlp:
+    metrics:
+      export:
+        enabled: ${OBSERVABILITY_OTLP_METRICS_ENABLED:false}
+        url: ${OBSERVABILITY_OTLP_METRICS_ENDPOINT:http://localhost:4318/v1/metrics}
+        headers:
+          Authorization: ${OBSERVABILITY_OTLP_AUTHORIZATION:}
 admin:
   agreements:
     # Daily sweep marking past-end enterprise agreements EXPIRED (JIKU-43).
@@ -461,6 +562,9 @@ invitation:
   # the WhatsApp conversation window, JIKU-61, or the email routing quota,
   # JIKU-62) are retried.
   queue-sweep-cron: ${INVITATION_QUEUE_SWEEP_CRON:0 */15 * * * *}
+  # An invitation still PENDING this long after it was handed to the sender
+  # was lost by a restart and is handed over again by the sweep (JIKU-215).
+  stale-pending-minutes: ${INVITATION_STALE_PENDING_MINUTES:30}
 
 catalog:
   operator-link:
@@ -500,6 +604,12 @@ catalog:
     walk-ins-allowed: ${CATALOG_SERVICE_WALK_INS_ALLOWED:true}
 
 notification:
+  # Daily ceilings on the platform's message costs (ADR 107); 0 turns one off.
+  # Yesterday's figures are checked each morning and an ops alert goes to the
+  # sales/ops mailbox when a ceiling is exceeded.
+  spend-alert:
+    whatsapp-daily-usd: ${MESSAGING_DAILY_WHATSAPP_USD_ALERT:0}
+    sms-daily-count: ${MESSAGING_DAILY_SMS_COUNT_ALERT:0}
   sales:
     # Mailbox notified of new manual activation requests (JIKU-41); blank keeps
     # requests visible only in the admin payments desk.
@@ -514,18 +624,29 @@ notification:
   send:
     # Delivery attempts before a notification is recorded as permanently failed.
     max-attempts: ${NOTIFICATION_MAX_ATTEMPTS:3}
+    # Wait before each new attempt, in milliseconds (JIKU-215); messages that
+    # fall back to SMS retry at once.
+    retry-backoff-ms: ${NOTIFICATION_RETRY_BACKOFF_MS:2000,8000}
   reputation:
     # Shared secret the email provider must present on the feedback webhook.
     webhook-secret: ${NOTIFICATION_WEBHOOK_SECRET:local-development-webhook-secret}
     # Svix signing secret (whsec_…) from the Resend webhook configuration; the
     # Resend-specific endpoint rejects everything until this is set.
     resend-webhook-secret: ${RESEND_WEBHOOK_SECRET:}
-    # Rolling window and alert thresholds (industry guidance: well under 5% bounce,
-    # under 0.5% complaint). Optional ops address emailed when a threshold breaks.
+    # Signing secret of the useSend webhook; the useSend-specific endpoint rejects
+    # everything until this is set (ADR 107).
+    usesend-webhook-secret: ${USESEND_WEBHOOK_SECRET:}
+    # Rolling window and alert thresholds, kept below AWS SES's own review limits
+    # (5% bounce, 0.1% complaint) because SES judges the whole account (ADR 107).
+    # Optional ops address emailed when a threshold breaks.
     window-hours: ${NOTIFICATION_REPUTATION_WINDOW_HOURS:24}
-    bounce-rate-threshold: ${NOTIFICATION_BOUNCE_RATE_THRESHOLD:0.05}
-    complaint-rate-threshold: ${NOTIFICATION_COMPLAINT_RATE_THRESHOLD:0.005}
+    bounce-rate-threshold: ${NOTIFICATION_BOUNCE_RATE_THRESHOLD:0.02}
+    complaint-rate-threshold: ${NOTIFICATION_COMPLAINT_RATE_THRESHOLD:0.0008}
     undeliverable-hard-bounces: ${NOTIFICATION_UNDELIVERABLE_HARD_BOUNCES:2}
+    # Hard-bounce rate above which one organization's platform email is paused
+    # until its bounces leave the window (JIKU-207); 0 turns it off.
+    tenant-pause-bounce-rate: ${NOTIFICATION_TENANT_PAUSE_BOUNCE_RATE:0.04}
+    tenant-pause-min-sample: ${NOTIFICATION_TENANT_PAUSE_MIN_SAMPLE:50}
     ops-alert-email: ${NOTIFICATION_OPS_ALERT_EMAIL:}
 
 # Verification des organisations (JIKU-175, référentiel métier §9).

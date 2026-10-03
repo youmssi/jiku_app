@@ -2,6 +2,7 @@ package com.jiku.messaging.internal
 
 import com.jiku.shared.ClientCalled
 import com.jiku.shared.TenantContext
+import com.jiku.shared.async.Executors
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 import org.springframework.transaction.event.TransactionalEventListener
@@ -15,7 +16,7 @@ import org.springframework.transaction.event.TransactionalEventListener
 class ClientCalledListener(
     private val notificationService: NotificationService,
 ) {
-    @Async("invitationExecutor")
+    @Async(Executors.URGENT)
     @TransactionalEventListener
     fun on(called: ClientCalled) {
         TenantContext.withTenant(called.tenantId) { notificationService.deliverClientCalled(called) }

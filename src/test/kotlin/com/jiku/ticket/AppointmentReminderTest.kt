@@ -25,6 +25,7 @@ import com.jiku.ticket.internal.ReminderStatus
 import com.jiku.ticket.internal.TicketKind
 import com.jiku.ticket.internal.TicketRepository
 import com.jiku.ticket.internal.TicketStatus
+import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,6 +38,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delet
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalTime
 import java.util.UUID
@@ -117,15 +119,18 @@ class AppointmentReminderTest {
         sweep.sweepService(serviceId, "WHATSAPP", "120", "reminder-once", "Africa/Conakry", now)
         sweep.sweepService(serviceId, "WHATSAPP", "120", "reminder-once", "Africa/Conakry", now)
 
-        val rows = reminders.findAll()
-        assertEquals(1, rows.size, "un seul rappel réservé pour (billet, décalage)")
-        val row = rows.single()
-        assertEquals(ReminderStatus.SENT, row.status)
-        assertEquals(1, row.attempts)
+        // L'envoi part en tâche de fond (JIKU-215).
+        await().pollInSameThread().atMost(Duration.ofSeconds(10)).untilAsserted {
+            val rows = reminders.findAll()
+            assertEquals(1, rows.size, "un seul rappel réservé pour (billet, décalage)")
+            val row = rows.single()
+            assertEquals(ReminderStatus.SENT, row.status)
+            assertEquals(1, row.attempts)
 
-        val sent =
-            logs.findByReferenceId(requireNotNull(row.id)).count { it.status == NotificationLog.STATUS_SENT }
-        assertEquals(1, sent, "un seul envoi journalisé malgré deux exécutions")
+            val sent =
+                logs.findByReferenceId(requireNotNull(row.id)).count { it.status == NotificationLog.STATUS_SENT }
+            assertEquals(1, sent, "un seul envoi journalisé malgré deux exécutions")
+        }
     }
 
     @Test

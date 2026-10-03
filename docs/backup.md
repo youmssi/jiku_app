@@ -1,5 +1,11 @@
 # Database backups
 
+> **Since ADR 107** the production database runs on the server, with WAL-G
+> shipping its WAL continuously and a full base backup nightly to Cloudflare R2
+> (`docker-compose.vps.yml`, `deploy/postgres/`). Restore steps are in
+> `docs/runbooks/database-restore.md`. The Neon notes below apply until the
+> cutover (`docs/deploy-vps.md`, step 7).
+
 **Primary mechanism:** Neon, the managed Postgres host used in production,
 takes continuous backups and offers point-in-time recovery on its own — this is
 already true with zero additional configuration on our side. For most incidents

@@ -7,7 +7,14 @@ import org.springframework.data.repository.query.Param
 import java.time.Instant
 import java.util.UUID
 
-interface ServiceRepository : JpaRepository<Service, UUID>
+interface ServiceRepository : JpaRepository<Service, UUID> {
+    /** First service per organization, across tenants, for the back-office follow-up list (JIKU-202). */
+    @Query(
+        nativeQuery = true,
+        value = "SELECT tenant_id, MIN(created_at) FROM service GROUP BY tenant_id",
+    )
+    fun firstCreatedAtByTenant(): List<Array<Any?>>
+}
 
 interface ServiceRequirementRepository : JpaRepository<ServiceRequirement, UUID> {
     fun findByServiceId(serviceId: UUID): List<ServiceRequirement>

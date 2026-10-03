@@ -28,8 +28,9 @@ class MessagingProviderResolver(
     private val platformWhatsAppSender: WhatsAppSender,
     private val emailProperties: NotificationEmailProperties,
     private val ownNumberGate: OwnWhatsAppNumberGate,
+    private val templateGate: WhatsAppTemplateGate,
     @Value("\${jiku.mail.resend.base-url:https://api.resend.com}") private val resendBaseUrl: String,
-    @Value("\${jiku.whatsapp.meta.base-url:https://graph.facebook.com/v21.0}") private val metaBaseUrl: String,
+    @Value("\${jiku.whatsapp.meta.base-url:https://graph.facebook.com/v25.0}") private val metaBaseUrl: String,
 ) {
     data class ResolvedEmail(
         val sender: EmailSender,
@@ -93,6 +94,9 @@ class MessagingProviderResolver(
                         templateLanguage = credentials.templateLanguage,
                         buttonsTemplateName = credentials.buttonsTemplateName?.takeIf { it.isNotBlank() },
                         imageTemplateName = credentials.imageTemplateName?.takeIf { it.isNotBlank() },
+                        wabaId = credentials.wabaId?.takeIf { it.isNotBlank() },
+                        gate = templateGate,
+                        templatePrefix = credentials.dedicatedTemplatePrefix?.takeIf { it.isNotBlank() },
                     )
                 CacheEntry(row.credentials, sender, from = null)
             }

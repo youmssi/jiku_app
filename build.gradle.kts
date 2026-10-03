@@ -19,6 +19,13 @@ extra["springModulithVersion"] = "2.1.1"
 // fails the build if the managed version is vulnerable again.
 extra["tomcat.version"] = "11.0.26"
 
+// Spring Boot 4.1.1 manages Jackson 3.1.5 and 2.21.5, which carry denial-of-service
+// and deserialization CVEs (CVE-2026-68497, CVE-2026-89407, CVE-2026-89425,
+// CVE-2026-91776, CVE-2026-91777) fixed in 3.1.7 and 2.21.7. Drop these overrides
+// once a Boot release manages fixed versions.
+extra["jackson-bom.version"] = "3.1.7"
+extra["jackson-2-bom.version"] = "2.21.7"
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(25)
@@ -40,6 +47,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     implementation("io.micrometer:micrometer-registry-prometheus")
+    // Traces and metrics over OTLP (ADR 107); export stays off until an endpoint is configured.
+    implementation("org.springframework.boot:spring-boot-starter-opentelemetry")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
     implementation("org.flywaydb:flyway-database-postgresql")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -49,6 +58,11 @@ dependencies {
     // no resource-server starter, so nothing is auto-configured.
     implementation("org.springframework.security:spring-security-oauth2-jose")
     implementation("org.apache.commons:commons-csv:1.14.1")
+    // Per-organization answers each send checks, kept a short while (JIKU-216).
+    implementation("com.github.ben-manes.caffeine:caffeine")
+    // Scheduled jobs run once across several API instances (JIKU-215).
+    implementation("net.javacrumbs.shedlock:shedlock-spring:7.10.1")
+    implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:7.10.1")
     // Error tracking (JIKU-70). Core SDK only — the Spring Boot starter is
     // deliberately avoided so nothing is auto-configured and the reporting path
     // stays behind the ErrorTracker port.

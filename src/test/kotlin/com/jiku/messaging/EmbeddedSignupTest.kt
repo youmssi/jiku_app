@@ -2,6 +2,7 @@ package com.jiku.messaging
 
 import com.jiku.TestcontainersConfiguration
 import com.jiku.messaging.internal.MetaWebhookSignature
+import com.jiku.messaging.internal.WhatsAppTemplateKind
 import com.jiku.money.internal.OwnWhatsAppNumberService
 import com.jiku.shared.TenantContext
 import com.jiku.support.OrganizerApi
@@ -100,13 +101,18 @@ class EmbeddedSignupTest {
         val register = calls.single { it.path == "/$phoneNumberId/register" }
         assertTrue(Regex("\"pin\":\"\\d{6}\"").containsMatchIn(register.body), register.body)
         val templates = calls.filter { it.path == "/waba-1/message_templates" }
-        assertEquals(
-            listOf("jiku_message", "jiku_invitation", "jiku_ticket"),
+        val created =
             templates.map {
-                Regex("\"name\":\"(\\w+)\"").find(it.body)!!.groupValues[1]
-            },
+                Regex("\"name\":\"(\\w+)\"").find(it.body)!!.groupValues[1] + ":" +
+                    Regex("\"language\":\"(\\w+)\"").find(it.body)!!.groupValues[1]
+            }
+        assertEquals(
+            WhatsAppTemplateKind.entries.flatMap { listOf("jiku_${it.key}:fr", "jiku_${it.key}:en") },
+            created,
         )
-        assertTrue("\"header_handle\":[\"HANDLE-1\"]" in templates.last().body, templates.last().body)
+        assertTrue(templates.all { "\"category\":\"UTILITY\"" in it.body })
+        val ticket = templates.first { "jiku_ticket_v1" in it.body }
+        assertTrue("\"header_handle\":[\"HANDLE-1\"]" in ticket.body, ticket.body)
     }
 
     @Test

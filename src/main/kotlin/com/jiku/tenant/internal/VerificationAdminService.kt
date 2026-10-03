@@ -3,6 +3,7 @@ package com.jiku.tenant.internal
 import com.jiku.shared.TenantContext
 import com.jiku.tenant.AdminVerificationView
 import com.jiku.tenant.VerificationDocumentLink
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.springframework.http.HttpStatus
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -141,6 +142,7 @@ class VerificationDocumentPurgeJob(
     private val properties: VerificationProperties,
 ) {
     @Scheduled(cron = "\${verification.purge-cron:0 30 3 * * *}")
+    @SchedulerLock(name = "VerificationAdminService.purge")
     fun purge() {
         val now = Instant.now()
         admin.purgeExpired(before = now.minus(properties.documentRetention), now = now)

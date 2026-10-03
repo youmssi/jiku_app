@@ -1,6 +1,7 @@
 package com.jiku.ticket.internal
 
 import com.jiku.shared.ClientCharge
+import com.jiku.shared.LiveChanged
 import com.jiku.ticket.AttendanceStats
 import com.jiku.ticket.CheckInOutcome
 import com.jiku.ticket.CheckInResult
@@ -14,6 +15,7 @@ import com.jiku.ticket.TicketPaymentResult
 import com.jiku.ticket.TicketPaymentStatus
 import com.jiku.ticket.TicketingModuleApi
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -27,6 +29,7 @@ class TicketingService(
     private val codeGenerator: TicketCodeGenerator,
     private val rankAllocator: TicketDayRankAllocator,
     private val rankCounters: TicketDayCounterRepository,
+    private val events: ApplicationEventPublisher,
 ) : TicketingModuleApi {
     private val log = LoggerFactory.getLogger(TicketingService::class.java)
 
@@ -138,6 +141,7 @@ class TicketingService(
         val ticketId = requireNotNull(ticket.id)
         // Claim the check-in with the device's scan time as the recorded moment.
         if (tickets.checkIn(ticketId, scannedAt, checkedInBy) == 1) {
+            changed(ticket)
             return CheckInResult(
                 outcome = CheckInOutcome.CHECKED_IN,
                 ticket = tickets.findById(ticketId).get().toInfo(),
@@ -151,6 +155,7 @@ class TicketingService(
         }
         // Already checked in: the earliest scan owns the record (first-timestamp-wins).
         if (tickets.reassignEarlierCheckIn(ticketId, scannedAt, checkedInBy) == 1) {
+            changed(ticket)
             val owned = tickets.findById(ticketId).get()
             return CheckInResult(CheckInOutcome.CHECKED_IN, owned.toInfo(), owned.checkedInAt, owned.checkedInBy)
         }
@@ -212,6 +217,7 @@ class TicketingService(
             // La transition a vidé le contexte : on relit pour rendre la personne
             // telle qu'elle est maintenant (APPELÉ), pas la photo prise avant.
             if (tickets.callLine(requireNotNull(claimed.id), serviceId, counter) == 1) {
+                changed(claimed)
                 return tickets.findById(requireNotNull(claimed.id)).orElse(claimed).toLine()
             }
         }
@@ -248,6 +254,7 @@ class TicketingService(
         val ticketId = requireNotNull(ticket.id)
         if (tickets.startWait(ticketId, serviceId, at) == 1) {
             tickets.assignDayRank(ticketId, allocateDayRank(serviceId, rankDay))
+            changed(ticket)
             return LineActionResult(LineOutcome.OK, reload(serviceId, ticketCode))
         }
         return LineActionResult(LineOutcome.WRONG_STATE, reload(serviceId, ticketCode))
@@ -325,6 +332,7 @@ class TicketingService(
         val ticketId = requireNotNull(ticket.id)
         val outcome =
             if (tickets.markPaid(ticketId, Instant.now(), paidBy, method) == 1) {
+                changed(ticket)
                 TicketPaymentOutcome.PAID
             } else {
                 TicketPaymentOutcome.NOT_DUE
@@ -369,6 +377,7 @@ class TicketingService(
             return LineActionResult(LineOutcome.WRONG_STATE, ticket.toLine())
         }
         val updated = step(requireNotNull(ticket.id)) == 1
+        if (updated) changed(ticket)
         return LineActionResult(
             outcome = if (updated) LineOutcome.OK else LineOutcome.WRONG_STATE,
             ticket = reload(serviceId, ticketCode),
@@ -384,6 +393,9 @@ class TicketingService(
         return ticket?.takeIf { it.belongsToLineOf(serviceId) }?.toLine()
     }
 
+    /** Screens following this ticket's event or line reload (JIKU-214): bulk updates bypass the entity listener. */
+    private fun changed(ticket: Ticket) = events.publishEvent(LiveChanged(ticket.liveTopics()))
+
     private fun Ticket.belongsToLineOf(serviceId: UUID): Boolean = kind in LINE_KINDS && this.serviceId == serviceId
 
     private fun checkIn(
@@ -394,6 +406,7 @@ class TicketingService(
         val ticketId = requireNotNull(ticket.id)
         val now = Instant.now()
         if (tickets.checkIn(ticketId, now, checkedInBy) == 1) {
+            changed(ticket)
             return CheckInResult(
                 outcome = CheckInOutcome.CHECKED_IN,
                 ticket = tickets.findById(ticketId).get().toInfo(),

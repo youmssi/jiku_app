@@ -1,5 +1,6 @@
 package com.jiku.messaging
 
+import com.jiku.shared.TenantMilestones
 import java.time.Instant
 import java.util.UUID
 
@@ -39,6 +40,9 @@ interface NotificationModuleApi {
 
     /** WhatsApp delivery cost for one event (current tenant), aggregated across every send. */
     fun eventWhatsAppCost(eventId: UUID): WhatsAppEventCost
+
+    /** When each organization first delivered a message, across tenants (JIKU-202, back-office follow-up). */
+    fun adminFirstSendAt(): TenantMilestones
 }
 
 data class DeliverabilityInfo(

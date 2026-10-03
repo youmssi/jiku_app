@@ -30,6 +30,7 @@ class WhatsAppInboundService(
     private val providers: MessagingProviderResolver,
     private val catalog: MessageCatalog,
     private val events: ApplicationEventPublisher,
+    private val sentMessages: WhatsAppSentMessageRepository,
 ) {
     private val log = LoggerFactory.getLogger(WhatsAppInboundService::class.java)
 
@@ -86,7 +87,8 @@ class WhatsAppInboundService(
             optOuts.existsById(from) -> Unit
 
             word in STOP_WORDS -> {
-                optOuts.save(WhatsAppOptOut(from))
+                val organization = thread?.tenantId ?: sentMessages.findFirstByRecipientOrderBySentAtDesc(from)?.tenantId
+                optOuts.save(WhatsAppOptOut(from, tenantId = organization))
                 reply(from, language, "whatsapp.reply.optedOut")
             }
 
@@ -108,7 +110,7 @@ class WhatsAppInboundService(
         values: Map<String, String> = emptyMap(),
     ) {
         try {
-            providers.whatsApp().sender.send(WhatsAppMessage(to = "+$phone", body = catalog.text(language, key, values)))
+            providers.whatsApp().sender.send(WhatsAppMessage(to = "+$phone", body = catalog.text(language, key, values), session = true))
         } catch (ex: RuntimeException) {
             log.warn("WhatsApp answer {} to {} could not be sent", key, phone, ex)
         }

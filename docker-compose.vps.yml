@@ -1,0 +1,127 @@
+# Production on one server (ADR 107, JIKU-203): the API, the web app and
+# PostgreSQL with continuous WAL-G archiving to Cloudflare R2. Dokploy deploys
+# this file and its Traefik proxy terminates TLS; no port is published here,
+# so nothing but the proxy reaches the containers. See docs/deploy-vps.md.
+#
+# Images come from GHCR (built by .github/workflows/images.yml in each
+# repository); the server never compiles. Every value comes from the
+# environment Dokploy injects (see .env.example, "Single server" section).
+name: jiku
+
+x-walg-env: &walg-env
+  WALG_S3_PREFIX: ${WALG_S3_PREFIX:?set WALG_S3_PREFIX, e.g. s3://jiku-backups/postgres}
+  AWS_ACCESS_KEY_ID: ${WALG_ACCESS_KEY_ID:?set WALG_ACCESS_KEY_ID}
+  AWS_SECRET_ACCESS_KEY: ${WALG_SECRET_ACCESS_KEY:?set WALG_SECRET_ACCESS_KEY}
+  AWS_ENDPOINT: ${WALG_ENDPOINT:?set WALG_ENDPOINT, the R2 S3 endpoint}
+  AWS_REGION: ${WALG_REGION:-auto}
+  AWS_S3_FORCE_PATH_STYLE: "true"
+  WALG_COMPRESSION_METHOD: brotli
+
+services:
+  postgres:
+    build: ./deploy/postgres
+    restart: unless-stopped
+    environment:
+      <<: *walg-env
+      POSTGRES_DB: ${DATABASE_NAME:-jiku}
+      POSTGRES_USER: ${DATABASE_USERNAME:-jiku}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD}
+    command:
+      - postgres
+      - -c
+      - wal_level=replica
+      - -c
+      - archive_mode=on
+      - -c
+      - archive_command=wal-g wal-push %p
+      # Ship a segment at least every minute, so a lost server loses at most a minute.
+      - -c
+      - archive_timeout=60
+      - -c
+      - shared_buffers=${POSTGRES_SHARED_BUFFERS:-512MB}
+      - -c
+      - max_connections=${POSTGRES_MAX_CONNECTIONS:-60}
+    volumes:
+      - pgdata:/var/lib/postgresql
+      # Runs only when the volume is created: the Umami database next to Jikū's.
+      - ./deploy/postgres/init:/docker-entrypoint-initdb.d:ro
+    mem_limit: ${POSTGRES_MEMORY_LIMIT:-2g}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME:-jiku} -d ${DATABASE_NAME:-jiku}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Nightly full base backup and retention; WAL itself is pushed by PostgreSQL.
+  postgres-backup:
+    build: ./deploy/postgres
+    restart: unless-stopped
+    user: postgres
+    entrypoint: ["/usr/local/bin/backup-loop.sh"]
+    environment:
+      <<: *walg-env
+      PGHOST: postgres
+      PGUSER: ${DATABASE_USERNAME:-jiku}
+      PGPASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD}
+      PGDATABASE: ${DATABASE_NAME:-jiku}
+      PGDATA: /var/lib/postgresql/18/docker
+      BACKUP_HOUR_UTC: ${BACKUP_HOUR_UTC:-2}
+      BACKUP_RETAIN_FULL: ${BACKUP_RETAIN_FULL:-14}
+    volumes: ["pgdata:/var/lib/postgresql"]
+    mem_limit: 256m
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    image: ghcr.io/youmssi/jiku_app:${API_IMAGE_TAG:-main}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/${DATABASE_NAME:-jiku}
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-jiku}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD}
+    # The JVM takes 75% of the memory it sees (MaxRAMPercentage); without a
+    # limit it would see the whole server.
+    mem_limit: ${API_MEMORY_LIMIT:-1536m}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [default, dokploy-network]
+
+  web:
+    image: ghcr.io/youmssi/jiku_web:${WEB_IMAGE_TAG:-main}
+    restart: unless-stopped
+    environment:
+      # Server-side calls stay on the internal network; the browser uses the
+      # public API URL baked into the image at build time.
+      API_BASE_URL: http://api:8080/api/v1
+      API_TIMEOUT_MS: ${WEB_API_TIMEOUT_MS:-15000}
+    mem_limit: ${WEB_MEMORY_LIMIT:-768m}
+    depends_on: [api]
+    networks: [default, dokploy-network]
+
+  # Privacy-friendly visit statistics for the public site (ADR 107): no cookies,
+  # its own database in the same PostgreSQL. The web image loads its script
+  # once NEXT_PUBLIC_UMAMI_SRC and NEXT_PUBLIC_UMAMI_WEBSITE_ID are set.
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${DATABASE_USERNAME:-jiku}:${DATABASE_PASSWORD:?set DATABASE_PASSWORD}@postgres:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET:?set UMAMI_APP_SECRET}
+    mem_limit: ${UMAMI_MEMORY_LIMIT:-384m}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [default, dokploy-network]
+
+volumes:
+  pgdata:
+
+networks:
+  default:
+    name: jiku-internal
+  # Created by Dokploy; its Traefik proxy routes the public domains to api and web.
+  dokploy-network:
+    external: true

@@ -3,7 +3,10 @@ package com.jiku.catalog.internal
 import com.jiku.catalog.PublicServiceLink
 import com.jiku.catalog.ServiceModuleApi
 import com.jiku.shared.TenantContext
+import com.jiku.shared.TenantMilestones
+import com.jiku.shared.tenantMilestones
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 /**
@@ -27,4 +30,7 @@ class ServiceModuleApiService(
                     )
                 }.filter { it.shortCode.isNotBlank() }
         }
+
+    @Transactional(readOnly = true)
+    override fun adminFirstServiceAt(): TenantMilestones = tenantMilestones(services.firstCreatedAtByTenant())
 }

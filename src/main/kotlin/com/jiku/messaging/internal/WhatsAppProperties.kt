@@ -30,12 +30,28 @@ data class WhatsAppProperties(
      */
     val marketingMarkers: String =
         "promo,réduction,solde,gratuit,offre spéciale,cadeau,bon plan,code promo,achetez maintenant",
+    val health: Health = Health(),
 ) {
+    /** How Jikū reacts to what Meta reports about its templates and numbers (JIKU-209). */
+    data class Health(
+        /** How long a paused template stays unused before Jikū tries it again (Meta pauses for 3 h, then 6 h). */
+        val pauseHours: Long = 3,
+        /** Stop using a template Meta moved to MARKETING: it costs several times more and is capped per recipient. */
+        val blockMarketingTemplates: Boolean = true,
+    )
+
     data class Meta(
         val accessToken: String = "",
         val phoneNumberId: String = "",
-        val baseUrl: String = "https://graph.facebook.com/v21.0",
-        /** Approved template for business-initiated sends; blank sends plain text. */
+        val baseUrl: String = "https://graph.facebook.com/v25.0",
+        /**
+         * Send each message with its own approved template (JIKU-210), named
+         * `<templatePrefix><kind>` and created in French and English with
+         * `POST /admin/whatsapp/templates`. Off, the single templates below are used.
+         */
+        val dedicatedTemplates: Boolean = true,
+        val templatePrefix: String = "jiku_",
+        /** Single approved template for business-initiated sends when dedicated templates are off; blank sends plain text. */
         val templateName: String = "",
         val templateLanguage: String = "fr",
         /**
@@ -62,5 +78,12 @@ data class WhatsAppProperties(
          * the card conversation; blank keeps it off.
          */
         val cardsPhoneNumberId: String = "",
+        /**
+         * The WhatsApp Business Account of the platform number (JIKU-209): Meta
+         * reports template pauses per account, so the platform sender checks its
+         * templates under this id. Blank skips the check; Meta's own refusals
+         * still queue the message.
+         */
+        val businessAccountId: String = "",
     )
 }

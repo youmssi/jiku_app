@@ -4,6 +4,10 @@ import com.jiku.messaging.internal.MetaCloudWhatsAppSender
 import com.jiku.messaging.internal.WhatsAppButton
 import com.jiku.messaging.internal.WhatsAppDeliveryException
 import com.jiku.messaging.internal.WhatsAppMessage
+import com.jiku.messaging.internal.WhatsAppTemplateCall
+import com.jiku.messaging.internal.WhatsAppTemplateGate
+import com.jiku.messaging.internal.WhatsAppTemplateKind
+import com.jiku.messaging.internal.WhatsAppUnavailableException
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -29,6 +33,8 @@ class MetaCloudWhatsAppSenderTest {
         templateName: String?,
         buttonsTemplateName: String? = null,
         imageTemplateName: String? = null,
+        gate: WhatsAppTemplateGate? = null,
+        templatePrefix: String? = null,
         expectations: (MockRestServiceServer) -> Unit,
     ): MetaCloudWhatsAppSender {
         val builder = RestClient.builder().baseUrl("https://graph.test")
@@ -41,6 +47,9 @@ class MetaCloudWhatsAppSenderTest {
             templateLanguage = "fr",
             buttonsTemplateName = buttonsTemplateName,
             imageTemplateName = imageTemplateName,
+            wabaId = "WABA1",
+            gate = gate,
+            templatePrefix = templatePrefix,
         )
     }
 
@@ -166,5 +175,119 @@ class MetaCloudWhatsAppSenderTest {
                 templateLanguage = "fr",
             )
         }
+    }
+
+    private class RecordingGate(
+        private val blocked: Set<String> = emptySet(),
+    ) : WhatsAppTemplateGate {
+        val refusals = mutableListOf<Pair<String?, Int>>()
+
+        override fun assertUsable(
+            wabaId: String,
+            name: String,
+            language: String,
+        ) {
+            if (name in blocked) throw WhatsAppUnavailableException("$name paused")
+        }
+
+        override fun onSendRefused(
+            wabaId: String?,
+            name: String?,
+            language: String,
+            code: Int,
+        ) {
+            refusals += name to code
+        }
+    }
+
+    @Test
+    fun `a paused template is not tried`() {
+        val gate = RecordingGate(blocked = setOf("jiku_invitation"))
+        val sender = mockedSender(templateName = "jiku_invitation", gate = gate) { }
+
+        assertFailsWith<WhatsAppUnavailableException> { sender.send(message) }
+    }
+
+    @Test
+    fun `a template Meta reports paused makes the message wait and is reported`() {
+        val gate = RecordingGate()
+        val sender =
+            mockedSender(templateName = "jiku_invitation", gate = gate) { server ->
+                server
+                    .expect(requestTo("https://graph.test/123456789/messages"))
+                    .andRespond(
+                        withStatus(HttpStatus.BAD_REQUEST)
+                            .body("""{"error":{"message":"Template paused","type":"OAuthException","code":132015,"error_subcode":2494}}"""),
+                    )
+            }
+
+        assertFailsWith<WhatsAppUnavailableException> { sender.send(message) }
+        assertTrue(gate.refusals == listOf("jiku_invitation" to 132015))
+    }
+
+    @Test
+    fun `other Meta refusals stay delivery failures`() {
+        val gate = RecordingGate()
+        val sender =
+            mockedSender(templateName = "jiku_invitation", gate = gate) { server ->
+                server
+                    .expect(requestTo("https://graph.test/123456789/messages"))
+                    .andRespond(withStatus(HttpStatus.BAD_REQUEST).body("""{"error":{"message":"Invalid parameter","code":100}}"""))
+            }
+
+        assertFailsWith<WhatsAppDeliveryException> { sender.send(message) }
+        assertTrue(gate.refusals == listOf("jiku_invitation" to 100))
+    }
+
+    private val rsvp =
+        withButtons.copy(
+            template = WhatsAppTemplateCall(WhatsAppTemplateKind.INVITATION_RSVP, "en", listOf("Awa", "Club", "Gala", "Saturday")),
+        )
+
+    @Test
+    fun `a message with its dedicated template goes out as that template, in its language`() {
+        val gate = RecordingGate()
+        val sender =
+            mockedSender(templateName = "jiku_invitation", buttonsTemplateName = "old_buttons", gate = gate, templatePrefix = "jiku_") {
+                expectBody(
+                    it,
+                    "\"name\":\"jiku_invitation_rsvp_v1\"",
+                    "\"code\":\"en\"",
+                    "{\"type\":\"text\",\"text\":\"Gala\"}",
+                    "\"payload\":\"RSVP_YES:1\"",
+                    "\"index\":\"1\"",
+                )
+            }
+        sender.send(rsvp)
+    }
+
+    @Test
+    fun `the dedicated template is checked under its own name and language`() {
+        val sender =
+            mockedSender(
+                templateName = null,
+                gate = RecordingGate(blocked = setOf("jiku_invitation_rsvp_v1")),
+                templatePrefix = "jiku_",
+            ) { }
+
+        assertFailsWith<WhatsAppUnavailableException> { sender.send(rsvp) }
+    }
+
+    @Test
+    fun `without the dedicated templates the configured ones are used`() {
+        val sender =
+            mockedSender(templateName = "jiku_invitation", buttonsTemplateName = "old_buttons") {
+                expectBody(it, "\"name\":\"old_buttons\"")
+            }
+        sender.send(rsvp)
+    }
+
+    @Test
+    fun `an answer to someone who just wrote is always a session message`() {
+        val sender =
+            mockedSender(templateName = "jiku_invitation", templatePrefix = "jiku_") {
+                expectBody(it, "\"type\":\"text\"", "\"body\":\"Vous êtes invité\"")
+            }
+        sender.send(message.copy(session = true, template = rsvp.template))
     }
 }
