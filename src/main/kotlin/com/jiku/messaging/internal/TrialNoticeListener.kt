@@ -1,9 +1,11 @@
 package com.jiku.messaging.internal
 
 import com.jiku.shared.TrialNotice
+import com.jiku.shared.async.Executors
 import org.slf4j.LoggerFactory
-import org.springframework.context.event.EventListener
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
+import org.springframework.transaction.event.TransactionalEventListener
 
 /**
  * Organizer emails for the trial lifecycle (JIKU-42): granted, expiring soon,
@@ -17,7 +19,8 @@ class TrialNoticeListener(
 ) {
     private val log = LoggerFactory.getLogger(TrialNoticeListener::class.java)
 
-    @EventListener
+    @Async(Executors.URGENT)
+    @TransactionalEventListener(fallbackExecution = true)
     fun onTrialNotice(notice: TrialNotice) {
         val language = catalog.language(notice.tenantId)
         val reason = notice.note?.takeIf { it.isNotBlank() }?.let { catalog.text(language, "trial.reason", mapOf("note" to it)) }

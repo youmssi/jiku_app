@@ -8,6 +8,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationEventPublisher
@@ -17,6 +18,7 @@ import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -207,7 +209,9 @@ class TenantWhatsAppPausedException(
  * or whose messages Meta cannot deliver (JIKU-211). Blocks and reports are what
  * lower the number's quality for everyone; an organization sending from its
  * own number spends its own quality and is not checked. The pause lifts by
- * itself as the window moves on.
+ * itself as the window moves on. The answer is kept for a minute per
+ * organization (`jiku.messaging.check-cache-ttl`), so a batch does not count
+ * again for each message.
  */
 @Component
 @EnableConfigurationProperties(WhatsAppReputationProperties::class)
@@ -216,10 +220,14 @@ class TenantWhatsAppPause(
     private val optOuts: WhatsAppOptOutRepository,
     private val properties: WhatsAppReputationProperties,
     private val events: ApplicationEventPublisher,
+    @Value("\${jiku.messaging.check-cache-ttl:60s}") checkCacheTtl: Duration,
 ) {
     private val alertedOn = ConcurrentHashMap<String, LocalDate>()
+    private val reasons = PerTenantCache<String>(checkCacheTtl)
 
-    fun reason(tenantId: String): String? {
+    fun reason(tenantId: String): String? = reasons.get(tenantId) { currentReason(tenantId) }
+
+    private fun currentReason(tenantId: String): String? {
         val since = Instant.now().minus(properties.windowDays, ChronoUnit.DAYS)
         val sent = messages.countPlatformSince(tenantId, since)
         if (sent < properties.minSample) return null

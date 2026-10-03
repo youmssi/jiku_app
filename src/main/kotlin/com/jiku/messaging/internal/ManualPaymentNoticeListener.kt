@@ -1,10 +1,12 @@
 package com.jiku.messaging.internal
 
 import com.jiku.shared.ManualPaymentNotice
+import com.jiku.shared.async.Executors
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.context.event.EventListener
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
+import org.springframework.transaction.event.TransactionalEventListener
 
 /**
  * Emails for the manual payment flow (JIKU-41): a new activation request goes to
@@ -22,7 +24,8 @@ class ManualPaymentNoticeListener(
 ) {
     private val log = LoggerFactory.getLogger(ManualPaymentNoticeListener::class.java)
 
-    @EventListener
+    @Async(Executors.URGENT)
+    @TransactionalEventListener(fallbackExecution = true)
     fun onManualPaymentNotice(notice: ManualPaymentNotice) {
         when (notice.kind) {
             ManualPaymentNotice.KIND_REQUESTED -> notifySales(notice)

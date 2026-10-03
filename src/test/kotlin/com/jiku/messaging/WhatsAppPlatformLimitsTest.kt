@@ -19,6 +19,7 @@ import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.event.ApplicationEvents
 import org.springframework.test.context.event.RecordApplicationEvents
+import java.time.Duration
 import java.util.UUID
 
 /** JIKU-212: what one organization may send through the Jikū WhatsApp number. */
@@ -39,6 +40,7 @@ class WhatsAppPlatformLimitsTest {
             },
             WhatsAppPlatformLimitProperties(unverifiedDaily = 5, monthlyBeforeOwnNumber = 8),
             publisher,
+            Duration.ZERO,
         )
     }
 

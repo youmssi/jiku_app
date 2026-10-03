@@ -1,9 +1,11 @@
 package com.jiku.messaging.internal
 
 import com.jiku.shared.AccountNotice
+import com.jiku.shared.async.Executors
 import org.slf4j.LoggerFactory
-import org.springframework.context.event.EventListener
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
+import org.springframework.transaction.event.TransactionalEventListener
 
 /**
  * Account-lifecycle emails (JIKU-49): password reset and email verification, in the language
@@ -16,7 +18,8 @@ class AccountNoticeListener(
 ) {
     private val log = LoggerFactory.getLogger(AccountNoticeListener::class.java)
 
-    @EventListener
+    @Async(Executors.URGENT)
+    @TransactionalEventListener(fallbackExecution = true)
     fun onAccountNotice(notice: AccountNotice) {
         val email =
             when (notice.kind) {

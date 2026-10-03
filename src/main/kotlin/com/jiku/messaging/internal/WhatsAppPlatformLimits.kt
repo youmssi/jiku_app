@@ -3,10 +3,12 @@ package com.jiku.messaging.internal
 import com.jiku.shared.OpsAlert
 import com.jiku.shared.TenantContext
 import com.jiku.shared.VerificationGate
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -38,7 +40,9 @@ data class PlatformWhatsAppUsage(
  * campaign; past a monthly volume, an organization connects its own number
  * (ADR 105), which carries its own reputation and Meta bills to it. Beyond a
  * limit the message waits in the queue, with the reason, and the team is told
- * once a day. An organization on its own number is not counted.
+ * once a day. An organization on its own number is not counted. Whether an
+ * organization is verified is kept for a minute (`jiku.messaging.check-cache-ttl`);
+ * the counts are not, so a limit is never overshot.
  */
 @Component
 @EnableConfigurationProperties(WhatsAppPlatformLimitProperties::class)
@@ -47,12 +51,14 @@ class WhatsAppPlatformLimits(
     private val verification: VerificationGate,
     private val properties: WhatsAppPlatformLimitProperties,
     private val events: ApplicationEventPublisher,
+    @Value("\${jiku.messaging.check-cache-ttl:60s}") checkCacheTtl: Duration,
 ) {
     private val alertedOn = ConcurrentHashMap<String, LocalDate>()
+    private val verified = PerTenantCache<Boolean>(checkCacheTtl)
 
     fun usage(): PlatformWhatsAppUsage? {
         val tenantId = TenantContext.get() ?: return null
-        val verified = verification.isVerified()
+        val verified = isVerified(tenantId)
         return PlatformWhatsAppUsage(
             sentToday = sentSince(tenantId, 1),
             dailyLimit = properties.unverifiedDaily.takeIf { it > 0 && !verified },
@@ -65,7 +71,7 @@ class WhatsAppPlatformLimits(
     fun assertWithinLimits() {
         val tenantId = TenantContext.get() ?: return
         val daily = properties.unverifiedDaily
-        if (daily > 0 && !verification.isVerified() && sentSince(tenantId, 1) >= daily) {
+        if (daily > 0 && !isVerified(tenantId) && sentSince(tenantId, 1) >= daily) {
             refuse(
                 tenantId,
                 "daily",
@@ -83,6 +89,8 @@ class WhatsAppPlatformLimits(
             )
         }
     }
+
+    private fun isVerified(tenantId: String): Boolean = verified.get(tenantId) { verification.isVerified() } ?: false
 
     private fun sentSince(
         tenantId: String,
