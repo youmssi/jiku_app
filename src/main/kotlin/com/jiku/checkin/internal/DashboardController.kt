@@ -1,8 +1,10 @@
 package com.jiku.checkin.internal
 
+import com.jiku.live.LiveTicket
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
@@ -22,4 +24,10 @@ class DashboardController(
     fun get(
         @PathVariable eventId: UUID,
     ): DashboardResponse = dashboardService.dashboard(eventId)
+
+    /** A ticket to follow the dashboard live (JIKU-214): the screen reloads when it changes. */
+    @PostMapping("/live")
+    fun live(
+        @PathVariable eventId: UUID,
+    ): LiveTicket = dashboardService.liveTicket(eventId)
 }

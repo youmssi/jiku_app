@@ -1,6 +1,7 @@
 package com.jiku.catalog.internal
 
 import com.jiku.shared.AppointmentBooked
+import com.jiku.shared.LiveChanged
 import com.jiku.shared.TenantContext
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.http.HttpStatus
@@ -84,6 +85,7 @@ class AppointmentRequestService(
         if (reservations.confirmByTokenHash(hash, now) == 0) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "This request has already been handled")
         }
+        events.publishEvent(LiveChanged(row.liveTopics()))
         val rows = reservations.findByBookingTokenHash(hash)
         val confirmed = rows.first()
         val professionalName = resources.professionalAmong(rows.map { it.resourceId })
@@ -114,6 +116,7 @@ class AppointmentRequestService(
         }
         val hash = requireNotNull(row.bookingTokenHash)
         reservations.deleteByTokenHash(hash)
+        events.publishEvent(LiveChanged(row.liveTopics()))
     }
 
     private fun loadRequest(

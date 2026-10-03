@@ -2,6 +2,8 @@ package com.jiku.ticket.internal
 
 import com.jiku.shared.BaseTenantEntity
 import com.jiku.shared.ClientCharge
+import com.jiku.shared.LiveScoped
+import com.jiku.shared.LiveTopics
 import com.jiku.ticket.TicketPaymentMethod
 import com.jiku.ticket.TicketPaymentStatus
 import jakarta.persistence.Column
@@ -36,7 +38,10 @@ class Ticket(
     val guestId: UUID,
     @Column(name = "ticket_code", nullable = false, updatable = false)
     val ticketCode: String,
-) : BaseTenantEntity() {
+) : BaseTenantEntity(),
+    LiveScoped {
+    override fun liveTopics(): Collection<String> = listOfNotNull(eventId?.let(LiveTopics::event), serviceId?.let(LiveTopics::service))
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     var id: UUID? = null

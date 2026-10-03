@@ -5,6 +5,14 @@ jiku:
   async:
     bulk-threads: ${ASYNC_BULK_THREADS:8}
     urgent-concurrency: ${ASYNC_URGENT_CONCURRENCY:64}
+  # Live updates (JIKU-214): screens left open (event dashboard, day line, a
+  # client's place) follow a stream that says "this changed" and reload.
+  live:
+    ticket-ttl: ${LIVE_TICKET_TTL:12h}
+    stream-timeout: ${LIVE_STREAM_TIMEOUT:30m}
+    coalesce: ${LIVE_COALESCE:500ms}
+    heartbeat: ${LIVE_HEARTBEAT:25s}
+    max-streams: ${LIVE_MAX_STREAMS:2000}
   messaging:
     # How long an organization's pause and verification status are kept in
     # memory between sends (JIKU-216); 0s asks the database on every send.

@@ -1,6 +1,7 @@
 package com.jiku.catalog.internal
 
 import com.jiku.catalog.ResourceType
+import com.jiku.live.LiveTicket
 import com.jiku.shared.TenantAccessGate
 import com.jiku.shared.TenantContext
 import com.jiku.shared.VerificationGate
@@ -109,6 +110,17 @@ class AppointmentPublicService(
         code: String,
         ticketCode: String,
     ): ClientLineTicketView = withService(resolveCode(code), null) { serviceId -> lineTicket(serviceId, ticketCode) }
+
+    /** Un ticket pour suivre sa place en direct (JIKU-214), pour un ticket de la ligne du jour. */
+    fun liveTicketByCode(
+        code: String,
+        ticketCode: String,
+    ): LiveTicket = withService(resolveCode(code), null) { serviceId -> liveTicket(serviceId, ticketCode) }
+
+    fun liveTicketByToken(
+        token: String,
+        ticketCode: String,
+    ): LiveTicket = withService(resolveToken(token), null) { serviceId -> liveTicket(serviceId, ticketCode) }
 
     fun lineTicketByToken(
         token: String,
@@ -225,6 +237,14 @@ class AppointmentPublicService(
         val mine =
             entries.filter { it.kind == WALK_IN && it.clientPhone == phone }.maxBy { it.dayRank ?: 0 }
         return placeOf(serviceId, mine, entries)
+    }
+
+    private fun liveTicket(
+        serviceId: UUID,
+        ticketCode: String,
+    ): LiveTicket {
+        lineTicket(serviceId, ticketCode)
+        return line.liveTicket(serviceId)
     }
 
     private fun lineTicket(

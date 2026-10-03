@@ -1,5 +1,6 @@
 package com.jiku.catalog.internal
 
+import com.jiku.live.LiveTicket
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -41,6 +42,13 @@ class ShortLinkPublicController(
         @PathVariable code: String,
         @Valid @RequestBody request: WalkInRequest,
     ): ClientLineTicketView = appointments.takeTicketByCode(code, request)
+
+    /** A ticket to follow one's place in the line live (JIKU-214). */
+    @PostMapping("/{code}/line/{ticketCode}/live")
+    fun live(
+        @PathVariable code: String,
+        @PathVariable ticketCode: String,
+    ): LiveTicket = appointments.liveTicketByCode(code, ticketCode)
 
     @GetMapping("/{code}/line/{ticketCode}")
     fun lineTicket(

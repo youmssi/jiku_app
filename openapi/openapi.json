@@ -2750,6 +2750,18 @@
         },
         "type" : "object"
       },
+      "LiveTicket" : {
+        "properties" : {
+          "expiresAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "ticket" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "LoginRequest" : {
         "properties" : {
           "email" : {
@@ -5808,6 +5820,15 @@
               "string",
               "null"
             ]
+          }
+        },
+        "type" : "object"
+      },
+      "SseEmitter" : {
+        "properties" : {
+          "timeout" : {
+            "format" : "int64",
+            "type" : "integer"
           }
         },
         "type" : "object"
@@ -9053,6 +9074,44 @@
         ]
       }
     },
+    "/api/v1/appointments/{token}/line/{ticketCode}/live" : {
+      "post" : {
+        "operationId" : "appointmentPublicLive",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "token",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "in" : "path",
+            "name" : "ticketCode",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LiveTicket"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "appointment-public-controller"
+        ]
+      }
+    },
     "/api/v1/auth/forgot-password" : {
       "post" : {
         "operationId" : "authForgotPassword",
@@ -11022,6 +11081,37 @@
         ]
       }
     },
+    "/api/v1/events/{eventId}/dashboard/live" : {
+      "post" : {
+        "operationId" : "dashboardLive",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LiveTicket"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "dashboard-controller"
+        ]
+      }
+    },
     "/api/v1/events/{eventId}/guests" : {
       "get" : {
         "operationId" : "guestList",
@@ -12796,6 +12886,36 @@
         ]
       }
     },
+    "/api/v1/line/{token}/live" : {
+      "post" : {
+        "operationId" : "lineStaffLive",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "token",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LiveTicket"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "line-staff-controller"
+        ]
+      }
+    },
     "/api/v1/line/{token}/next" : {
       "post" : {
         "operationId" : "lineStaffNext",
@@ -13222,6 +13342,36 @@
         },
         "tags" : [
           "line-staff-controller"
+        ]
+      }
+    },
+    "/api/v1/live/stream" : {
+      "get" : {
+        "operationId" : "liveStreamStream",
+        "parameters" : [
+          {
+            "in" : "query",
+            "name" : "ticket",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "text/event-stream" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SseEmitter"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "live-stream-controller"
         ]
       }
     },
@@ -14054,6 +14204,45 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/DayLineView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "line-staff-controller"
+        ]
+      }
+    },
+    "/api/v1/operator/{token}/services/{serviceId}/live" : {
+      "post" : {
+        "operationId" : "lineStaffLive_1",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "token",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "in" : "path",
+            "name" : "serviceId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LiveTicket"
                 }
               }
             },
@@ -15266,6 +15455,44 @@
         ]
       }
     },
+    "/api/v1/r/{code}/line/{ticketCode}/live" : {
+      "post" : {
+        "operationId" : "shortLinkPublicLive",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "code",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "in" : "path",
+            "name" : "ticketCode",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LiveTicket"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "short-link-public-controller"
+        ]
+      }
+    },
     "/api/v1/resources" : {
       "get" : {
         "operationId" : "resourceList",
@@ -16217,6 +16444,37 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/DayLineView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "service-day-line-controller"
+        ]
+      }
+    },
+    "/api/v1/services/{serviceId}/day-line/live" : {
+      "post" : {
+        "operationId" : "serviceDayLineLive",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "serviceId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LiveTicket"
                 }
               }
             },

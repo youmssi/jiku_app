@@ -2,6 +2,8 @@ package com.jiku.invitation.internal
 
 import com.jiku.catalog.InvitationChannel
 import com.jiku.shared.BaseTenantEntity
+import com.jiku.shared.LiveScoped
+import com.jiku.shared.LiveTopics
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -31,7 +33,10 @@ class Invitation(
     @Enumerated(EnumType.STRING)
     @Column(name = "channel", nullable = false, updatable = false)
     val channel: InvitationChannel,
-) : BaseTenantEntity() {
+) : BaseTenantEntity(),
+    LiveScoped {
+    override fun liveTopics(): Collection<String> = listOf(LiveTopics.event(eventId))
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     var id: UUID? = null

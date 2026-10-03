@@ -1,6 +1,8 @@
 package com.jiku.catalog.internal
 
 import com.jiku.shared.BaseTenantEntity
+import com.jiku.shared.LiveScoped
+import com.jiku.shared.LiveTopics
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -46,7 +48,10 @@ class ServiceReservation(
     /** La place occupée dans la séance, de 0 à la capacité moins un. */
     @Column(name = "seat", nullable = false, updatable = false)
     val seat: Int = 0,
-) : BaseTenantEntity() {
+) : BaseTenantEntity(),
+    LiveScoped {
+    override fun liveTopics(): Collection<String> = listOf(LiveTopics.service(serviceId))
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     var id: UUID? = null

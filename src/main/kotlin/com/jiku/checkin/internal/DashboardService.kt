@@ -3,8 +3,11 @@ package com.jiku.checkin.internal
 import com.jiku.catalog.EventModuleApi
 import com.jiku.catalog.OperatorModuleApi
 import com.jiku.invitation.InvitationModuleApi
+import com.jiku.live.LiveModuleApi
+import com.jiku.live.LiveTicket
 import com.jiku.messaging.NotificationModuleApi
 import com.jiku.money.BillingModuleApi
+import com.jiku.shared.LiveTopics
 import com.jiku.shared.RetentionProperties
 import com.jiku.ticket.TicketingModuleApi
 import org.springframework.http.HttpStatus
@@ -29,7 +32,14 @@ class DashboardService(
     private val billing: BillingModuleApi,
     private val retentionProperties: RetentionProperties,
     private val operators: OperatorModuleApi,
+    private val live: LiveModuleApi,
 ) {
+    @Transactional(readOnly = true)
+    fun liveTicket(eventId: UUID): LiveTicket {
+        events.findEvent(eventId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found")
+        return live.ticket(LiveTopics.event(eventId))
+    }
+
     @Transactional(readOnly = true)
     fun dashboard(eventId: UUID): DashboardResponse {
         val event = events.findEvent(eventId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found")

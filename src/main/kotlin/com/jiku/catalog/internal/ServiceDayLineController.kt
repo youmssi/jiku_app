@@ -1,5 +1,6 @@
 package com.jiku.catalog.internal
 
+import com.jiku.live.LiveTicket
 import com.jiku.shared.ORGANIZER_OPERATOR_LABEL
 import com.jiku.ticket.LineActionResult
 import com.jiku.ticket.MarkPaidRequest
@@ -38,6 +39,12 @@ class ServiceDayLineController(
         @PathVariable serviceId: UUID,
         @RequestParam(required = false) date: String?,
     ): DayLineView = console.view(serviceId, parseDate(date))
+
+    /** Un ticket pour suivre la ligne et ses demandes en direct (JIKU-214). */
+    @PostMapping("/live")
+    fun live(
+        @PathVariable serviceId: UUID,
+    ): LiveTicket = console.liveTicket(serviceId)
 
     /** Demandes de rendez-vous en attente de confirmation (mode « sur demande »). */
     @GetMapping("/requests")

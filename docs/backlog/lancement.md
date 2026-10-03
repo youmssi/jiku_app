@@ -25,6 +25,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-212 | Plafonds sur le numéro Jikū : non vérifiés, volume mensuel, liens | app, web | JIKU-211 |
 | JIKU-213 | Consentement des invités importés, prouvé et exigé pour WhatsApp | app, web | JIKU-212 |
 | JIKU-215 | Envois fiables : files séparées, hors transaction, reprise, tentatives espacées, tâches verrouillées | app | — |
+| JIKU-214 | Temps réel : flux SSE « ça a changé » pour le tableau de bord, la ligne du jour et la place du client | app, web | JIKU-216 |
 | JIKU-216 | Performance et hygiène : index, cache par organisation, purge, threads virtuels, e-mails de compte en arrière-plan | app | JIKU-215 |
 
 ---
@@ -342,3 +343,34 @@ e-mails de compte partaient pendant la requête.
 - [ ] Un e-mail de compte part après la validation, hors du thread de la requête, et pas en cas d'annulation
 - [ ] Une alerte d'exploitation part même si sa transaction est annulée
 - [ ] `scripts/load/send-rush.js` : 1 000 invitations envoyées en 5 minutes, écrans organisateur sous 800 ms (95e centile)
+
+---
+
+## JIKU-214 — Temps réel
+
+**Pourquoi.** Le tableau de bord se rechargeait toutes les 7 s, la console de
+ligne toutes les 10 s, la page du client toutes les 15 s. Un client appelé
+pouvait l'apprendre 15 s trop tard, et chaque écran ouvert interrogeait l'API
+même quand rien ne bougeait.
+
+**Comportement.**
+
+| Où | Après |
+|---|---|
+| `POST /events/{id}/dashboard/live`, `/services/{id}/day-line/live`, `/line/{token}/live`, `/operator/{token}/services/{id}/live`, `/r/{code}/line/{ticket}/live`, `/appointments/{token}/line/{ticket}/live` | Un ticket signé (12 h) pour suivre ce sujet, après les contrôles habituels de l'écran |
+| `GET /live/stream?ticket=…` | Flux SSE : `ready` à l'ouverture, `change` quand le sujet a changé ; aucune donnée, l'écran relit par son endpoint habituel |
+| Écritures | Toute écriture validée d'un invité, d'une invitation, d'une réponse à la carte, d'une commande, d'un billet ou d'une réservation prévient ses sujets ; les mises à jour atomiques (check-in, appel, paiement) aussi |
+| Navigateur | Un seul `EventSource` par sujet et par page, fermé quand l'onglet est caché ; relecture au plus une fois par seconde ; sans flux, l'ancien rythme reprend ; avec, une relecture de sécurité par minute |
+| Proxy | Caddy ne compresse ni ne met en tampon `/live/stream` ; battement toutes les 25 s pour Cloudflare |
+
+**Critères d'acceptation.**
+
+- [ ] Le tableau de bord entend l'ajout d'un invité à son événement
+- [ ] Un client qui suit sa place entend le guichet appeler le suivant
+- [ ] Une autre organisation n'obtient pas de ticket pour un événement qui n'est pas le sien (404)
+- [ ] Un jeton de session ou un ticket forgé n'ouvre pas de flux (401)
+- [ ] Un ticket hors de la ligne du jour n'obtient pas de ticket live (404)
+
+**Limite.** Le hub est en mémoire : avec plusieurs instances de l'API, il faudra
+relayer les signaux par PostgreSQL `LISTEN/NOTIFY`.
+
