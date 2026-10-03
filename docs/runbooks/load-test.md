@@ -60,3 +60,49 @@ recette. À ajouter ici après la bascule (`docs/deploy-vps.md`).
    index manquant sur le code du billet, verrou sur le compteur de présence.
 2. Mémoire et CPU des conteneurs `api` et `postgres` pendant le test.
 3. Corriger dans une story, puis relancer le test jusqu'à repasser sous les seuils.
+
+---
+
+# Envoi massif pendant l'activité (JIKU-216)
+
+**Quoi :** `scripts/load/send-rush.js` (k6) envoie **1 000 invitations** par
+e-mail pendant que **20 organisateurs** gardent leurs écrans ouverts et que
+**50 visiteurs** ouvrent la carte publique. Il vérifie que le lot ne ralentit
+pas l'API et que toutes les invitations partent dans la fenêtre.
+
+## Seuils
+
+| Mesure | Seuil |
+|---|---|
+| Lancement du lot (`POST …/invitations/send`) | < 2 s |
+| Écrans organisateur (invités, statuts, événement), 95e centile | < 800 ms |
+| Page de la carte, 95e centile | < 500 ms |
+| Invitations envoyées en `SEND_MINUTES` (5) | 1 000 |
+
+## Préparer
+
+Sur la recette, en plus des variables du test précédent :
+
+| Variable | Valeur | Pourquoi |
+|---|---|---|
+| `MAIL_TRANSPORT` | `log` | aucun e-mail réel ne part |
+| `MAIL_LOG_LATENCY` | `300ms` | chaque envoi dure comme chez un fournisseur |
+
+## Lancer
+
+```
+k6 run -e API_URL=https://api.recette.<domaine>/api/v1 \
+       -e ORGANIZER_EMAIL=<e-mail> -e ORGANIZER_PASSWORD=<mot de passe> \
+       scripts/load/send-rush.js
+```
+
+Paramètres facultatifs : `GUESTS` (1000), `ORGANIZERS` (20), `SEND_MINUTES` (5).
+
+Débit attendu : `ASYNC_BULK_THREADS` envois en parallèle, soit 8 × (1 s / 300 ms)
+≈ 26 e-mails par seconde ; 1 000 invitations en un peu plus d'une minute.
+
+## Résultats
+
+| Date | Environnement | Invitations / latence fournisseur | Lot envoyé en | Écrans p95 | Carte p95 |
+|---|---|---|---|---|---|
+

@@ -1,8 +1,10 @@
 package com.jiku.messaging.internal
 
 import com.jiku.shared.OpsAlert
+import com.jiku.shared.async.Executors
 import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 
 /**
@@ -17,6 +19,7 @@ class OpsAlertListener(
 ) {
     private val log = LoggerFactory.getLogger(OpsAlertListener::class.java)
 
+    @Async(Executors.URGENT)
     @EventListener
     fun onOpsAlert(alert: OpsAlert) {
         log.warn("OPS ALERT: {} — {}", alert.subject, alert.message)

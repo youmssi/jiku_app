@@ -58,6 +58,8 @@ dependencies {
     // no resource-server starter, so nothing is auto-configured.
     implementation("org.springframework.security:spring-security-oauth2-jose")
     implementation("org.apache.commons:commons-csv:1.14.1")
+    // Per-organization answers each send checks, kept a short while (JIKU-216).
+    implementation("com.github.ben-manes.caffeine:caffeine")
     // Scheduled jobs run once across several API instances (JIKU-215).
     implementation("net.javacrumbs.shedlock:shedlock-spring:7.10.1")
     implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:7.10.1")

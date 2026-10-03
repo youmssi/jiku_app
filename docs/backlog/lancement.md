@@ -25,6 +25,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-212 | Plafonds sur le numéro Jikū : non vérifiés, volume mensuel, liens | app, web | JIKU-211 |
 | JIKU-213 | Consentement des invités importés, prouvé et exigé pour WhatsApp | app, web | JIKU-212 |
 | JIKU-215 | Envois fiables : files séparées, hors transaction, reprise, tentatives espacées, tâches verrouillées | app | — |
+| JIKU-216 | Performance et hygiène : index, cache par organisation, purge, threads virtuels, e-mails de compte en arrière-plan | app | JIKU-215 |
 
 ---
 
@@ -314,3 +315,30 @@ secondes.
 | Envoi perdu au redémarrage | Une invitation restée PENDING plus de 30 min après sa remise est renvoyée par le balayage |
 | 3 tentatives dans la même seconde | Attentes de 2 s puis 8 s ; les messages qui basculent sur SMS réessaient tout de suite |
 | Tâches planifiées l'une après l'autre, en double avec plusieurs serveurs | 4 threads ; verrou ShedLock dans PostgreSQL |
+
+---
+
+## JIKU-216 — Performance et hygiène des envois
+
+**Pourquoi.** Chaque message WhatsApp faisait une dizaine de lectures, dont six
+comptages sur des tables sans index adapté et qui grossissent sans fin. Elles
+gardent aussi adresses et numéros des destinataires sans limite de durée. Les
+e-mails de compte partaient pendant la requête.
+
+**Comportement.**
+
+| Avant | Après |
+|---|---|
+| Comptages par organisation sur `notification_log` et `email_feedback` sans index composite | Index `(tenant_id, status, channel, created_at)`, `(created_at)`, `(recipient, created_at)` ; `email_feedback (tenant_id, feedback_type, created_at)` et `(recipient, feedback_type)` |
+| Pause e-mail, pause WhatsApp et vérification relues à chaque envoi | Gardées une minute par organisation (`MESSAGING_CHECK_CACHE_TTL`) ; les compteurs de limites restent exacts |
+| Journaux d'envoi conservés sans limite | Purge nocturne au-delà de 180 jours (`MESSAGING_RETENTION_DAYS`), par lots ; restent les rebonds définitifs, les plaintes, les coûts, les STOP et le premier envoi de chaque organisation |
+| Un thread Tomcat bloqué par requête qui attend | Threads virtuels (`VIRTUAL_THREADS_ENABLED`) ; le pool de connexions reste la limite |
+| Réinitialisation du mot de passe, invitation d'un membre, avis d'essai, d'abonnement et de paiement envoyés pendant la requête | En arrière-plan après validation ; rien n'est envoyé si la transaction est annulée ; les alertes partent quand même |
+
+**Critères d'acceptation.**
+
+- [ ] 300 envois d'une organisation ne relisent sa pause qu'une fois par minute
+- [ ] La purge garde le premier envoi réussi de chaque organisation, les rebonds définitifs et les plaintes
+- [ ] Un e-mail de compte part après la validation, hors du thread de la requête, et pas en cas d'annulation
+- [ ] Une alerte d'exploitation part même si sa transaction est annulée
+- [ ] `scripts/load/send-rush.js` : 1 000 invitations envoyées en 5 minutes, écrans organisateur sous 800 ms (95e centile)

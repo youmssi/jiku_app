@@ -1,9 +1,11 @@
 package com.jiku.messaging.internal
 
 import com.jiku.shared.SubscriptionNotice
+import com.jiku.shared.async.Executors
 import org.slf4j.LoggerFactory
-import org.springframework.context.event.EventListener
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
+import org.springframework.transaction.event.TransactionalEventListener
 
 /**
  * E-mails d'abonnement à l'organisateur (JIKU-90) : échéance proche (J-7),
@@ -18,7 +20,8 @@ class SubscriptionNoticeListener(
 ) {
     private val log = LoggerFactory.getLogger(SubscriptionNoticeListener::class.java)
 
-    @EventListener
+    @Async(Executors.URGENT)
+    @TransactionalEventListener(fallbackExecution = true)
     fun onSubscriptionNotice(notice: SubscriptionNotice) {
         val language = catalog.language(notice.tenantId)
         val values =

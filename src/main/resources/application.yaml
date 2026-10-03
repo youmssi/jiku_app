@@ -5,6 +5,17 @@ jiku:
   async:
     bulk-threads: ${ASYNC_BULK_THREADS:8}
     urgent-concurrency: ${ASYNC_URGENT_CONCURRENCY:64}
+  messaging:
+    # How long an organization's pause and verification status are kept in
+    # memory between sends (JIKU-216); 0s asks the database on every send.
+    check-cache-ttl: ${MESSAGING_CHECK_CACHE_TTL:60s}
+    # Sending records (attempts, WhatsApp messages and threads, soft bounces,
+    # daily counters) older than this are deleted nightly (JIKU-216); 0 keeps
+    # them. Hard bounces, complaints, costs and STOPs are always kept.
+    retention:
+      days: ${MESSAGING_RETENTION_DAYS:180}
+      batch-size: ${MESSAGING_RETENTION_BATCH_SIZE:5000}
+      cron: ${MESSAGING_RETENTION_CRON:0 45 3 * * *}
   mail:
     # Email delivery transport: log (default — records sends without delivering,
     # so a fresh clone works with zero setup), smtp (Mailpit from docker-compose
@@ -13,6 +24,9 @@ jiku:
     # API), or routing (Resend first, Brevo fallback once Resend's daily cap is
     # hit — JIKU-62).
     transport: ${MAIL_TRANSPORT:log}
+    # With transport=log, how long each send takes, to imitate a provider in a
+    # load test (JIKU-216). Leave at 0ms otherwise.
+    log-latency: ${MAIL_LOG_LATENCY:0ms}
     usesend:
       api-key: ${USESEND_API_KEY:}
       # useSend cloud by default; a self-hosted instance's URL ends in /api.
@@ -132,8 +146,16 @@ logging:
     correlation: "[%X{requestId:-}] [%X{tenantId:-}] "
 
 spring:
+  # Requests, scheduled jobs and the default task executor run on virtual
+  # threads (JIKU-216): a request waiting on Meta, the email provider or the
+  # database no longer holds one of Tomcat's 200 threads. The database pool
+  # (DATABASE_POOL_SIZE) stays the limit on concurrent queries.
+  threads:
+    virtual:
+      enabled: ${VIRTUAL_THREADS_ENABLED:true}
   # Scheduled jobs no longer wait for each other (JIKU-215): the retention
-  # purge at night would otherwise hold up the reminder sweep.
+  # purge at night would otherwise hold up the reminder sweep. Used only when
+  # virtual threads are off; with them, each job runs on its own thread.
   task:
     scheduling:
       pool:

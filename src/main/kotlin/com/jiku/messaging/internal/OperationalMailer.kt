@@ -9,7 +9,10 @@ import java.time.ZoneOffset
  * Courrier opérationnel émis par le sender plateforme (essais, abonnements,
  * paiements manuels…) : un seul endroit garde l'adresse vide, le rendu du gabarit
  * et la protection "un échec d'envoi ne doit jamais casser l'action qui l'a
- * déclenché". Les écouteurs ne décrivent plus que le contenu.
+ * déclenché". Les écouteurs ne décrivent plus que le contenu. Ils tournent en
+ * arrière-plan, après la validation de la transaction (JIKU-216) : l'action
+ * n'attend pas le fournisseur d'e-mail, et aucun e-mail n'annonce un
+ * changement annulé.
  */
 @Component
 class OperationalMailer(

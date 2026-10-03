@@ -1,8 +1,10 @@
 package com.jiku.messaging.internal
 
 import com.jiku.shared.OpsAlert
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -20,7 +22,9 @@ class TenantEmailPausedException(
  * list could otherwise put every organization's invitations at risk (ADR 107).
  * Only the platform sender is guarded: an organization sending through its own
  * provider spends its own reputation. The pause lifts by itself once the
- * bounces leave the rolling window.
+ * bounces leave the rolling window. The answer is kept for a minute per
+ * organization (`jiku.messaging.check-cache-ttl`), so a batch does not count
+ * again for each email.
  */
 @Component
 class TenantEmailPause(
@@ -28,10 +32,14 @@ class TenantEmailPause(
     private val feedback: EmailFeedbackRepository,
     private val properties: EmailReputationProperties,
     private val events: ApplicationEventPublisher,
+    @Value("\${jiku.messaging.check-cache-ttl:60s}") checkCacheTtl: Duration,
 ) {
     private val alertedOn = ConcurrentHashMap<String, LocalDate>()
+    private val paused = PerTenantCache<Boolean>(checkCacheTtl)
 
-    fun isPaused(tenantId: String): Boolean {
+    fun isPaused(tenantId: String): Boolean = paused.get(tenantId) { bounceRateTooHigh(tenantId) } ?: false
+
+    private fun bounceRateTooHigh(tenantId: String): Boolean {
         if (properties.tenantPauseBounceRate <= 0.0) return false
         val since = Instant.now().minus(properties.windowHours, ChronoUnit.HOURS)
         val sent = logs.countSentByTenantAndChannelSince(tenantId, EMAIL_CHANNEL, since)
