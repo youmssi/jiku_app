@@ -9,6 +9,7 @@ import com.jiku.shared.ReminderDue
 import com.jiku.shared.TenantContext
 import com.jiku.support.OrganizerApi
 import com.sun.net.httpserver.HttpServer
+import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -24,8 +25,10 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.net.InetSocketAddress
+import java.time.Duration
 import java.time.Instant
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 import kotlin.test.assertEquals
 
@@ -148,13 +151,18 @@ class SoloReminderAllowanceTest {
     /** Collects what the messaging module reports back for each reminder. */
     @Component
     class Deliveries {
-        private val byId = mutableMapOf<UUID, ReminderDelivered>()
+        private val byId = ConcurrentHashMap<UUID, ReminderDelivered>()
 
         @EventListener
         fun on(delivered: ReminderDelivered) {
             byId[delivered.reminderId] = delivered
         }
 
-        fun of(reminderId: UUID): ReminderDelivered = requireNotNull(byId[reminderId]) { "No delivery reported for $reminderId" }
+        /** Delivery runs in the background (JIKU-215): waits for its report. */
+        fun of(reminderId: UUID): ReminderDelivered =
+            await().pollInSameThread().atMost(Duration.ofSeconds(10)).until({ byId[reminderId] }, {
+                it !=
+                    null
+            })!!
     }
 }

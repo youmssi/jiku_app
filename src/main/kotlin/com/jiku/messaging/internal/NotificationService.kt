@@ -238,7 +238,7 @@ class NotificationService(
         phone: String,
         send: () -> Unit,
     ): DeliveryOutcome =
-        deliverWithRetry(send) { status, attempt, error ->
+        deliverWithRetry(send, backoff = false) { status, attempt, error ->
             record(referenceId, channel.name, phone, status, attempt, error)
         }
 
@@ -310,10 +310,12 @@ class NotificationService(
 
     private fun deliverWithRetry(
         send: () -> Unit,
+        backoff: Boolean = true,
         record: (status: String, attempt: Int, error: String?) -> Unit,
     ): DeliveryOutcome {
         var lastError: String? = null
         for (attempt in 1..sendProperties.maxAttempts) {
+            if (attempt > 1 && backoff) Thread.sleep(sendProperties.backoffBefore(attempt))
             try {
                 send()
                 record(NotificationLog.STATUS_SENT, attempt, null)

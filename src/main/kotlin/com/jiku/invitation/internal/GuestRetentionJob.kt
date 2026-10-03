@@ -3,6 +3,7 @@ package com.jiku.invitation.internal
 import com.jiku.catalog.EventModuleApi
 import com.jiku.shared.RetentionProperties
 import com.jiku.shared.TenantContext
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -27,6 +28,7 @@ class GuestRetentionJob(
     private val log = LoggerFactory.getLogger(GuestRetentionJob::class.java)
 
     @Scheduled(cron = "\${compliance.retention.cron:0 30 3 * * *}")
+    @SchedulerLock(name = "GuestRetentionJob.enforceRetention")
     fun enforceRetention() {
         val anonymized = anonymizePastEvents()
         if (anonymized > 0) {

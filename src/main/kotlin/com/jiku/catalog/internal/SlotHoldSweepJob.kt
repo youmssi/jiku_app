@@ -1,6 +1,7 @@
 package com.jiku.catalog.internal
 
 import com.jiku.shared.TenantContext
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.Instant
@@ -19,6 +20,7 @@ class SlotHoldSweepJob(
     private val engine: SlotEngine,
 ) {
     @Scheduled(cron = "\${appointment.hold.sweep-cron:0 * * * * *}")
+    @SchedulerLock(name = "SlotHoldSweepJob.sweep")
     fun sweep() {
         val now = Instant.now()
         for (tenantId in reservations.expiredHoldTenantIds(now)) {

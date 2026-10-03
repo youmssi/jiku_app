@@ -5,6 +5,7 @@ import com.jiku.shared.ReminderChannel
 import com.jiku.shared.ReminderDue
 import com.jiku.shared.TicketConfirmedNotice
 import com.jiku.support.OrganizerApi
+import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -13,6 +14,7 @@ import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Import
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.web.servlet.MockMvc
+import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 import kotlin.random.Random
@@ -76,8 +78,11 @@ class ListenerTenantBindingTest {
             ),
         )
 
-        assertEquals(listOf(tenantId), tenantsOfLogsTo(phone))
-        assertEquals(listOf(tenantId), tenantsOfLogsTo(email))
+        // Delivery runs in the background (JIKU-215).
+        await().pollInSameThread().atMost(Duration.ofSeconds(10)).untilAsserted {
+            assertEquals(listOf(tenantId), tenantsOfLogsTo(phone))
+            assertEquals(listOf(tenantId), tenantsOfLogsTo(email))
+        }
     }
 
     private fun tenantsOfLogsTo(recipient: String): List<String> =

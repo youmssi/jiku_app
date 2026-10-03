@@ -1,4 +1,10 @@
 jiku:
+  # Background executors (JIKU-215): threads for volume work (invitation
+  # batches, tickets, cancellations, reminders) and the cap on urgent work
+  # running at once ("your turn", phone codes, chat answers).
+  async:
+    bulk-threads: ${ASYNC_BULK_THREADS:8}
+    urgent-concurrency: ${ASYNC_URGENT_CONCURRENCY:64}
   mail:
     # Email delivery transport: log (default — records sends without delivering,
     # so a fresh clone works with zero setup), smtp (Mailpit from docker-compose
@@ -126,6 +132,12 @@ logging:
     correlation: "[%X{requestId:-}] [%X{tenantId:-}] "
 
 spring:
+  # Scheduled jobs no longer wait for each other (JIKU-215): the retention
+  # purge at night would otherwise hold up the reminder sweep.
+  task:
+    scheduling:
+      pool:
+        size: ${SCHEDULING_POOL_SIZE:4}
   config:
     import: optional:file:.env[.properties]
   application:
@@ -520,6 +532,9 @@ invitation:
   # the WhatsApp conversation window, JIKU-61, or the email routing quota,
   # JIKU-62) are retried.
   queue-sweep-cron: ${INVITATION_QUEUE_SWEEP_CRON:0 */15 * * * *}
+  # An invitation still PENDING this long after it was handed to the sender
+  # was lost by a restart and is handed over again by the sweep (JIKU-215).
+  stale-pending-minutes: ${INVITATION_STALE_PENDING_MINUTES:30}
 
 catalog:
   operator-link:
@@ -579,6 +594,9 @@ notification:
   send:
     # Delivery attempts before a notification is recorded as permanently failed.
     max-attempts: ${NOTIFICATION_MAX_ATTEMPTS:3}
+    # Wait before each new attempt, in milliseconds (JIKU-215); messages that
+    # fall back to SMS retry at once.
+    retry-backoff-ms: ${NOTIFICATION_RETRY_BACKOFF_MS:2000,8000}
   reputation:
     # Shared secret the email provider must present on the feedback webhook.
     webhook-secret: ${NOTIFICATION_WEBHOOK_SECRET:local-development-webhook-secret}

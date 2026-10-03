@@ -2,10 +2,12 @@ package com.jiku.messaging.internal
 
 import com.jiku.shared.ReminderDelivered
 import com.jiku.shared.ReminderDue
-import com.jiku.shared.TenantTransaction
+import com.jiku.shared.TenantContext
+import com.jiku.shared.async.Executors
 import org.springframework.context.ApplicationEventPublisher
-import org.springframework.context.event.EventListener
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
+import org.springframework.transaction.event.TransactionalEventListener
 
 /**
  * Entrée messaging d'un rappel (JIKU-89) : [ReminderDue] publié par le module
@@ -14,13 +16,13 @@ import org.springframework.stereotype.Component
  */
 @Component
 class ReminderNotificationListener(
-    private val tenantTransaction: TenantTransaction,
     private val notificationService: NotificationService,
     private val events: ApplicationEventPublisher,
 ) {
-    @EventListener
+    @Async(Executors.BULK)
+    @TransactionalEventListener(fallbackExecution = true)
     fun onReminderDue(event: ReminderDue) {
-        tenantTransaction.run(event.tenantId) {
+        TenantContext.withTenant(event.tenantId) {
             val outcome = notificationService.deliverAppointmentReminder(event)
             events.publishEvent(
                 ReminderDelivered(

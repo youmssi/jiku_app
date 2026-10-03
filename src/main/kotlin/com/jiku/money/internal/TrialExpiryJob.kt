@@ -1,5 +1,6 @@
 package com.jiku.money.internal
 
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -15,6 +16,7 @@ class TrialExpiryJob(
     private val log = LoggerFactory.getLogger(TrialExpiryJob::class.java)
 
     @Scheduled(cron = "\${billing.trial.cron:0 15 * * * *}")
+    @SchedulerLock(name = "TrialExpiryJob.sweep")
     fun sweep() {
         val notified = trialService.notifyExpiring()
         val processed = trialService.expireDue()

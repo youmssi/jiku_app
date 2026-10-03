@@ -1,6 +1,7 @@
 package com.jiku.money.internal
 
 import com.jiku.shared.TenantContext
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.Instant
@@ -18,6 +19,7 @@ class SubscriptionExpiryJob(
     private val worker: SubscriptionExpiryWorker,
 ) {
     @Scheduled(cron = "\${billing.subscription.cron:0 30 4 * * *}")
+    @SchedulerLock(name = "SubscriptionExpiryJob.sweep")
     fun sweep() {
         val now = Instant.now()
         val graceEnd = now.minus(properties.grace)
