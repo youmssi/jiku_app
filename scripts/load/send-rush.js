@@ -1,5 +1,6 @@
 // An invitation batch during the event (JIKU-216): GUESTS invitations are sent
-// by email while organizers keep their screens open and guests open the card.
+// by email while organizers keep their screens open and guests open the card
+// (about 100 views a minute, under the per-card limit of 120).
 // Checks that the batch does not slow the API down, and that every invitation
 // is sent within SEND_MINUTES. Run against the acceptance environment, never
 // production, with MAIL_TRANSPORT=log and MAIL_LOG_LATENCY=300ms on the API:
@@ -30,7 +31,7 @@ export const options = {
             vus: ORGANIZERS,
             duration: `${SEND_MINUTES}m`,
         },
-        cardPage: { executor: 'constant-vus', exec: 'openCard', vus: 50, duration: `${SEND_MINUTES}m` },
+        cardPage: { executor: 'constant-vus', exec: 'openCard', vus: 25, duration: `${SEND_MINUTES}m` },
         progress: {
             executor: 'shared-iterations',
             exec: 'waitForBatch',
@@ -122,7 +123,7 @@ export function organizerScreens(data) {
 export function openCard(data) {
     const response = http.get(`${API}/open/${data.cardCode}`);
     check(response, { 'card page served': (r) => r.status === 200 });
-    sleep(2 + Math.random() * 2);
+    sleep(10 + Math.random() * 10);
 }
 
 export function waitForBatch(data) {

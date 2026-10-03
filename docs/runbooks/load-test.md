@@ -67,7 +67,8 @@ recette. À ajouter ici après la bascule (`docs/deploy-vps.md`).
 
 **Quoi :** `scripts/load/send-rush.js` (k6) envoie **1 000 invitations** par
 e-mail pendant que **20 organisateurs** gardent leurs écrans ouverts et que
-**50 visiteurs** ouvrent la carte publique. Il vérifie que le lot ne ralentit
+**25 visiteurs** ouvrent la carte publique (environ 100 fois par minute, sous
+la limite de 120). Il vérifie que le lot ne ralentit
 pas l'API et que toutes les invitations partent dans la fenêtre.
 
 ## Seuils
@@ -105,4 +106,4 @@ Débit attendu : `ASYNC_BULK_THREADS` envois en parallèle, soit 8 × (1 s / 300
 
 | Date | Environnement | Invitations / latence fournisseur | Lot envoyé en | Écrans p95 | Carte p95 |
 |---|---|---|---|---|---|
-
+| 2026-10-03 | Poste de développement : API et PostgreSQL locaux, une instance, threads virtuels | 1 000 / 300 ms | 39 s (26 par seconde) | 24 ms | 20 ms |
