@@ -21,6 +21,14 @@ data class RateLimitProperties(
     val store: Store = Store.MEMORY,
     /** Named policies, matched against the request path relative to the API base path. */
     val policies: Map<String, Policy> = emptyMap(),
+    /**
+     * Shared with the web server, which calls the API on the visitor's behalf
+     * (Server Actions, server rendering): every such call comes from the web
+     * host's address, so without it all visitors would share one budget. A
+     * request carrying this secret may name the visitor's IP; blank turns the
+     * header off, and a wrong secret is ignored.
+     */
+    val forwardedClientIpSecret: String = "",
 ) {
     enum class Store {
         /** Per-instance counters held in a map; no database round trip. */
