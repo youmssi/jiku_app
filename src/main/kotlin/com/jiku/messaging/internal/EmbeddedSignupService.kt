@@ -59,7 +59,7 @@ class EmbeddedSignupService(
                 val dedicated = properties.meta.dedicatedTemplates
                 if (dedicated) {
                     publisher
-                        .publishDedicated(wabaId, token)
+                        .publishDedicated(wabaId, token, WhatsAppTemplateKind.entries.filterNot { it.platformOnly })
                         .filterNot { it.created }
                         .forEach { log.warn("Template {} ({}) not created in account {}: {}", it.name, it.language, wabaId, it.error) }
                 } else {

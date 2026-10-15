@@ -82,6 +82,11 @@ class WhatsAppTemplateCalls(
         )
     }
 
+    fun phoneCode(
+        code: String,
+        language: String,
+    ): WhatsAppTemplateCall = WhatsAppTemplateCall(WhatsAppTemplateKind.PHONE_CODE, MessageLanguage.normalize(language), listOf(code))
+
     fun clientCalled(
         clientName: String?,
         counter: String?,

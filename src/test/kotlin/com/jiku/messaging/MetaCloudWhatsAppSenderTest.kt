@@ -262,6 +262,22 @@ class MetaCloudWhatsAppSenderTest {
     }
 
     @Test
+    fun `a phone code goes out as the authentication template, the code on its copy button too`() {
+        val code = message.copy(template = WhatsAppTemplateCall(WhatsAppTemplateKind.PHONE_CODE, "fr", listOf("481902")))
+        val sender =
+            mockedSender(templateName = null, gate = RecordingGate(), templatePrefix = "jiku_") {
+                expectBody(
+                    it,
+                    "\"name\":\"jiku_phone_code_v1\"",
+                    "\"sub_type\":\"url\"",
+                    "\"index\":\"0\"",
+                    "{\"type\":\"text\",\"text\":\"481902\"}",
+                )
+            }
+        sender.send(code)
+    }
+
+    @Test
     fun `the dedicated template is checked under its own name and language`() {
         val sender =
             mockedSender(

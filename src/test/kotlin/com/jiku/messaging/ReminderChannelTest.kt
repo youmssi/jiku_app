@@ -10,6 +10,8 @@ import com.jiku.messaging.internal.WhatsAppMessage
 import com.jiku.messaging.internal.WhatsAppSender
 import com.jiku.messaging.internal.WhatsAppSentMessageRepository
 import com.jiku.messaging.internal.WhatsAppStatusUpdate
+import com.jiku.messaging.internal.WhatsAppTemplateKind
+import com.jiku.shared.PhoneCodeRequested
 import com.jiku.shared.ReminderChannel
 import com.jiku.shared.ReminderDue
 import com.jiku.shared.TenantContext
@@ -132,6 +134,25 @@ class ReminderChannelTest {
         assertTrue(send(ReminderChannel.SMS).delivered)
         assertTrue(providers.whatsApps.isEmpty())
         assertEquals(1, providers.smses.size)
+    }
+
+    @Test
+    fun `a phone code goes on WhatsApp first, SMS taking over when WhatsApp cannot deliver`() {
+        val requested = PhoneCodeRequested(tenantId = "reminder-channel-tenant", phone = "+224620000009", code = "481902")
+
+        assertTrue(TenantContext.withTenant("reminder-channel-tenant") { notifications.deliverPhoneCode(requested) }.delivered)
+        assertEquals(
+            WhatsAppTemplateKind.PHONE_CODE,
+            providers.whatsApps
+                .single()
+                .template
+                ?.kind,
+        )
+        assertTrue(providers.smses.isEmpty())
+
+        providers.whatsAppFails.set(true)
+        assertTrue(TenantContext.withTenant("reminder-channel-tenant") { notifications.deliverPhoneCode(requested) }.delivered)
+        assertTrue("481902" in providers.smses.single().body)
     }
 
     @Test

@@ -328,5 +328,50 @@
         "text": "Jikū · Reply STOP to stop these messages"
       }
     ]
+  },
+  "phone_code_v1": {
+    "parameters": [
+      "code"
+    ],
+    "fr": [
+      {
+        "type": "BODY",
+        "add_security_recommendation": true
+      },
+      {
+        "type": "FOOTER",
+        "code_expiration_minutes": 10
+      },
+      {
+        "type": "BUTTONS",
+        "buttons": [
+          {
+            "type": "OTP",
+            "otp_type": "COPY_CODE",
+            "text": "Copier le code"
+          }
+        ]
+      }
+    ],
+    "en": [
+      {
+        "type": "BODY",
+        "add_security_recommendation": true
+      },
+      {
+        "type": "FOOTER",
+        "code_expiration_minutes": 10
+      },
+      {
+        "type": "BUTTONS",
+        "buttons": [
+          {
+            "type": "OTP",
+            "otp_type": "COPY_CODE",
+            "text": "Copy code"
+          }
+        ]
+      }
+    ]
   }
 }

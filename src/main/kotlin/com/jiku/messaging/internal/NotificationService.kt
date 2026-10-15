@@ -178,15 +178,21 @@ class NotificationService(
         )
     }
 
-    /** Sends an organization its phone verification code, by SMS so any number receives it. */
-    fun deliverPhoneCode(requested: PhoneCodeRequested): DeliveryOutcome =
-        deliverToPhone(
+    /**
+     * Sends an organization its phone verification code on WhatsApp, as Meta's
+     * authentication template with a copy button; an SMS takes over when
+     * WhatsApp cannot deliver, so a number without WhatsApp still gets it.
+     */
+    fun deliverPhoneCode(requested: PhoneCodeRequested): DeliveryOutcome {
+        val language = catalog.language(requested.tenantId)
+        return deliverToPhone(
             UUID.randomUUID(),
             requested.phone,
-            ReminderChannel.SMS,
-            whatsAppRenderer.renderPhoneCode(requested.code, catalog.language(requested.tenantId)),
-            template = null,
+            ReminderChannel.WHATSAPP_OR_SMS,
+            whatsAppRenderer.renderPhoneCode(requested.code, language),
+            templateCalls.phoneCode(requested.code, language),
         )
+    }
 
     /**
      * Sends [text] to a client's phone by [channel]. With WHATSAPP_OR_SMS, an SMS
