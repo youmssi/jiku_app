@@ -76,12 +76,18 @@ class WhatsAppTemplateRenderer(
             ),
         )
 
-    /** "It's your turn" for a waiting client (JIKU-114); also the SMS text. */
+    /**
+     * The phone verification code: Jikū's own text, which no organization
+     * customizes, so it is read straight from the catalog rather than through
+     * the client templates (where it has no entry, and rendering it there
+     * failed every time).
+     */
     fun renderPhoneCode(
         code: String,
         language: String,
-    ): String = render("phone-code", language, mapOf("code" to code))
+    ): String = catalog.substitute(catalog.whatsAppTemplate(language, "phone-code.txt"), mapOf("code" to code))
 
+    /** "It's your turn" for a waiting client (JIKU-114); also the SMS text. */
     fun renderClientCalled(
         clientName: String,
         counter: String?,

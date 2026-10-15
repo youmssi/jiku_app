@@ -107,7 +107,7 @@ class EmbeddedSignupTest {
                     Regex("\"language\":\"(\\w+)\"").find(it.body)!!.groupValues[1]
             }
         assertEquals(
-            WhatsAppTemplateKind.entries.flatMap { listOf("jiku_${it.key}:fr", "jiku_${it.key}:en") },
+            WhatsAppTemplateKind.entries.filterNot { it.platformOnly }.flatMap { listOf("jiku_${it.key}:fr", "jiku_${it.key}:en") },
             created,
         )
         assertTrue(templates.all { "\"category\":\"UTILITY\"" in it.body })
