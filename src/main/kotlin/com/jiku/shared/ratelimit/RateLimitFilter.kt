@@ -10,6 +10,7 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.filter.OncePerRequestFilter
+import java.security.MessageDigest
 
 /**
  * Enforces the configured [RateLimitProperties] policies on every request whose
@@ -19,7 +20,9 @@ import org.springframework.web.filter.OncePerRequestFilter
  *
  * Keys combine the policy name, the client IP and — for link-token flows — the
  * token path segment, so a busy venue NAT does not lump every validator together
- * and a scanning attacker cannot rotate tokens for a fresh budget.
+ * and a scanning attacker cannot rotate tokens for a fresh budget. The client IP
+ * is the one the web server forwards for its visitor when it proves itself with
+ * [RateLimitProperties.forwardedClientIpSecret], the connection's address otherwise.
  */
 @Component
 // Runs just before the Spring Security filter chain (registered at -100 by
@@ -82,6 +85,23 @@ class RateLimitFilter(
             policy.tokenSegment?.let { index ->
                 relativePath.trim('/').split('/').getOrNull(index)
             }
-        return listOfNotNull(policyName, request.remoteAddr, token).joinToString(":")
+        return listOfNotNull(policyName, clientIp(request), token).joinToString(":")
+    }
+
+    private fun clientIp(request: HttpServletRequest): String {
+        val secret = properties.forwardedClientIpSecret
+        if (secret.isBlank()) return request.remoteAddr
+        val presented = request.getHeader(CLIENT_IP_SECRET_HEADER) ?: return request.remoteAddr
+        if (!MessageDigest.isEqual(presented.toByteArray(), secret.toByteArray())) return request.remoteAddr
+        val forwarded = request.getHeader(CLIENT_IP_HEADER)?.trim()
+        return forwarded?.takeIf { IP_LITERAL.matches(it) } ?: request.remoteAddr
+    }
+
+    companion object {
+        const val CLIENT_IP_HEADER = "X-Jiku-Client-Ip"
+        const val CLIENT_IP_SECRET_HEADER = "X-Jiku-Client-Ip-Secret"
+
+        /** An IPv4 or IPv6 literal: digits, hex letters, dots and colons, nothing else. */
+        private val IP_LITERAL = Regex("^[0-9A-Fa-f:.]{2,45}$")
     }
 }

@@ -105,13 +105,17 @@ class MetaCloudWhatsAppSender internal constructor(
         val header = message.imageUrl?.let { headerComponent(mapOf("type" to "image", "image" to mapOf("link" to it))) }
         val body = mapOf("type" to "body", "parameters" to call.parameters.map { mapOf("type" to "text", "text" to it) })
         val buttons =
-            message.buttons.mapIndexed { index, button ->
-                mapOf(
-                    "type" to "button",
-                    "sub_type" to "quick_reply",
-                    "index" to index.toString(),
-                    "parameters" to listOf(mapOf("type" to "payload", "payload" to button.id)),
-                )
+            if (call.kind.authentication) {
+                listOf(copyCodeButton(call.parameters.first()))
+            } else {
+                message.buttons.mapIndexed { index, button ->
+                    mapOf(
+                        "type" to "button",
+                        "sub_type" to "quick_reply",
+                        "index" to index.toString(),
+                        "parameters" to listOf(mapOf("type" to "payload", "payload" to button.id)),
+                    )
+                }
             }
         return session(
             message.to,
@@ -123,6 +127,15 @@ class MetaCloudWhatsAppSender internal constructor(
             ),
         )
     }
+
+    /** An authentication template's copy-code button carries the code again, as Meta requires. */
+    private fun copyCodeButton(code: String): Map<String, Any> =
+        mapOf(
+            "type" to "button",
+            "sub_type" to "url",
+            "index" to "0",
+            "parameters" to listOf(mapOf("type" to "text", "text" to code)),
+        )
 
     private fun errorCode(body: String): Int? =
         ERROR_CODE

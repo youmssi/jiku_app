@@ -261,6 +261,10 @@ api:
     # API runs more than one instance: with memory, N instances each grant the full
     # budget, silently multiplying every limit below by N.
     store: ${RATE_LIMIT_STORE:memory}
+    # Secret shared with the web server, so a budget follows the visitor rather
+    # than the web host that calls the API for them. Blank: the connection's
+    # address is the client IP. Same value as the web's API_CLIENT_IP_SECRET.
+    forwarded-client-ip-secret: ${RATE_LIMIT_FORWARDED_CLIENT_IP_SECRET:}
     # How often elapsed windows are deleted; only runs with store=database.
     sweep-cron: ${RATE_LIMIT_SWEEP_CRON:0 */10 * * * *}
     policies:

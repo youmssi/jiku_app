@@ -27,7 +27,7 @@ class DedicatedWhatsAppTemplatesTest {
 
     @Test
     fun `every template is defined in both languages the way Meta accepts it`() {
-        for (kind in WhatsAppTemplateKind.entries) {
+        for (kind in WhatsAppTemplateKind.entries.filterNot { it.authentication }) {
             val definition = definitions.path(kind.key)
             val parameters = definition.path("parameters").size()
             for (language in listOf("fr", "en")) {
@@ -53,6 +53,21 @@ class DedicatedWhatsAppTemplatesTest {
                 assertEquals(kind == WhatsAppTemplateKind.TICKET, components.any { it.path("format").asString("") == "IMAGE" })
             }
         }
+    }
+
+    @Test
+    fun `the phone code template is Meta's authentication format with a copy button`() {
+        val definition = definitions.path(WhatsAppTemplateKind.PHONE_CODE.key)
+        for (language in listOf("fr", "en")) {
+            val components = definition.path(language).toList()
+            val body = components.single { it.path("type").asString("") == "BODY" }
+            assertTrue(body.path("add_security_recommendation").asBoolean(false), language)
+            assertFalse(body.has("text"), "Meta writes the text of an authentication template: $language")
+            val button = components.single { it.path("type").asString("") == "BUTTONS" }.path("buttons").single()
+            assertEquals("OTP", button.path("type").asString(""), language)
+            assertEquals("COPY_CODE", button.path("otp_type").asString(""), language)
+        }
+        assertEquals(listOf("481902"), calls.phoneCode("481902", "fr-FR").parameters)
     }
 
     @Test

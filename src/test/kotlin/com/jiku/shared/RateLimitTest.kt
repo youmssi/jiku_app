@@ -93,7 +93,21 @@ class RateLimitTest {
                     ),
             )
 
-        private fun filter() = RateLimitFilter(properties, ApiProperties(basePath = "/api/v1"), InMemoryRateLimiter())
+        private fun filter(secret: String = "") =
+            RateLimitFilter(
+                properties.copy(forwardedClientIpSecret = secret),
+                ApiProperties(basePath = "/api/v1"),
+                InMemoryRateLimiter(),
+            )
+
+        private fun fromWebServer(
+            visitorIp: String,
+            secret: String,
+        ): MockHttpServletRequest =
+            request("/api/v1/auth/login", ip = "198.51.100.7").apply {
+                addHeader(RateLimitFilter.CLIENT_IP_HEADER, visitorIp)
+                addHeader(RateLimitFilter.CLIENT_IP_SECRET_HEADER, secret)
+            }
 
         private fun request(
             uri: String,
@@ -149,6 +163,32 @@ class RateLimitTest {
                 .isEqualTo(HttpStatus.TOO_MANY_REQUESTS.value())
             assertThat(run(filter, request("/api/v1/rsvp/token-b/confirm")).status)
                 .isEqualTo(HttpStatus.OK.value())
+        }
+
+        @Test
+        fun `visitors behind the web server keep their own budget when it proves itself`() {
+            val filter = filter(secret = "shared-secret")
+            repeat(3) { run(filter, fromWebServer("203.0.113.10", "shared-secret")) }
+            assertThat(run(filter, fromWebServer("203.0.113.10", "shared-secret")).status)
+                .isEqualTo(HttpStatus.TOO_MANY_REQUESTS.value())
+            assertThat(run(filter, fromWebServer("203.0.113.99", "shared-secret")).status)
+                .isEqualTo(HttpStatus.OK.value())
+        }
+
+        @Test
+        fun `a forwarded IP without the right secret is ignored`() {
+            val filter = filter(secret = "shared-secret")
+            repeat(2) { run(filter, fromWebServer("203.0.113.${it + 1}", "guessed")) }
+            assertThat(run(filter, fromWebServer("203.0.113.50", "guessed")).status)
+                .isEqualTo(HttpStatus.TOO_MANY_REQUESTS.value())
+        }
+
+        @Test
+        fun `the header is ignored when no secret is configured`() {
+            val filter = filter()
+            repeat(2) { run(filter, fromWebServer("203.0.113.${it + 1}", "")) }
+            assertThat(run(filter, fromWebServer("203.0.113.50", "")).status)
+                .isEqualTo(HttpStatus.TOO_MANY_REQUESTS.value())
         }
 
         @Test

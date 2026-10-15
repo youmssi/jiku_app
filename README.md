@@ -193,6 +193,7 @@ live service afterwards. Step-by-step guides:
 - [Deploying to a permanent host](docs/deploy.md)
 - [Backups](docs/backup.md) and [database restore](docs/runbooks/database-restore.md)
 - [Uptime and performance](docs/runbooks/uptime-and-performance.md)
+- [Testing the WhatsApp integration with Meta's MCP server](docs/runbooks/whatsapp-mcp.md)
 - [Pre-launch security review](docs/security/pre-launch-security-review.md)
 - [User acceptance test plan](docs/uat/uat-test-plan.md)
 

@@ -22,8 +22,8 @@ data class TemplatePublication(
 
 /**
  * Creates the dedicated WhatsApp templates (JIKU-210) in a WhatsApp Business
- * Account: every [WhatsAppTemplateKind] in French and English, as UTILITY,
- * from `whatsapp-templates/meta/dedicated.json`. Meta then reviews each one;
+ * Account: the given [WhatsAppTemplateKind]s in French and English, each in
+ * its own category, from `whatsapp-templates/meta/dedicated.json`. Meta then reviews each one;
  * one it refuses, or one that already exists, is reported and does not stop
  * the others.
  */
@@ -36,6 +36,7 @@ class WhatsAppTemplatePublisher(
     fun publishDedicated(
         wabaId: String,
         token: String,
+        kinds: List<WhatsAppTemplateKind> = WhatsAppTemplateKind.entries,
     ): List<TemplatePublication> {
         val definitions =
             ClassPathResource(DEFINITIONS).inputStream.use { objectMapper.readValue<Map<String, Map<String, Any>>>(it) }
@@ -44,12 +45,12 @@ class WhatsAppTemplatePublisher(
                 meta.uploadExample(token, EXAMPLE_IMAGE, "image/png", ClassPathResource(EXAMPLE_IMAGE_PATH).contentAsByteArray)
             }
         }
-        return WhatsAppTemplateKind.entries.flatMap { kind ->
+        return kinds.flatMap { kind ->
             val definition = requireNotNull(definitions[kind.key]) { "No definition for WhatsApp template ${kind.key}" }
             LANGUAGES.map { language ->
                 val name = properties.meta.templatePrefix + kind.key
                 val components = definition[language] ?: error("No $language text for WhatsApp template ${kind.key}")
-                publish(name, language, components, if (definition["image"] == true) imageHandle else null, wabaId, token)
+                publish(name, language, kind.category, components, if (definition["image"] == true) imageHandle else null, wabaId, token)
             }
         }
     }
@@ -57,6 +58,7 @@ class WhatsAppTemplatePublisher(
     private fun publish(
         name: String,
         language: String,
+        category: String,
         components: Any,
         imageHandle: Result<String>?,
         wabaId: String,
@@ -76,7 +78,7 @@ class WhatsAppTemplatePublisher(
             mapOf(
                 "name" to name,
                 "language" to language,
-                "category" to "UTILITY",
+                "category" to category,
                 "components" to objectMapper.readValue<List<Map<String, Any>>>(json),
             )
         return runCatching { meta.createTemplate(wabaId, token, template) }
