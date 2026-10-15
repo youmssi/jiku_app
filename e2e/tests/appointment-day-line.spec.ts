@@ -40,7 +40,7 @@ async function api<T>(path: string, { token, body, method = 'GET' }: ApiOptions 
     return response.status === 204 ? (null as T) : ((await response.json()) as T);
 }
 
-/** Creates a service open all week on Africa/Conakry, returns it bookable. */
+/** Creates a service open all week on Africa/Conakry, bookable today whatever the hour. */
 async function createDayService(token: string): Promise<DayService> {
     const service = await api<{ id: string }>('/services', {
         token,
@@ -63,6 +63,14 @@ async function createDayService(token: string): Promise<DayService> {
         token,
         method: 'POST',
         body: { type: 'PERSON', quantity: 1 },
+    });
+    // The product's grid (30-minute slots, booked at least two hours ahead)
+    // leaves nothing bookable today from mid-evening on; a fine grid with no
+    // minimum notice keeps a slot open until a few minutes before midnight.
+    await api(`/services/${service.id}/configuration`, {
+        token,
+        method: 'PUT',
+        body: { stepMinutes: 5, durationMinutes: 5, bufferMinutes: 0, minHorizonMinutes: 0 },
     });
     return { serviceId: service.id, name: 'Coupe' };
 }
