@@ -3,6 +3,8 @@ package com.jiku.catalog.internal
 import com.jiku.catalog.CardStyle
 import com.jiku.shared.ApiProperties
 import com.jiku.shared.BaseTenantEntity
+import com.jiku.shared.ImageRules
+import com.jiku.shared.acceptUploadedImage
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
@@ -16,10 +18,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
-import java.io.ByteArrayInputStream
 import java.time.Instant
 import java.util.UUID
-import javax.imageio.ImageIO
 
 /** Limits and public address of event banner photos (JIKU-194). */
 @ConfigurationProperties(prefix = "catalog.banner")
@@ -112,28 +112,18 @@ class EventLookService(
         now: Instant = Instant.now(),
     ): EventLookView {
         val event = load(eventId)
-        val type = contentType?.substringBefore(';')?.trim()?.lowercase()
-        if (type !in ACCEPTED_TYPES) {
-            throw ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "The photo must be a JPEG or PNG image")
-        }
-        if (content.isEmpty() || content.size > properties.maxBytes) {
-            throw ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "The photo must be at most ${properties.maxBytes} bytes")
-        }
-        val image =
-            runCatching { ImageIO.read(ByteArrayInputStream(content)) }.getOrNull()
-                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "This file is not a readable image")
-        if (image.width < properties.minWidth || image.height < properties.minHeight) {
-            throw ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "The photo must be at least ${properties.minWidth} × ${properties.minHeight} pixels",
+        val type =
+            acceptUploadedImage(
+                content,
+                contentType,
+                ImageRules(maxBytes = properties.maxBytes, minWidth = properties.minWidth, minHeight = properties.minHeight),
             )
-        }
         val banner =
             banners.findById(eventId).orElse(null)?.apply {
                 this.content = content
-                this.contentType = requireNotNull(type)
+                this.contentType = type
                 updatedAt = now
-            } ?: EventBanner(eventId = eventId, content = content, contentType = requireNotNull(type), updatedAt = now)
+            } ?: EventBanner(eventId = eventId, content = content, contentType = type, updatedAt = now)
         banners.save(banner)
         event.bannerUpdatedAt = now
         return events.save(event).toLook()
@@ -161,8 +151,4 @@ class EventLookService(
 
     private fun load(eventId: UUID): Event =
         events.findById(eventId).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found") }
-
-    private companion object {
-        val ACCEPTED_TYPES = setOf("image/jpeg", "image/png")
-    }
 }

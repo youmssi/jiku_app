@@ -234,6 +234,13 @@ tenant:
     # creation. The default country applies when a sign-up names none.
     default-country: ${TENANT_DEFAULT_COUNTRY:GN}
     supported-countries: ${TENANT_SUPPORTED_COUNTRIES:GN}
+  images:
+    # Logo et bannière de l'organisation (JIKU-259), servis par cette API.
+    api-public-url: ${API_PUBLIC_URL:http://localhost:8080}
+    max-bytes: ${TENANT_IMAGE_MAX_BYTES:1048576}
+    logo-min-size: ${TENANT_LOGO_MIN_SIZE:128}
+    banner-min-width: ${TENANT_BANNER_MIN_WIDTH:600}
+    banner-min-height: ${TENANT_BANNER_MIN_HEIGHT:150}
 
 jwt:
   # HMAC signing secret (minimum 32 bytes). The default is for local use only;
