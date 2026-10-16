@@ -53,8 +53,9 @@ test.describe('Validator check-in', () => {
         await expect(admitted).toBeVisible();
         await expect(admitted.getByText('Ibrahima Sow')).toBeVisible();
 
-        // Dismiss the result and admit the same guest again.
-        await admitted.getByRole('button', { name: 'Scan next' }).click();
+        // A valid entry hands the door back by itself, then the same guest is
+        // admitted again.
+        await expect(admitted).toBeHidden({ timeout: 5_000 });
         await page.getByPlaceholder('Search by name, email or phone').fill('Ibrahima');
         await page.getByRole('button', { name: /Ibrahima Sow/ }).click();
 
