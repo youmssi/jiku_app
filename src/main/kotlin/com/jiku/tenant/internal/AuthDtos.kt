@@ -82,6 +82,8 @@ data class MeResponse(
     val email: String,
     /** Null when the account never provided a name; the UI shows the email. */
     val fullName: String?,
+    /** Whether the address is proven; sending on the organization's behalf waits for it (JIKU-253). */
+    val emailVerified: Boolean = false,
     val tenantId: String,
     val role: String,
     val memberships: List<MembershipView>,

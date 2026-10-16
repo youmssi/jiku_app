@@ -61,8 +61,8 @@ class AuthService(
 
     /**
      * Creates an organization owned by the caller and rebinds the session to it.
-     * Requires a verified email (JIKU-49) so the platform never carries an
-     * organization whose owner address was never proven.
+     * An unverified address may create and prepare an organization (JIKU-253);
+     * what the organization sends waits for the proven address ([com.jiku.shared.SenderGate]).
      */
     @Transactional
     fun createOrganization(
@@ -70,9 +70,6 @@ class AuthService(
         request: CreateOrgRequest,
     ): AuthResponse {
         val user = requireUser(userId)
-        if (!user.emailVerified) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Verify your email address before creating an organization")
-        }
         return tokensFor(user, createOrganizationFor(user, request.name.trim(), request.country))
     }
 
@@ -209,6 +206,7 @@ class AuthService(
             userId = userId,
             email = user.email,
             fullName = user.fullName,
+            emailVerified = user.emailVerified,
             tenantId = activeTenantId,
             role = activeRole,
             marketingConsent = user.marketingConsent.granted,

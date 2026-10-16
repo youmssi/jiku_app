@@ -82,8 +82,17 @@ class AccountTokenService(
         sendEmailVerification(user)
     }
 
+    /**
+     * Proves the address. The same link opened again (a mail app's preview,
+     * then the browser) answers as a success once the address is proven,
+     * instead of a misleading "invalid link" (JIKU-253).
+     */
     @Transactional
     fun verifyEmail(rawToken: String) {
+        val used = tokens.findByTokenHash(Tokens.hash(rawToken))
+        if (used != null && used.purpose == AccountTokenPurpose.EMAIL_VERIFICATION && used.usedAt != null) {
+            if (users.findById(used.userId).map { it.emailVerified }.orElse(false)) return
+        }
         val token = consume(rawToken, AccountTokenPurpose.EMAIL_VERIFICATION)
         val user = users.findById(token.userId).orElseThrow { invalidToken() }
         user.emailVerified = true
