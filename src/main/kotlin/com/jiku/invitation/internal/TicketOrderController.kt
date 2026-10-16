@@ -36,6 +36,7 @@ class PublicTicketOrderController(
     private val tenantAccessGate: TenantAccessGate,
     private val service: TicketOrderService,
     private val tokens: OrderTokenService,
+    private val orders: TicketOrderRepository,
 ) {
     @GetMapping("/public/orgs/{username}/events/{eventId}")
     fun sale(
@@ -72,17 +73,22 @@ class PublicTicketOrderController(
         return TenantContext.withTenant(tenant.id.toString()) { block(tenant) }
     }
 
+    /** Opens an order by its short link code (JIKU-250) or, for links handed out before, its signed token. */
     private fun <T> withOrder(
         token: String,
         block: (UUID) -> T,
     ): T {
-        val claims = parse(token)
-        val tenantId =
-            (claims[OrderTokenService.CLAIM_TENANT_ID] as? String)
-                ?.takeIf { claims[OrderTokenService.CLAIM_TYPE] == OrderTokenService.TOKEN_TYPE }
-                ?.takeUnless { tenantAccessGate.isSuspended(it) }
+        val (tenantId, orderId) =
+            if (GuestInviteCodes.looksLikeCode(token)) {
+                orders.routeLinkCode(token.trim().uppercase())?.let { it.tenantId to it.orderId }
+            } else {
+                val claims = parse(token)
+                (claims[OrderTokenService.CLAIM_TENANT_ID] as? String)
+                    ?.takeIf { claims[OrderTokenService.CLAIM_TYPE] == OrderTokenService.TOKEN_TYPE }
+                    ?.let { it to UUID.fromString(claims.subject) }
+            }?.takeUnless { tenantAccessGate.isSuspended(it.first) }
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "This order link is invalid")
-        return TenantContext.withTenant(tenantId) { block(UUID.fromString(claims.subject)) }
+        return TenantContext.withTenant(tenantId) { block(orderId) }
     }
 
     private fun parse(token: String): Claims =

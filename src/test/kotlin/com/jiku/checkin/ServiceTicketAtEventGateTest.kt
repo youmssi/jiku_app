@@ -3,6 +3,7 @@ package com.jiku.checkin
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.shared.TenantContext
+import com.jiku.support.DoorLinks
 import com.jiku.support.OrganizerApi
 import com.jiku.support.TestDates.EVENT_YEAR
 import com.jiku.ticket.TicketingModuleApi
@@ -78,7 +79,7 @@ class ServiceTicketAtEventGateTest {
             )
         mockMvc
             .perform(
-                post("/api/v1/checkin/${link.substringAfter("/checkin/")}/sync")
+                post("/api/v1/checkin/${DoorLinks.token(mockMvc, link)}/sync")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"items":[{"ticketCode":"$appointmentCode","scannedAt":"${EVENT_YEAR}-12-01T09:05:00Z"}]}"""),
             ).andExpect(status().isOk())

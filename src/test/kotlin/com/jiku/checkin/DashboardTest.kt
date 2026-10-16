@@ -3,6 +3,7 @@ package com.jiku.checkin
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.invitation.internal.InvitationTokenService
+import com.jiku.support.DoorLinks
 import com.jiku.support.TestDates.EVENT_YEAR
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -78,7 +79,7 @@ class DashboardTest {
                 .response
                 .contentAsString
         val link: String = JsonPath.read(body, "$.link")
-        return link.substringAfter("/checkin/")
+        return DoorLinks.token(mockMvc, link)
     }
 
     private fun confirmAndGetTicket(
