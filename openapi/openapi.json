@@ -10325,6 +10325,82 @@
         ]
       }
     },
+    "/api/v1/branding/{kind}" : {
+      "delete" : {
+        "operationId" : "brandingRemoveImage",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "kind",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BrandingResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "branding-controller"
+        ]
+      },
+      "put" : {
+        "operationId" : "brandingReplaceImage",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "kind",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "properties" : {
+                  "file" : {
+                    "format" : "binary",
+                    "type" : "string"
+                  }
+                },
+                "required" : [
+                  "file"
+                ],
+                "type" : "object"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BrandingResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "branding-controller"
+        ]
+      }
+    },
     "/api/v1/checkin/{token}" : {
       "get" : {
         "operationId" : "operatorCheckInContext",
@@ -15283,6 +15359,46 @@
         },
         "tags" : [
           "public-event-banner-controller"
+        ]
+      }
+    },
+    "/api/v1/public/orgs/{tenantId}/images/{kind}" : {
+      "get" : {
+        "operationId" : "publicTenantImageImage",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "tenantId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          },
+          {
+            "in" : "path",
+            "name" : "kind",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "format" : "byte",
+                  "type" : "string"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "public-tenant-image-controller"
         ]
       }
     },

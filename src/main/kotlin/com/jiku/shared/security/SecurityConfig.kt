@@ -81,6 +81,9 @@ class SecurityConfig(
                 // Photo de bandeau d'un événement (JIKU-194) : affichée sur les pages
                 // publiques et dans les aperçus de lien, jamais pour un brouillon.
                 it.requestMatchers(HttpMethod.GET, "${apiProperties.basePath}/public/events/*/banner").permitAll()
+                // Logo et bannière envoyés par l'organisation (JIKU-259) : affichés sur les
+                // pages publiques et dans les e-mails.
+                it.requestMatchers(HttpMethod.GET, "${apiProperties.basePath}/public/orgs/*/images/*").permitAll()
                 // Invitation ouverte (JIKU-184) : la carte partagée dans les groupes et
                 // la réponse se trouvent par le code de l'invitation, sans compte.
                 it.requestMatchers("${apiProperties.basePath}/open/**").permitAll()

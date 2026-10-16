@@ -5,7 +5,10 @@ import jakarta.validation.constraints.Size
 
 /**
  * Branding update. Every field is optional; sending a field with a blank value
- * clears it back to the default. At MVP stage the logo is provided as a URL.
+ * clears it back to the default, so a client sends back the links it read. The
+ * logo and banner are uploaded through `/branding/logo` and `/branding/banner`
+ * (JIKU-259), which set these links; a link to a photo hosted elsewhere is
+ * still accepted.
  */
 data class UpdateBrandingRequest(
     @field:Size(max = 255)
