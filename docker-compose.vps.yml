@@ -81,6 +81,13 @@ services:
       DATABASE_URL: jdbc:postgresql://postgres:5432/${DATABASE_NAME:-jiku}
       DATABASE_USERNAME: ${DATABASE_USERNAME:-jiku}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD}
+      # Required here so a missing secret stops the deploy instead of the API
+      # falling back to a development value (the API also refuses to start).
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?set AUTH_JWT_SECRET to at least 32 random bytes}
+      PROVIDER_CREDENTIALS_ENCRYPTION_KEY: ${PROVIDER_CREDENTIALS_ENCRYPTION_KEY:?set PROVIDER_CREDENTIALS_ENCRYPTION_KEY}
+      PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:?set PAYMENT_WEBHOOK_SECRET}
+      NOTIFICATION_WEBHOOK_SECRET: ${NOTIFICATION_WEBHOOK_SECRET:?set NOTIFICATION_WEBHOOK_SECRET}
+      API_DOCS_ENABLED: ${API_DOCS_ENABLED:-false}
     # The JVM takes 75% of the memory it sees (MaxRAMPercentage); without a
     # limit it would see the whole server.
     mem_limit: ${API_MEMORY_LIMIT:-1536m}

@@ -45,4 +45,23 @@ class PublicRoutesRateLimitTest {
             )
         }
     }
+
+    @Test
+    fun `sign-in and public reads that cost a database read are throttled too`() {
+        val routes =
+            listOf(
+                "/admin/auth/login",
+                "/admin/auth/refresh",
+                "/auth/login",
+                "/public/orgs/some-org",
+                "/public/events/some-event/banner",
+                "/public/orgs/some-tenant/images/logo",
+            )
+        for (path in routes) {
+            assertTrue(
+                properties.policies.values.any { policy -> policy.paths.any { matcher.match(it, path) } },
+                "$path has no rate-limit policy",
+            )
+        }
+    }
 }

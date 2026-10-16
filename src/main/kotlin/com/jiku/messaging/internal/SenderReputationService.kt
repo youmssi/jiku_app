@@ -4,6 +4,7 @@ import com.jiku.shared.TenantContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.security.MessageDigest
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -116,7 +117,9 @@ class SenderReputationService(
         return DeliverabilitySummary(sent = sent, bounced = bounced, bounceRate = bounceRate, warn = warn)
     }
 
-    fun verifyWebhookSecret(secret: String?): Boolean = secret != null && secret == properties.webhookSecret
+    /** Constant-time, so the response time does not reveal how much of a guessed secret was right. */
+    fun verifyWebhookSecret(secret: String?): Boolean =
+        secret != null && MessageDigest.isEqual(secret.toByteArray(), properties.webhookSecret.toByteArray())
 
     private fun window(): Instant = Instant.now().minus(properties.windowHours, ChronoUnit.HOURS)
 

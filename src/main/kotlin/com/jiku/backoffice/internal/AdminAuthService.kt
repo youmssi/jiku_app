@@ -20,10 +20,15 @@ class AdminAuthService(
     private val passwordEncoder: PasswordEncoder,
     private val jwtService: JwtService,
 ) {
+    private val unknownAccountHash: String by lazy { requireNotNull(passwordEncoder.encode(UUID.randomUUID().toString())) }
+
     @Transactional(readOnly = true)
     fun login(request: AdminLoginRequest): AdminAuthResponse {
         val admin = admins.findByEmail(request.email)
-        if (admin == null || !passwordEncoder.matches(request.password, admin.passwordHash)) {
+        // An unknown address still costs one hash check, so the response time
+        // does not tell which addresses have an account.
+        val hash = admin?.passwordHash ?: unknownAccountHash
+        if (!passwordEncoder.matches(request.password, hash) || admin == null) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password")
         }
         return tokensFor(admin)

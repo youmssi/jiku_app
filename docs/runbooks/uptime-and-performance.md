@@ -22,9 +22,10 @@ fires. Keep this current as endpoints or thresholds change.
 ### Performance metrics (dashboard)
 
 - **Endpoints:** `GET /actuator/prometheus` (scrape format) and
-  `GET /actuator/metrics` — both **require authentication**, so operational data
-  is not exposed publicly. Access them through an authenticated session or an
-  internal-network port-forward.
+  `GET /actuator/metrics` — both **require a platform-admin token** (the one the
+  admin desk signs in with), so neither the public nor a signed-in organizer can
+  read operational data. Health details follow the same rule; the bare
+  `/actuator/health` status stays public for uptime monitors.
 - **Key metric:** `http_server_requests_seconds` (Micrometer `http.server.requests`),
   tagged by `uri`, `method`, `status`, and `outcome`. Latency histograms are
   enabled, so p95/p99 and error rate are queryable per route.

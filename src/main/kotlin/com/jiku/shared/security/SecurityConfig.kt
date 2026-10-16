@@ -117,6 +117,9 @@ class SecurityConfig(
                 it.requestMatchers("${apiProperties.basePath}/billing/payments/callback").permitAll()
                 it.requestMatchers(HttpMethod.POST, "${apiProperties.basePath}/billing/payments/callback/*").permitAll()
                 it.requestMatchers("/actuator/health/**").permitAll()
+                // Métriques et informations de build : réservées à l'équipe de la
+                // plateforme, jamais à un organisateur connecté.
+                it.requestMatchers("/actuator/**").hasRole("PLATFORM_ADMIN")
                 // Versioned liveness endpoint for external uptime monitors (JIKU-60).
                 it.requestMatchers("${apiProperties.basePath}/health").permitAll()
                 // API documentation (springdoc): the spec and Swagger UI are public so
