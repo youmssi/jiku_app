@@ -120,7 +120,9 @@ jiku:
       block-marketing-templates: ${WHATSAPP_BLOCK_MARKETING_TEMPLATES:true}
   sms:
     # SMS delivery transport (JIKU-112): log (default — records sends without
-    # delivering) or nimba (Nimba SMS, with the credentials below).
+    # delivering), nimba (Nimba SMS, with the credentials below) or off (JIKU-261:
+    # no SMS at all — the SMS fallback is skipped, an SMS-only message is recorded
+    # as not sent, and screens stop offering SMS).
     transport: ${SMS_TRANSPORT:log}
     nimba:
       service-id: ${NIMBA_SMS_SERVICE_ID:}
