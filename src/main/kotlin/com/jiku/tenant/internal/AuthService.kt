@@ -1,5 +1,6 @@
 package com.jiku.tenant.internal
 
+import com.jiku.shared.CodedRefusal
 import com.jiku.shared.JwtService
 import com.jiku.shared.MarketingConsent
 import com.jiku.shared.security.TokenRoles
@@ -252,12 +253,12 @@ class AuthService(
         val all = memberships.findByUserIdOrderByCreatedAtDesc(requireNotNull(user.id))
         if (all.isEmpty()) return null
         return all.firstOrNull { !isSuspended(it.tenantId) }
-            ?: throw ResponseStatusException(HttpStatus.FORBIDDEN, "This account has been suspended. Contact support.")
+            ?: throw CodedRefusal(HttpStatus.FORBIDDEN, CodedRefusal.TENANT_SUSPENDED, "This account has been suspended. Contact support.")
     }
 
     private fun rejectSuspended(tenantId: String) {
         if (isSuspended(tenantId)) {
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "This account has been suspended. Contact support.")
+            throw CodedRefusal(HttpStatus.FORBIDDEN, CodedRefusal.TENANT_SUSPENDED, "This account has been suspended. Contact support.")
         }
     }
 

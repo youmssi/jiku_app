@@ -99,6 +99,7 @@ class TenantSuspensionTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"email":"$organizerEmail","password":"supersecret"}"""),
             ).andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.code").value("account.suspended"))
 
         // Guest invitation links of the suspended tenant stop resolving.
         val guestLink = invitationTokens.issue(UUID.randomUUID(), UUID.randomUUID(), tenantId)

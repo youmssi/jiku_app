@@ -5,14 +5,12 @@ import com.jiku.money.PlanOption
 import com.jiku.money.SubscriptionView
 import com.jiku.shared.SubscriptionNotice
 import com.jiku.shared.TenantContext
-import com.jiku.tenant.TenantModuleApi
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
 import java.time.Instant
 import java.time.ZoneOffset
-import java.util.UUID
 
 /**
  * A tenant's services subscription (JIKU-90, priced per team since ADR 105).
@@ -26,7 +24,6 @@ class SubscriptionService(
     private val subscriptions: SubscriptionRepository,
     private val properties: SubscriptionProperties,
     private val platformSettings: PlatformBillingSettingsService,
-    private val tenantModuleApi: TenantModuleApi,
     private val notifier: SubscriptionNotifier,
     private val billingCurrency: TenantBillingCurrency,
     private val reminderAllowance: ReminderAllowanceService,
@@ -104,7 +101,8 @@ class SubscriptionService(
 
     /**
      * A prepayment was confirmed: the plan is (re)activated and extended by the
-     * months paid, and the tenant is lifted if it was suspended. The extension
+     * months paid, which ends a services pause (JIKU-254). A platform suspension
+     * is not billing's to lift and stays as it is. The extension
      * starts from the current end when it is still ahead, so renewing early adds up.
      */
     @Transactional
@@ -130,8 +128,6 @@ class SubscriptionService(
         row.expiryNoticeSent = false
         row.graceNoticeSent = false
         row.updatedAt = now
-
-        tenantModuleApi.setTenantSuspended(UUID.fromString(tenantId), false)
 
         notifier.send(
             kind = SubscriptionNotice.KIND_REACTIVATED,

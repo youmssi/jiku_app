@@ -25,7 +25,7 @@ class SubscriptionExpiryJob(
         val graceEnd = now.minus(properties.grace)
 
         subscriptions.findDueForSuspension(graceEnd).forEach { ref ->
-            TenantContext.withTenant(ref.tenantId) { worker.suspend(ref.subscriptionId) }
+            TenantContext.withTenant(ref.tenantId) { worker.pauseServices(ref.subscriptionId) }
         }
         subscriptions.findDueForGrace(now).forEach { ref ->
             TenantContext.withTenant(ref.tenantId) { worker.enterGrace(ref.subscriptionId) }

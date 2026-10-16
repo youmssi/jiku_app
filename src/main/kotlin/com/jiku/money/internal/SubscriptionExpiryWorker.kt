@@ -1,7 +1,6 @@
 package com.jiku.money.internal
 
 import com.jiku.shared.SubscriptionNotice
-import com.jiku.tenant.TenantModuleApi
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -17,7 +16,6 @@ import java.util.UUID
 class SubscriptionExpiryWorker(
     private val subscriptions: SubscriptionRepository,
     private val properties: SubscriptionProperties,
-    private val tenantModuleApi: TenantModuleApi,
     private val notifier: SubscriptionNotifier,
 ) {
     /** Préavis J-7 : une fois, avant l'échéance. */
@@ -56,9 +54,15 @@ class SubscriptionExpiryWorker(
         )
     }
 
-    /** Fin de grâce : expiration définitive et suspension par le kill-switch. */
+    /**
+     * Fin de grâce : l'abonnement expire et les services se mettent en pause
+     * (JIKU-254) — plus de nouvelles réservations ni de tickets de file, mais
+     * l'organisation, ses événements et l'accès du propriétaire, qui peut
+     * renouveler, restent intacts. La suspension complète reste une décision
+     * de la plateforme, jamais une conséquence de facturation.
+     */
     @Transactional
-    fun suspend(subscriptionId: UUID) {
+    fun pauseServices(subscriptionId: UUID) {
         val row = subscriptions.findById(subscriptionId).orElse(null) ?: return
         if (row.status != SubscriptionStatus.GRACE) {
             return
@@ -68,7 +72,6 @@ class SubscriptionExpiryWorker(
         val suspensionAt = expiresAt.plus(properties.grace)
         row.status = SubscriptionStatus.EXPIRED
         row.updatedAt = Instant.now()
-        tenantModuleApi.setTenantSuspended(UUID.fromString(tenantId), true)
         notifier.send(
             kind = SubscriptionNotice.KIND_EXPIRED,
             tenantId = tenantId,

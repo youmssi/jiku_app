@@ -3,6 +3,7 @@ package com.jiku.invitation.internal
 import com.jiku.catalog.EventInfo
 import com.jiku.catalog.EventModuleApi
 import com.jiku.catalog.InvitationChannel
+import com.jiku.shared.CodedRefusal
 import com.jiku.shared.UsageAllowanceGate
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -135,10 +136,12 @@ class InvitationSendingService(
         val addsNewGuests = projected.size > committed.size
         if (addsNewGuests && projected.size + openHeads > ceiling) {
             val remaining = (ceiling - committed.size - openHeads).coerceAtLeast(0)
-            throw ResponseStatusException(
+            throw CodedRefusal(
                 HttpStatus.PAYMENT_REQUIRED,
+                CodedRefusal.GUEST_ALLOWANCE,
                 "This event's guest allowance ($ceiling) would be exceeded. " +
                     "You can invite $remaining more guest(s); purchase additional capacity to send to the rest.",
+                mapOf("allowance" to ceiling, "remaining" to remaining),
             )
         }
     }

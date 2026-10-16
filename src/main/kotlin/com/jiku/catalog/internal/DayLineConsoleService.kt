@@ -3,8 +3,10 @@ package com.jiku.catalog.internal
 import com.jiku.live.LiveModuleApi
 import com.jiku.live.LiveTicket
 import com.jiku.shared.ClientCalled
+import com.jiku.shared.CodedRefusal
 import com.jiku.shared.LiveTopics
 import com.jiku.shared.ReminderChannel
+import com.jiku.shared.ServicesAccessGate
 import com.jiku.shared.TenantContext
 import com.jiku.shared.WalkInArrived
 import com.jiku.ticket.LineActionResult
@@ -39,6 +41,7 @@ class DayLineConsoleService(
     private val ticketing: TicketingModuleApi,
     private val events: ApplicationEventPublisher,
     private val live: LiveModuleApi,
+    private val servicesAccess: ServicesAccessGate,
 ) {
     /** Un ticket pour suivre la ligne en direct (JIKU-214) : l'écran se recharge quand elle bouge. */
     @Transactional(readOnly = true)
@@ -154,6 +157,14 @@ class DayLineConsoleService(
         clientPhone: String,
     ): DayLineView {
         val service = services.get(serviceId)
+        if (servicesAccess.servicesPaused()) {
+            // Clients already in the line are still served; a new one waits for the renewal (JIKU-254).
+            throw CodedRefusal(
+                HttpStatus.LOCKED,
+                CodedRefusal.SERVICES_PAUSED,
+                "The services subscription has ended; renew it to add clients",
+            )
+        }
         if (!config.effective(serviceId).walkInsAllowed) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "This service does not accept walk-ins")
         }
@@ -246,5 +257,9 @@ internal fun LineActionResult.orThrow(): LineActionResult =
                 "This entry is no longer in the expected state — it may have been handled by another desk",
             )
         LineOutcome.PAYMENT_DUE ->
-            throw ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, "The client has not paid yet; record the payment first")
+            throw CodedRefusal(
+                HttpStatus.PAYMENT_REQUIRED,
+                CodedRefusal.CLIENT_UNPAID,
+                "The client has not paid yet; record the payment first",
+            )
     }

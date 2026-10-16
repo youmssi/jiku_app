@@ -5,6 +5,7 @@ import com.jiku.TestcontainersConfiguration
 import com.jiku.money.internal.SubscriptionExpiryJob
 import com.jiku.money.internal.SubscriptionRepository
 import com.jiku.money.internal.SubscriptionStatus
+import com.jiku.shared.CodedRefusal
 import com.jiku.shared.TenantContext
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -16,6 +17,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.time.Instant
 import java.util.UUID
@@ -26,7 +28,8 @@ import kotlin.test.assertTrue
  * Services subscription priced per team (JIKU-90, ADR 105): the first person
  * opens a free Solo plan that never expires, places and equipment do not count,
  * outgrowing Solo opens a window to choose a paid plan, a team plan is priced
- * for its size, and the expiry → grace → suspension → reactivation cycle holds.
+ * for its size, and the expiry → grace → services pause → renewal cycle holds,
+ * without ever locking the organization out (JIKU-254).
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -87,12 +90,16 @@ class SubscriptionFlowTest {
     }
 
     @Test
-    fun `expiry leads to grace then suspension then reactivation on payment`() {
+    fun `expiry leads to grace then a services pause the owner lifts by renewing`() {
         val token = register("Cycle Org", uniqueEmail())
         val tenantId = currentTenantId(token)
         repeat(2) { createResource(token) }
+        val serviceId = createService(token)
+        val link = bookingCode(token, serviceId)
 
         forceExpiry(tenantId, Instant.now().plusSeconds(86400))
+        // Two people outgrew the free Solo plan: choosing a plan comes first.
+        billingStatus(token).andExpect(jsonPath("$.attention").value("OVER_LIMIT"))
         expiryJob.sweep()
         TenantContext.set(tenantId)
         val noticed = subscriptions.findCurrent().single()
@@ -110,15 +117,43 @@ class SubscriptionFlowTest {
         val inGrace = subscriptionJson(token)
         assertEquals("GRACE", JsonPath.read<String>(inGrace, "$.status"))
         assertTrue(JsonPath.read<String>(inGrace, "$.suspensionAt") != null)
+        billingStatus(token)
+            .andExpect(jsonPath("$.attention").value("GRACE"))
+            .andExpect(jsonPath("$.subscription.pausesAt").exists())
 
         forceExpiry(tenantId, Instant.now().minusSeconds(3L * 86400))
         expiryJob.sweep()
         TenantContext.set(tenantId)
         assertEquals(SubscriptionStatus.EXPIRED, subscriptions.findCurrent().single().status)
         TenantContext.clear()
+        // The owner keeps their account and events, and sees why services stopped.
+        assertEquals("EXPIRED", JsonPath.read<String>(subscriptionJson(token), "$.status"))
+        billingStatus(token)
+            .andExpect(jsonPath("$.attention").value("SERVICES_PAUSED"))
+            .andExpect(jsonPath("$.subscription.servicesPaused").value(true))
         mockMvc
-            .perform(get("/api/v1/billing/subscription").header("Authorization", "Bearer $token"))
-            .andExpect(status().is4xxClientError())
+            .perform(get("/api/v1/events").header("Authorization", "Bearer $token"))
+            .andExpect(status().isOk())
+        // New clients wait, with a code the booking page explains.
+        mockMvc
+            .perform(get("/api/v1/appointments/$link"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.bookingPaused").value(true))
+            .andExpect(jsonPath("$.slots").isEmpty())
+        mockMvc
+            .perform(
+                post("/api/v1/appointments/$link/book")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"startsAt":"${Instant.now().plusSeconds(172800)}","clientName":"Awa","clientPhone":"+224620112233"}"""),
+            ).andExpect(status().isLocked())
+            .andExpect(jsonPath("$.code").value(CodedRefusal.SERVICES_PAUSED))
+        mockMvc
+            .perform(
+                post("/api/v1/services/$serviceId/day-line/walk-in")
+                    .header("Authorization", "Bearer $token")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"clientName":"Awa","clientPhone":"+224620112233"}"""),
+            ).andExpect(status().isLocked())
 
         billingModuleApi.adminConfirmManualPayment(UUID.fromString(paymentId))
         val reactivated = subscriptionJson(token)
@@ -126,7 +161,47 @@ class SubscriptionFlowTest {
         assertEquals("Teams", JsonPath.read<String>(reactivated, "$.plan"))
         assertEquals(2, JsonPath.read<Int>(reactivated, "$.resourcesIncluded"))
         assertTrue(JsonPath.read<String>(reactivated, "$.expiresAt") > JsonPath.read<String>(reactivated, "$.startedAt"))
+        billingStatus(token).andExpect(jsonPath("$.attention").value("NONE"))
+        forceExpiry(tenantId, Instant.now().plusSeconds(86400))
+        billingStatus(token).andExpect(jsonPath("$.attention").value("EXPIRING_SOON"))
+        mockMvc
+            .perform(get("/api/v1/appointments/$link"))
+            .andExpect(jsonPath("$.bookingPaused").value(false))
     }
+
+    private fun billingStatus(token: String) =
+        mockMvc
+            .perform(get("/api/v1/billing/status").header("Authorization", "Bearer $token"))
+            .andExpect(status().isOk())
+
+    private fun createService(token: String): String =
+        JsonPath.read(
+            mockMvc
+                .perform(
+                    post("/api/v1/services")
+                        .header("Authorization", "Bearer $token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                            """{"name":"Coupe","timezone":"Africa/Conakry","quickSetup":{"durationMinutes":30,"hostName":"Kadiatou"}}""",
+                        ),
+                ).andExpect(status().isCreated())
+                .andReturn()
+                .response.contentAsString,
+            "$.id",
+        )
+
+    private fun bookingCode(
+        token: String,
+        serviceId: String,
+    ): String =
+        JsonPath.read(
+            mockMvc
+                .perform(get("/api/v1/services/$serviceId/booking-link").header("Authorization", "Bearer $token"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .response.contentAsString,
+            "$.token",
+        )
 
     private fun forceExpiry(
         tenantId: String,
