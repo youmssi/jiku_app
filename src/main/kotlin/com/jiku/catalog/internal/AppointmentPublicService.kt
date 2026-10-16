@@ -3,6 +3,7 @@ package com.jiku.catalog.internal
 import com.jiku.catalog.ResourceType
 import com.jiku.live.LiveTicket
 import com.jiku.shared.TenantAccessGate
+import com.jiku.shared.TenantBrand
 import com.jiku.shared.TenantContext
 import com.jiku.shared.VerificationGate
 import com.jiku.ticket.LineTicket
@@ -28,6 +29,9 @@ data class AppointmentServiceView(
     val clientsPerSlot: Int = 1,
     /** The organizer's approved verification (COMPANY, PERSONAL) or null (référentiel §9). */
     val organizerVerification: String? = null,
+    /** Who the client books with (JIKU-249): the organization's display name and logo. */
+    val organizerName: String? = null,
+    val logoUrl: String? = null,
 )
 
 data class AppointmentSlotView(
@@ -94,6 +98,7 @@ class AppointmentPublicService(
     private val cancellations: AppointmentCancellationService,
     private val line: DayLineConsoleService,
     private val verification: VerificationGate,
+    private val brand: TenantBrand,
 ) {
     /** A client takes a ticket for today's line, from the QR shown at the entrance (JIKU-113). */
     fun takeTicketByCode(
@@ -180,6 +185,7 @@ class AppointmentPublicService(
         val day = date?.let { LocalDate.parse(it) } ?: LocalDate.now(zone)
         val professionals = resources.findByActiveTrueAndTypeOrderByNameAsc(ResourceType.PERSON).map { it.name }
         val effective = config.effective(service.id)
+        val organizer = TenantContext.get()?.let(brand::of)
         return AppointmentServiceView(
             serviceId = service.id,
             name = service.name,
@@ -189,6 +195,8 @@ class AppointmentPublicService(
             slots = engine.openSlots(serviceId, day).map { AppointmentSlotView(it.startsAt, it.endsAt, it.placesLeft) },
             clientsPerSlot = effective.clientsPerSlot,
             organizerVerification = verification.verifiedKind(),
+            organizerName = organizer?.name,
+            logoUrl = organizer?.logoUrl,
         )
     }
 

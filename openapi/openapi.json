@@ -431,8 +431,20 @@
           "confirmationMode" : {
             "type" : "string"
           },
+          "logoUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
           "name" : {
             "type" : "string"
+          },
+          "organizerName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           },
           "organizerVerification" : {
             "type" : [

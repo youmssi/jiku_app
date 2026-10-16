@@ -34,16 +34,20 @@ class GuestInviteCodes(
         return codeFor(guest)
     }
 
-    /** The guest's code, drawn and saved on first use. */
+    /**
+     * The guest's code, drawn and saved on first use. Only the code column is
+     * written and [guest] is left untouched, so a stale copy of the guest is
+     * never flushed over a newer answer or transfer; a code set meanwhile by
+     * another sender wins.
+     */
     @Transactional
     fun codeFor(guest: Guest): String {
         guest.inviteCode?.let { return it }
+        val id = requireNotNull(guest.id)
         repeat(ATTEMPTS) {
             val candidate = RandomCode.generate(LENGTH)
             if (!guests.inviteCodeTaken(candidate)) {
-                guest.inviteCode = candidate
-                guests.save(guest)
-                return candidate
+                return if (guests.assignInviteCode(id, candidate) == 1) candidate else requireNotNull(guests.inviteCodeOf(id))
             }
         }
         throw IllegalStateException("Could not draw a free invitation code")
