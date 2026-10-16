@@ -20,7 +20,7 @@ enum class SubscriptionStatus {
     /** Échéance dépassée ; tolérance en cours avant suspension. */
     GRACE,
 
-    /** Fin de grâce atteinte ; le tenant a été suspendu par le kill-switch. */
+    /** Fin de grâce atteinte ; les services sont en pause jusqu'au renouvellement (JIKU-254). */
     EXPIRED,
 }
 

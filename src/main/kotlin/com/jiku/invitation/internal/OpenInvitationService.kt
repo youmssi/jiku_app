@@ -2,6 +2,7 @@ package com.jiku.invitation.internal
 
 import com.jiku.catalog.EventInfo
 import com.jiku.catalog.EventModuleApi
+import com.jiku.shared.CodedRefusal
 import com.jiku.shared.RandomCode
 import com.jiku.shared.TenantAccessGate
 import com.jiku.shared.TenantContext
@@ -258,8 +259,14 @@ class OpenInvitationService(
         extra: Int,
     ) {
         val committed = committedGuests(eventId)
-        if (committed + extra > allowanceGate.allowanceCeiling(eventId, committed)) {
-            throw ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, "The organizer's guest allowance is used up")
+        val ceiling = allowanceGate.allowanceCeiling(eventId, committed)
+        if (committed + extra > ceiling) {
+            throw CodedRefusal(
+                HttpStatus.PAYMENT_REQUIRED,
+                CodedRefusal.GUEST_ALLOWANCE,
+                "The organizer's guest allowance is used up",
+                mapOf("allowance" to ceiling, "remaining" to (ceiling - committed).coerceAtLeast(0)),
+            )
         }
     }
 

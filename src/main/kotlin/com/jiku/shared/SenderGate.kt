@@ -1,7 +1,6 @@
 package com.jiku.shared
 
 import org.springframework.http.HttpStatus
-import org.springframework.web.server.ResponseStatusException
 
 /**
  * Whether a person has proven their email address, checked before the first
@@ -21,4 +20,8 @@ interface SenderGate {
 
 /** A send was refused because the sender has not confirmed their email address. */
 class UnverifiedSenderException :
-    ResponseStatusException(HttpStatus.FORBIDDEN, "Confirm your email address before sending on behalf of your organization")
+    CodedRefusal(
+        HttpStatus.FORBIDDEN,
+        CodedRefusal.EMAIL_UNVERIFIED,
+        "Confirm your email address before sending on behalf of your organization",
+    )

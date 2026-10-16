@@ -424,6 +424,9 @@
       },
       "AppointmentServiceView" : {
         "properties" : {
+          "bookingPaused" : {
+            "type" : "boolean"
+          },
           "clientsPerSlot" : {
             "format" : "int32",
             "type" : "integer"
@@ -640,6 +643,61 @@
           },
           "withinAllowance" : {
             "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "BillingStatusView" : {
+        "properties" : {
+          "attention" : {
+            "enum" : [
+              "SERVICES_PAUSED",
+              "GRACE",
+              "OVER_LIMIT",
+              "EXPIRING_SOON",
+              "NONE"
+            ],
+            "type" : "string"
+          },
+          "ownWhatsAppNumber" : {
+            "type" : "boolean"
+          },
+          "ownWhatsAppNumberAddonExpiresAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "packActive" : {
+            "type" : "boolean"
+          },
+          "packExpiresAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "subscription" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/SubscriptionStatusSummary"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          },
+          "whatsAppReminders" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/ReminderAllowance"
+              },
+              {
+                "type" : "null"
+              }
+            ]
           }
         },
         "type" : "object"
@@ -5938,6 +5996,47 @@
         ],
         "type" : "object"
       },
+      "SubscriptionStatusSummary" : {
+        "properties" : {
+          "attention" : {
+            "enum" : [
+              "SERVICES_PAUSED",
+              "GRACE",
+              "OVER_LIMIT",
+              "EXPIRING_SOON",
+              "NONE"
+            ],
+            "type" : "string"
+          },
+          "expiresAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "overLimit" : {
+            "type" : "boolean"
+          },
+          "pausesAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "plan" : {
+            "type" : "string"
+          },
+          "servicesPaused" : {
+            "type" : "boolean"
+          },
+          "status" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "SubscriptionView" : {
         "properties" : {
           "currency" : {
@@ -9935,6 +10034,26 @@
         },
         "tags" : [
           "billing-history-controller"
+        ]
+      }
+    },
+    "/api/v1/billing/status" : {
+      "get" : {
+        "operationId" : "billingStatusStatus",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BillingStatusView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "billing-status-controller"
         ]
       }
     },
