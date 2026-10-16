@@ -144,6 +144,14 @@ server:
   # platform's reverse proxy. NATIVE has the embedded server honour the
   # X-Forwarded-* headers set by the immediate (trusted) proxy.
   forwarded-headers-strategy: ${SERVER_FORWARDED_HEADERS:native}
+springdoc:
+  # The OpenAPI spec and Swagger UI. On for local work and for regenerating
+  # openapi/openapi.json; a deployed API turns them off with API_DOCS_ENABLED=false
+  # so it does not publish a map of every endpoint.
+  api-docs:
+    enabled: ${API_DOCS_ENABLED:true}
+  swagger-ui:
+    enabled: ${API_DOCS_ENABLED:true}
 logging:
   # Prepend the request and tenant correlation ids to every console line so a
   # request can be traced locally. In deployed environments set
@@ -378,6 +386,23 @@ api:
         paths: [/open/*/responses]
         max-requests: ${RATE_LIMIT_OPEN_INVITATION_RESPONSE_MAX_REQUESTS:30}
         window: ${RATE_LIMIT_OPEN_INVITATION_RESPONSE_WINDOW:PT10M}
+      admin-login:
+        # The platform desk's sign-in and session renewal, per address: the
+        # account behind it can read every organization, so guessing is cut short.
+        paths: [/admin/auth/login, /admin/auth/refresh]
+        max-requests: ${RATE_LIMIT_ADMIN_LOGIN_MAX_REQUESTS:5}
+        window: ${RATE_LIMIT_ADMIN_LOGIN_WINDOW:PT1M}
+      public-profile:
+        # An organization's public page, read by its username.
+        paths: [/public/orgs/*]
+        max-requests: ${RATE_LIMIT_PUBLIC_PROFILE_MAX_REQUESTS:60}
+        window: ${RATE_LIMIT_PUBLIC_PROFILE_WINDOW:PT1M}
+      public-images:
+        # Event banners and organization logos, read from the database. Browsers
+        # and link previews cache them for good, so a high ceiling is plenty.
+        paths: [/public/events/*/banner, /public/orgs/*/images/*]
+        max-requests: ${RATE_LIMIT_PUBLIC_IMAGES_MAX_REQUESTS:120}
+        window: ${RATE_LIMIT_PUBLIC_IMAGES_WINDOW:PT1M}
 
 error-tracking:
   # Unhandled-error reporting (JIKU-70). The DSN is the switch: blank — the default
@@ -411,6 +436,8 @@ management:
       # uptime monitor), never the internal component details.
       show-details: ${OBSERVABILITY_HEALTH_DETAILS:when-authorized}
       show-components: ${OBSERVABILITY_HEALTH_COMPONENTS:when-authorized}
+      # "Authorized" means the platform team, not any signed-in organizer.
+      roles: PLATFORM_ADMIN
   health:
     db:
       # Explicit: the readiness state must reflect database connectivity.
