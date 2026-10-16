@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 import java.util.UUID
 
@@ -22,6 +23,7 @@ interface GuestRepository : JpaRepository<Guest, UUID> {
      * set yet: the caller may hold a copy of the guest read before an RSVP or a
      * transfer changed it, which a full save would write back.
      */
+    @Transactional
     @Modifying(flushAutomatically = true)
     @Query(nativeQuery = true, value = "UPDATE guest SET invite_code = :code WHERE id = :id AND invite_code IS NULL")
     fun assignInviteCode(
