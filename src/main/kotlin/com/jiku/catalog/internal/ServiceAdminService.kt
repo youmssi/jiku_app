@@ -28,6 +28,9 @@ class ServiceAdminService(
     private val eventPublisher: ApplicationEventPublisher,
     private val tenantCurrency: TenantCurrency,
     private val verification: VerificationGate,
+    private val resources: ResourceService,
+    private val serviceConfigs: ServiceConfigService,
+    private val serviceDefaults: ServiceDefaultsProperties,
 ) {
     @Transactional(readOnly = true)
     fun list(): List<ServiceResponse> = services.findAll().map { it.toResponse() }
@@ -49,7 +52,30 @@ class ServiceAdminService(
             }
         // A paid service makes clients pay: the organization must be verified (référentiel §9).
         if (service.clientCharge() != null) verification.requireVerified()
-        return services.save(service).toResponse()
+        val saved = services.save(service)
+        request.quickSetup?.let { setUpForBookings(requireNotNull(saved.id), it, request.timezone) }
+        return saved.toResponse()
+    }
+
+    /**
+     * Makes a new service bookable at once (JIKU-252): it lasts [setup]'s
+     * duration and takes one person. When the organization has no person yet,
+     * the host is created with the default opening hours; otherwise its people
+     * are kept as they are, so nobody is doubled across services.
+     */
+    private fun setUpForBookings(
+        serviceId: UUID,
+        setup: ServiceQuickSetup,
+        timezone: String,
+    ) {
+        if (resources.listResources().none { it.type == ResourceType.PERSON && it.active }) {
+            val host = resources.createResource(setup.hostName, ResourceType.PERSON, timezone)
+            serviceDefaults.openingDays.forEach { day ->
+                resources.addAvailability(host.id, day, serviceDefaults.opensAt, serviceDefaults.closesAt)
+            }
+        }
+        addRequirement(serviceId, ResourceType.PERSON, 1)
+        serviceConfigs.update(serviceId, ServiceConfigUpdate(durationMinutes = setup.durationMinutes))
     }
 
     /**

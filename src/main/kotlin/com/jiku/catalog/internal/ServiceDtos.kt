@@ -1,6 +1,7 @@
 package com.jiku.catalog.internal
 
 import com.jiku.catalog.ResourceType
+import jakarta.validation.Valid
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
@@ -13,6 +14,19 @@ data class ServiceCreateRequest(
     val paymentRule: PaymentRule = PaymentRule.FREE,
     /** Required unless the service is free; in the organization's currency. */
     val priceMinor: Long? = null,
+    /** Makes the service bookable as it is created (JIKU-252); absent, it starts empty as before. */
+    @field:Valid val quickSetup: ServiceQuickSetup? = null,
+)
+
+/**
+ * What a one-step service needs to take bookings: how long one lasts, and who
+ * receives the client. When the organization has nobody yet, that person is
+ * created with the default opening hours; otherwise its people are reused, so
+ * one person is never doubled across services.
+ */
+data class ServiceQuickSetup(
+    @field:Min(5) @field:Max(480) val durationMinutes: Int,
+    @field:NotBlank @field:Size(max = 120) val hostName: String,
 )
 
 /** Absent fields stay unchanged; the payment rule and price change together. */
