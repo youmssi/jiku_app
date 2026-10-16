@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.invitation.internal.InvitationTokenService
 import com.jiku.shared.TenantContext
+import com.jiku.support.DoorLinks
 import com.jiku.support.TestDates.EVENT_YEAR
 import com.jiku.ticket.CheckInOutcome
 import com.jiku.ticket.TicketingModuleApi
@@ -117,7 +118,7 @@ class OfflineSyncTest {
                 .response
                 .contentAsString
         val link: String = JsonPath.read(body, "$.link")
-        return link.substringAfter("/checkin/")
+        return DoorLinks.token(mockMvc, link)
     }
 
     private fun confirmAndGetTicket(

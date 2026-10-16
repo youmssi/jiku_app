@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
@@ -53,10 +54,12 @@ class OperatorConsoleController(
     private val operators: OperatorService,
     private val gate: OperatorGate,
 ) {
+    /** [door] pins the link to the operator's single event, as a door link opens straight on it. */
     @GetMapping("/operator-codes/{code}")
     fun resolve(
         @PathVariable code: String,
-    ): OperatorLinkResolution = operators.resolveCode(code)
+        @RequestParam(defaultValue = "false") door: Boolean,
+    ): OperatorLinkResolution = operators.resolveCode(code, pinEvent = door)
 
     @GetMapping("/operator/{token}")
     fun console(

@@ -63,19 +63,21 @@ class OperatorService(
      * Resolves a short code into a fresh signed link, or 404. The code is only an
      * entry point, never itself a bearer of API calls. [pinService] pins the link
      * to the operator's single service, for the counter links (JIKU-88) that
-     * expect one.
+     * expect one; [pinEvent] to their single event, for door links (JIKU-250).
      */
     fun resolveCode(
         code: String,
         pinService: Boolean = false,
+        pinEvent: Boolean = false,
     ): OperatorLinkResolution {
         val row = operators.findRowByCode(code).firstOrNull() ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "This link is invalid")
         val operatorId = UUID.fromString(row[0].toString())
         val tenantId = row[1].toString()
         if (row[2] as Boolean) throw ResponseStatusException(HttpStatus.NOT_FOUND, "This link has been revoked")
         if (tenantAccessGate.isSuspended(tenantId)) throw ResponseStatusException(HttpStatus.NOT_FOUND, "This link is no longer available")
-        val pinnedServiceId = if (pinService) singleServiceOf(operatorId, tenantId) else null
-        return OperatorLinkResolution(tokens.issue(operatorId, tenantId, pinnedServiceId = pinnedServiceId))
+        val pinnedServiceId = if (pinService) singleScopeOf(operatorId, tenantId) { it.serviceIds } else null
+        val pinnedEventId = if (pinEvent) singleScopeOf(operatorId, tenantId) { it.eventIds } else null
+        return OperatorLinkResolution(tokens.issue(operatorId, tenantId, pinnedServiceId = pinnedServiceId, pinnedEventId = pinnedEventId))
     }
 
     /** What the operator's console opens on; [operator] comes from [OperatorGate]. */
@@ -206,17 +208,17 @@ class OperatorService(
         }
     }
 
-    private fun singleServiceOf(
+    private fun singleScopeOf(
         operatorId: UUID,
         tenantId: String,
+        scope: (Operator) -> Collection<UUID>,
     ): UUID {
         TenantContext.set(tenantId)
         try {
-            val serviceIds = operators.findWithScopeById(operatorId)?.serviceIds.orEmpty()
-            return serviceIds.singleOrNull()
+            return operators.findWithScopeById(operatorId)?.let(scope)?.singleOrNull()
                 ?: throw ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "This link covers several services; open it from the operator console",
+                    "This link covers several events or services; open it from the operator console",
                 )
         } finally {
             TenantContext.clear()
@@ -257,7 +259,9 @@ class OperatorService(
         ValidatorResponse(
             id = requireNotNull(id),
             label = label,
-            link = "${properties.appBaseUrl}/checkin/${tokens.issue(requireNotNull(id), currentTenant(), pinnedEventId = eventId)}",
+            link =
+                code?.let { "${properties.appBaseUrl}/p/$it" }
+                    ?: "${properties.appBaseUrl}/checkin/${tokens.issue(requireNotNull(id), currentTenant(), pinnedEventId = eventId)}",
             revoked = revoked,
             createdAt = createdAt,
             revokedAt = revokedAt,

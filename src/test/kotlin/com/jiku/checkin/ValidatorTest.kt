@@ -3,6 +3,7 @@ package com.jiku.checkin
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.invitation.internal.InvitationTokenService
+import com.jiku.support.DoorLinks
 import com.jiku.support.TestDates.EVENT_YEAR
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -54,7 +55,10 @@ class ValidatorTest {
                 .contentAsString
         val validatorId: String = JsonPath.read(create, "$.id")
         val link: String = JsonPath.read(create, "$.link")
-        val validatorToken = link.substringAfter("/checkin/")
+        // The link sent to the validator is short (JIKU-250): a code, exchanged
+        // server-side for a token pinned to this event.
+        assert(Regex(".*/p/[A-HJKMNP-Z2-9]{10}").matches(link)) { "unexpected door link: $link" }
+        val validatorToken = DoorLinks.token(mockMvc, link)
 
         // Opening the link exposes only event/branding/attendance context.
         mockMvc
@@ -108,7 +112,7 @@ class ValidatorTest {
                 .response
                 .contentAsString
         val link: String = JsonPath.read(create, "$.link")
-        val validatorToken = link.substringAfter("/checkin/")
+        val validatorToken = DoorLinks.token(mockMvc, link)
 
         // Presented as a Bearer credential to an organizer endpoint, the validator
         // token is not an access token and is denied access to organizer data.
