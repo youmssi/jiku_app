@@ -34,21 +34,23 @@ test.describe('Invitation and RSVP', () => {
 
         // Journey 3 starts here: follow the real invitation out of the real inbox.
         const invitation = await waitForMessage(guestEmail, { timeoutMs: 60_000 });
-        const link = extractLink(invitation, '/invitation/');
+        // The personal link is a short code (JIKU-248), not a long signed token.
+        const link = extractLink(invitation, '/v/');
+        expect(new URL(link).pathname).toMatch(/^\/(en\/)?v\/[A-Z0-9]{10}$/);
 
         await page.goto(link);
-        await expect(page.getByRole('button', { name: 'Confirm attendance' })).toBeVisible();
+        await page.getByRole('button', { name: "I'm coming" }).click();
 
-        await page.getByRole('button', { name: 'Confirm attendance' }).click();
-        await expect(page.getByText(/You're confirmed/i).first()).toBeVisible();
-
-        // A confirmation must actually issue a ticket, not just change a label.
-        await page.getByRole('link', { name: /View your ticket/i }).click();
-        await expect(page).toHaveURL(/\/ticket$/);
-        // The QR is rendered client-side from the ticket code; its canvas is the
-        // only thing a validator can actually scan, so its absence is a failure
-        // even when the rest of the page looks right.
+        // A yes must actually issue a ticket, shown right away on the same link.
+        // The QR is rendered client-side from the ticket code; it is the only
+        // thing a validator can actually scan, so its absence is a failure even
+        // when the rest of the page looks right.
+        await expect(page.getByText('Valid', { exact: true })).toBeVisible();
         await expect(page.locator('canvas, svg').first()).toBeVisible();
+
+        // Opening the same link again goes straight to the ticket.
+        await page.goto(link);
+        await expect(page.getByText('Valid', { exact: true })).toBeVisible();
     });
 
     test('a guest who declines is not given a ticket', async ({ page }) => {
@@ -63,10 +65,10 @@ test.describe('Invitation and RSVP', () => {
         await sendInvitations(token, eventId);
 
         const invitation = await waitForMessage(guestEmail, { timeoutMs: 60_000 });
-        await page.goto(extractLink(invitation, '/invitation/'));
+        await page.goto(extractLink(invitation, '/v/'));
 
-        await page.getByRole('button', { name: "I can't make it" }).click();
+        await page.getByRole('button', { name: "I can't come" }).click();
         await expect(page.getByText(/You've declined/i).first()).toBeVisible();
-        await expect(page.getByRole('link', { name: /View your ticket/i })).toHaveCount(0);
+        await expect(page.getByText('Valid', { exact: true })).toHaveCount(0);
     });
 });

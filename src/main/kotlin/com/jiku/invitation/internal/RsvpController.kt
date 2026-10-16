@@ -31,6 +31,7 @@ class RsvpController(
     private val erasureService: GuestErasureService,
     private val dispatcher: InvitationDispatcher,
     private val tenantAccessGate: TenantAccessGate,
+    private val inviteCodes: GuestInviteCodes,
 ) {
     @GetMapping("/{token}")
     fun view(
@@ -96,10 +97,19 @@ class RsvpController(
             view
         }
 
+    /**
+     * Binds the tenant of [token], a short invitation code (JIKU-248) or a
+     * signed token sent before codes existed, then runs [block] with the
+     * guest and event ids.
+     */
     private fun <T> withTokenContext(
         token: String,
         block: (UUID, UUID) -> T,
     ): T {
+        if (GuestInviteCodes.looksLikeCode(token)) {
+            val route = inviteCodes.route(token) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "This invitation link is invalid")
+            return withTenant(route.tenantId) { block(route.guestId, route.eventId) }
+        }
         val claims = parse(token)
         if (claims[InvitationTokenService.CLAIM_TYPE] != InvitationTokenService.TOKEN_TYPE) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "This invitation link is invalid")
@@ -107,6 +117,15 @@ class RsvpController(
         val tenantId =
             claims[InvitationTokenService.CLAIM_TENANT_ID] as? String
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "This invitation link is invalid")
+        val guestId = UUID.fromString(claims.subject)
+        val eventId = UUID.fromString(claims[InvitationTokenService.CLAIM_EVENT_ID] as String)
+        return withTenant(tenantId) { block(guestId, eventId) }
+    }
+
+    private fun <T> withTenant(
+        tenantId: String,
+        block: () -> T,
+    ): T {
         if (tenantAccessGate.isSuspended(tenantId)) {
             // Platform-level suspension (JIKU-40): the organizer's links stop
             // resolving; a plain not-found leaks nothing about the reason.
@@ -114,9 +133,7 @@ class RsvpController(
         }
         TenantContext.set(tenantId)
         try {
-            val guestId = UUID.fromString(claims.subject)
-            val eventId = UUID.fromString(claims[InvitationTokenService.CLAIM_EVENT_ID] as String)
-            return block(guestId, eventId)
+            return block()
         } finally {
             TenantContext.clear()
         }

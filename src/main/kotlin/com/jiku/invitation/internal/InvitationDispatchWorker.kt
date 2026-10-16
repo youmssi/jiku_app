@@ -27,7 +27,7 @@ class InvitationDispatchWorker(
     private val guests: GuestRepository,
     private val events: EventModuleApi,
     private val tenants: TenantModuleApi,
-    private val tokenService: InvitationTokenService,
+    private val inviteCodes: GuestInviteCodes,
     private val properties: InvitationSendProperties,
     private val eventPublisher: ApplicationEventPublisher,
     private val rsvpService: RsvpService,
@@ -74,7 +74,7 @@ class InvitationDispatchWorker(
         val tenantId = TenantContext.get().orEmpty()
         val tenant = tenantId.takeIf { it.isNotEmpty() }?.let { tenants.findTenant(UUID.fromString(it)) }
         val language = MessageLanguage.forCountry(tenant?.country)
-        val token = tokenService.issue(invitation.guestId, invitation.eventId, tenantId)
+        val code = inviteCodes.linkKey(guest, tenantId)
         val ticket =
             if (event?.deliveryMode == DeliveryMode.DIRECT_TICKET) {
                 if (!rsvpService.issueDirectTicket(guest)) {
@@ -102,7 +102,7 @@ class InvitationDispatchWorker(
                 organizerName = event?.brand?.name ?: tenant?.displayName ?: "Your organizer",
                 primaryColor = event?.brand?.primaryColor ?: tenant?.primaryColor ?: DEFAULT_COLOR,
                 logoUrl = event?.brand?.logoUrl ?: tenant?.logoUrl,
-                invitationUrl = ticket?.ticketUrl ?: "${properties.appBaseUrl}/invitation/$token",
+                invitationUrl = ticket?.ticketUrl ?: "${properties.appBaseUrl}/v/$code",
                 language = language,
                 ticket = ticket,
                 interactive =
