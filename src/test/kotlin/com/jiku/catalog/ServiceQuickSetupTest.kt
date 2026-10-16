@@ -107,6 +107,38 @@ class ServiceQuickSetupTest {
         api.get(token, "/api/v1/services/$serviceId/requirements").andExpect(jsonPath("$").isEmpty())
     }
 
+    @Test
+    fun `the week is replaced in one step, and an inverted range is refused`() {
+        val api = OrganizerApi(mockMvc)
+        val token = api.register()
+        quickService(api, token, "Coupe", 30)
+        val personId =
+            JsonPath
+                .read<List<String>>(
+                    api
+                        .get(token, "/api/v1/resources")
+                        .andReturn()
+                        .response.contentAsString,
+                    "$[?(@.type == 'PERSON')].id",
+                ).single()
+
+        api
+            .put(
+                token,
+                "/api/v1/resources/$personId/availability",
+                """[{"dayOfWeek":2,"start":"10:00","end":"14:00"},{"dayOfWeek":2,"start":"15:00","end":"19:00"}]""",
+            ).andExpect(status().isOk())
+        api
+            .get(token, "/api/v1/resources/$personId/availability")
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[*].dayOfWeek").value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.`is`(2))))
+
+        api
+            .put(token, "/api/v1/resources/$personId/availability", """[{"dayOfWeek":3,"start":"18:00","end":"09:00"}]""")
+            .andExpect(status().isBadRequest())
+        api.get(token, "/api/v1/resources/$personId/availability").andExpect(jsonPath("$.length()").value(2))
+    }
+
     private fun quickService(
         api: OrganizerApi,
         token: String,

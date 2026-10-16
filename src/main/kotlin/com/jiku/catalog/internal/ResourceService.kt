@@ -81,6 +81,28 @@ class ResourceService(
             .toView()
     }
 
+    /**
+     * Replaces a resource's whole week in one step (JIKU-252), as the weekly
+     * hours editor saves it: the week is either all old or all new.
+     */
+    @Transactional
+    fun replaceAvailability(
+        resourceId: UUID,
+        week: List<AvailabilityRequest>,
+    ): List<ResourceAvailabilityView> {
+        requireResource(resourceId)
+        week.forEach {
+            if (!it.start.isBefore(it.end)) {
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Opening hours must end after they start")
+            }
+        }
+        availabilities.deleteAll(availabilities.findByResourceId(resourceId))
+        availabilities.flush()
+        return availabilities
+            .saveAll(week.map { ResourceAvailability(resourceId = resourceId, dayOfWeek = it.dayOfWeek, start = it.start, end = it.end) })
+            .map { it.toView() }
+    }
+
     @Transactional
     override fun removeAvailability(
         resourceId: UUID,

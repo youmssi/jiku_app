@@ -1,7 +1,6 @@
 package com.jiku.catalog.internal
 
 import com.jiku.catalog.ResourceAvailabilityView
-import com.jiku.catalog.ResourceModuleApi
 import com.jiku.catalog.ResourceUnavailabilityView
 import com.jiku.catalog.ResourceView
 import jakarta.validation.Valid
@@ -12,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -29,7 +29,7 @@ import java.util.UUID
 @RequestMapping("/resources")
 @PreAuthorize("hasRole('ORGANIZER')")
 class ResourceController(
-    private val resources: ResourceModuleApi,
+    private val resources: ResourceService,
 ) {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -62,6 +62,13 @@ class ResourceController(
         @PathVariable id: UUID,
         @Valid @RequestBody request: AvailabilityRequest,
     ): ResourceAvailabilityView = resources.addAvailability(id, request.dayOfWeek, request.start, request.end)
+
+    /** The whole week at once, as the weekly hours editor saves it (JIKU-252). */
+    @PutMapping("/{id}/availability")
+    fun replaceAvailability(
+        @PathVariable id: UUID,
+        @Valid @RequestBody week: List<@Valid AvailabilityRequest>,
+    ): List<ResourceAvailabilityView> = resources.replaceAvailability(id, week)
 
     @DeleteMapping("/{id}/availability/{availabilityId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
