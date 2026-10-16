@@ -18,10 +18,14 @@ data class SmsMessage(
 /**
  * Provider adapter port for SMS (JIKU-112), for clients without WhatsApp or
  * mobile data. The transport is selected with `jiku.sms.transport`:
- * [LoggingSmsSender] (`log`, default) or [NimbaSmsSender] (`nimba`). Adapters
- * throw [SmsDeliveryException] on failure so the orchestration retry engages.
+ * [LoggingSmsSender] (`log`, default), [NimbaSmsSender] (`nimba`) or
+ * [DisabledSmsSender] (`off`, JIKU-261). Adapters throw [SmsDeliveryException]
+ * on failure so the orchestration retry engages.
  */
 interface SmsSender {
+    /** False when the platform sends no SMS at all: callers skip SMS instead of trying it. */
+    val enabled: Boolean get() = true
+
     fun send(message: SmsMessage)
 }
 
@@ -57,11 +61,26 @@ class LoggingSmsSender : SmsSender {
     }
 }
 
+/**
+ * SMS turned off for the whole platform (JIKU-261): nothing is sent and nothing
+ * is billed. Callers check [enabled] and record the message as not sent; a send
+ * that still reaches here fails rather than pretending it went out.
+ */
+class DisabledSmsSender : SmsSender {
+    override val enabled: Boolean = false
+
+    override fun send(message: SmsMessage): Unit = throw SmsDeliveryException("SMS is turned off on this platform")
+}
+
 @Configuration
 class SmsSenderConfig {
     @Bean
     @ConditionalOnProperty(name = ["jiku.sms.transport"], havingValue = "log", matchIfMissing = true)
     fun loggingSmsSender(): SmsSender = LoggingSmsSender()
+
+    @Bean
+    @ConditionalOnProperty(name = ["jiku.sms.transport"], havingValue = "off")
+    fun disabledSmsSender(): SmsSender = DisabledSmsSender()
 
     @Bean
     @ConditionalOnProperty(name = ["jiku.sms.transport"], havingValue = "nimba")

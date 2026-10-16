@@ -2996,6 +2996,14 @@
         },
         "type" : "object"
       },
+      "MessagingChannelsResponse" : {
+        "properties" : {
+          "sms" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
       "MonthOption" : {
         "properties" : {
           "chargedMonths" : {
@@ -13774,6 +13782,26 @@
         },
         "tags" : [
           "member-controller"
+        ]
+      }
+    },
+    "/api/v1/messaging/channels" : {
+      "get" : {
+        "operationId" : "messagingChannelsChannels",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MessagingChannelsResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "messaging-channels-controller"
         ]
       }
     },
