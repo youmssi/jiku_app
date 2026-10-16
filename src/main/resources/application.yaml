@@ -606,6 +606,11 @@ catalog:
     cancel-deadline-hours: ${CATALOG_SERVICE_CANCEL_DEADLINE_HOURS:24}
     no-show-tolerance-minutes: ${CATALOG_SERVICE_NO_SHOW_TOLERANCE_MINUTES:10}
     walk-ins-allowed: ${CATALOG_SERVICE_WALK_INS_ALLOWED:true}
+    # Heures d'ouverture données à la personne qu'un service créé en un pas
+    # ajoute (JIKU-252) ; l'organisateur les ajuste ensuite jour par jour.
+    opening-days: ${CATALOG_SERVICE_OPENING_DAYS:1,2,3,4,5,6}
+    opens-at: ${CATALOG_SERVICE_OPENS_AT:09:00}
+    closes-at: ${CATALOG_SERVICE_CLOSES_AT:18:00}
 
 notification:
   # Daily ceilings on the platform's message costs (ADR 107); 0 turns one off.

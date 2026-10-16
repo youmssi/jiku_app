@@ -5605,6 +5605,16 @@
               "null"
             ]
           },
+          "quickSetup" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/ServiceQuickSetup"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          },
           "timezone" : {
             "minLength" : 1,
             "type" : "string"
@@ -5613,6 +5623,25 @@
         "required" : [
           "name",
           "timezone"
+        ],
+        "type" : "object"
+      },
+      "ServiceQuickSetup" : {
+        "properties" : {
+          "durationMinutes" : {
+            "format" : "int32",
+            "maximum" : 480,
+            "minimum" : 5,
+            "type" : "integer"
+          },
+          "hostName" : {
+            "maxLength" : 120,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "hostName"
         ],
         "type" : "object"
       },
