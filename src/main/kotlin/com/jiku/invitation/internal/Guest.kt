@@ -94,6 +94,10 @@ class Guest(
     /** People coming with this guest on the same ticket, from an open invitation (JIKU-184). */
     @Column(name = "companions", nullable = false)
     var companions: Int = 0
+
+    /** The short code of this guest's personal link (JIKU-248), drawn on first send. */
+    @Column(name = "invite_code", length = 16)
+    var inviteCode: String? = null
 }
 
 enum class GuestOrigin {

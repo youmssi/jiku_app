@@ -35,9 +35,9 @@ test.describe('Validator check-in', () => {
 
         // Only a confirmed guest holds a ticket, so the guest confirms first.
         const invitation = await waitForMessage(guestEmail, { timeoutMs: 60_000 });
-        await page.goto(extractLink(invitation, '/invitation/'));
-        await page.getByRole('button', { name: 'Confirm attendance' }).click();
-        await expect(page.getByText(/You're confirmed/i).first()).toBeVisible();
+        await page.goto(extractLink(invitation, '/v/'));
+        await page.getByRole('button', { name: "I'm coming" }).click();
+        await expect(page.getByText('Valid', { exact: true })).toBeVisible();
 
         const validatorLabel = 'Main gate';
         const checkInLink = await createValidator(token, eventId, validatorLabel);

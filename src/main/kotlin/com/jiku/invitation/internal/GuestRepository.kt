@@ -7,6 +7,26 @@ import java.time.Instant
 import java.util.UUID
 
 interface GuestRepository : JpaRepository<Guest, UUID> {
+    /**
+     * Native, so the tenant filter does not apply: codes are unique across
+     * organizations, and a visitor opening a short link has no tenant yet.
+     */
+    @Query(nativeQuery = true, value = "SELECT EXISTS (SELECT 1 FROM guest WHERE invite_code = :code)")
+    fun inviteCodeTaken(
+        @Param("code") code: String,
+    ): Boolean
+
+    /** The routing of a short link: only ids, the caller binds the tenant before reading anything else. */
+    @Query(
+        nativeQuery = true,
+        value =
+            "SELECT tenant_id AS tenantId, id AS guestId, event_id AS eventId FROM guest " +
+                "WHERE invite_code = :code AND event_id IS NOT NULL",
+    )
+    fun routeInviteCode(
+        @Param("code") code: String,
+    ): GuestInviteRoute?
+
     /** First guest per organization, across tenants, for the back-office follow-up list (JIKU-202). */
     @Query(
         nativeQuery = true,
@@ -82,4 +102,11 @@ interface GuestRepository : JpaRepository<Guest, UUID> {
     ): List<Guest>
 
     fun countByTicketTypeId(ticketTypeId: java.util.UUID): Long
+}
+
+/** Where a short invitation code leads (JIKU-248). */
+interface GuestInviteRoute {
+    val tenantId: String
+    val guestId: UUID
+    val eventId: UUID
 }

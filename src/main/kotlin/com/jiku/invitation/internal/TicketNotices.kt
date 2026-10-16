@@ -21,7 +21,7 @@ import java.util.UUID
 class TicketNotices(
     private val events: EventModuleApi,
     private val tenants: TenantModuleApi,
-    private val tokenService: InvitationTokenService,
+    private val inviteCodes: GuestInviteCodes,
     private val properties: InvitationSendProperties,
     private val api: ApiProperties,
 ) {
@@ -35,7 +35,7 @@ class TicketNotices(
         val guestId = requireNotNull(guest.id)
         val tenant = tenants.findTenant(UUID.fromString(tenantId))
         val language = MessageLanguage.forCountry(tenant?.country)
-        val token = tokenService.issue(guestId, event.id, tenantId)
+        val code = inviteCodes.linkKey(guest, tenantId)
         val category = guest.ticketTypeId?.let { typeId -> events.ticketTypes(event.id).firstOrNull { it.id == typeId }?.label }
         return TicketConfirmedNotice(
             guestId = guestId,
@@ -52,22 +52,22 @@ class TicketNotices(
             organizerName = event.brand.name ?: tenant?.displayName ?: event.name,
             primaryColor = event.brand.primaryColor ?: tenant?.primaryColor ?: DEFAULT_COLOR,
             logoUrl = event.brand.logoUrl ?: tenant?.logoUrl,
-            ticketUrl = links(token, language).ticketUrl,
+            ticketUrl = links(code, language).ticketUrl,
             language = language,
             channel = channel,
-            qrImageUrl = links(token, language).qrImageUrl,
+            qrImageUrl = links(code, language).qrImageUrl,
         )
     }
 
-    /** The ticket page and the QR code image of a signed ticket [token], in [language]. */
+    /** The ticket page and the QR code image of the guest whose short invitation code is [code], in [language]. */
     fun links(
-        token: String,
+        code: String,
         language: String,
     ): TicketLinks {
         val prefix = if (language == MessageLanguage.FRENCH) "" else "/$language"
         return TicketLinks(
-            ticketUrl = "${properties.appBaseUrl}$prefix/invitation/$token/ticket",
-            qrImageUrl = "${properties.apiPublicUrl}${api.basePath}/rsvp/$token/qr.png",
+            ticketUrl = "${properties.appBaseUrl}$prefix/v/$code/ticket",
+            qrImageUrl = "${properties.apiPublicUrl}${api.basePath}/rsvp/$code/qr.png",
         )
     }
 

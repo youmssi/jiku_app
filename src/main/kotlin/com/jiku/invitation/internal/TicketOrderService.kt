@@ -44,7 +44,7 @@ class TicketOrderService(
     private val tenants: TenantModuleApi,
     private val ticketing: TicketingModuleApi,
     private val verification: VerificationGate,
-    private val invitationTokens: InvitationTokenService,
+    private val inviteCodes: GuestInviteCodes,
     private val orderTokens: OrderTokenService,
     private val properties: TicketOrderProperties,
     private val commission: CommissionGate,
@@ -237,6 +237,7 @@ class TicketOrderService(
                             this.orderId = orderId
                         },
                     )
+                inviteCodes.codeFor(guest)
                 val charge = ClientCharge(line.unitPriceMinor, order.currency)
 
                 val ticket = ticketing.issueTicket(eventId, requireNotNull(guest.id), line.ticketTypeId, charge)
@@ -297,7 +298,7 @@ class TicketOrderService(
         val tickets =
             if (order.status == TicketOrderStatus.PAID) {
                 guests.findByOrderIdOrderByCreatedAtAsc(orderId).map {
-                    invitationTokens.issue(requireNotNull(it.id), order.eventId, tenant.id.toString())
+                    inviteCodes.linkKey(it, tenant.id.toString())
                 }
             } else {
                 emptyList()

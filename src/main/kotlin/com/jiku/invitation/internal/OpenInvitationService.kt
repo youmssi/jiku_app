@@ -43,7 +43,7 @@ class OpenInvitationService(
     private val ticketing: TicketingModuleApi,
     private val verification: VerificationGate,
     private val allowanceGate: UsageAllowanceGate,
-    private val invitationTokens: InvitationTokenService,
+    private val inviteCodes: GuestInviteCodes,
     private val properties: OpenInvitationProperties,
 ) {
     /** Runs [block] under the tenant of [code], with its event id; 404 for an unknown code or a suspended organization. */
@@ -194,7 +194,7 @@ class OpenInvitationService(
         val saved = responses.save(response)
         val ticketToken =
             saved.guestId?.takeIf { saved.answer == OpenAnswer.YES }?.let {
-                invitationTokens.issue(it, eventId, event.tenantId)
+                inviteCodes.linkKey(guests.findById(it).orElseThrow(), event.tenantId)
             }
         return OpenResponseView(answer = saved.answer, companions = saved.companions, ticketToken = ticketToken)
     }
