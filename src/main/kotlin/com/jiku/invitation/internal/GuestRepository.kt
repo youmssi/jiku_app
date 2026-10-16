@@ -1,6 +1,7 @@
 package com.jiku.invitation.internal
 
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.time.Instant
@@ -15,6 +16,23 @@ interface GuestRepository : JpaRepository<Guest, UUID> {
     fun inviteCodeTaken(
         @Param("code") code: String,
     ): Boolean
+
+    /**
+     * Sets a guest's code without touching any other column, and only if none is
+     * set yet: the caller may hold a copy of the guest read before an RSVP or a
+     * transfer changed it, which a full save would write back.
+     */
+    @Modifying(flushAutomatically = true)
+    @Query(nativeQuery = true, value = "UPDATE guest SET invite_code = :code WHERE id = :id AND invite_code IS NULL")
+    fun assignInviteCode(
+        @Param("id") id: UUID,
+        @Param("code") code: String,
+    ): Int
+
+    @Query(nativeQuery = true, value = "SELECT invite_code FROM guest WHERE id = :id")
+    fun inviteCodeOf(
+        @Param("id") id: UUID,
+    ): String?
 
     /** The routing of a short link: only ids, the caller binds the tenant before reading anything else. */
     @Query(

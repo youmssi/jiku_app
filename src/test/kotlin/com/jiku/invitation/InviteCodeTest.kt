@@ -110,6 +110,34 @@ class InviteCodeTest {
     }
 
     @Test
+    fun `drawing a code from a stale copy of the guest keeps their newer answer`() {
+        val api = OrganizerApi(mockMvc)
+        val token = api.register()
+        val tenantId = api.tenantId(token)
+        val eventId = publishedEvent(api, token, "Gala Diallo")
+        importGuest(token, eventId, "+22462" + Random.nextInt(1_000_000, 9_999_999))
+        val guestId = UUID.fromString(firstGuestId(api, token, eventId))
+        TenantContext.set(tenantId)
+        val stale = guests.findById(guestId).orElseThrow()
+        TenantContext.clear()
+
+        val signed = tokenService.issue(guestId, UUID.fromString(eventId), tenantId)
+        mockMvc.perform(post("/api/v1/rsvp/$signed/confirm")).andExpect(status().isOk())
+
+        TenantContext.set(tenantId)
+        try {
+            val code = inviteCodes.codeFor(stale)
+            assertEquals(code, inviteCodes.codeFor(stale))
+        } finally {
+            TenantContext.clear()
+        }
+        mockMvc
+            .perform(get("/api/v1/rsvp/$signed"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("CONFIRMED"))
+    }
+
+    @Test
     fun `an unknown code is not found`() {
         mockMvc.perform(get("/api/v1/rsvp/ZZZZZZZZZZ")).andExpect(status().isNotFound())
         mockMvc.perform(post("/api/v1/rsvp/ZZZZZZZZZZ/confirm")).andExpect(status().isNotFound())
