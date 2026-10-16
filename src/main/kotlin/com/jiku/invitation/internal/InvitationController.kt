@@ -1,7 +1,9 @@
 package com.jiku.invitation.internal
 
 import com.jiku.catalog.InvitationChannel
+import com.jiku.shared.SenderGate
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -16,13 +18,17 @@ import java.util.UUID
 class InvitationController(
     private val sendingService: InvitationSendingService,
     private val dispatcher: InvitationDispatcher,
+    private val senders: SenderGate,
 ) {
+    /** Sending is the first thing done on the organization's behalf: it needs a proven address (JIKU-253). */
     @PostMapping("/send")
     fun send(
+        authentication: Authentication,
         @PathVariable eventId: UUID,
         @RequestParam(name = "channels", defaultValue = "EMAIL") channels: Set<InvitationChannel>,
         @RequestParam(name = "onlyUnsent", defaultValue = "true") onlyUnsent: Boolean,
     ): SendInvitationsResult {
+        senders.requireVerifiedSender(authentication.name)
         val result = sendingService.queue(eventId, channels, onlyUnsent)
         dispatcher.dispatchPending(eventId)
         return result

@@ -3,7 +3,7 @@ import { expect, type Page } from '@playwright/test';
 import { extractLink, waitForMessage } from './mailpit';
 
 /**
- * Registers a verified organizer with an organization, driving the real UI.
+ * Registers an organizer with an organization, driving the real UI.
  *
  * Registration is unique-by-email, so every run gets a fresh address rather than
  * reusing a fixture account — otherwise a second run would collide with the first
@@ -36,27 +36,33 @@ export function newOrganizer(label: string): Organizer {
  * loses the session. The next page then bounces to the sign-in screen, which
  * surfaces much later as an unrelated-looking missing field.
  */
-export async function register(page: Page, organizer: Organizer): Promise<void> {
-    await submitRegistration(page, organizer);
+export async function register(page: Page, organizer: Organizer): Promise<boolean> {
+    const namedOrganization = await submitRegistration(page, organizer);
     await page.waitForURL((url) => !url.pathname.endsWith('/register'), { timeout: 60_000 });
+    return namedOrganization;
 }
 
 /**
  * Submits the form without waiting for success — for the cases that expect the
- * attempt to be refused and the user to stay put.
+ * attempt to be refused and the user to stay put. Returns whether the form
+ * named the organization too (JIKU-253), so callers skip onboarding.
  */
-export async function submitRegistration(page: Page, organizer: Organizer): Promise<void> {
+export async function submitRegistration(page: Page, organizer: Organizer): Promise<boolean> {
     await page.goto('/register');
     await page.locator('#fullName').fill(organizer.fullName);
+    const organizationField = page.locator('#organizationName');
+    const namedOrganization = (await organizationField.count()) > 0;
+    if (namedOrganization) await organizationField.fill(organizer.organization);
     await page.locator('#email').fill(organizer.email);
     await page.locator('#password').fill(organizer.password);
     await page.getByRole('button', { name: /create|sign up|register/i }).click();
+    return namedOrganization;
 }
 
 /**
- * Follows the verification link out of the real email. An address must be
- * verified before an organization can be created, so this is a prerequisite for
- * every organizer journey rather than a test of its own.
+ * Follows the verification link out of the real email. Invitations only leave
+ * once the address is verified, so this is a prerequisite for every organizer
+ * journey rather than a test of its own.
  */
 export async function verifyEmail(page: Page, organizer: Organizer): Promise<void> {
     // Emails follow the organizer's language, so match the subject in either one.
@@ -64,8 +70,8 @@ export async function verifyEmail(page: Page, organizer: Organizer): Promise<voi
     const link = extractLink(message, '/verify-email');
     await page.goto(link);
     // Waiting for the confirmation is load-bearing, not cosmetic: the page
-    // redeems the token after it renders, and onboarding shows a "verify your
-    // address first" notice — with no organization field — until that lands.
+    // redeems the token after it renders, and sending is refused until that
+    // lands.
     await expect(page.getByText(/verified|vérifié/i).first()).toBeVisible({ timeout: 30_000 });
 }
 
@@ -84,11 +90,11 @@ export async function createOrganization(page: Page, organizer: Organizer): Prom
     await page.waitForURL(/\/dashboard/, { timeout: 30_000 });
 }
 
-/** The full path from nothing to an organizer who can create an event. */
+/** The full path from nothing to an organizer who can create an event and send. */
 export async function onboardedOrganizer(page: Page, label: string): Promise<Organizer> {
     const organizer = newOrganizer(label);
-    await register(page, organizer);
+    const namedOrganization = await register(page, organizer);
     await verifyEmail(page, organizer);
-    await createOrganization(page, organizer);
+    if (!namedOrganization) await createOrganization(page, organizer);
     return organizer;
 }

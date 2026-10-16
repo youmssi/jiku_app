@@ -3,6 +3,7 @@ package com.jiku.tenant
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.shared.AccountNotice
+import com.jiku.support.OrganizerApi
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,7 +15,9 @@ import org.springframework.context.annotation.Import
 import org.springframework.context.event.EventListener
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.net.URI
 import java.util.concurrent.CopyOnWriteArrayList
@@ -22,7 +25,8 @@ import java.util.concurrent.CopyOnWriteArrayList
 /**
  * Password reset and email verification (JIKU-49): tokens are single-use and
  * mailed as links, a reset cuts off old refresh tokens, nothing reveals whether
- * an address has an account, and organization creation waits for verification.
+ * an address has an account, and sending on an organization's behalf waits for
+ * verification (JIKU-253) while creating and preparing it does not.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -121,38 +125,58 @@ class AccountRecoveryTest {
     }
 
     @Test
-    fun `email verification gates organization creation`() {
+    fun `an unverified organizer prepares freely but sends only once the address is proven`() {
         val email = "verify-flow@jiku.test"
         val accessToken = registerAccessToken(email)
 
-        // Unverified accounts cannot create an organization.
+        // Creating and preparing an organization does not wait for the address.
+        val orgToken: String =
+            JsonPath.read(
+                mockMvc
+                    .perform(
+                        post("/api/v1/orgs")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""{"name":"Early Org"}""")
+                            .header("Authorization", "Bearer $accessToken"),
+                    ).andExpect(status().isCreated())
+                    .andReturn()
+                    .response.contentAsString,
+                "$.accessToken",
+            )
         mockMvc
-            .perform(
-                post("/api/v1/orgs")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""{"name":"Too Early Org"}""")
-                    .header("Authorization", "Bearer $accessToken"),
-            ).andExpect(status().isForbidden())
+            .perform(get("/api/v1/auth/me").header("Authorization", "Bearer $orgToken"))
+            .andExpect(jsonPath("$.emailVerified").value(false))
+        val api = OrganizerApi(mockMvc)
+        val eventId = api.createEvent(orgToken)
+        api.importGuest(orgToken, eventId, "Awa")
+        api.publish(orgToken, eventId)
+
+        // Sending on the organization's behalf does.
+        mockMvc
+            .perform(post("/api/v1/events/$eventId/invitations/send").header("Authorization", "Bearer $orgToken"))
+            .andExpect(status().isForbidden())
 
         // Resend works and replaces the registration token; verify with the new one.
         mockMvc
-            .perform(post("/api/v1/auth/verify-email/resend").header("Authorization", "Bearer $accessToken"))
+            .perform(post("/api/v1/auth/verify-email/resend").header("Authorization", "Bearer $orgToken"))
             .andExpect(status().isOk())
         val token = recorder.lastTokenFor(email, AccountNotice.KIND_EMAIL_VERIFICATION)
-        mockMvc
-            .perform(
-                post("/api/v1/auth/verify-email")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""{"token":"$token"}"""),
-            ).andExpect(status().isOk())
+        repeat(2) {
+            // The same link opened twice (a mail preview, then the browser) still confirms.
+            mockMvc
+                .perform(
+                    post("/api/v1/auth/verify-email")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""{"token":"$token"}"""),
+                ).andExpect(status().isOk())
+        }
 
         mockMvc
-            .perform(
-                post("/api/v1/orgs")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""{"name":"Verified Org"}""")
-                    .header("Authorization", "Bearer $accessToken"),
-            ).andExpect(status().isCreated())
+            .perform(get("/api/v1/auth/me").header("Authorization", "Bearer $orgToken"))
+            .andExpect(jsonPath("$.emailVerified").value(true))
+        mockMvc
+            .perform(post("/api/v1/events/$eventId/invitations/send").header("Authorization", "Bearer $orgToken"))
+            .andExpect(status().isOk())
     }
 
     private fun register(

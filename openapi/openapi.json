@@ -2875,6 +2875,9 @@
           "email" : {
             "type" : "string"
           },
+          "emailVerified" : {
+            "type" : "boolean"
+          },
           "fullName" : {
             "type" : [
               "string",

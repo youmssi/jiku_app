@@ -14,15 +14,25 @@ test.describe('Organizer onboarding', () => {
     test('registers, verifies by email, and creates an organization @smoke', async ({ page }) => {
         const organizer = newOrganizer('onboarding');
 
-        await register(page, organizer);
-        // Registration signs the user in but leaves the address unverified; the
-        // product refuses organization creation until it is confirmed.
+        // One form creates the account and its organization (JIKU-253): the
+        // organizer lands on their dashboard before confirming the address,
+        // with a reminder that only sending waits for it.
+        const namedOrganization = await register(page, organizer);
         await expect(page).not.toHaveURL(/\/register$/);
+        if (namedOrganization) {
+            await expect(page).toHaveURL(/\/dashboard/);
+            await expect(page.getByText(/confirm your email|confirmez votre adresse/i).first()).toBeVisible();
+        }
 
         await verifyEmail(page, organizer);
         await expect(page.getByText(/verified|vérifié/i).first()).toBeVisible();
 
-        await createOrganization(page, organizer);
+        if (namedOrganization) {
+            await page.goto('/dashboard');
+            await expect(page.getByText(/confirm your email|confirmez votre adresse/i)).toHaveCount(0);
+        } else {
+            await createOrganization(page, organizer);
+        }
         await expect(page).toHaveURL(/\/dashboard/);
         await expect(page.getByText(organizer.organization).first()).toBeVisible();
     });
