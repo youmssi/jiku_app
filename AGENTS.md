@@ -21,7 +21,7 @@ implementing it.
 | **Spring Modulith** | 2.1.0 | Module boundary enforcement (tracks the Boot 4.1 line) |
 | **Java toolchain** | 25 | Set in `build.gradle.kts` |
 | **Build** | Gradle (Kotlin DSL) | `./gradlew` |
-| **Database** | PostgreSQL | Neon in production; Docker locally |
+| **Database** | PostgreSQL 18 | On the production server (ADR 107, 108); Docker locally |
 
 > Keep dependencies on the **latest stable, mutually compatible** versions. Spring
 > Modulith's minor version tracks Spring Boot's minor version (Boot 4.1 → Modulith
@@ -37,12 +37,14 @@ com.jiku
 ├── JikuApplication      # entry point
 ├── tenant               # tenants, organizer identity, white-label config
 ├── catalog              # events, services, day line, operators
+├── allocation           # atomic capacity (seats, slots) shared by events and services
 ├── invitation           # guests, CSV import, invitation sending
 ├── ticket               # tickets, QR codes, payment status
 ├── checkin              # check-in validation, presence tracking
 ├── messaging            # email / WhatsApp / SMS orchestration (event-driven)
 ├── money                # metering, tiers, payments, invoicing, trials, subscriptions
 ├── backoffice           # platform-operator desk, early-access prospect capture
+├── live                 # signed tickets and the SSE "something changed" stream (JIKU-214)
 └── shared               # genuinely cross-cutting code only
 ```
 

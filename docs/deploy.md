@@ -1,5 +1,10 @@
 # Deploying to a permanent host
 
+> **Previous hosting.** Production moves to one Hetzner server driven by Dokploy
+> (ADR 107 and 108): follow [`deploy-vps.md`](deploy-vps.md). This guide stays
+> for Render, Neon and Vercel, which remain the way back for two weeks after the
+> switch.
+
 ## Where things run today
 
 | Piece | Location | Notes |

@@ -4,6 +4,11 @@ Ce guide installe la production complète (web, API, PostgreSQL) sur un serveur
 Hetzner piloté par Dokploy, derrière Cloudflare, puis bascule depuis Vercel,
 Render et Neon. Il se suit de haut en bas, sans connaissance préalable.
 
+Les outils de conversation commerciale (Chatwoot avec sa propre base, Redis,
+n8n) s'ajoutent comme applications Dokploy séparées, avec les limites de
+mémoire de l'ADR 108. Les SMS sont coupés par défaut (`SMS_TRANSPORT=off`,
+JIKU-261).
+
 | Pièce | Où | Comment |
 |---|---|---|
 | Web (Next.js) | Serveur, conteneur `web` | Image `ghcr.io/youmssi/jiku_web` |
@@ -22,7 +27,7 @@ Fichiers utilisés : `docker-compose.vps.yml`, `deploy/postgres/`,
 
 ## 1. Créer le serveur
 
-1. Hetzner Cloud → **CX33** (4 vCPU, 8 Go, 80 Go), image **Ubuntu 24.04**,
+1. Hetzner Cloud → **CX43** (8 vCPU, 16 Go, 160 Go ; ADR 108, qui y ajoute Chatwoot et n8n), image **Ubuntu 24.04**,
    région Falkenstein ou Nuremberg, avec votre clé SSH. Activer les
    **sauvegardes Hetzner** (+20 %).
 2. Créer un **pare-feu Hetzner** et l'attacher au serveur :
