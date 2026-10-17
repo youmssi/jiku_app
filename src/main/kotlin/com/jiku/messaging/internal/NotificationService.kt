@@ -221,7 +221,7 @@ class NotificationService(
                         WhatsAppMessage(phone, text, template = template),
                         referenceId,
                         null,
-                        smsFallback = text.takeIf { channel == ReminderChannel.WHATSAPP_OR_SMS },
+                        smsFallback = text.takeIf { channel == ReminderChannel.WHATSAPP_OR_SMS && smsSender.enabled },
                     ),
                 ).also { if (it.delivered) onWhatsAppSent() }
             } else {
@@ -229,11 +229,18 @@ class NotificationService(
                 DeliveryOutcome(delivered = false, attempts = 0, error = FREE_REMINDERS_USED)
             }
         }
-        val bySms = { deliverLogged(referenceId, ReminderChannel.SMS, phone, sms(phone, text)) }
+        val bySms = {
+            if (smsSender.enabled) {
+                deliverLogged(referenceId, ReminderChannel.SMS, phone, sms(phone, text))
+            } else {
+                record(referenceId, ReminderChannel.SMS.name, phone, NotificationLog.STATUS_FAILED, 0, SMS_OFF)
+                DeliveryOutcome(delivered = false, attempts = 0, error = SMS_OFF)
+            }
+        }
         return when (channel) {
             ReminderChannel.WHATSAPP -> byWhatsApp()
             ReminderChannel.SMS -> bySms()
-            ReminderChannel.WHATSAPP_OR_SMS -> byWhatsApp().takeIf { it.delivered } ?: bySms()
+            ReminderChannel.WHATSAPP_OR_SMS -> byWhatsApp().let { if (it.delivered || !smsSender.enabled) it else bySms() }
             ReminderChannel.NONE -> throw IllegalArgumentException("Message $referenceId has no channel")
         }
     }
@@ -529,6 +536,7 @@ class NotificationService(
 
     private companion object {
         const val FREE_REMINDERS_USED = "The free plan's WhatsApp reminders for this month are used"
+        const val SMS_OFF = "Not sent: SMS is turned off on this platform"
         const val CALENDAR_FILE = "invitation.ics"
         const val CALENDAR_TYPE = "text/calendar; charset=utf-8; method=PUBLISH"
     }

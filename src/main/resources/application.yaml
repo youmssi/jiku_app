@@ -120,7 +120,9 @@ jiku:
       block-marketing-templates: ${WHATSAPP_BLOCK_MARKETING_TEMPLATES:true}
   sms:
     # SMS delivery transport (JIKU-112): log (default — records sends without
-    # delivering) or nimba (Nimba SMS, with the credentials below).
+    # delivering), nimba (Nimba SMS, with the credentials below) or off (JIKU-261:
+    # no SMS at all — the SMS fallback is skipped, an SMS-only message is recorded
+    # as not sent, and screens stop offering SMS).
     transport: ${SMS_TRANSPORT:log}
     nimba:
       service-id: ${NIMBA_SMS_SERVICE_ID:}
@@ -144,6 +146,14 @@ server:
   # platform's reverse proxy. NATIVE has the embedded server honour the
   # X-Forwarded-* headers set by the immediate (trusted) proxy.
   forwarded-headers-strategy: ${SERVER_FORWARDED_HEADERS:native}
+springdoc:
+  # The OpenAPI spec and Swagger UI. On for local work and for regenerating
+  # openapi/openapi.json; a deployed API turns them off with API_DOCS_ENABLED=false
+  # so it does not publish a map of every endpoint.
+  api-docs:
+    enabled: ${API_DOCS_ENABLED:true}
+  swagger-ui:
+    enabled: ${API_DOCS_ENABLED:true}
 logging:
   # Prepend the request and tenant correlation ids to every console line so a
   # request can be traced locally. In deployed environments set
@@ -234,6 +244,13 @@ tenant:
     # creation. The default country applies when a sign-up names none.
     default-country: ${TENANT_DEFAULT_COUNTRY:GN}
     supported-countries: ${TENANT_SUPPORTED_COUNTRIES:GN}
+  images:
+    # Logo et bannière de l'organisation (JIKU-259), servis par cette API.
+    api-public-url: ${API_PUBLIC_URL:http://localhost:8080}
+    max-bytes: ${TENANT_IMAGE_MAX_BYTES:1048576}
+    logo-min-size: ${TENANT_LOGO_MIN_SIZE:128}
+    banner-min-width: ${TENANT_BANNER_MIN_WIDTH:600}
+    banner-min-height: ${TENANT_BANNER_MIN_HEIGHT:150}
 
 jwt:
   # HMAC signing secret (minimum 32 bytes). The default is for local use only;
@@ -371,6 +388,23 @@ api:
         paths: [/open/*/responses]
         max-requests: ${RATE_LIMIT_OPEN_INVITATION_RESPONSE_MAX_REQUESTS:30}
         window: ${RATE_LIMIT_OPEN_INVITATION_RESPONSE_WINDOW:PT10M}
+      admin-login:
+        # The platform desk's sign-in and session renewal, per address: the
+        # account behind it can read every organization, so guessing is cut short.
+        paths: [/admin/auth/login, /admin/auth/refresh]
+        max-requests: ${RATE_LIMIT_ADMIN_LOGIN_MAX_REQUESTS:5}
+        window: ${RATE_LIMIT_ADMIN_LOGIN_WINDOW:PT1M}
+      public-profile:
+        # An organization's public page, read by its username.
+        paths: [/public/orgs/*]
+        max-requests: ${RATE_LIMIT_PUBLIC_PROFILE_MAX_REQUESTS:60}
+        window: ${RATE_LIMIT_PUBLIC_PROFILE_WINDOW:PT1M}
+      public-images:
+        # Event banners and organization logos, read from the database. Browsers
+        # and link previews cache them for good, so a high ceiling is plenty.
+        paths: [/public/events/*/banner, /public/orgs/*/images/*]
+        max-requests: ${RATE_LIMIT_PUBLIC_IMAGES_MAX_REQUESTS:120}
+        window: ${RATE_LIMIT_PUBLIC_IMAGES_WINDOW:PT1M}
 
 error-tracking:
   # Unhandled-error reporting (JIKU-70). The DSN is the switch: blank — the default
@@ -404,6 +438,8 @@ management:
       # uptime monitor), never the internal component details.
       show-details: ${OBSERVABILITY_HEALTH_DETAILS:when-authorized}
       show-components: ${OBSERVABILITY_HEALTH_COMPONENTS:when-authorized}
+      # "Authorized" means the platform team, not any signed-in organizer.
+      roles: PLATFORM_ADMIN
   health:
     db:
       # Explicit: the readiness state must reflect database connectivity.
@@ -606,6 +642,11 @@ catalog:
     cancel-deadline-hours: ${CATALOG_SERVICE_CANCEL_DEADLINE_HOURS:24}
     no-show-tolerance-minutes: ${CATALOG_SERVICE_NO_SHOW_TOLERANCE_MINUTES:10}
     walk-ins-allowed: ${CATALOG_SERVICE_WALK_INS_ALLOWED:true}
+    # Heures d'ouverture données à la personne qu'un service créé en un pas
+    # ajoute (JIKU-252) ; l'organisateur les ajuste ensuite jour par jour.
+    opening-days: ${CATALOG_SERVICE_OPENING_DAYS:1,2,3,4,5,6}
+    opens-at: ${CATALOG_SERVICE_OPENS_AT:09:00}
+    closes-at: ${CATALOG_SERVICE_CLOSES_AT:18:00}
 
 notification:
   # Daily ceilings on the platform's message costs (ADR 107); 0 turns one off.

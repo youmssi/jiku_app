@@ -81,6 +81,9 @@ class SecurityConfig(
                 // Photo de bandeau d'un événement (JIKU-194) : affichée sur les pages
                 // publiques et dans les aperçus de lien, jamais pour un brouillon.
                 it.requestMatchers(HttpMethod.GET, "${apiProperties.basePath}/public/events/*/banner").permitAll()
+                // Logo et bannière envoyés par l'organisation (JIKU-259) : affichés sur les
+                // pages publiques et dans les e-mails.
+                it.requestMatchers(HttpMethod.GET, "${apiProperties.basePath}/public/orgs/*/images/*").permitAll()
                 // Invitation ouverte (JIKU-184) : la carte partagée dans les groupes et
                 // la réponse se trouvent par le code de l'invitation, sans compte.
                 it.requestMatchers("${apiProperties.basePath}/open/**").permitAll()
@@ -114,6 +117,9 @@ class SecurityConfig(
                 it.requestMatchers("${apiProperties.basePath}/billing/payments/callback").permitAll()
                 it.requestMatchers(HttpMethod.POST, "${apiProperties.basePath}/billing/payments/callback/*").permitAll()
                 it.requestMatchers("/actuator/health/**").permitAll()
+                // Métriques et informations de build : réservées à l'équipe de la
+                // plateforme, jamais à un organisateur connecté.
+                it.requestMatchers("/actuator/**").hasRole("PLATFORM_ADMIN")
                 // Versioned liveness endpoint for external uptime monitors (JIKU-60).
                 it.requestMatchers("${apiProperties.basePath}/health").permitAll()
                 // API documentation (springdoc): the spec and Swagger UI are public so

@@ -50,6 +50,9 @@ class TicketOrder(
     /** Short code the client quotes to the organization, e.g. in the Mobile Money message. */
     @Column(name = "reference", nullable = false, updatable = false, length = 12)
     val reference: String,
+    /** The key of the buyer's short link, `/c/{linkCode}` (JIKU-250); null on orders placed before it. */
+    @Column(name = "link_code", updatable = false, length = 16)
+    val linkCode: String? = null,
     @Column(name = "buyer_name", nullable = false, length = 120)
     var buyerName: String,
     @Column(name = "buyer_phone", nullable = false, length = 32)
@@ -121,6 +124,18 @@ interface TicketOrderRepository : JpaRepository<TicketOrder, UUID> {
 
     fun existsByReference(reference: String): Boolean
 
+    /** Native, so the tenant filter does not apply: a buyer opening a short link has no tenant yet. */
+    @Query(nativeQuery = true, value = "SELECT EXISTS (SELECT 1 FROM ticket_order WHERE link_code = :code)")
+    fun linkCodeTaken(
+        @Param("code") code: String,
+    ): Boolean
+
+    /** The routing of a short link: only ids, the caller binds the tenant before reading anything else. */
+    @Query(nativeQuery = true, value = "SELECT tenant_id AS tenantId, id AS orderId FROM ticket_order WHERE link_code = :code")
+    fun routeLinkCode(
+        @Param("code") code: String,
+    ): TicketOrderRoute?
+
     /** Tickets of [ticketTypeId] held by orders still waiting for their payment to be confirmed. */
     @Query(
         "SELECT COALESCE(SUM(l.quantity), 0) FROM TicketOrderLine l, TicketOrder o WHERE l.orderId = o.id " +
@@ -185,4 +200,10 @@ interface TicketOrderLineRepository : JpaRepository<TicketOrderLine, UUID> {
     fun findByOrderId(orderId: UUID): List<TicketOrderLine>
 
     fun findByOrderIdIn(orderIds: Collection<UUID>): List<TicketOrderLine>
+}
+
+/** Where an order's short link leads, read before any tenant is bound. */
+interface TicketOrderRoute {
+    val tenantId: String
+    val orderId: UUID
 }

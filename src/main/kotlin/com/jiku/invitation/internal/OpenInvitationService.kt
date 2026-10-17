@@ -2,6 +2,7 @@ package com.jiku.invitation.internal
 
 import com.jiku.catalog.EventInfo
 import com.jiku.catalog.EventModuleApi
+import com.jiku.shared.CodedRefusal
 import com.jiku.shared.RandomCode
 import com.jiku.shared.TenantAccessGate
 import com.jiku.shared.TenantContext
@@ -43,7 +44,7 @@ class OpenInvitationService(
     private val ticketing: TicketingModuleApi,
     private val verification: VerificationGate,
     private val allowanceGate: UsageAllowanceGate,
-    private val invitationTokens: InvitationTokenService,
+    private val inviteCodes: GuestInviteCodes,
     private val properties: OpenInvitationProperties,
 ) {
     /** Runs [block] under the tenant of [code], with its event id; 404 for an unknown code or a suspended organization. */
@@ -194,7 +195,7 @@ class OpenInvitationService(
         val saved = responses.save(response)
         val ticketToken =
             saved.guestId?.takeIf { saved.answer == OpenAnswer.YES }?.let {
-                invitationTokens.issue(it, eventId, event.tenantId)
+                inviteCodes.linkKey(guests.findById(it).orElseThrow(), event.tenantId)
             }
         return OpenResponseView(answer = saved.answer, companions = saved.companions, ticketToken = ticketToken)
     }
@@ -258,8 +259,14 @@ class OpenInvitationService(
         extra: Int,
     ) {
         val committed = committedGuests(eventId)
-        if (committed + extra > allowanceGate.allowanceCeiling(eventId, committed)) {
-            throw ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, "The organizer's guest allowance is used up")
+        val ceiling = allowanceGate.allowanceCeiling(eventId, committed)
+        if (committed + extra > ceiling) {
+            throw CodedRefusal(
+                HttpStatus.PAYMENT_REQUIRED,
+                CodedRefusal.GUEST_ALLOWANCE,
+                "The organizer's guest allowance is used up",
+                mapOf("allowance" to ceiling, "remaining" to (ceiling - committed).coerceAtLeast(0)),
+            )
         }
     }
 

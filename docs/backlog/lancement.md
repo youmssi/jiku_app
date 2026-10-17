@@ -27,6 +27,10 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-215 | Envois fiables : files séparées, hors transaction, reprise, tentatives espacées, tâches verrouillées | app | — |
 | JIKU-214 | Temps réel : flux SSE « ça a changé » pour le tableau de bord, la ligne du jour et la place du client | app, web | JIKU-216 |
 | JIKU-216 | Performance et hygiène : index, cache par organisation, purge, threads virtuels, e-mails de compte en arrière-plan | app | JIKU-215 |
+| JIKU-261 | SMS coupés : transport `off`, statut honnête, écrans sans SMS | app, web | — |
+| JIKU-262 | Parrainage en crédit Jikū | app, web | pilote de 4 semaines |
+| JIKU-263 | ADR 108 et pages légales alignées sur la production | app, web | — |
+| JIKU-264 | Conversations commerciales : Chatwoot, n8n et assistant | exploitation | JIKU-263 |
 
 ---
 
@@ -373,4 +377,55 @@ même quand rien ne bougeait.
 
 **Limite.** Le hub est en mémoire : avec plusieurs instances de l'API, il faudra
 relayer les signaux par PostgreSQL `LISTEN/NOTIFY`.
+
+---
+
+## JIKU-261 — SMS coupés
+
+**Pourquoi.** Au lancement, aucun SMS (ADR 108) : les écrans ne doivent pas en
+promettre.
+
+**Critères d'acceptation.**
+
+- [x] `SMS_TRANSPORT=off` : aucun SMS n'est tenté ; avec WHATSAPP_OR_SMS, le résultat WhatsApp est gardé
+- [x] Un message dont le canal est SMS seul est enregistré FAILED : « Not sent: SMS is turned off on this platform »
+- [x] `GET /messaging/channels` renvoie `{ sms: false }` ; les rappels d'un service n'offrent plus le repli SMS ; la vérification du téléphone parle de WhatsApp seul
+- [x] Les fichiers de déploiement utilisent `off` par défaut
+
+## JIKU-262 — Parrainage en crédit Jikū
+
+**Pourquoi.** Faire venir des clients par le bouche-à-oreille sans transformer
+Jikū en plateforme « où l'on gagne de l'argent » (ADR 108, décision 6).
+
+**Avant de construire.** Un pilote de 4 semaines avec 5 parrains, codes suivis
+à la main. On construit si au moins 2 parrains apportent des clients payants.
+
+**Critères d'acceptation.**
+
+- [ ] Chaque organisation a un lien et un code de parrainage ; le premier lien utilisé compte pendant 60 jours
+- [ ] Le parrain reçoit un mois du plan du filleul quand celui-ci paie son deuxième mois ; le filleul, un mois après son premier paiement
+- [ ] Paliers : un mois bonus à 5 parrainages, statut Ambassadeur à 10
+- [ ] Le crédit paie l'abonnement ou des options, peut être offert à une autre organisation, ne se convertit pas en argent, expire après 12 mois
+- [ ] Plafonds : 2 mois du plan du filleul par client acquis, 12 mois par parrain et par an
+- [ ] Pas d'auto-parrainage (même téléphone ou même moyen de paiement)
+- [ ] Le parrain voit ses filleuls (nom de l'organisation et étape, jamais leurs coordonnées) et peut demander à Jikū une relance neutre, une fois par semaine au plus
+- [ ] Le bureau d'administration voit les crédits émis, utilisés et expirés, et peut suspendre un parrain
+
+## JIKU-263 — ADR 108 et pages légales
+
+**Critères d'acceptation.**
+
+- [x] ADR 108 : serveur CX43, conversations commerciales, trois numéros, SMS coupés, budget, parrainage en crédit
+- [x] Mentions légales et politique de confidentialité : Hetzner, Cloudflare, useSend sur Amazon SES, Meta, Nimba (si activé), CinetPay, Sentry, Umami, Chatwoot, n8n, Anthropic, Cal.com
+- [ ] Relecture juridique
+
+## JIKU-264 — Conversations commerciales
+
+**Critères d'acceptation.**
+
+- [ ] Chatwoot (avec sa propre base), Redis et n8n déployés par Dokploy avec les limites de mémoire de l'ADR 108
+- [ ] Le numéro « conversations » est relié à Chatwoot par l'API officielle de Meta
+- [ ] L'assistant (Claude Haiku 5.5) se présente comme automatique, répond depuis une base de réponses validées, propose un rendez-vous Cal.com et confie la conversation à une personne sur demande, sur une hésitation de prix ou hors de la base
+- [ ] Plafond de dépense de l'API à 15 $ par mois
+- [ ] Évaluation sur 40 à 50 vraies conversations : taux de rendez-vous, reprises par une personne, erreurs ; décision de garder Haiku ou de passer à Sonnet
 

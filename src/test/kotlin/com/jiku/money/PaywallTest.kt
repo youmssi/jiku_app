@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.util.concurrent.TimeUnit
 import javax.crypto.Mac
@@ -53,6 +54,8 @@ class PaywallTest {
                 post("/api/v1/events/$eventId/invitations/send?channels=EMAIL")
                     .header("Authorization", "Bearer $token"),
             ).andExpect(status().isPaymentRequired())
+            .andExpect(jsonPath("$.code").value("billing.guest-allowance"))
+            .andExpect(jsonPath("$.remaining").exists())
 
         // Nothing was sent — the whole batch was refused, not partially delivered.
         assert(JsonPath.read<Int>(usage(token, eventId), "$.invitedGuests") == 0)

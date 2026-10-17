@@ -16,6 +16,15 @@ services:
     build: .
     restart: unless-stopped
     env_file: .env
+    environment:
+      # Required here so a missing secret stops the deploy instead of the API
+      # falling back to a development value (the API also refuses to start).
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?set AUTH_JWT_SECRET to at least 32 random bytes}
+      PROVIDER_CREDENTIALS_ENCRYPTION_KEY: ${PROVIDER_CREDENTIALS_ENCRYPTION_KEY:?set PROVIDER_CREDENTIALS_ENCRYPTION_KEY}
+      PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:?set PAYMENT_WEBHOOK_SECRET}
+      NOTIFICATION_WEBHOOK_SECRET: ${NOTIFICATION_WEBHOOK_SECRET:?set NOTIFICATION_WEBHOOK_SECRET}
+      API_DOCS_ENABLED: ${API_DOCS_ENABLED:-false}
+      SMS_TRANSPORT: ${SMS_TRANSPORT:-off}
     expose:
       - "8080"
 

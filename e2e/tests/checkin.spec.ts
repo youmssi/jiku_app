@@ -35,9 +35,9 @@ test.describe('Validator check-in', () => {
 
         // Only a confirmed guest holds a ticket, so the guest confirms first.
         const invitation = await waitForMessage(guestEmail, { timeoutMs: 60_000 });
-        await page.goto(extractLink(invitation, '/invitation/'));
-        await page.getByRole('button', { name: 'Confirm attendance' }).click();
-        await expect(page.getByText(/You're confirmed/i).first()).toBeVisible();
+        await page.goto(extractLink(invitation, '/v/'));
+        await page.getByRole('button', { name: "I'm coming" }).click();
+        await expect(page.getByText('Valid', { exact: true })).toBeVisible();
 
         const validatorLabel = 'Main gate';
         const checkInLink = await createValidator(token, eventId, validatorLabel);
@@ -53,8 +53,9 @@ test.describe('Validator check-in', () => {
         await expect(admitted).toBeVisible();
         await expect(admitted.getByText('Ibrahima Sow')).toBeVisible();
 
-        // Dismiss the result and admit the same guest again.
-        await admitted.getByRole('button', { name: 'Scan next' }).click();
+        // A valid entry hands the door back by itself, then the same guest is
+        // admitted again.
+        await expect(admitted).toBeHidden({ timeout: 5_000 });
         await page.getByPlaceholder('Search by name, email or phone').fill('Ibrahima');
         await page.getByRole('button', { name: /Ibrahima Sow/ }).click();
 

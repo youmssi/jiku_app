@@ -5,6 +5,7 @@ import com.jiku.catalog.EventModuleApi
 import com.jiku.catalog.TicketTypeInfo
 import com.jiku.shared.ClientCharge
 import com.jiku.shared.CommissionGate
+import com.jiku.shared.RandomCode
 import com.jiku.shared.TenantContext
 import com.jiku.shared.VerificationGate
 import com.jiku.tenant.TenantInfo
@@ -44,8 +45,7 @@ class TicketOrderService(
     private val tenants: TenantModuleApi,
     private val ticketing: TicketingModuleApi,
     private val verification: VerificationGate,
-    private val invitationTokens: InvitationTokenService,
-    private val orderTokens: OrderTokenService,
+    private val inviteCodes: GuestInviteCodes,
     private val properties: TicketOrderProperties,
     private val commission: CommissionGate,
 ) {
@@ -138,6 +138,7 @@ class TicketOrderService(
                 TicketOrder(
                     eventId = eventId,
                     reference = newReference(),
+                    linkCode = newLinkCode(),
                     buyerName = request.buyerName.trim(),
                     buyerPhone = request.buyerPhone.filterNot { it == ' ' },
                     buyerEmail = request.buyerEmail?.trim()?.takeIf { it.isNotEmpty() },
@@ -153,7 +154,7 @@ class TicketOrderService(
                 TicketOrderLine(orderId = orderId, ticketTypeId = type.id, quantity = quantity, unitPriceMinor = charge.amountMinor)
             },
         )
-        return PlacedOrderView(token = orderTokens.issue(orderId, tenant.id.toString()), order = buyerView(order, tenant))
+        return PlacedOrderView(token = requireNotNull(order.linkCode), order = buyerView(order, tenant))
     }
 
     @Transactional(readOnly = true)
@@ -237,6 +238,7 @@ class TicketOrderService(
                             this.orderId = orderId
                         },
                     )
+                inviteCodes.codeFor(guest)
                 val charge = ClientCharge(line.unitPriceMinor, order.currency)
 
                 val ticket = ticketing.issueTicket(eventId, requireNotNull(guest.id), line.ticketTypeId, charge)
@@ -297,7 +299,7 @@ class TicketOrderService(
         val tickets =
             if (order.status == TicketOrderStatus.PAID) {
                 guests.findByOrderIdOrderByCreatedAtAsc(orderId).map {
-                    invitationTokens.issue(requireNotNull(it.id), order.eventId, tenant.id.toString())
+                    inviteCodes.linkKey(it, tenant.id.toString())
                 }
             } else {
                 emptyList()
@@ -400,6 +402,14 @@ class TicketOrderService(
             if (!orders.existsByReference(candidate)) return candidate
         }
         throw IllegalStateException("Could not draw a free order reference")
+    }
+
+    private fun newLinkCode(): String {
+        repeat(REFERENCE_ATTEMPTS) {
+            val candidate = RandomCode.generate(GuestInviteCodes.LENGTH)
+            if (!orders.linkCodeTaken(candidate)) return candidate
+        }
+        throw IllegalStateException("Could not draw a free order link code")
     }
 
     private fun TicketOrderLine.toView(labels: Map<UUID, String>): OrderLineView =

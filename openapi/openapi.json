@@ -424,6 +424,9 @@
       },
       "AppointmentServiceView" : {
         "properties" : {
+          "bookingPaused" : {
+            "type" : "boolean"
+          },
           "clientsPerSlot" : {
             "format" : "int32",
             "type" : "integer"
@@ -431,8 +434,20 @@
           "confirmationMode" : {
             "type" : "string"
           },
+          "logoUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
           "name" : {
             "type" : "string"
+          },
+          "organizerName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           },
           "organizerVerification" : {
             "type" : [
@@ -628,6 +643,61 @@
           },
           "withinAllowance" : {
             "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "BillingStatusView" : {
+        "properties" : {
+          "attention" : {
+            "enum" : [
+              "SERVICES_PAUSED",
+              "GRACE",
+              "OVER_LIMIT",
+              "EXPIRING_SOON",
+              "NONE"
+            ],
+            "type" : "string"
+          },
+          "ownWhatsAppNumber" : {
+            "type" : "boolean"
+          },
+          "ownWhatsAppNumberAddonExpiresAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "packActive" : {
+            "type" : "boolean"
+          },
+          "packExpiresAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "subscription" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/SubscriptionStatusSummary"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          },
+          "whatsAppReminders" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/ReminderAllowance"
+              },
+              {
+                "type" : "null"
+              }
+            ]
           }
         },
         "type" : "object"
@@ -2863,6 +2933,9 @@
           "email" : {
             "type" : "string"
           },
+          "emailVerified" : {
+            "type" : "boolean"
+          },
           "fullName" : {
             "type" : [
               "string",
@@ -2919,6 +2992,14 @@
           },
           "tenantName" : {
             "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "MessagingChannelsResponse" : {
+        "properties" : {
+          "sms" : {
+            "type" : "boolean"
           }
         },
         "type" : "object"
@@ -5593,6 +5674,16 @@
               "null"
             ]
           },
+          "quickSetup" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/ServiceQuickSetup"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          },
           "timezone" : {
             "minLength" : 1,
             "type" : "string"
@@ -5601,6 +5692,25 @@
         "required" : [
           "name",
           "timezone"
+        ],
+        "type" : "object"
+      },
+      "ServiceQuickSetup" : {
+        "properties" : {
+          "durationMinutes" : {
+            "format" : "int32",
+            "maximum" : 480,
+            "minimum" : 5,
+            "type" : "integer"
+          },
+          "hostName" : {
+            "maxLength" : 120,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "hostName"
         ],
         "type" : "object"
       },
@@ -5892,6 +6002,47 @@
         "required" : [
           "plan"
         ],
+        "type" : "object"
+      },
+      "SubscriptionStatusSummary" : {
+        "properties" : {
+          "attention" : {
+            "enum" : [
+              "SERVICES_PAUSED",
+              "GRACE",
+              "OVER_LIMIT",
+              "EXPIRING_SOON",
+              "NONE"
+            ],
+            "type" : "string"
+          },
+          "expiresAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "overLimit" : {
+            "type" : "boolean"
+          },
+          "pausesAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "plan" : {
+            "type" : "string"
+          },
+          "servicesPaused" : {
+            "type" : "boolean"
+          },
+          "status" : {
+            "type" : "string"
+          }
+        },
         "type" : "object"
       },
       "SubscriptionView" : {
@@ -9894,6 +10045,26 @@
         ]
       }
     },
+    "/api/v1/billing/status" : {
+      "get" : {
+        "operationId" : "billingStatusStatus",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BillingStatusView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "billing-status-controller"
+        ]
+      }
+    },
     "/api/v1/billing/subscription" : {
       "get" : {
         "operationId" : "subscriptionView",
@@ -10144,6 +10315,82 @@
             }
           },
           "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BrandingResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "branding-controller"
+        ]
+      }
+    },
+    "/api/v1/branding/{kind}" : {
+      "delete" : {
+        "operationId" : "brandingRemoveImage",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "kind",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BrandingResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "branding-controller"
+        ]
+      },
+      "put" : {
+        "operationId" : "brandingReplaceImage",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "kind",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "properties" : {
+                  "file" : {
+                    "format" : "binary",
+                    "type" : "string"
+                  }
+                },
+                "required" : [
+                  "file"
+                ],
+                "type" : "object"
+              }
+            }
+          }
         },
         "responses" : {
           "200" : {
@@ -13538,6 +13785,26 @@
         ]
       }
     },
+    "/api/v1/messaging/channels" : {
+      "get" : {
+        "operationId" : "messagingChannelsChannels",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MessagingChannelsResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "messaging-channels-controller"
+        ]
+      }
+    },
     "/api/v1/notifications/email-feedback" : {
       "post" : {
         "operationId" : "emailFeedbackReceive",
@@ -13741,6 +14008,15 @@
             "required" : true,
             "schema" : {
               "type" : "string"
+            }
+          },
+          {
+            "in" : "query",
+            "name" : "door",
+            "required" : false,
+            "schema" : {
+              "default" : false,
+              "type" : "boolean"
             }
           }
         ],
@@ -15114,6 +15390,46 @@
         ]
       }
     },
+    "/api/v1/public/orgs/{tenantId}/images/{kind}" : {
+      "get" : {
+        "operationId" : "publicTenantImageImage",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "tenantId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          },
+          {
+            "in" : "path",
+            "name" : "kind",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "format" : "byte",
+                  "type" : "string"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "public-tenant-image-controller"
+        ]
+      }
+    },
     "/api/v1/public/orgs/{username}" : {
       "get" : {
         "operationId" : "publicOrgProfile",
@@ -15680,6 +15996,51 @@
               }
             },
             "description" : "Created"
+          }
+        },
+        "tags" : [
+          "resource-controller"
+        ]
+      },
+      "put" : {
+        "operationId" : "resourceReplaceAvailability",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "id",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "items" : {
+                  "$ref" : "#/components/schemas/AvailabilityRequest"
+                },
+                "type" : "array"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ResourceAvailabilityView"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
           }
         },
         "tags" : [

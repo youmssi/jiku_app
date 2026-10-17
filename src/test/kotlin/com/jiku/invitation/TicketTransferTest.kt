@@ -3,6 +3,7 @@ package com.jiku.invitation
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.invitation.internal.InvitationTokenService
+import com.jiku.support.DoorLinks
 import com.jiku.support.TestDates.EVENT_YEAR
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -211,7 +212,7 @@ class TicketTransferTest {
                 .contentAsString
         // The response carries the shareable URL; the token is its last segment.
         val link: String = JsonPath.read(body, "$.link")
-        return link.substringAfterLast('/')
+        return DoorLinks.token(mockMvc, link)
     }
 
     private fun currentTenantId(accessToken: String): String {

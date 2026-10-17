@@ -2,6 +2,7 @@ package com.jiku.invitation
 
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
+import com.jiku.invitation.internal.OrderTokenService
 import com.jiku.invitation.internal.TicketOrderService
 import com.jiku.shared.TenantContext
 import com.jiku.support.OrganizerApi
@@ -45,6 +46,9 @@ class TicketOrderFlowTest {
 
     @Autowired
     lateinit var orders: TicketOrderService
+
+    @Autowired
+    lateinit var orderTokens: OrderTokenService
 
     private val api by lazy { OrganizerApi(mockMvc) }
 
@@ -103,6 +107,32 @@ class TicketOrderFlowTest {
             .andExpect(jsonPath("$.guestName").value("Aminata Camara"))
             .andExpect(jsonPath("$.payment.status").value("PAID"))
         publicSale(sale).andExpect(jsonPath("$.categories[0].available").value(1))
+    }
+
+    @Test
+    fun `an order opens by a short code, and a signed link handed out before still works`() {
+        val sale = openSale(capacity = 3)
+        val placed =
+            place(sale, quantity = 1)
+                .andExpect(status().isCreated())
+                .andReturn()
+                .response.contentAsString
+        val code = JsonPath.read<String>(placed, "$.token")
+        assert(Regex("[A-HJKMNP-Z2-9]{10}").matches(code)) { "unexpected order link code: $code" }
+        order(code).andExpect(status().isOk()).andExpect(jsonPath("$.status").value("AWAITING_PAYMENT"))
+        // Someone retyping the link may not keep the capitals.
+        order(code.lowercase()).andExpect(status().isOk())
+
+        val orderId =
+            JsonPath.read<String>(
+                api
+                    .get(sale.token, "/api/v1/events/${sale.eventId}/orders")
+                    .andReturn()
+                    .response.contentAsString,
+                "$[0].id",
+            )
+        order(orderTokens.issue(UUID.fromString(orderId), sale.tenantId)).andExpect(status().isOk())
+        order("ZZZZZZZZZZ").andExpect(status().isNotFound())
     }
 
     @Test

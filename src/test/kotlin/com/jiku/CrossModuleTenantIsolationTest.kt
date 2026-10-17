@@ -1,6 +1,7 @@
 package com.jiku
 
 import com.jayway.jsonpath.JsonPath
+import com.jiku.support.DoorLinks
 import com.jiku.support.TestDates.EVENT_YEAR
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -90,7 +91,7 @@ class CrossModuleTenantIsolationTest {
                 ).andExpect(status().isCreated())
                 .andReturn()
                 .response.contentAsString
-        return JsonPath.read<String>(body, "$.link").substringAfterLast("/checkin/")
+        return DoorLinks.token(mockMvc, JsonPath.read(body, "$.link"))
     }
 
     private fun importGuest(

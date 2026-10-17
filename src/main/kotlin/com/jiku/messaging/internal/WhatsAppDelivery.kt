@@ -158,7 +158,7 @@ class WhatsAppDeliveryStatusService(
                 NotificationLog(message.referenceId, WHATSAPP, "+${message.recipient}", NotificationLog.STATUS_FAILED, 0, reason.take(500)),
             )
             val fallback = message.smsFallback
-            if (fallback != null) {
+            if (fallback != null && smsSender.enabled) {
                 message.smsFallback = null
                 val status =
                     try {
