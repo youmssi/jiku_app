@@ -1,7 +1,8 @@
 # Jikū — Ce qu'il manque pour la production, et le plan de travail
 
-**Date :** 2026-09-24, état et chronogramme mis à jour le 2026-09-27
-**Référence :** ADR 104 (ticket, paiement, canaux, tarification), ADR 106 (cartes partageables).
+**Date :** 2026-09-24, état mis à jour le 2026-10-17
+**Référence :** ADR 104 (ticket, paiement, canaux, tarification), ADR 106 (cartes partageables),
+ADR 107 (hébergement unique), ADR 108 (pile de lancement).
 
 Ce document répond à une question : **que faut-il encore faire pour que le
 périmètre de Jikū soit complet et prêt pour la production ?** Il distingue ce
@@ -45,7 +46,7 @@ décrite dans `docs/backlog/phase-7-suite.md` et datée au §5.
 | Sélecteur de prestataires | ✅ Prêt | `PaymentProviderSelector`, `MessagingProviderResolver` |
 | Prix et règle de paiement sur le ticket, statut « payé » | ✅ Prêt | JIKU-108, JIKU-110, JIKU-161 |
 | Moyens de paiement de l'organisation | ✅ Prêt | JIKU-109, JIKU-160 |
-| Canal SMS (Nimba) et repli WhatsApp → SMS | ✅ Prêt | `NimbaSmsSender`, JIKU-112 (rappels et file) |
+| Canal SMS (Nimba) et repli WhatsApp → SMS | ✅ Prêt, coupé au lancement | `NimbaSmsSender`, JIKU-112 ; `SMS_TRANSPORT=off` et écrans sans SMS (JIKU-261) |
 | Opérateur avec périmètre, équipe, console unique | ✅ Prêt | JIKU-116, JIKU-162, JIKU-163 |
 | Plusieurs monnaies (GNF, FCFA, USD) | ✅ Prêt | ADR 105, JIKU-137, JIKU-138 |
 | Votre propre numéro WhatsApp (Embedded Signup) | ✅ Prêt | JIKU-154, JIKU-155, JIKU-156 |
@@ -60,19 +61,19 @@ décrite dans `docs/backlog/phase-7-suite.md` et datée au §5.
 
 | Élément | État | Constat |
 |---|---|---|
-| Hébergement toujours actif | ⏳ | un serveur Hetzner avec Dokploy pour le web, l'API et la base (ADR 107, JIKU-203) |
-| Envoi d'e-mails au-delà des offres gratuites | ⏳ | useSend sur AWS SES, seuils de réputation abaissés (ADR 107, JIKU-200) |
-| Domaine de marque | ❌ | web, API et e-mails encore sur `mrvin100.de` ; SPF et DKIM à refaire pour Resend et Brevo |
+| Hébergement toujours actif | 🟡 | prêt dans le code : serveur Hetzner CX43 avec Dokploy (ADR 107, ADR 108, JIKU-203) ; bascule et test sur le vrai domaine à faire |
+| Envoi d'e-mails au-delà des offres gratuites | 🟡 | useSend sur AWS SES, seuils de réputation abaissés (JIKU-200) ; SPF, DKIM et DMARC à valider |
+| Domaine de marque | ❌ | web, API et e-mails encore sur `mrvin100.de` ; adresse de support sur le domaine à créer |
 | Branche `main` et mise en production | ✅ | `main` partage l'historique de `develop` depuis la version du 2026-09-26 ; une version est une PR `develop` → `main` fusionnée par commit de fusion |
 | Moyen de paiement sur le compte WhatsApp Business | ❌ | exigé par Meta avant le 30 septembre 2026, sinon l'envoi s'arrête |
 | Statut Tech Provider Meta, modèles de messages approuvés | ⏳ | nécessaire pour « votre propre numéro » et les invitations interactives |
 | Compte marchand CinetPay en production | ⏳ | clés, URL de notification, délai de reversement à négocier |
-| Secrets de production (constat F-3) | ⏳ | à poser et vérifier avant la bascule |
+| Secrets de production (constat F-3) | 🟡 | l'API refuse de démarrer avec une valeur de développement (JIKU-260) ; à poser sur le serveur |
 | Scan des vulnérabilités en CI (constat F-6) | ✅ | Trivy sur le jar du backend, `pnpm audit` sur le web (JIKU-180) |
-| Validation de la revue de sécurité | ⏳ | case non cochée |
-| Recette utilisateur (UAT) | ⏳ | plan rédigé, validations non cochées |
-| Identité légale sur les factures | ❌ | `BILLING_SELLER_NAME`, adresse et identifiant fiscal vides ; entreprise à immatriculer |
-| CGU, CGV, mentions légales | 🟡 | pages publiées avec des champs d'entreprise à compléter (JIKU-135) ; relecture juridique à faire |
+| Validation de la revue de sécurité | ✅ | phase de sécurité du 2026-10-16 : constats corrigés (JIKU-260) |
+| Recette utilisateur (UAT) | 🟡 | vérification avant lancement du 2026-10-16 : « Go conditionnel », 11 parcours critiques vérifiés de bout en bout sur la version de production ; validations UAT à cocher |
+| Identité légale sur les factures | 🟡 | MRVIN100 SARLU immatriculée au RCCM de Conakry le 2026-10-14 ; `BILLING_SELLER_*` à poser en production |
+| CGU, CGV, mentions légales | 🟡 | identité de l'entreprise et prestataires de production à jour (JIKU-263) ; relecture juridique à faire |
 | Sauvegardes et restauration | ✅ | répétition de restauration faite (`docs/backup.md`) |
 | Suivi des erreurs et disponibilité | ✅ | Sentry branché, runbook de disponibilité |
 
