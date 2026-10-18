@@ -97,7 +97,7 @@ jiku:
     # Cost/quota/category guardrails (JIKU-61).
     conversation-safety-threshold: ${WHATSAPP_CONVERSATION_SAFETY_THRESHOLD:220}
     usd-to-gnf-rate: ${WHATSAPP_USD_TO_GNF_RATE:8760}
-    marketing-markers: ${WHATSAPP_MARKETING_MARKERS:promo,réduction,solde,gratuit,offre spéciale,cadeau,bon plan,code promo,achetez maintenant}
+    marketing-markers: ${WHATSAPP_MARKETING_MARKERS:promo,réduction,solde,gratuit,offre spéciale,cadeau,bon plan,code promo,achetez maintenant,discount,special offer,free gift,buy now,limited offer,% off}
     # What Meta reports about templates and numbers (JIKU-209): a paused
     # template is left alone this long, and one Meta moves to MARKETING is no
     # longer used.
@@ -109,7 +109,7 @@ jiku:
     # connects its own number. 0 turns a limit off.
     limits:
       unverified-daily: ${WHATSAPP_LIMIT_UNVERIFIED_DAILY:50}
-      monthly-before-own-number: ${WHATSAPP_LIMIT_MONTHLY_BEFORE_OWN_NUMBER:500}
+      monthly-before-own-number: ${WHATSAPP_LIMIT_MONTHLY_BEFORE_OWN_NUMBER:3000}
     reputation:
       window-days: ${WHATSAPP_REPUTATION_WINDOW_DAYS:7}
       min-sample: ${WHATSAPP_REPUTATION_MIN_SAMPLE:50}
@@ -501,10 +501,10 @@ admin:
     password: ${ADMIN_BOOTSTRAP_PASSWORD:}
 
 billing:
-  # Pay-per-event pricing (JIKU-32, re-based in ADR 105). The tiers and the
-  # per-guest price beyond them are set in GNF, FCFA and USD (BillingProperties
-  # defaults, overridable here or from the admin desk); an organization is
-  # billed in its own franc, or in dollars elsewhere.
+  # Event pricing (JIKU-268): free guests each year, then a tax-inclusive price
+  # per guest set in GNF, FCFA and USD (BillingProperties defaults, overridable
+  # here or from the admin desk); an organization is billed in its own franc,
+  # or in dollars elsewhere.
   free-tier-guests: ${BILLING_FREE_TIER_GUESTS:100}
   # Rolling window (ISO-8601 duration) over which free-tier-guests accumulates
   # per tenant account, not per event (JIKU-54) — closes the bypass of
@@ -528,17 +528,20 @@ billing:
       name: ${BILLING_SELLER_NAME:Jiku}
       address-line: ${BILLING_SELLER_ADDRESS:}
       tax-identifier: ${BILLING_SELLER_TAX_ID:}
-    # Consumption tax per ISO 3166-1 alpha-2 country. DELIBERATELY EMPTY: the GTM
-    # plan records Guinea's rate as unconfirmed and warns explicitly not to plan
-    # against an assumed figure for Cameroon, so shipping a guess here would put a
-    # wrong number on a legal document. An unconfigured country bills at zero tax.
-    # The key is left out entirely rather than written as an empty mapping: Spring
-    # reads `tax: {}` as the string "{}" and fails to bind it. Confirm each rate
-    # with a local accountant, then add it here, e.g.:
-    #   tax:
-    #     GN:
-    #       label: "TVA 18%"
-    #       rate: "0.18"
+    # Consumption tax included in prices, per ISO 3166-1 alpha-2 country
+    # (JIKU-268): prices are tax-inclusive and the invoice extracts the tax. A
+    # country missing here bills at zero tax. Rates as filed with each tax
+    # office; change them here when they change.
+    tax:
+      GN:
+        label: ${BILLING_TAX_GN_LABEL:TVA 18 %}
+        rate: ${BILLING_TAX_GN_RATE:0.18}
+      CI:
+        label: ${BILLING_TAX_CI_LABEL:TVA 18 %}
+        rate: ${BILLING_TAX_CI_RATE:0.18}
+      SN:
+        label: ${BILLING_TAX_SN_LABEL:TVA 18 %}
+        rate: ${BILLING_TAX_SN_RATE:0.18}
   payment:
     # Mobile Money integration (JIKU-33). `provider` names the adapter that starts
     # new payments (JIKU-105); every registered adapter keeps confirming its own
@@ -582,12 +585,21 @@ feedback:
 
 compliance:
   retention:
-    # Data-retention policy (JIKU-37). Guest personal data is anonymized this many
-    # days after an event's date; the dashboard warns notice-days ahead of that
-    # cutoff. The job runs on the cron below.
+    # Data-retention policy (JIKU-37, JIKU-267). Guest and ticket-buyer personal
+    # data is anonymized this many days after an event's date, and a service
+    # client's name and number this many days after the appointment or line
+    # ticket; the dashboard warns notice-days ahead of the event cutoff. The jobs
+    # run on the cron below.
     days: ${COMPLIANCE_RETENTION_DAYS:365}
     notice-days: ${COMPLIANCE_RETENTION_NOTICE_DAYS:30}
     cron: ${COMPLIANCE_RETENTION_CRON:0 30 3 * * *}
+
+backoffice:
+  prospects:
+    # Prospects who wrote to Jikū are deleted this many days after they wrote
+    # (JIKU-267); 0 keeps them.
+    retention-days: ${PROSPECT_RETENTION_DAYS:365}
+    retention-cron: ${PROSPECT_RETENTION_CRON:0 40 3 * * *}
 
 invitation:
   import:

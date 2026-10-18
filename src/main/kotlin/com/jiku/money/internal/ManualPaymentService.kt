@@ -43,29 +43,27 @@ class ManualPaymentService(
     private val random = SecureRandom()
 
     /**
-     * Records the activation request and returns the payment instructions.
-     * Idempotent per event+tier: re-requesting while a request is open returns the
-     * existing one (with its original reference) instead of stacking duplicates.
+     * Records the request to raise [eventId] to [guests] paid guests and returns
+     * the payment instructions. Idempotent: re-requesting the same guests while a
+     * request is open returns the existing one (with its original reference)
+     * instead of stacking duplicates.
      */
     @Transactional
     fun request(
         eventId: UUID,
-        tierName: String,
+        guests: Long,
     ): ManualPaymentInstructions {
-        val tier =
-            platformSettings.tierByName(tierName)
-                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown tier: $tierName")
         val tenantId = requireNotNull(TenantContext.get()) { "A manual payment request requires an authenticated tenant" }
 
         val existing =
             payments.findFirstByEventIdAndTierAndProviderAndStatusOrderByCreatedAtDesc(
                 eventId,
-                tier.name,
+                Payment.GUESTS_TIER,
                 PROVIDER_MANUAL,
                 PaymentStatus.PENDING,
             )
-        val quote = eventPricing.upgradeQuote(eventId, tier)
-        if (existing != null && existing.amountMinor == quote.amountMinor && existing.interactive == quote.interactive) {
+        val quote = eventPricing.quote(eventId, guests)
+        if (existing != null && existing.guests == guests && existing.amountMinor == quote.amountMinor) {
             return instructionsFor(existing)
         }
 
@@ -73,11 +71,11 @@ class ManualPaymentService(
             payments.save(
                 Payment(
                     eventId = eventId,
-                    tier = tier.name,
+                    tier = Payment.GUESTS_TIER,
                     amountMinor = quote.amountMinor,
                     currency = quote.currency,
-                    interactive = quote.interactive,
                     provider = PROVIDER_MANUAL,
+                    guests = guests,
                 ),
             )
         payment.providerReference = generateReference()
@@ -172,7 +170,7 @@ class ManualPaymentService(
     }
 
     /**
-     * A request to pay for [months] of Organizer Pack (ADR 105), with the guests
+     * A request to pay for [months] of Pro Organisateur (ADR 105), with the guests
      * still owed from an event day included. Same manual circuit as a
      * subscription; an open request at the same price is handed back.
      */
@@ -306,9 +304,9 @@ class ManualPaymentService(
                     payment.status = if (succeeded) PaymentStatus.SUCCEEDED else PaymentStatus.FAILED
                     payment.updatedAt = Instant.now()
                     payments.save(payment)
-                    // Only an event tier has an event to notify about; a
+                    // Only an event's guests have an event to notify about; a
                     // subscription publishes its own notice (REACTIVATED).
-                    tenantKind = payment.kind != Payment.KIND_TIER
+                    tenantKind = payment.kind != Payment.KIND_GUESTS
                     if (succeeded) fulfillment.fulfill(payment)
                     payment.toAdminView()
                 }
@@ -327,6 +325,7 @@ class ManualPaymentService(
             paymentId = requireNotNull(payment.id),
             reference = requireNotNull(payment.providerReference),
             tier = payment.tier,
+            guests = payment.guests,
             amountMinor = payment.amountMinor,
             currency = payment.currency,
             status = payment.status.name,
@@ -354,8 +353,8 @@ class ManualPaymentService(
                 kind = kind,
                 paymentId = view.id,
                 tenantId = tenantId,
-                eventId = requireNotNull(view.eventId) { "A manual tier payment always references an event" },
-                tier = view.tier,
+                eventId = requireNotNull(view.eventId) { "A manual guests payment always references an event" },
+                guests = requireNotNull(view.guests) { "A manual guests payment always names its guests" },
                 amountMinor = view.amountMinor,
                 currency = view.currency,
                 reference = view.reference,
@@ -382,6 +381,7 @@ class ManualPaymentService(
             tenantId = tenantId ?: "",
             eventId = eventId,
             tier = tier,
+            guests = guests,
             amountMinor = amountMinor,
             currency = currency,
             provider = provider,

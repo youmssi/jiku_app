@@ -19,16 +19,13 @@ class ServicePlanPricingTest {
     }
 
     @Test
-    fun `a team plan charges its base price then each extra person`() {
-        val teams = plans.getValue("Teams")
-        assertEquals(150_000, teams.monthlyMinor("GNF", people = 1))
-        assertEquals(150_000, teams.monthlyMinor("GNF", people = 2))
-        assertEquals(300_000, teams.monthlyMinor("GNF", people = 5))
-        assertEquals(20_500, teams.monthlyMinor("XOF", people = 5))
-        assertEquals(3_500, teams.monthlyMinor("USD", people = 5))
-
-        val organisation = plans.getValue("Organisation")
-        assertEquals(550_000, organisation.monthlyMinor("GNF", people = 10))
+    fun `Services Pro charges each person who serves clients`() {
+        val pro = plans.getValue("Services Pro")
+        assertEquals(60_000, pro.monthlyMinor("GNF", people = 1))
+        assertEquals(300_000, pro.monthlyMinor("GNF", people = 5))
+        assertEquals(20_000, pro.monthlyMinor("XOF", people = 5))
+        assertEquals(3_500, pro.monthlyMinor("USD", people = 5))
+        assertEquals(2, plans.size, "only Solo and Services Pro are on offer")
     }
 
     @Test
@@ -37,6 +34,6 @@ class ServicePlanPricingTest {
         assertTrue(solo.free)
         assertTrue(solo.covers(1))
         assertFalse(solo.covers(2))
-        assertTrue(plans.getValue("Teams").covers(50))
+        assertTrue(plans.getValue("Services Pro").covers(50))
     }
 }

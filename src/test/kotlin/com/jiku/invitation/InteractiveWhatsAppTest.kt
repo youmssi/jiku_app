@@ -97,13 +97,13 @@ class InteractiveWhatsAppTest {
     }
 
     @Test
-    fun `a paid event without the interactive surcharge sends a plain link`(output: CapturedOutput) {
+    fun `a paid event answers in WhatsApp with nothing more to pay`(output: CapturedOutput) {
         val api = OrganizerApi(mockMvc)
         val token = api.register()
         val eventId = api.createEvent(token)
         val payment =
             api
-                .post(token, "/api/v1/events/$eventId/payments/manual", """{"tier":"BRONZE"}""")
+                .post(token, "/api/v1/events/$eventId/payments/manual", """{"guests":300}""")
                 .andExpect(status().isOk())
                 .andReturn()
                 .response.contentAsString
@@ -113,7 +113,7 @@ class InteractiveWhatsAppTest {
                 token,
                 "/api/v1/events/$eventId",
                 """
-                {"name":"Gala sans supplément","timezone":"Africa/Conakry","startDateTime":"${EVENT_YEAR}-12-01T19:00:00Z",
+                {"name":"Gala payé","timezone":"Africa/Conakry","startDateTime":"${EVENT_YEAR}-12-01T19:00:00Z",
                 "invitationChannels":["WHATSAPP"],"settings":{"deliveryMode":"INTERACTIVE"}}
                 """.trimIndent(),
             ).andExpect(status().isOk())
@@ -124,7 +124,7 @@ class InteractiveWhatsAppTest {
         api.post(token, "/api/v1/events/$eventId/invitations/send?channels=WHATSAPP", "{}").andExpect(status().isOk())
 
         await().atMost(10, TimeUnit.SECONDS).untilAsserted {
-            assert(output.out.contains("to=$phone buttons=[] image=null")) { "the invitation was not sent as a plain link" }
+            assert(output.out.contains("to=$phone buttons=[RSVP")) { "a paid event's invitation lost its answer buttons" }
         }
     }
 

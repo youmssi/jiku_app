@@ -80,6 +80,13 @@
               "null"
             ]
           },
+          "guests" : {
+            "format" : "int64",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
           "id" : {
             "format" : "uuid",
             "type" : "string"
@@ -106,20 +113,6 @@
         "properties" : {
           "refreshToken" : {
             "type" : "string"
-          }
-        },
-        "type" : "object"
-      },
-      "AdminTierCatalog" : {
-        "properties" : {
-          "currency" : {
-            "type" : "string"
-          },
-          "tiers" : {
-            "items" : {
-              "$ref" : "#/components/schemas/BillingTierOption"
-            },
-            "type" : "array"
           }
         },
         "type" : "object"
@@ -216,9 +209,6 @@
               "string",
               "null"
             ]
-          },
-          "tier" : {
-            "type" : "string"
           }
         },
         "type" : "object"
@@ -634,6 +624,10 @@
             "format" : "int64",
             "type" : "integer"
           },
+          "paidGuests" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
           "remaining" : {
             "format" : "int64",
             "type" : "integer"
@@ -698,27 +692,6 @@
                 "type" : "null"
               }
             ]
-          }
-        },
-        "type" : "object"
-      },
-      "BillingTierOption" : {
-        "properties" : {
-          "maxGuests" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "price" : {
-            "$ref" : "#/components/schemas/PriceList"
-          },
-          "priceMinor" : {
-            "deprecated" : true,
-            "description" : "Use price",
-            "format" : "int64",
-            "type" : "integer"
           }
         },
         "type" : "object"
@@ -1279,43 +1252,6 @@
         },
         "type" : "object"
       },
-      "CustomQuote" : {
-        "properties" : {
-          "currency" : {
-            "type" : "string"
-          },
-          "guestCount" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "priceMinor" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        },
-        "type" : "object"
-      },
-      "CustomTierOption" : {
-        "properties" : {
-          "beyondPerGuestMinor" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "perGuestUsdCents" : {
-            "deprecated" : true,
-            "description" : "Use beyondPerGuestMinor",
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "setupFeeUsdCents" : {
-            "deprecated" : true,
-            "description" : "There is no setup fee since ADR 105; always 0",
-            "format" : "int64",
-            "type" : "integer"
-          }
-        },
-        "type" : "object"
-      },
       "DashboardResponse" : {
         "properties" : {
           "checkedIn" : {
@@ -1629,6 +1565,22 @@
         },
         "type" : "object"
       },
+      "EventGuestsRequest" : {
+        "properties" : {
+          "guests" : {
+            "format" : "int64",
+            "minimum" : 1,
+            "type" : [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required" : [
+          "guests"
+        ],
+        "type" : "object"
+      },
       "EventLookRequest" : {
         "properties" : {
           "cardStyle" : {
@@ -1698,6 +1650,26 @@
         },
         "type" : "object"
       },
+      "EventPricingView" : {
+        "properties" : {
+          "currency" : {
+            "type" : "string"
+          },
+          "freeTierGuests" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "maxGuestsPerEvent" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "perGuestMinor" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
       "EventQuestionResponse" : {
         "properties" : {
           "eventId" : {
@@ -1717,6 +1689,26 @@
           },
           "required" : {
             "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "EventQuote" : {
+        "properties" : {
+          "amountMinor" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "guests" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "paidGuests" : {
+            "format" : "int64",
+            "type" : "integer"
           }
         },
         "type" : "object"
@@ -1870,32 +1862,6 @@
             ]
           },
           "status" : {
-            "type" : "string"
-          }
-        },
-        "type" : "object"
-      },
-      "EventTierQuote" : {
-        "properties" : {
-          "amountMinor" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "currency" : {
-            "type" : "string"
-          },
-          "interactive" : {
-            "type" : "boolean"
-          },
-          "maxGuests" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "surchargeMinor" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "tier" : {
             "type" : "string"
           }
         },
@@ -2185,23 +2151,27 @@
               "null"
             ]
           },
+          "guests" : {
+            "format" : "int64",
+            "minimum" : 1,
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
           "tenantId" : {
             "format" : "uuid",
             "type" : [
               "string",
               "null"
             ]
-          },
-          "tier" : {
-            "minLength" : 1,
-            "type" : "string"
           }
         },
         "required" : [
           "eventId",
           "expiresAt",
-          "tenantId",
-          "tier"
+          "guests",
+          "tenantId"
         ],
         "type" : "object"
       },
@@ -2386,18 +2356,6 @@
             ]
           }
         },
-        "type" : "object"
-      },
-      "InitiatePaymentRequest" : {
-        "properties" : {
-          "tier" : {
-            "minLength" : 1,
-            "type" : "string"
-          }
-        },
-        "required" : [
-          "tier"
-        ],
         "type" : "object"
       },
       "InterruptAgreementRequest" : {
@@ -2868,6 +2826,13 @@
           "currency" : {
             "type" : "string"
           },
+          "guests" : {
+            "format" : "int64",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
           "payee" : {
             "$ref" : "#/components/schemas/PayeeDetails"
           },
@@ -2885,18 +2850,6 @@
             "type" : "string"
           }
         },
-        "type" : "object"
-      },
-      "ManualPaymentRequest" : {
-        "properties" : {
-          "tier" : {
-            "minLength" : 1,
-            "type" : "string"
-          }
-        },
-        "required" : [
-          "tier"
-        ],
         "type" : "object"
       },
       "MarkPaidRequest" : {
@@ -3994,6 +3947,16 @@
           "eventName" : {
             "type" : "string"
           },
+          "guests" : {
+            "format" : "int64",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
+          "kind" : {
+            "type" : "string"
+          },
           "paymentId" : {
             "format" : "uuid",
             "type" : "string"
@@ -4284,15 +4247,12 @@
           "payee" : {
             "$ref" : "#/components/schemas/PayeeDetails"
           },
+          "perGuest" : {
+            "$ref" : "#/components/schemas/PriceList"
+          },
           "subscriptionPlans" : {
             "items" : {
               "$ref" : "#/components/schemas/SubscriptionPlanOption"
-            },
-            "type" : "array"
-          },
-          "tiers" : {
-            "items" : {
-              "$ref" : "#/components/schemas/BillingTierOption"
             },
             "type" : "array"
           }
@@ -4310,15 +4270,12 @@
           "payee" : {
             "$ref" : "#/components/schemas/PayeeDetails"
           },
+          "perGuest" : {
+            "$ref" : "#/components/schemas/PriceList"
+          },
           "subscriptionPlans" : {
             "items" : {
               "$ref" : "#/components/schemas/SubscriptionPlanOption"
-            },
-            "type" : "array"
-          },
-          "tiers" : {
-            "items" : {
-              "$ref" : "#/components/schemas/BillingTierOption"
             },
             "type" : "array"
           }
@@ -6713,47 +6670,6 @@
         },
         "type" : "object"
       },
-      "TierCatalog" : {
-        "properties" : {
-          "currency" : {
-            "type" : "string"
-          },
-          "custom" : {
-            "$ref" : "#/components/schemas/CustomTierOption"
-          },
-          "freeTierGuests" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "interactivePerGuestMinor" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "tiers" : {
-            "items" : {
-              "$ref" : "#/components/schemas/TierOption"
-            },
-            "type" : "array"
-          }
-        },
-        "type" : "object"
-      },
-      "TierOption" : {
-        "properties" : {
-          "maxGuests" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "priceMinor" : {
-            "format" : "int64",
-            "type" : "integer"
-          }
-        },
-        "type" : "object"
-      },
       "TimeBucket" : {
         "properties" : {
           "count" : {
@@ -7488,6 +7404,36 @@
         ],
         "type" : "object"
       },
+      "WhatsAppMessageCheck" : {
+        "properties" : {
+          "category" : {
+            "type" : "string"
+          },
+          "promotionalWords" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "WhatsAppMessageCheckRequest" : {
+        "properties" : {
+          "text" : {
+            "maxLength" : 4096,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required" : [
+          "text"
+        ],
+        "type" : "object"
+      },
       "WhatsAppOverrideStatus" : {
         "properties" : {
           "activatedAt" : {
@@ -7931,26 +7877,6 @@
         },
         "tags" : [
           "admin-billing-settings-controller"
-        ]
-      }
-    },
-    "/api/v1/admin/billing/tiers" : {
-      "get" : {
-        "operationId" : "adminBillingCatalogCatalog",
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/AdminTierCatalog"
-                }
-              }
-            },
-            "description" : "OK"
-          }
-        },
-        "tags" : [
-          "admin-billing-catalog-controller"
         ]
       }
     },
@@ -9598,6 +9524,26 @@
         ]
       }
     },
+    "/api/v1/billing/event-pricing" : {
+      "get" : {
+        "operationId" : "eventPricingPricing",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EventPricingView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "event-pricing-controller"
+        ]
+      }
+    },
     "/api/v1/billing/invoices" : {
       "get" : {
         "operationId" : "invoiceList",
@@ -10142,66 +10088,6 @@
         },
         "tags" : [
           "subscription-controller"
-        ]
-      }
-    },
-    "/api/v1/billing/tiers" : {
-      "get" : {
-        "operationId" : "billingTiersTiers",
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/TierCatalog"
-                }
-              }
-            },
-            "description" : "OK"
-          }
-        },
-        "tags" : [
-          "billing-tiers-controller"
-        ]
-      }
-    },
-    "/api/v1/billing/tiers/custom-quote" : {
-      "get" : {
-        "operationId" : "billingTiersCustomQuote",
-        "parameters" : [
-          {
-            "in" : "query",
-            "name" : "guestCount",
-            "required" : true,
-            "schema" : {
-              "format" : "int64",
-              "type" : "integer"
-            }
-          },
-          {
-            "in" : "query",
-            "name" : "interactive",
-            "required" : false,
-            "schema" : {
-              "default" : false,
-              "type" : "boolean"
-            }
-          }
-        ],
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CustomQuote"
-                }
-              }
-            },
-            "description" : "OK"
-          }
-        },
-        "tags" : [
-          "billing-tiers-controller"
         ]
       }
     },
@@ -10947,9 +10833,9 @@
         ]
       }
     },
-    "/api/v1/events/{eventId}/billing/quotes" : {
+    "/api/v1/events/{eventId}/billing/quote" : {
       "get" : {
-        "operationId" : "eventTierQuotesQuotes",
+        "operationId" : "eventPricingQuote",
         "parameters" : [
           {
             "in" : "path",
@@ -10959,6 +10845,15 @@
               "format" : "uuid",
               "type" : "string"
             }
+          },
+          {
+            "in" : "query",
+            "name" : "guests",
+            "required" : true,
+            "schema" : {
+              "format" : "int64",
+              "type" : "integer"
+            }
           }
         ],
         "responses" : {
@@ -10966,10 +10861,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/EventTierQuote"
-                  },
-                  "type" : "array"
+                  "$ref" : "#/components/schemas/EventQuote"
                 }
               }
             },
@@ -10977,7 +10869,7 @@
           }
         },
         "tags" : [
-          "event-tier-quotes-controller"
+          "event-pricing-controller"
         ]
       }
     },
@@ -12202,7 +12094,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/InitiatePaymentRequest"
+                "$ref" : "#/components/schemas/EventGuestsRequest"
               }
             }
           },
@@ -12272,7 +12164,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/ManualPaymentRequest"
+                "$ref" : "#/components/schemas/EventGuestsRequest"
               }
             }
           },
@@ -13802,6 +13694,36 @@
         },
         "tags" : [
           "messaging-channels-controller"
+        ]
+      }
+    },
+    "/api/v1/messaging/whatsapp/check" : {
+      "post" : {
+        "operationId" : "whatsAppMessageCheckCheck",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WhatsAppMessageCheckRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WhatsAppMessageCheck"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "whats-app-message-check-controller"
         ]
       }
     },

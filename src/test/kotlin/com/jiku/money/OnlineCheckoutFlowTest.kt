@@ -22,7 +22,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * JIKU-164: every purchase can be paid online, not only an event tier. A checkout
+ * JIKU-164: every purchase can be paid online, not only an event's guests. A checkout
  * records a pending payment and hands back the provider's page, whose return URL
  * names the payment; the purchase is granted only when the provider confirms it,
  * and the payment's status is readable by its own organization alone.
@@ -114,10 +114,10 @@ class OnlineCheckoutFlowTest {
                 .andExpect(status().is2xxSuccessful())
         }
         api.post(team, "/api/v1/billing/subscription/checkout", """{"plan":"Solo","months":1}""").andExpect(status().isBadRequest())
-        pay(team, teamTenant, "/api/v1/billing/subscription/checkout", """{"plan":"Teams","months":1}""")
+        pay(team, teamTenant, "/api/v1/billing/subscription/checkout", """{"plan":"Services Pro","months":1}""")
         api
             .get(team, "/api/v1/billing/subscription")
-            .andExpect(jsonPath("$.plan").value("Teams"))
+            .andExpect(jsonPath("$.plan").value("Services Pro"))
             .andExpect(jsonPath("$.status").value("ACTIVE"))
     }
 

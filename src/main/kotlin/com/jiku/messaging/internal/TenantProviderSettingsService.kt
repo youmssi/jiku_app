@@ -63,7 +63,7 @@ class TenantProviderSettingsService(
         if (!ownNumberGate.ownNumberAllowed()) {
             throw ResponseStatusException(
                 HttpStatus.PAYMENT_REQUIRED,
-                "Your own WhatsApp number comes with the Organisation plan, the Organizer Pack or its monthly add-on",
+                "Your own WhatsApp number comes with Services Pro, Pro Organisateur or its monthly add-on",
             )
         }
     }

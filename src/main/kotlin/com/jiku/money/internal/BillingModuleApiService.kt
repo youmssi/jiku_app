@@ -6,10 +6,8 @@ import com.jiku.money.AdminTrialStats
 import com.jiku.money.AdminTrialView
 import com.jiku.money.BillingAllowance
 import com.jiku.money.BillingModuleApi
-import com.jiku.money.BillingTierOption
 import com.jiku.money.PlatformBillingSettingsUpdate
 import com.jiku.money.PlatformBillingSettingsView
-import com.jiku.money.PriceList
 import com.jiku.shared.TenantMilestones
 import com.jiku.shared.tenantMilestones
 import org.springframework.stereotype.Service
@@ -27,10 +25,7 @@ class BillingModuleApiService(
     private val usageService: UsageService,
     private val manualPaymentService: ManualPaymentService,
     private val trialService: TrialService,
-    private val tierUnlockService: TierUnlockService,
-    private val invoiceService: InvoiceService,
     private val platformSettings: PlatformBillingSettingsService,
-    private val properties: BillingProperties,
     private val payments: PaymentRepository,
     private val trialGrants: TrialGrantRepository,
 ) : BillingModuleApi {
@@ -70,19 +65,14 @@ class BillingModuleApiService(
     override fun adminGrantTrial(
         tenantId: UUID,
         eventId: UUID,
-        tier: String,
+        guests: Long,
         expiresAt: Instant,
-    ): AdminTrialView = trialService.grant(tenantId, eventId, tier, expiresAt)
+    ): AdminTrialView = trialService.grant(tenantId, eventId, guests, expiresAt)
 
     override fun adminEndTrial(
         trialId: UUID,
         reason: String,
     ): AdminTrialView = trialService.endEarly(trialId, reason)
-
-    override fun currency(): String = PriceList.GNF
-
-    override fun tierOptions(): List<BillingTierOption> =
-        platformSettings.tiers().map { BillingTierOption(name = it.name, maxGuests = it.maxGuests, price = it.price) }
 
     override fun adminBillingSettings(): PlatformBillingSettingsView = platformSettings.view()
 

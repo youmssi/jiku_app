@@ -18,7 +18,8 @@ import java.time.ZoneId
 import java.util.UUID
 
 /**
- * Issues invoices and credit notes (JIKU-69).
+ * Issues invoices and credit notes (JIKU-69). Line prices are tax-inclusive
+ * (JIKU-268); the tax is extracted from the total paid.
  *
  * Two properties carry the whole story and are why this is a service rather than
  * a mapper: numbers must be **gapless** within a tenant's fiscal year, and an
@@ -68,12 +69,7 @@ class InvoiceService(
         }
 
         val buyer = requireLegalIdentity()
-        val eventName = payment.eventId?.let { events.findEvent(it)?.name }
-        val description =
-            listOfNotNull(
-                "Jiku ${payment.tier} tier",
-                eventName?.let { "— $it" },
-            ).joinToString(" ")
+        val description = "Jiku — " + paymentLabel(payment, payment.eventId?.let { events.findEvent(it)?.name })
 
         return issue(
             documentType = DocumentType.INVOICE,
@@ -140,8 +136,8 @@ class InvoiceService(
         val sequence = nextSequenceNumber(fiscalYear)
 
         val treatment = properties.taxFor(buyer.country)
-        val subtotal = lines.sumOf { it.quantity * it.unitPriceMinor }
-        val taxAmount = taxOn(subtotal, treatment.rate)
+        val total = lines.sumOf { it.quantity * it.unitPriceMinor }
+        val taxAmount = taxIncludedIn(total, treatment.rate)
 
         val prefix =
             if (documentType == DocumentType.CREDIT_NOTE) properties.creditNotePrefix else properties.numberPrefix
@@ -157,10 +153,10 @@ class InvoiceService(
                 buyerCountry = buyer.country.uppercase(),
                 sellerName = properties.seller.name,
                 currency = currency,
-                subtotalMinor = subtotal,
+                subtotalMinor = total - taxAmount,
                 taxRate = treatment.rate,
                 taxAmountMinor = taxAmount,
-                totalMinor = subtotal + taxAmount,
+                totalMinor = total,
                 issueDate = issueDate,
             ).apply {
                 this.correctedInvoiceId = correctedInvoiceId
@@ -214,14 +210,17 @@ class InvoiceService(
         return taken
     }
 
-    private fun taxOn(
-        subtotalMinor: Long,
+    /**
+     * The tax inside a tax-inclusive [totalMinor] (JIKU-268): Jikū's prices
+     * include every tax, so the invoice extracts it rather than adding it.
+     */
+    private fun taxIncludedIn(
+        totalMinor: Long,
         rate: BigDecimal,
-    ): Long =
-        BigDecimal(subtotalMinor)
-            .multiply(rate)
-            .setScale(0, RoundingMode.HALF_UP)
-            .toLong()
+    ): Long {
+        val net = BigDecimal(totalMinor).divide(BigDecimal.ONE.add(rate), 0, RoundingMode.HALF_UP).toLong()
+        return totalMinor - net
+    }
 
     private fun requireLegalIdentity(): TenantLegalIdentityInfo {
         val tenantId =

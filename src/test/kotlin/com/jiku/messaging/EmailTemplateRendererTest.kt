@@ -118,7 +118,7 @@ class EmailTemplateRendererTest {
                 paymentId = UUID.randomUUID(),
                 tenantId = UUID.randomUUID().toString(),
                 eventId = UUID.randomUUID(),
-                tier = "PRO",
+                guests = 300,
                 amountMinor = 150000,
                 currency = "GNF",
                 reference = "JK-42",

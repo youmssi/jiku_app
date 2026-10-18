@@ -20,11 +20,12 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 /**
- * Time-boxed trial allowances (JIKU-42). An admin grants an event a paid tier
- * until an expiry instant; while live, the trial raises the event's effective
- * allowance (see UsageService) without ever touching the paid entitlement. The
- * sweep converts a trial whose tier was paid for in the meantime and reverts the
- * rest — so a paid unlock is never rolled back, and an unpaid trial always is.
+ * Time-boxed trial allowances (JIKU-42). An admin lends an event a number of
+ * guests until an expiry instant; while live, the trial raises the event's
+ * effective allowance (see UsageService) without ever touching the paid
+ * entitlement. The sweep converts a trial whose guests were bought in the
+ * meantime and reverts the rest — so a paid unlock is never rolled back, and an
+ * unpaid trial always is.
  */
 @Service
 class TrialService(
@@ -32,7 +33,6 @@ class TrialService(
     private val payments: PaymentRepository,
     private val billingProperties: BillingProperties,
     private val trialProperties: TrialProperties,
-    private val platformSettings: PlatformBillingSettingsService,
     private val tenantModuleApi: TenantModuleApi,
     private val eventModuleApi: EventModuleApi,
     private val eventPublisher: ApplicationEventPublisher,
@@ -51,12 +51,12 @@ class TrialService(
     fun grant(
         tenantId: UUID,
         eventId: UUID,
-        tierName: String,
+        guests: Long,
         expiresAt: Instant,
     ): AdminTrialView {
-        val tier =
-            platformSettings.tierByName(tierName)
-                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown tier: $tierName")
+        if (guests < 1 || guests > billingProperties.maxGuestsPerEvent) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Lend between 1 and ${billingProperties.maxGuestsPerEvent} guests")
+        }
         if (!expiresAt.isAfter(Instant.now())) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "The expiry must be in the future")
         }
@@ -70,8 +70,7 @@ class TrialService(
                         .save(
                             TrialGrant(
                                 eventId = eventId,
-                                tier = tier.name,
-                                grantedAllowance = tier.maxGuests,
+                                grantedAllowance = guests,
                                 expiresAt = expiresAt,
                             ),
                         ).toView(tenantId.toString())
@@ -166,7 +165,7 @@ class TrialService(
     }
 
     /**
-     * The expiry sweep: converts each due trial whose tier was paid for during the
+     * The expiry sweep: converts each due trial whose guests were bought during the
      * trial window, expires the rest. One trial per transaction under its own
      * tenant, so a single bad row cannot wedge the sweep.
      */
@@ -181,7 +180,7 @@ class TrialService(
                         transactions.execute {
                             val trial = trials.findById(trialId).orElse(null) ?: return@execute null
                             if (trial.status != TrialStatus.ACTIVE) return@execute null
-                            val paid = hasAnySucceededPayment(trial.eventId, trial.tier)
+                            val paid = boughtGuests(trial.eventId, trial.grantedAllowance)
                             trial.status = if (paid) TrialStatus.CONVERTED else TrialStatus.EXPIRED
                             trial.updatedAt = Instant.now()
                             trials.save(trial).toView(tenantId)
@@ -226,14 +225,14 @@ class TrialService(
         return notified
     }
 
-    /** Any confirmed payment for the event's tier (any provider) converts the trial. */
-    private fun hasAnySucceededPayment(
+    /** A confirmed purchase (any provider) of at least the lent guests converts the trial. */
+    private fun boughtGuests(
         eventId: UUID,
-        tier: String,
+        guests: Long,
     ): Boolean =
         payments
             .findByEventIdOrderByCreatedAtDesc(eventId)
-            .any { it.tier == tier && it.status == PaymentStatus.SUCCEEDED }
+            .any { it.kind == Payment.KIND_GUESTS && it.status == PaymentStatus.SUCCEEDED && (it.guests ?: 0) >= guests }
 
     private fun loadActive(trialId: UUID): TrialGrant {
         val trial =
@@ -257,7 +256,7 @@ class TrialService(
                 trialId = view.id,
                 tenantId = view.tenantId,
                 eventId = view.eventId,
-                tier = view.tier,
+                guests = view.grantedAllowance,
                 expiresAt = view.expiresAt,
                 organizerName = tenant?.displayName ?: tenant?.name ?: "Organizer",
                 organizerEmail = tenant?.contactEmail ?: "",
@@ -271,7 +270,6 @@ class TrialService(
             id = requireNotNull(id),
             tenantId = tenantId,
             eventId = eventId,
-            tier = tier,
             grantedAllowance = grantedAllowance,
             expiresAt = expiresAt,
             status = status.name,

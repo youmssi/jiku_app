@@ -14,8 +14,8 @@ import java.util.UUID
 /**
  * The metering snapshot for one event (JIKU-32). Tenant-scoped; one per event. The
  * count columns mirror the invitation module's authoritative figures (refreshed on
- * read), while [unlockedAllowance] is the stateful entitlement — the free tier by
- * default, raised when a paid tier is unlocked (JIKU-33).
+ * read), while [paidGuests] is the stateful entitlement: zero while the event
+ * runs on the organization's free guests, raised when it buys guests (JIKU-268).
  */
 @Entity
 @Table(
@@ -25,8 +25,8 @@ import java.util.UUID
 class UsageRecord(
     @Column(name = "event_id", nullable = false, updatable = false)
     val eventId: UUID,
-    @Column(name = "unlocked_allowance", nullable = false)
-    var unlockedAllowance: Long,
+    @Column(name = "paid_guests", nullable = false)
+    var paidGuests: Long = 0,
 ) : BaseTenantEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -43,10 +43,6 @@ class UsageRecord(
 
     @Column(name = "invitations_sent_whatsapp", nullable = false)
     var invitationsSentWhatsapp: Long = 0
-
-    /** Paid guests covered for the interactive WhatsApp mode (ADR 105); raised with the tier when paid for. */
-    @Column(name = "interactive_allowance", nullable = false)
-    var interactiveAllowance: Long = 0
 
     @Column(name = "updated_at", nullable = false)
     var updatedAt: Instant = Instant.now()

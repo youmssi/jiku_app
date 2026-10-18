@@ -24,7 +24,7 @@ import javax.crypto.spec.SecretKeySpec
 
 /**
  * JIKU-34: sending beyond the unlocked allowance is blocked in full; unlocking a
- * paid tier via the JIKU-33 flow makes the same send succeed.
+ * guests via the JIKU-33 flow makes the same send succeed.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -60,14 +60,14 @@ class PaywallTest {
         // Nothing was sent — the whole batch was refused, not partially delivered.
         assert(JsonPath.read<Int>(usage(token, eventId), "$.invitedGuests") == 0)
 
-        // Pay for the BRONZE tier and confirm it via the signed callback.
+        // Pay for 300 guests and confirm it via the signed callback.
         val payment =
             mockMvc
                 .perform(
                     post("/api/v1/events/$eventId/payments")
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"tier":"BRONZE"}"""),
+                        .content("""{"guests":300}"""),
                 ).andExpect(status().isOk())
                 .andReturn()
                 .response.contentAsString

@@ -303,7 +303,7 @@ class OpenInvitationService(
                     expected = all.sumOf { it.heads },
                 ),
             notifyOnCancel = invitation.notifyOnCancel,
-            cancelNoticeIncluded = allowanceGate.paidTier(invitation.eventId),
+            cancelNoticeIncluded = allowanceGate.paidEvent(invitation.eventId),
             whatsappNumber = whatsappNumber(),
         )
     }

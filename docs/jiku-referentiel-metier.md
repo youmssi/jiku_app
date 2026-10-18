@@ -85,8 +85,7 @@ par une même ressource dépend de l'offre :
 | Offre | Clients en même temps par ressource et par créneau |
 |---|---|
 | Solo | 1 |
-| Teams | jusqu'à 10 |
-| Organisation | jusqu'à 30 |
+| Services Pro | jusqu'à 30 |
 | Entreprise | sur devis |
 
 Un groupe plus grand passe par une offre supérieure, **jamais par une
@@ -165,8 +164,9 @@ lancement.
 
 | Ce qui est payé | Quand | Montant |
 |---|---|---|
-| **Abonnement Services** | Chaque mois (ou chaque année) | Par utilisateur qui rend le service, selon l'offre (Solo gratuit, Teams, Organisation, Entreprise) |
-| **Palier d'un événement à invités** | En une fois, au moment où l'action dépasse la part gratuite (importer ou inviter au-delà). Pas d'acompte, pas de solde | Prix du palier ; passer au palier supérieur ne fait payer que la différence |
+| **Abonnement Services** | Chaque mois (ou chaque année) | Par personne qui rend le service (Solo gratuit, Services Pro, Entreprise ; ADR 109) |
+| **Invités d'un événement** | En une fois, au moment où l'action dépasse la part gratuite (importer ou inviter au-delà). Pas d'acompte, pas de solde | Prix par invité, toutes taxes comprises ; en ajouter ne fait payer que les nouveaux (ADR 109) |
+| **Pro Organisateur** | Chaque mois (ou chaque année) | Forfait de 1 000 invités par mois sur tous les événements, puis prix par invité (ADR 109) |
 | **Tranche de commission** | Avant de vendre, puis à chaque tranche épuisée | 3 % × prix du billet × taille de la tranche |
 | **SMS** | Au moment de l'envoi | Prix exact affiché avant d'envoyer |
 

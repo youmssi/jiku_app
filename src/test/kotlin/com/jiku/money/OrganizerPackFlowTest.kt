@@ -59,7 +59,7 @@ class OrganizerPackFlowTest {
         val token = api.register()
         val freeEvent = api.createEvent(token)
         TenantContext.set(api.tenantId(token))
-        assertEquals(false, allowanceGate.paidTier(UUID.fromString(freeEvent)))
+        assertEquals(false, allowanceGate.paidEvent(UUID.fromString(freeEvent)))
         TenantContext.clear()
         api
             .get(token, "/api/v1/billing/pack")
@@ -80,8 +80,8 @@ class OrganizerPackFlowTest {
             .get(token, "/api/v1/events/$eventId/usage")
             .andExpect(jsonPath("$.tier").value("PACK"))
             .andExpect(jsonPath("$.allowance").value(1_000))
-        api.get(token, "/api/v1/events/$eventId/billing/quotes").andExpect(jsonPath("$.length()").value(0))
-        api.post(token, "/api/v1/events/$eventId/payments/manual", """{"tier":"BRONZE"}""").andExpect(status().isConflict())
+        api.get(token, "/api/v1/events/$eventId/billing/quote?guests=300").andExpect(status().isConflict())
+        api.post(token, "/api/v1/events/$eventId/payments/manual", """{"guests":300}""").andExpect(status().isConflict())
 
         confirm(request(token, "/api/v1/billing/pack/extra", """{"blocks":2}""", 200 * 600))
         api.get(token, "/api/v1/billing/pack").andExpect(jsonPath("$.remainingGuests").value(1_200))
@@ -112,8 +112,7 @@ class OrganizerPackFlowTest {
         organizerPack.recordCommitment(1_000)
         assertEquals(Long.MAX_VALUE, allowanceGate.allowanceCeiling(UUID.fromString(today), 0))
         assertEquals(0, allowanceGate.allowanceCeiling(UUID.fromString(later), 0))
-        assertEquals(true, allowanceGate.interactiveCovered(UUID.fromString(later)))
-        assertEquals(true, allowanceGate.paidTier(UUID.fromString(later)))
+        assertEquals(true, allowanceGate.paidEvent(UUID.fromString(later)))
     }
 
     private fun eventStartingAt(

@@ -21,7 +21,7 @@ data class WhatsAppPlatformLimitProperties(
     /** Messages a day an organization the Jikū team has not verified may send through the Jikū number. */
     val unverifiedDaily: Long = 50,
     /** Messages over 30 days past which an organization must connect its own number. */
-    val monthlyBeforeOwnNumber: Long = 500,
+    val monthlyBeforeOwnNumber: Long = 3_000,
 )
 
 /** An organization's use of the Jikū WhatsApp number, for its settings page (JIKU-212). */

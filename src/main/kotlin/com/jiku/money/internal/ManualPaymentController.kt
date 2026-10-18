@@ -2,7 +2,6 @@ package com.jiku.money.internal
 
 import com.jiku.money.ManualPaymentInstructions
 import jakarta.validation.Valid
-import jakarta.validation.constraints.NotBlank
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
@@ -29,8 +28,8 @@ class ManualPaymentController(
     @PostMapping
     fun request(
         @PathVariable eventId: UUID,
-        @Valid @RequestBody request: ManualPaymentRequest,
-    ): ManualPaymentInstructions = manualPaymentService.request(eventId, request.tier)
+        @Valid @RequestBody request: EventGuestsRequest,
+    ): ManualPaymentInstructions = manualPaymentService.request(eventId, requireNotNull(request.guests))
 
     @GetMapping
     fun current(
@@ -39,8 +38,3 @@ class ManualPaymentController(
         manualPaymentService.currentInstructions(eventId)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "No open activation request for this event")
 }
-
-data class ManualPaymentRequest(
-    @field:NotBlank
-    val tier: String,
-)

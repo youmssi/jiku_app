@@ -53,7 +53,7 @@ class CinetPayPaymentProviderTest {
                 assertTrue(body.contains("\"amount\":150000"))
                 assertTrue(body.contains("\"currency\":\"GNF\""))
                 assertTrue(body.contains("\"metadata\":\"$reference\""))
-                assertTrue(body.contains("\"description\":\"Unlock BRONZE tier\""))
+                assertTrue(body.contains("\"description\":\"300 guests\""))
                 assertTrue(body.contains("\"return_url\":\"https://jiku.test/billing/return?paymentId=$paymentId\""))
             }.andRespond(
                 withSuccess(
@@ -154,7 +154,7 @@ class CinetPayPaymentProviderTest {
             paymentId = paymentId,
             amountMinor = 150_000,
             currency = "GNF",
-            description = "Unlock BRONZE tier",
+            description = "300 guests",
             reference = reference,
         )
 

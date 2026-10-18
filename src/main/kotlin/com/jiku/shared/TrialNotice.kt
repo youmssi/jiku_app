@@ -13,7 +13,8 @@ data class TrialNotice(
     val trialId: UUID,
     val tenantId: String,
     val eventId: UUID,
-    val tier: String,
+    /** Guests the trial lends the event. */
+    val guests: Long,
     val expiresAt: Instant,
     val organizerName: String,
     val organizerEmail: String,

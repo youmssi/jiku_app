@@ -3,7 +3,6 @@ package com.jiku.money
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.support.OrganizerApi
-import com.jiku.support.TestDates.EVENT_YEAR
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -17,11 +16,9 @@ import java.util.UUID
 import kotlin.test.assertEquals
 
 /**
- * Event pricing (ADR 105): tiers are priced in the organization's billing
- * currency, moving up a tier charges only the difference with the tier already
- * paid, and an event beyond the last tier adds a local per-guest price. An
- * event whose guests answer in WhatsApp adds the interactive surcharge per paid
- * guest, and can buy just the surcharge when it switches after paying.
+ * Event pricing (JIKU-268): an event buys its guests at one tax-inclusive
+ * price each, in the organization's billing currency, every delivery mode
+ * included. Buying more charges only the guests not already paid for.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -41,115 +38,73 @@ class EventPricingFlowTest {
     }
 
     @Test
-    fun `the catalog is priced in the organization's currency`() {
+    fun `the per-guest price is in the organization's currency`() {
         val token = api.register()
 
         api
-            .get(token, "/api/v1/billing/tiers")
+            .get(token, "/api/v1/billing/event-pricing")
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.currency").value("GNF"))
-            .andExpect(jsonPath("$.tiers[?(@.name == 'BRONZE')].priceMinor").value(225_000))
-            .andExpect(jsonPath("$.custom.beyondPerGuestMinor").value(500))
-            .andExpect(jsonPath("$.interactivePerGuestMinor").value(150))
-        api
-            .get(token, "/api/v1/billing/tiers/custom-quote?guestCount=1500")
-            .andExpect(jsonPath("$.priceMinor").value(600_000 + 500 * 500))
-            .andExpect(jsonPath("$.currency").value("GNF"))
-        api
-            .get(token, "/api/v1/billing/tiers/custom-quote?guestCount=1500&interactive=true")
-            .andExpect(jsonPath("$.priceMinor").value(600_000 + 500 * 500 + 1_500 * 150))
+            .andExpect(jsonPath("$.perGuestMinor").value(750))
+            .andExpect(jsonPath("$.freeTierGuests").value(100))
     }
 
     @Test
-    fun `an interactive event pays the surcharge on each paid guest, once`() {
-        val token = api.register()
-        val eventId = api.createEvent(token)
-        setMode(token, eventId, "INTERACTIVE")
-
-        val bronze = requestTier(token, eventId, "BRONZE")
-        assertEquals(225_000 + 300 * 150, JsonPath.read<Int>(bronze, "$.amountMinor"))
-        billingModuleApi.adminConfirmManualPayment(UUID.fromString(JsonPath.read(bronze, "$.paymentId")))
-
-        val argent = requestTier(token, eventId, "ARGENT")
-        assertEquals(375_000 - 225_000 + (600 - 300) * 150, JsonPath.read<Int>(argent, "$.amountMinor"))
-        api
-            .post(token, "/api/v1/events/$eventId/payments/manual", """{"tier":"BRONZE"}""")
-            .andExpect(status().isConflict())
-    }
-
-    @Test
-    fun `switching to interactive after paying buys just the surcharge`() {
+    fun `an event pays for each guest it buys`() {
         val token = api.register()
         val eventId = api.createEvent(token)
 
-        val bronze = requestTier(token, eventId, "BRONZE")
-        billingModuleApi.adminConfirmManualPayment(UUID.fromString(JsonPath.read(bronze, "$.paymentId")))
-        setMode(token, eventId, "INTERACTIVE")
-
         api
-            .get(token, "/api/v1/events/$eventId/billing/quotes")
+            .get(token, "/api/v1/events/$eventId/billing/quote?guests=300")
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$[0].tier").value("BRONZE"))
-            .andExpect(jsonPath("$[0].amountMinor").value(300 * 150))
-            .andExpect(jsonPath("$[0].surchargeMinor").value(300 * 150))
-            .andExpect(jsonPath("$[1].tier").value("ARGENT"))
-            .andExpect(jsonPath("$[1].amountMinor").value(375_000 - 225_000 + 600 * 150))
+            .andExpect(jsonPath("$.amountMinor").value(300 * 750))
+            .andExpect(jsonPath("$.paidGuests").value(0))
 
-        val surcharge = requestTier(token, eventId, "BRONZE")
-        assertEquals(300 * 150, JsonPath.read<Int>(surcharge, "$.amountMinor"))
-        billingModuleApi.adminConfirmManualPayment(UUID.fromString(JsonPath.read(surcharge, "$.paymentId")))
-        api
-            .post(token, "/api/v1/events/$eventId/payments/manual", """{"tier":"BRONZE"}""")
-            .andExpect(status().isConflict())
-    }
-
-    private fun setMode(
-        token: String,
-        eventId: String,
-        mode: String,
-    ) {
-        api
-            .put(
-                token,
-                "/api/v1/events/$eventId",
-                """
-                {"name":"Test Event","timezone":"Africa/Conakry","startDateTime":"${EVENT_YEAR}-12-01T18:00:00Z",
-                "invitationChannels":["WHATSAPP"],"settings":{"deliveryMode":"$mode"}}
-                """.trimIndent(),
-            ).andExpect(status().isOk())
+        val first = requestGuests(token, eventId, 300)
+        assertEquals(300 * 750, JsonPath.read<Int>(first, "$.amountMinor"))
+        assertEquals(300, JsonPath.read<Int>(first, "$.guests"))
     }
 
     @Test
-    fun `moving up a tier charges only the difference`() {
+    fun `buying more charges only the guests not yet paid for`() {
         val token = api.register()
         val eventId = api.createEvent(token)
 
-        val bronze = requestTier(token, eventId, "BRONZE")
-        assertEquals(225_000, JsonPath.read<Int>(bronze, "$.amountMinor"))
-        billingModuleApi.adminConfirmManualPayment(UUID.fromString(JsonPath.read(bronze, "$.paymentId")))
+        val first = requestGuests(token, eventId, 300)
+        billingModuleApi.adminConfirmManualPayment(UUID.fromString(JsonPath.read(first, "$.paymentId")))
+        api
+            .get(token, "/api/v1/events/$eventId/usage")
+            .andExpect(jsonPath("$.allowance").value(300))
+            .andExpect(jsonPath("$.tier").value("PAID"))
+
+        val more = requestGuests(token, eventId, 450)
+        assertEquals((450 - 300) * 750, JsonPath.read<Int>(more, "$.amountMinor"))
 
         api
-            .get(token, "/api/v1/events/$eventId/billing/quotes")
-            .andExpect(jsonPath("$.length()").value(2))
-            .andExpect(jsonPath("$[0].tier").value("ARGENT"))
-            .andExpect(jsonPath("$[0].amountMinor").value(375_000 - 225_000))
-            .andExpect(jsonPath("$[0].interactive").value(false))
-
-        val argent = requestTier(token, eventId, "ARGENT")
-        assertEquals(375_000 - 225_000, JsonPath.read<Int>(argent, "$.amountMinor"))
-
-        api
-            .post(token, "/api/v1/events/$eventId/payments/manual", """{"tier":"BRONZE"}""")
+            .post(token, "/api/v1/events/$eventId/payments/manual", """{"guests":300}""")
             .andExpect(status().isConflict())
     }
 
-    private fun requestTier(
+    @Test
+    fun `a guest count out of range is refused`() {
+        val token = api.register()
+        val eventId = api.createEvent(token)
+
+        api
+            .post(token, "/api/v1/events/$eventId/payments/manual", """{"guests":0}""")
+            .andExpect(status().isBadRequest())
+        api
+            .get(token, "/api/v1/events/$eventId/billing/quote?guests=100001")
+            .andExpect(status().isBadRequest())
+    }
+
+    private fun requestGuests(
         token: String,
         eventId: String,
-        tier: String,
+        guests: Int,
     ): String =
         api
-            .post(token, "/api/v1/events/$eventId/payments/manual", """{"tier":"$tier"}""")
+            .post(token, "/api/v1/events/$eventId/payments/manual", """{"guests":$guests}""")
             .andExpect(status().isOk())
             .andReturn()
             .response.contentAsString

@@ -31,6 +31,8 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-262 | Parrainage en crédit Jikū | app, web | pilote de 4 semaines |
 | JIKU-263 | ADR 108 et pages légales alignées sur la production | app, web | — |
 | JIKU-264 | Conversations commerciales : Chatwoot, n8n et assistant | exploitation | JIKU-263 |
+| JIKU-268 | Tarification simplifiée, prix TTC, limite WhatsApp à 3 000 (ADR 109) | app, web | — |
+| JIKU-269 | Vérification des messages WhatsApp pendant la rédaction et guide d'écriture | app, web | JIKU-268 |
 
 ---
 
@@ -268,7 +270,7 @@ et une organisation qui envoie beaucoup doit porter sa propre réputation
 | Règle | Défaut | Au-delà |
 |---|---|---|
 | Organisation non vérifiée | 50 messages par jour (`WHATSAPP_LIMIT_UNVERIFIED_DAILY`) | Les messages attendent ; motif « Vérifiez votre organisation » |
-| Toute organisation | 500 messages sur 30 jours (`WHATSAPP_LIMIT_MONTHLY_BEFORE_OWN_NUMBER`) | Les messages attendent ; motif « Connectez votre propre numéro » |
+| Organisation vérifiée | 3 000 messages sur 30 jours (`WHATSAPP_LIMIT_MONTHLY_BEFORE_OWN_NUMBER`, ADR 109) | Les messages attendent ; motif « Connectez votre propre numéro » |
 
 - Une organisation sur son propre numéro n'est pas comptée.
 - Les rappels « WhatsApp ou SMS » partent par SMS quand un plafond est atteint.
@@ -427,5 +429,35 @@ Jikū en plateforme « où l'on gagne de l'argent » (ADR 108, décision 6).
 - [ ] Le numéro « conversations » est relié à Chatwoot par l'API officielle de Meta
 - [ ] L'assistant (Claude Haiku 5.5) se présente comme automatique, répond depuis une base de réponses validées, propose un rendez-vous Cal.com et confie la conversation à une personne sur demande, sur une hésitation de prix ou hors de la base
 - [ ] Plafond de dépense de l'API à 15 $ par mois
+- [x] Base de connaissances et consignes de l'assistant (`docs/sales/`) : cible du lancement (organisateurs professionnels en Guinée, Côte d'Ivoire et Sénégal, expatriés en sous-segment), prix, feuille de route sans date, objections, règles de passage de main
 - [ ] Évaluation sur 40 à 50 vraies conversations : taux de rendez-vous, reprises par une personne, erreurs ; décision de garder Haiku ou de passer à Sonnet
+
+## JIKU-268 — Tarification simplifiée
+
+**Pourquoi.** Un prix qu'un organisateur comprend en une ligne et recopie dans son
+devis (ADR 109).
+
+**Critères d'acceptation.**
+
+- [x] Un événement achète un nombre d'invités à 750 GNF / 50 FCFA / 0,08 USD chacun, tout inclus ; en ajouter ne fait payer que les nouveaux
+- [x] Pro Organisateur à 600 000 GNF / 40 000 FCFA / 70 USD par mois, 1 000 invités, puis 600 GNF par invité ; numéro WhatsApp propre inclus
+- [x] Services Pro à 60 000 GNF / 4 000 FCFA / 7 USD par personne et par mois, groupes jusqu'à 30 ; Solo reste gratuit
+- [x] Paliers, supplément interactif et formules Solo Plus, Teams et Organisation supprimés, données migrées
+- [x] La facture extrait la TVA de 18 % (GN, CI, SN) du prix payé
+- [x] Une organisation vérifiée envoie jusqu'à 3 000 messages sur 30 jours sur le numéro Jikū
+- [x] Bureau d'administration : prix par invité et formules modifiables ; un essai prête un nombre d'invités
+- [x] Web : calculateur à une question, pages publiques, facturation, CGU (usage raisonnable des rappels), guides
+- [x] Base de connaissances commerciale à jour
+
+## JIKU-269 — Vérifier un message WhatsApp pendant la rédaction
+
+**Pourquoi.** Meta facture plus cher et limite un message classé marketing ;
+l'organisateur doit le savoir en écrivant, pas à l'envoi (ADR 109, décision 4).
+
+**Critères d'acceptation.**
+
+- [x] `POST /messaging/whatsapp/check` renvoie la catégorie et les mots repérés, avec la même liste que le contrôle à l'envoi (mots français et anglais)
+- [ ] Les champs de message WhatsApp affichent « Message d'information » ou « Risque marketing » et les mots à retirer
+- [ ] Un guide « Écrire un message WhatsApp qui passe » (FR et EN) dans /docs
+- [x] Un envoi refusé parce que le compte WhatsApp Business de l'organisation n'a plus de moyen de paiement l'explique dans le statut du message (erreur Meta 131042)
 

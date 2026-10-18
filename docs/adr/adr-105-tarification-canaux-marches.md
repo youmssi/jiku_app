@@ -1,6 +1,7 @@
 # ADR 105 — Tarification unique multi-pays, modes d'envoi et marchés prioritaires
 
-**Statut :** accepté.
+**Statut :** accepté ; grille de prix remplacée par l'ADR 109 (2026-10-18). Les
+monnaies, le numéro WhatsApp propre et le paiement à l'année restent en vigueur.
 **Date :** 2026-09-25
 **Remplace :** ADR 104, §8 (tarification). Le reste de l'ADR 104 reste en vigueur.
 **Amont :** analyse de prix du 2026-09-25, `docs/jiku-modele-financier.md`.

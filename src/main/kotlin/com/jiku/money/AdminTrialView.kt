@@ -16,7 +16,7 @@ data class AdminTrialView(
     val tenantName: String? = null,
     val eventId: UUID,
     val eventName: String? = null,
-    val tier: String,
+    /** Guests the trial lends the event while active. */
     val grantedAllowance: Long,
     val expiresAt: Instant,
     val status: String,

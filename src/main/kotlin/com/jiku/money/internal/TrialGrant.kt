@@ -13,7 +13,7 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * A time-boxed trial of a paid tier granted by a platform admin (JIKU-42).
+ * A time-boxed loan of guests granted by a platform admin (JIKU-42).
  * Deliberately a separate record from [UsageRecord.unlockedAllowance] — that
  * column stays strictly the *paid* entitlement, so expiry can revert a trial
  * without ever guessing whether an allowance was paid for.
@@ -23,9 +23,7 @@ import java.util.UUID
 class TrialGrant(
     @Column(name = "event_id", nullable = false, updatable = false)
     val eventId: UUID,
-    @Column(name = "tier", nullable = false, updatable = false)
-    val tier: String,
-    /** The allowance the trial unlocks while active (the tier's guest ceiling). */
+    /** The guests the trial lends the event while active. */
     @Column(name = "granted_allowance", nullable = false, updatable = false)
     val grantedAllowance: Long,
     @Column(name = "expires_at", nullable = false)
