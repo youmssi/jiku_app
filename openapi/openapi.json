@@ -7404,6 +7404,36 @@
         ],
         "type" : "object"
       },
+      "WhatsAppMessageCheck" : {
+        "properties" : {
+          "category" : {
+            "type" : "string"
+          },
+          "promotionalWords" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "WhatsAppMessageCheckRequest" : {
+        "properties" : {
+          "text" : {
+            "maxLength" : 4096,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required" : [
+          "text"
+        ],
+        "type" : "object"
+      },
       "WhatsAppOverrideStatus" : {
         "properties" : {
           "activatedAt" : {
@@ -13664,6 +13694,36 @@
         },
         "tags" : [
           "messaging-channels-controller"
+        ]
+      }
+    },
+    "/api/v1/messaging/whatsapp/check" : {
+      "post" : {
+        "operationId" : "whatsAppMessageCheckCheck",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WhatsAppMessageCheckRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WhatsAppMessageCheck"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "whats-app-message-check-controller"
         ]
       }
     },

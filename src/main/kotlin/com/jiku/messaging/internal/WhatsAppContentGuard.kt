@@ -19,15 +19,21 @@ class WhatsAppContentGuard(
     private val overrides: WhatsAppContentOverrideRepository,
 ) {
     /** [WhatsAppPricing.CATEGORY_MARKETING] or [WhatsAppPricing.CATEGORY_UTILITY]. */
-    fun classify(body: String): String {
+    fun classify(body: String): String =
+        if (promotionalWords(body).isEmpty()) WhatsAppPricing.CATEGORY_UTILITY else WhatsAppPricing.CATEGORY_MARKETING
+
+    /**
+     * The configured promotional words [body] contains, the very ones [classify]
+     * blocks on, so an organizer checking a message while writing it (JIKU-269)
+     * gets the verdict the send will get.
+     */
+    fun promotionalWords(body: String): List<String> {
         val normalized = body.lowercase()
-        val markers =
-            properties.marketingMarkers
-                .split(",")
-                .map { it.trim().lowercase() }
-                .filter { it.isNotEmpty() }
-        val flagged = markers.any { normalized.contains(it) }
-        return if (flagged) WhatsAppPricing.CATEGORY_MARKETING else WhatsAppPricing.CATEGORY_UTILITY
+        return properties.marketingMarkers
+            .split(",")
+            .map { it.trim().lowercase() }
+            .filter { it.isNotEmpty() && normalized.contains(it) }
+            .distinct()
     }
 
     fun assertAllowed(category: String) {

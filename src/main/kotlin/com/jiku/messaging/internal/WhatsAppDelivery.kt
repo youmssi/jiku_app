@@ -143,7 +143,11 @@ class WhatsAppDeliveryStatusService(
         message.updatedAt = Instant.now()
         if (status == WhatsAppSentMessage.STATUS_FAILED) {
             message.errorCode = update.errorCode
-            failed(message, "WhatsApp could not deliver it (Meta ${update.errorCode ?: "?"}: ${update.errorTitle ?: "no detail"})")
+            failed(
+                message,
+                MetaErrors.explain(update.errorCode)
+                    ?: "WhatsApp could not deliver it (Meta ${update.errorCode ?: "?"}: ${update.errorTitle ?: "no detail"})",
+            )
         }
         messages.save(message)
     }

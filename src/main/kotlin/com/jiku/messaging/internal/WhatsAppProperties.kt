@@ -23,13 +23,14 @@ data class WhatsAppProperties(
     val usdToGnfRate: Long = 8760,
     /**
      * Comma-separated, case-insensitive substrings that mark a rendered body as
-     * promotional (MARKETING) rather than transactional (UTILITY) content — French
-     * by default since the shipped templates are French. Configurable, not
+     * promotional (MARKETING) rather than transactional (UTILITY) content, in
+     * French and English since organizers write in both. Configurable, not
      * hardcoded, because what counts as promotional is a judgment call that may
      * need tuning without a redeploy.
      */
     val marketingMarkers: String =
-        "promo,réduction,solde,gratuit,offre spéciale,cadeau,bon plan,code promo,achetez maintenant",
+        "promo,réduction,solde,gratuit,offre spéciale,cadeau,bon plan,code promo,achetez maintenant," +
+            "discount,special offer,free gift,buy now,limited offer,% off",
     val health: Health = Health(),
 ) {
     /** How Jikū reacts to what Meta reports about its templates and numbers (JIKU-209). */
