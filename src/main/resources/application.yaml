@@ -97,7 +97,7 @@ jiku:
     # Cost/quota/category guardrails (JIKU-61).
     conversation-safety-threshold: ${WHATSAPP_CONVERSATION_SAFETY_THRESHOLD:220}
     usd-to-gnf-rate: ${WHATSAPP_USD_TO_GNF_RATE:8760}
-    marketing-markers: ${WHATSAPP_MARKETING_MARKERS:promo,réduction,solde,gratuit,offre spéciale,cadeau,bon plan,code promo,achetez maintenant}
+    marketing-markers: ${WHATSAPP_MARKETING_MARKERS:promo,réduction,solde,gratuit,offre spéciale,cadeau,bon plan,code promo,achetez maintenant,discount,special offer,free gift,buy now,limited offer,% off}
     # What Meta reports about templates and numbers (JIKU-209): a paused
     # template is left alone this long, and one Meta moves to MARKETING is no
     # longer used.

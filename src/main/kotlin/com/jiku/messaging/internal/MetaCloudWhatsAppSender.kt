@@ -73,7 +73,8 @@ class MetaCloudWhatsAppSender internal constructor(
                 }
             }
             throw WhatsAppDeliveryException(
-                "WhatsApp Cloud API rejected message to ${message.to} (${e.statusCode}): ${e.responseBodyAsString}",
+                MetaErrors.explain(code)
+                    ?: "WhatsApp Cloud API rejected message to ${message.to} (${e.statusCode}): ${e.responseBodyAsString}",
                 e,
             )
         } catch (e: ResourceAccessException) {

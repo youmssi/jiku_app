@@ -446,7 +446,7 @@ devis (ADR 109).
 - [x] La facture extrait la TVA de 18 % (GN, CI, SN) du prix payé
 - [x] Une organisation vérifiée envoie jusqu'à 3 000 messages sur 30 jours sur le numéro Jikū
 - [x] Bureau d'administration : prix par invité et formules modifiables ; un essai prête un nombre d'invités
-- [ ] Web : calculateur à une question, pages publiques, facturation, CGU (usage raisonnable des rappels), guides
+- [x] Web : calculateur à une question, pages publiques, facturation, CGU (usage raisonnable des rappels), guides
 - [x] Base de connaissances commerciale à jour
 
 ## JIKU-269 — Vérifier un message WhatsApp pendant la rédaction
@@ -456,8 +456,8 @@ l'organisateur doit le savoir en écrivant, pas à l'envoi (ADR 109, décision 4
 
 **Critères d'acceptation.**
 
-- [ ] `POST /messaging/whatsapp/check` renvoie la catégorie et les mots repérés, avec la même liste que le contrôle à l'envoi
+- [x] `POST /messaging/whatsapp/check` renvoie la catégorie et les mots repérés, avec la même liste que le contrôle à l'envoi (mots français et anglais)
 - [ ] Les champs de message WhatsApp affichent « Message d'information » ou « Risque marketing » et les mots à retirer
 - [ ] Un guide « Écrire un message WhatsApp qui passe » (FR et EN) dans /docs
-- [ ] Un envoi refusé parce que le compte WhatsApp Business de l'organisation n'a plus de moyen de paiement l'explique dans le statut du message
+- [x] Un envoi refusé parce que le compte WhatsApp Business de l'organisation n'a plus de moyen de paiement l'explique dans le statut du message (erreur Meta 131042)
 
