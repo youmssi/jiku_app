@@ -79,6 +79,20 @@ class TicketOrder(
     @Column(name = "status", nullable = false, length = 24)
     var status: TicketOrderStatus = TicketOrderStatus.AWAITING_PAYMENT
 
+    /**
+     * Removes the buyer's name, number and address once the event is past its
+     * retention window (JIKU-267); the reference, amounts and status stay for
+     * the organization's accounts. The number keeps a unique placeholder.
+     */
+    fun erase() {
+        buyerName = ERASED_BUYER
+        buyerPhone = ERASED_PHONE_PREFIX + requireNotNull(id).toString().replace("-", "").take(ERASED_PHONE_LENGTH)
+        buyerEmail = null
+    }
+
+    val erased: Boolean
+        get() = buyerPhone.startsWith(ERASED_PHONE_PREFIX)
+
     @Column(name = "declared_at")
     var declaredAt: Instant? = null
 
@@ -94,6 +108,12 @@ class TicketOrder(
 
     @Column(name = "rejection_reason", length = 300)
     var rejectionReason: String? = null
+
+    private companion object {
+        const val ERASED_BUYER = "Deleted Buyer"
+        const val ERASED_PHONE_PREFIX = "E"
+        const val ERASED_PHONE_LENGTH = 19
+    }
 }
 
 /** Tickets of one category in an order, at the price fixed when the order was placed. */

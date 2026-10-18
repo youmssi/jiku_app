@@ -582,12 +582,21 @@ feedback:
 
 compliance:
   retention:
-    # Data-retention policy (JIKU-37). Guest personal data is anonymized this many
-    # days after an event's date; the dashboard warns notice-days ahead of that
-    # cutoff. The job runs on the cron below.
+    # Data-retention policy (JIKU-37, JIKU-267). Guest and ticket-buyer personal
+    # data is anonymized this many days after an event's date, and a service
+    # client's name and number this many days after the appointment or line
+    # ticket; the dashboard warns notice-days ahead of the event cutoff. The jobs
+    # run on the cron below.
     days: ${COMPLIANCE_RETENTION_DAYS:365}
     notice-days: ${COMPLIANCE_RETENTION_NOTICE_DAYS:30}
     cron: ${COMPLIANCE_RETENTION_CRON:0 30 3 * * *}
+
+backoffice:
+  prospects:
+    # Prospects who wrote to Jikū are deleted this many days after they wrote
+    # (JIKU-267); 0 keeps them.
+    retention-days: ${PROSPECT_RETENTION_DAYS:365}
+    retention-cron: ${PROSPECT_RETENTION_CRON:0 40 3 * * *}
 
 invitation:
   import:

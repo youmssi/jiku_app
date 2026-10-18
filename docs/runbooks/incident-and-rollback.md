@@ -60,6 +60,13 @@ Objectif : service rétabli en moins d'une heure.
 3. Identifier l'organisation à l'origine (back-office → tableau de bord de
    délivrabilité) et la contacter avant de rebasculer.
 
+## 7. Fuite de données personnelles
+
+Si des données personnelles ont pu être lues ou copiées par quelqu'un qui n'en
+avait pas le droit, suivre en plus la procédure de
+`docs/security/protection-des-donnees.md` (§3) : prévenir les organisations
+touchées sous 72 heures.
+
 ## Après l'incident
 
 Écrire en cinq lignes : ce qui s'est passé, l'heure de début et de fin, la

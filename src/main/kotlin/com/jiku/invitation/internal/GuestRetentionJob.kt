@@ -23,6 +23,7 @@ class GuestRetentionJob(
     private val guests: GuestRepository,
     private val erasureService: GuestErasureService,
     private val openResponses: OpenResponseRepository,
+    private val orders: TicketOrderRepository,
     private val properties: RetentionProperties,
 ) {
     private val log = LoggerFactory.getLogger(GuestRetentionJob::class.java)
@@ -51,6 +52,11 @@ class GuestRetentionJob(
                 openResponses.findByEventIdOrderByUpdatedAtDesc(candidate.eventId).filterNot { it.erased }.forEach {
                     it.erase()
                     openResponses.save(it)
+                }
+                // Ticket buyers too (JIKU-267): the order keeps its reference and amounts.
+                orders.findByEventIdOrderByCreatedAtDesc(candidate.eventId).filterNot { it.erased }.forEach {
+                    it.erase()
+                    orders.save(it)
                 }
             }
         }
