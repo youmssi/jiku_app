@@ -108,7 +108,7 @@ Prix fixés à la main dans chaque monnaie (jamais convertis). FCFA = XOF et XAF
 
 - Depuis **Facturation** dans l'espace de l'organisation ; le montant exact s'affiche avant le paiement.
 - En ligne via CinetPay (Mobile Money, carte) ou par transfert Mobile Money manuel avec une référence ; l'activation d'un transfert manuel est confirmée par l'équipe, pas instantanée.
-- **Hors de Guinée, les moyens de paiement sont confirmés par l'équipe** : l'assistant ne promet pas un moyen précis et passe la main si la question bloque la décision.
+- **En Guinée, en Côte d'Ivoire et au Sénégal**, le paiement en ligne passe par CinetPay, qui accepte les Mobile Money des opérateurs de chaque pays et la carte bancaire ; l'organisation paie dans sa monnaie (GNF ou FCFA), ou en USD par carte. Un moyen de paiement précis (un opérateur donné) n'est jamais promis : si la personne ne le trouve pas au moment de payer, l'assistant passe la main.
 - **L'assistant ne demande jamais** de numéro de carte, de code ou de mot de passe.
 
 ## 5. Feuille de route
