@@ -26,11 +26,11 @@ data class SubscriptionView(
     /** Plans and prepaid lengths on offer, priced for this team. */
     val plans: List<PlanOption>,
     val months: List<MonthOption>,
-    /** WhatsApp reminders used this month; null when the plan has no monthly cap (ADR 105). */
+    /** WhatsApp reminders sent this month from Jikū's number, and the plan's monthly cap (ADR 105, JIKU-268). */
     val whatsAppReminders: ReminderAllowance? = null,
 )
 
-/** WhatsApp appointment reminders sent this month out of a free plan's allowance (ADR 105). */
+/** WhatsApp appointment reminders sent this month from Jikū's number, out of the plan's monthly cap (ADR 105, JIKU-268). */
 data class ReminderAllowance(
     val sent: Int,
     val limit: Int,

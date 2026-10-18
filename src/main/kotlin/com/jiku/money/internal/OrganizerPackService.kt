@@ -1,12 +1,10 @@
 package com.jiku.money.internal
 
-import com.jiku.catalog.EventModuleApi
 import com.jiku.money.MonthOption
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
-import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
@@ -27,7 +25,7 @@ class OrganizerPackService(
     private val billing: BillingProperties,
     private val subscriptionProperties: SubscriptionProperties,
     private val billingCurrency: TenantBillingCurrency,
-    private val events: EventModuleApi,
+    private val eventDay: EventDay,
 ) {
     private val pack get() = billing.pack
 
@@ -80,7 +78,7 @@ class OrganizerPackService(
     ): Long? {
         val now = Instant.now()
         val row = activePack(now) ?: return null
-        if (unlimitedOnEventDay && isEventDay(eventId, now)) return Long.MAX_VALUE
+        if (unlimitedOnEventDay && eventDay.isEventDay(eventId, now)) return Long.MAX_VALUE
         val month = packMonths.findFirstByMonthStart(monthStart(row, now))
         val remaining = pack.includedGuests + (month?.extraGuests ?: 0) - (month?.usedGuests ?: 0)
         return alreadyCommitted + remaining.coerceAtLeast(0)
@@ -190,23 +188,10 @@ class OrganizerPackService(
         return plusMonths(start, elapsed)
     }
 
-    /** Within a day of the event's start: sending never stops then (ADR 105). */
-    private fun isEventDay(
-        eventId: UUID,
-        now: Instant,
-    ): Boolean {
-        val start = events.findEvent(eventId)?.startDateTime ?: return false
-        return Duration.between(now, start).abs() <= EVENT_DAY
-    }
-
     private fun plusMonths(
         instant: Instant,
         months: Long,
     ): Instant = instant.atZone(ZoneOffset.UTC).plusMonths(months).toInstant()
-
-    private companion object {
-        val EVENT_DAY: Duration = Duration.ofHours(24)
-    }
 }
 
 data class PackQuote(

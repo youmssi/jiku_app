@@ -12,14 +12,18 @@ import java.math.BigDecimal
  */
 object MoneyFormat {
     /** Devises ISO 4217 sans unité mineure — celle de la plateforme incluse. */
-    private val ZERO_DECIMAL = setOf("GNF", "XAF", "XOF", "JPY", "KRW", "RWF", "UGX", "VND")
+    private val ZERO_DECIMAL =
+        setOf("BIF", "CLP", "DJF", "GNF", "JPY", "KMF", "KRW", "MGA", "PYG", "RWF", "UGX", "VND", "VUV", "XAF", "XOF", "XPF")
+
+    /** Si [currency] n'a pas d'unité mineure : le montant mineur est alors le montant entier. */
+    fun isZeroDecimal(currency: String): Boolean = currency.uppercase() in ZERO_DECIMAL
 
     fun format(
         minor: Long,
         currency: String,
     ): String {
         val code = currency.uppercase()
-        return if (code in ZERO_DECIMAL) {
+        return if (isZeroDecimal(code)) {
             "%,d %s".format(minor, code)
         } else {
             "%,.2f %s".format(BigDecimal(minor).movePointLeft(2), code)

@@ -97,7 +97,7 @@ jiku:
     # Cost/quota/category guardrails (JIKU-61).
     conversation-safety-threshold: ${WHATSAPP_CONVERSATION_SAFETY_THRESHOLD:220}
     usd-to-gnf-rate: ${WHATSAPP_USD_TO_GNF_RATE:8760}
-    marketing-markers: ${WHATSAPP_MARKETING_MARKERS:promo,réduction,solde,gratuit,offre spéciale,cadeau,bon plan,code promo,achetez maintenant,discount,special offer,free gift,buy now,limited offer,% off}
+    marketing-markers: ${WHATSAPP_MARKETING_MARKERS:promo,code promo,coupon,réduction,rabais,soldes,prix cassé,offre spéciale,offre exclusive,offre limitée,bon plan,achetez maintenant,achetez vite,commandez maintenant,essai gratuit,cadeau offert,cadeau gratuit,livraison gratuite,black friday,discount,promo code,special offer,exclusive offer,limited offer,limited time,buy now,shop now,order now,free gift,free trial,free shipping,% off}
     # What Meta reports about templates and numbers (JIKU-209): a paused
     # template is left alone this long, and one Meta moves to MARKETING is no
     # longer used.
@@ -510,10 +510,19 @@ billing:
   # per tenant account, not per event (JIKU-54) — closes the bypass of
   # fragmenting guests across many small free events.
   free-tier-window: ${BILLING_FREE_TIER_WINDOW:P365D}
+  # On an event's day, an event past its guests may still send to this much
+  # more (percent of its guests, at least min-guests); they show as owed after.
+  event-day-grace:
+    percent: ${BILLING_EVENT_DAY_GRACE_PERCENT:20}
+    min-guests: ${BILLING_EVENT_DAY_GRACE_MIN_GUESTS:20}
   subscription:
     # WhatsApp appointment reminders a free services plan (Solo) includes each
     # calendar month (ADR 105); past it, reminders stop until the next month.
     free-plan-whatsapp-reminders: ${FREE_PLAN_WHATSAPP_REMINDERS:50}
+    # Fair use of Services Pro: WhatsApp reminders per person who serves clients
+    # each calendar month from Jikū's number. Past it, reminders fall back to the
+    # other channels; reminders sent from the organization's own number never count.
+    paid-plan-whatsapp-reminders-per-person: ${PAID_PLAN_WHATSAPP_REMINDERS_PER_PERSON:1000}
   invoice:
     # Accounting-grade invoicing (JIKU-69). Numbers are gapless per tenant per
     # fiscal year; these prefixes only shape the human-readable form.

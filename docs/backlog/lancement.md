@@ -33,6 +33,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-264 | Conversations commerciales : Chatwoot, n8n et assistant | exploitation | JIKU-263 |
 | JIKU-268 | Tarification simplifiée, prix TTC, limite WhatsApp à 3 000 (ADR 109) | app, web | — |
 | JIKU-269 | Vérification des messages WhatsApp pendant la rédaction et guide d'écriture | app, web | JIKU-268 |
+| JIKU-270 | Tarifs alignés, invités gratuits déduits, marge le jour J, usage raisonnable appliqué, devise par pays | app, web | JIKU-269 |
 
 ---
 
@@ -457,7 +458,25 @@ l'organisateur doit le savoir en écrivant, pas à l'envoi (ADR 109, décision 4
 **Critères d'acceptation.**
 
 - [x] `POST /messaging/whatsapp/check` renvoie la catégorie et les mots repérés, avec la même liste que le contrôle à l'envoi (mots français et anglais)
-- [ ] Les champs de message WhatsApp affichent « Message d'information » ou « Risque marketing » et les mots à retirer
-- [ ] Un guide « Écrire un message WhatsApp qui passe » (FR et EN) dans /docs
+- [x] Les champs de message WhatsApp affichent « Message d'information » ou « Risque marketing » et les mots à retirer
+- [x] Un guide « Écrire un message WhatsApp qui passe » (FR et EN) dans /docs
 - [x] Un envoi refusé parce que le compte WhatsApp Business de l'organisation n'a plus de moyen de paiement l'explique dans le statut du message (erreur Meta 131042)
+
+## JIKU-270 — Tarifs cohérents et règles appliquées
+
+**Pourquoi.** Le seuil de Pro Organisateur différait entre le dollar et les
+francs, un événement payait ses invités gratuits, un organisateur pouvait être
+bloqué le jour de son événement et l'usage raisonnable de Services Pro n'était
+écrit que dans les CGU (ADR 109, décisions 5 à 10).
+
+**Critères d'acceptation.**
+
+- [x] Prix en dollars : 72 USD par mois pour Pro Organisateur, 0,09 USD par invité ; le seuil est 800 invités dans les trois monnaies
+- [x] Un premier achat d'invités ne paie que ceux au-delà des invités gratuits restants, qui sont alors réservés à l'événement
+- [x] Le jour de l'événement, l'envoi continue jusqu'à 20 % au-delà des invités (au moins 20), et ces invités apparaissent comme à payer
+- [x] Une offre payante de services envoie au plus 1 000 rappels WhatsApp par personne et par mois depuis le numéro Jikū
+- [x] La facture est en français et en anglais
+- [x] Les mots promotionnels sont comparés par mots entiers et ne repèrent plus les tournures courantes d'une invitation
+- [x] Web : la devise affichée suit le pays du visiteur (GNF en Guinée, FCFA dans l'UEMOA et la CEMAC, USD ailleurs), FCFA par défaut en français et USD en anglais, avec un sélecteur retenu
+- [x] Web : l'écran de facturation déduit les invités gratuits de l'estimation
 

@@ -14,7 +14,7 @@ import java.util.UUID
 
 /**
  * A time-boxed loan of guests granted by a platform admin (JIKU-42).
- * Deliberately a separate record from [UsageRecord.unlockedAllowance] — that
+ * Deliberately a separate record from [UsageRecord.paidGuests] — that
  * column stays strictly the *paid* entitlement, so expiry can revert a trial
  * without ever guessing whether an allowance was paid for.
  */

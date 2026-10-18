@@ -76,15 +76,25 @@ Côte d'Ivoire et au Sénégal) : le montant affiché est le montant payé. Prix
 | Offre | GNF | FCFA | USD | Pour qui |
 |---|---|---|---|---|
 | **Gratuit** | 0 | 0 | 0 | Pour essayer : 100 invités par an sur tous les événements, et Solo (1 personne, 50 rappels WhatsApp par mois) |
-| **Par événement** | 750 par invité | 50 par invité | 0,08 par invité | Un événement de temps en temps ; tout est inclus (réponse dans WhatsApp, billets, contrôle) |
-| **Pro Organisateur** | 600 000 par mois | 40 000 par mois | 70 par mois | Wedding planners, agences, salles : 1 000 invités par mois sur tous les événements, puis 600 GNF / 40 FCFA / 0,07 USD par invité |
+| **Par événement** | 750 par invité | 50 par invité | 0,09 par invité | Un événement de temps en temps ; tout est inclus (réponse dans WhatsApp, billets, contrôle). Seuls les invités au-delà des invités gratuits sont payés |
+| **Pro Organisateur** | 600 000 par mois | 40 000 par mois | 72 par mois | Wedding planners, agences, salles : 1 000 invités par mois sur tous les événements, puis 600 GNF / 40 FCFA / 0,07 USD par invité |
 | **Services Pro** | 60 000 par personne et par mois | 4 000 | 7 | Salons, cliniques, coachs : séances de groupe jusqu'à 30 clients, 1 000 rappels WhatsApp par personne et par mois (usage raisonnable) |
 | **Entreprise** | Sur devis | | | Gros volumes, besoins sur mesure |
 
 - **Repère de choix** : Pro Organisateur devient moins cher que « Par événement »
   dès **800 invités par mois**. Sous ce seuil, payer à l'événement.
-- Exemple : un mariage de 300 invités = 300 × 750 = **225 000 GNF**, tout compris.
+- Exemple : un mariage de 300 invités = 300 × 750 = **225 000 GNF**, tout compris ;
+  si c'est le premier événement de l'année, les 100 invités gratuits sont déduits :
+  200 × 750 = **150 000 GNF**.
+- Les invités gratuits restants sont déduits du premier achat : un événement de
+  120 invités, sans autre événement dans l'année, paie 20 invités (15 000 GNF).
 - Un événement qui a déjà payé ses invités et en ajoute ne paie que les nouveaux.
+- Le jour de l'événement, l'envoi ne s'arrête pas net : il continue jusqu'à 20 %
+  au-delà (au moins 20 invités), à régler ensuite. La validation à l'entrée
+  n'est jamais bloquée.
+- Services Pro : au-delà de 1 000 rappels WhatsApp par personne et par mois sur
+  le numéro Jikū, les rappels passent par les autres canaux du service ; sur le numéro propre du
+  client, pas de limite.
 - Pour une carte partagée, seuls les « oui » et leurs accompagnants comptent.
 - Paiement à l'année sur Pro Organisateur et Services Pro : 10 mois payés,
   **2 mois offerts**.
@@ -97,7 +107,7 @@ Côte d'Ivoire et au Sénégal) : le montant affiché est le montant payé. Prix
 
 - **Argument** : « Vos invitations partent de **votre** numéro, avec **votre** nom ;
   vos contacts restent les vôtres. » Le branchement prend quelques minutes depuis
-  les réglages et ne coûte rien à Jikū ni au client.
+  les réglages.
 - **Inclus** dans Pro Organisateur et Services Pro ; en option à 100 000 GNF /
   7 000 FCFA / 12 USD par mois pour les autres.
 - Meta facture alors les messages directement à l'organisation : il faut une carte

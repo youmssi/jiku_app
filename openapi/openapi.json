@@ -608,6 +608,10 @@
             "format" : "int64",
             "type" : "integer"
           },
+          "freeGuests" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
           "guestsImported" : {
             "format" : "int64",
             "type" : "integer"
@@ -684,14 +688,7 @@
             ]
           },
           "whatsAppReminders" : {
-            "oneOf" : [
-              {
-                "$ref" : "#/components/schemas/ReminderAllowance"
-              },
-              {
-                "type" : "null"
-              }
-            ]
+            "$ref" : "#/components/schemas/ReminderAllowance"
           }
         },
         "type" : "object"
@@ -1701,6 +1698,10 @@
           },
           "currency" : {
             "type" : "string"
+          },
+          "freeGuests" : {
+            "format" : "int64",
+            "type" : "integer"
           },
           "guests" : {
             "format" : "int64",

@@ -89,8 +89,8 @@ data class BillingStatusView(
     val ownWhatsAppNumber: Boolean,
     /** End of the paid add-on, when that is what provides the number. */
     val ownWhatsAppNumberAddonExpiresAt: Instant?,
-    /** WhatsApp reminders used this month; null without a monthly cap. */
-    val whatsAppReminders: ReminderAllowance?,
+    /** WhatsApp reminders sent this month from Jikū's number, and the plan's monthly cap. */
+    val whatsAppReminders: ReminderAllowance,
 )
 
 data class SubscriptionStatusSummary(

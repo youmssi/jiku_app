@@ -83,7 +83,8 @@ class PaymentTest {
             ).andExpect(status().isOk())
         assert(JsonPath.read<Int>(usage(token, eventId), "$.allowance") == 300)
 
-        // A second event's failed payment leaves that event on the free guests.
+        // A second event's failed payment leaves that event on the free guests,
+        // none left: the first event's purchase took them (JIKU-270).
         val otherEvent = createPublishedEvent(token)
         val other =
             mockMvc
@@ -103,7 +104,7 @@ class PaymentTest {
                     .header("X-Signature", sign(failedBody))
                     .content(failedBody),
             ).andExpect(status().isOk())
-        assert(JsonPath.read<Int>(usage(token, otherEvent), "$.allowance") == 100)
+        assert(JsonPath.read<Int>(usage(token, otherEvent), "$.allowance") == 0)
     }
 
     private fun callbackBody(

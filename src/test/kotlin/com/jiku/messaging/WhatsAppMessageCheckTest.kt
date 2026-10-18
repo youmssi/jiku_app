@@ -49,6 +49,26 @@ class WhatsAppMessageCheckTest {
     }
 
     @Test
+    fun `everyday invitation wording is not taken for promotion`() {
+        val api = OrganizerApi(mockMvc)
+        val token = api.register()
+        listOf(
+            "Entrée gratuite. La liste de cadeaux est sur notre page.",
+            "Remise des diplômes de la promotion 2026, solde à régler à l'accueil.",
+            "Un moment promotionnel ? Non : le dîner commence à 20 h.",
+        ).forEach { text ->
+            api
+                .post(token, "/api/v1/messaging/whatsapp/check", """{"text":"$text"}""")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.category").value("UTILITY"))
+        }
+        api
+            .post(token, "/api/v1/messaging/whatsapp/check", """{"text":"Free  gift for the first guests, 20% off tonight."}""")
+            .andExpect(jsonPath("$.promotionalWords[0]").value("free gift"))
+            .andExpect(jsonPath("$.promotionalWords[1]").value("% off"))
+    }
+
+    @Test
     fun `checking needs a signed-in organizer and a bounded text`() {
         mockMvc
             .perform(post("/api/v1/messaging/whatsapp/check").contentType(MediaType.APPLICATION_JSON).content("""{"text":"x"}"""))

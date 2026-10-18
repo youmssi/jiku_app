@@ -15,7 +15,9 @@ import java.math.RoundingMode
 import java.time.format.DateTimeFormatter
 
 /**
- * Renders an [Invoice] as a PDF (JIKU-69).
+ * Renders an [Invoice] as a PDF (JIKU-69), its labels in French then English
+ * (JIKU-270): French is the official language where Jikū bills, and English
+ * serves a buyer elsewhere, without one document per language.
  *
  * Everything printed comes from the invoice row itself — both parties, the tax
  * rate, every total. Nothing is looked up live, so re-downloading a document
@@ -36,7 +38,7 @@ class InvoiceDocumentRenderer {
             document.add(totals(invoice))
             invoice.correctedInvoiceId?.let {
                 document.add(
-                    Paragraph("This credit note corrects invoice $it.", PdfDocument.SMALL).apply {
+                    Paragraph("Cet avoir corrige la facture $it. · This credit note corrects invoice $it.", PdfDocument.SMALL).apply {
                         spacingBefore = 16f
                     },
                 )
@@ -51,11 +53,11 @@ class InvoiceDocumentRenderer {
     fun fileName(invoice: Invoice): String = "${invoice.invoiceNumber}.pdf"
 
     private fun heading(invoice: Invoice): Paragraph {
-        val title = if (invoice.documentType == DocumentType.CREDIT_NOTE) "Credit note" else "Invoice"
+        val title = if (invoice.documentType == DocumentType.CREDIT_NOTE) "Avoir · Credit note" else "Facture · Invoice"
         return Paragraph().apply {
             add(Paragraph(title, PdfDocument.TITLE))
             add(Paragraph(invoice.invoiceNumber, PdfDocument.SUBTITLE))
-            add(Paragraph("Issued ${invoice.issueDate.format(DATE)}", PdfDocument.SMALL))
+            add(Paragraph("Émise le · Issued ${invoice.issueDate.format(DATE)}", PdfDocument.SMALL))
             spacingAfter = 18f
         }
     }
@@ -66,31 +68,33 @@ class InvoiceDocumentRenderer {
             setSpacingAfter(18f)
             addCell(
                 PdfDocument.partyCell(
-                    "From",
+                    "Vendeur · From",
                     listOfNotNull(invoice.sellerName, invoice.sellerAddressLine, taxLine(invoice.sellerTaxIdentifier)),
                 ),
             )
             addCell(
                 PdfDocument.partyCell(
-                    "Billed to",
+                    "Client · Billed to",
                     listOfNotNull(
                         invoice.buyerLegalName,
                         invoice.buyerAddressLine,
                         "${invoice.buyerCity}, ${invoice.buyerCountry}",
-                        invoice.buyerRegistrationNumber?.let { "Reg. $it" },
+                        invoice.buyerRegistrationNumber?.let { "N° d'immatriculation · Reg. $it" },
                         taxLine(invoice.buyerTaxIdentifier),
                     ),
                 ),
             )
         }
 
-    private fun taxLine(identifier: String?): String? = identifier?.let { "Tax ID $it" }
+    private fun taxLine(identifier: String?): String? = identifier?.let { "N° fiscal · Tax ID $it" }
 
     private fun lines(invoice: Invoice): PdfPTable =
         PdfPTable(floatArrayOf(5f, 1f, 2f, 2f)).apply {
             widthPercentage = 100f
             setSpacingAfter(12f)
-            listOf("Description", "Qty", "Unit price", "Amount").forEach { addCell(PdfDocument.headerCell(it)) }
+            listOf("Désignation · Description", "Qté · Qty", "Prix unitaire · Unit price", "Montant · Amount").forEach {
+                addCell(PdfDocument.headerCell(it))
+            }
             invoice.lines.forEach { line ->
                 addCell(PdfDocument.bodyCell(line.description, Element.ALIGN_LEFT))
                 addCell(PdfDocument.bodyCell(line.quantity.toString(), Element.ALIGN_RIGHT))
@@ -103,29 +107,22 @@ class InvoiceDocumentRenderer {
         PdfPTable(floatArrayOf(6f, 3f)).apply {
             widthPercentage = 100f
             horizontalAlignment = Element.ALIGN_RIGHT
-            addCell(PdfDocument.bodyCell("Total excl. tax", Element.ALIGN_RIGHT))
+            addCell(PdfDocument.bodyCell("Total HT · Total excl. tax", Element.ALIGN_RIGHT))
             addCell(PdfDocument.bodyCell(MoneyFormat.format(invoice.subtotalMinor, invoice.currency), Element.ALIGN_RIGHT))
             // The tax row is printed even at zero so the document never leaves a
             // reader guessing whether tax was considered.
-            addCell(PdfDocument.bodyCell("${invoice.taxLabel ?: "Tax (${percent(invoice.taxRate)})"} included", Element.ALIGN_RIGHT))
+            addCell(
+                PdfDocument.bodyCell("${invoice.taxLabel ?: "TVA (${percent(invoice.taxRate)})"} incluse · included", Element.ALIGN_RIGHT),
+            )
             addCell(PdfDocument.bodyCell(MoneyFormat.format(invoice.taxAmountMinor, invoice.currency), Element.ALIGN_RIGHT))
-            addCell(PdfDocument.totalCell("Total incl. tax"))
+            addCell(PdfDocument.totalCell("Total TTC · Total incl. tax"))
             addCell(PdfDocument.totalCell(MoneyFormat.format(invoice.totalMinor, invoice.currency)))
         }
-
-    /**
-     * Minor units to a readable amount. GNF and XAF have no minor unit, so a
-     * blanket divide-by-100 would print every Guinean amount a hundred times too
-     * small — the kind of error that only shows up on a customer's invoice.
-     */
 
     private fun percent(rate: BigDecimal): String =
         "${rate.movePointRight(2).setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()}%"
 
     private companion object {
         val DATE: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
-
-        /** ISO 4217 currencies with no minor unit — the platform's own included. */
-        val ZERO_DECIMAL_CURRENCIES = setOf("GNF", "XAF", "XOF", "JPY", "KRW", "RWF", "UGX", "VND")
     }
 }
