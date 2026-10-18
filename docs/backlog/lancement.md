@@ -427,5 +427,6 @@ Jikū en plateforme « où l'on gagne de l'argent » (ADR 108, décision 6).
 - [ ] Le numéro « conversations » est relié à Chatwoot par l'API officielle de Meta
 - [ ] L'assistant (Claude Haiku 5.5) se présente comme automatique, répond depuis une base de réponses validées, propose un rendez-vous Cal.com et confie la conversation à une personne sur demande, sur une hésitation de prix ou hors de la base
 - [ ] Plafond de dépense de l'API à 15 $ par mois
+- [x] Base de connaissances et consignes de l'assistant (`docs/sales/`) : cible du lancement (organisateurs professionnels en Guinée, Côte d'Ivoire et Sénégal, expatriés en sous-segment), prix, feuille de route sans date, objections, règles de passage de main
 - [ ] Évaluation sur 40 à 50 vraies conversations : taux de rendez-vous, reprises par une personne, erreurs ; décision de garder Haiku ou de passer à Sonnet
 
