@@ -32,18 +32,18 @@ class InvoiceDocumentRendererTest {
             buyerCountry = "GN",
             sellerName = "Jiku",
             currency = currency,
-            subtotalMinor = unitPriceMinor,
+            subtotalMinor = unitPriceMinor * 100 / 118,
             taxRate = BigDecimal("0.18"),
-            taxAmountMinor = (unitPriceMinor * 18) / 100,
-            totalMinor = unitPriceMinor + (unitPriceMinor * 18) / 100,
+            taxAmountMinor = unitPriceMinor - unitPriceMinor * 100 / 118,
+            totalMinor = unitPriceMinor,
             issueDate = LocalDate.of(2026, 9, 1),
         ).apply {
-            taxLabel = "TVA 18%"
+            taxLabel = "TVA 18 %"
             lines =
                 mutableListOf(
                     InvoiceLine(
                         lineNumber = 1,
-                        description = "Jiku ARGENT tier",
+                        description = "Jiku — Gala: 400 guests",
                         quantity = 1,
                         unitPriceMinor = unitPriceMinor,
                         lineTotalMinor = unitPriceMinor,

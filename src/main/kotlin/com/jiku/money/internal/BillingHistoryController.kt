@@ -39,6 +39,8 @@ class BillingHistoryController(
                 eventName =
                     label(payment),
                 tier = payment.tier,
+                kind = payment.kind,
+                guests = payment.guests,
                 amountMinor = payment.amountMinor,
                 currency = payment.currency,
                 status = payment.status.name,
@@ -63,8 +65,7 @@ class BillingHistoryController(
         if (payment.status != PaymentStatus.SUCCEEDED) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "A receipt is only available for a successful payment")
         }
-        val eventName =
-            label(payment)
+        val purchase = label(payment)
         val when0 = RECEIPT_DATE.format(payment.createdAt)
         val amount = formatAmount(payment.amountMinor, payment.currency)
         return buildString {
@@ -72,26 +73,17 @@ class BillingHistoryController(
             appendLine("========================")
             appendLine("Receipt reference : ${payment.id}")
             appendLine("Date              : $when0")
-            appendLine("Event             : $eventName")
-            appendLine("Tier unlocked     : ${payment.tier}")
+            appendLine("Purchase          : $purchase")
             appendLine("Amount            : $amount")
             appendLine("Payment method    : Mobile Money (${payment.provider})")
             appendLine("Provider reference: ${payment.providerReference ?: "-"}")
             appendLine("Status            : ${payment.status.name}")
             appendLine()
-            appendLine("This is a basic receipt for your records, not a tax invoice.")
+            appendLine("Amount includes all taxes. This is a basic receipt for your records, not a tax invoice.")
         }
     }
 
-    /** What a payment was for: its event, the subscription, the Organizer Pack or the own-number add-on (ADR 105). */
-    private fun label(payment: Payment): String =
-        when (payment.kind) {
-            Payment.KIND_SUBSCRIPTION -> "${payment.tier} subscription"
-            Payment.KIND_PACK -> "Organizer Pack (${payment.subscriptionMonths} months)"
-            Payment.KIND_PACK_EXTRA -> "Organizer Pack: ${payment.guests} extra guests"
-            Payment.KIND_WHATSAPP_NUMBER -> "Own WhatsApp number (${payment.subscriptionMonths} months)"
-            else -> payment.eventId?.let { events.findEvent(it)?.name } ?: "Event"
-        }
+    private fun label(payment: Payment): String = paymentLabel(payment, payment.eventId?.let { events.findEvent(it)?.name })
 
     private fun formatAmount(
         minor: Long,
@@ -123,6 +115,10 @@ data class PaymentHistoryItem(
     val eventId: UUID?,
     val eventName: String,
     val tier: String,
+    /** GUESTS, SUBSCRIPTION, PACK, PACK_EXTRA, WHATSAPP_NUMBER or COMMISSION. */
+    val kind: String,
+    /** Guests the payment bought or settled; null when it bought none. */
+    val guests: Long?,
     val amountMinor: Long,
     val currency: String,
     val status: String,

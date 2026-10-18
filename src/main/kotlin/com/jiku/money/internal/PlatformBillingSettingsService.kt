@@ -1,6 +1,5 @@
 package com.jiku.money.internal
 
-import com.jiku.money.BillingTierOption
 import com.jiku.money.PayeeDetails
 import com.jiku.money.PlatformBillingSettingsUpdate
 import com.jiku.money.PlatformBillingSettingsView
@@ -14,7 +13,7 @@ import java.time.Instant
 
 /**
  * Réglages de facturation pilotés par le bureau admin (bénéficiaire des
- * virements, grilles de prix des paliers et des formules d'abonnement),
+ * virements, prix par invité d'un événement et formules de services),
  * persistés en base pour être modifiables sans redéploiement. Tant qu'une
  * colonne n'a pas été renseignée, la configuration d'environnement reste le
  * défaut — la base est une surcouche, jamais un second catalogue à maintenir.
@@ -28,12 +27,10 @@ class PlatformBillingSettingsService(
     private val objectMapper: ObjectMapper,
 ) {
     @Transactional(readOnly = true)
-    fun tiers(): List<BillingProperties.Tier> {
+    fun perGuest(): PriceList {
         val row = settings.findById(PlatformBillingSettings.ROW_ID).orElse(null)
-        val json = row?.tierPricesJson?.takeIf { it.isNotBlank() } ?: return billingProperties.tiers
-        return runCatching {
-            objectMapper.readValue<List<BillingProperties.Tier>>(json)
-        }.getOrNull() ?: billingProperties.tiers
+        val json = row?.perGuestPriceJson?.takeIf { it.isNotBlank() } ?: return billingProperties.perGuest
+        return runCatching { objectMapper.readValue<PriceList>(json) }.getOrNull() ?: billingProperties.perGuest
     }
 
     @Transactional(readOnly = true)
@@ -44,9 +41,6 @@ class PlatformBillingSettingsService(
             objectMapper.readValue<List<Plan>>(json)
         }.getOrNull() ?: subscriptionProperties.plans
     }
-
-    @Transactional(readOnly = true)
-    fun tierByName(name: String): BillingProperties.Tier? = tiers().firstOrNull { it.name.equals(name, ignoreCase = true) }
 
     @Transactional(readOnly = true)
     fun planByName(name: String): Plan? = plans().firstOrNull { it.name.equals(name, ignoreCase = true) }
@@ -60,14 +54,6 @@ class PlatformBillingSettingsService(
         val holding = plans().filter { it.covers(people) }.ifEmpty { subscriptionProperties.plans.filter { it.covers(people) } }
         return holding.firstOrNull { it.free } ?: holding.minBy { it.monthlyMinor(PriceList.GNF, people) }
     }
-
-    /** Le palier correspondant à [invitedGuests] invités (pour l'affichage). */
-    @Transactional(readOnly = true)
-    fun tierForUsage(invitedGuests: Long): String =
-        when {
-            invitedGuests <= billingProperties.freeTierGuests -> BillingProperties.FREE_TIER
-            else -> tiers().firstOrNull { invitedGuests <= it.maxGuests }?.name ?: BillingProperties.CUSTOM_TIER
-        }
 
     /** Bénéficiaire effectif : la base d'abord, puis la configuration d'environnement. */
     @Transactional(readOnly = true)
@@ -92,11 +78,11 @@ class PlatformBillingSettingsService(
     @Transactional(readOnly = true)
     fun view(): PlatformBillingSettingsView {
         val row = settings.findById(PlatformBillingSettings.ROW_ID).orElse(null)
-        val managed = row?.tierPricesJson != null || row?.subscriptionPlansJson != null
+        val managed = row?.perGuestPriceJson != null || row?.subscriptionPlansJson != null
         return PlatformBillingSettingsView(
             currency = PriceList.GNF,
             payee = payeeDetails(),
-            tiers = tiers().map { BillingTierOption(it.name, it.maxGuests, it.price) },
+            perGuest = perGuest(),
             subscriptionPlans =
                 plans().map {
                     SubscriptionPlanOption(
@@ -124,7 +110,7 @@ class PlatformBillingSettingsService(
         row.mobileMoneyNumber = update.payee.mobileMoneyNumber?.takeIf { it.isNotBlank() }
         row.mobileMoneyOperator = update.payee.mobileMoneyOperator?.takeIf { it.isNotBlank() }
         row.bankDetails = update.payee.bankDetails?.takeIf { it.isNotBlank() }
-        row.tierPricesJson = objectMapper.writeValueAsString(update.tiers.map { BillingProperties.Tier(it.name, it.maxGuests, it.price) })
+        row.perGuestPriceJson = objectMapper.writeValueAsString(update.perGuest)
         row.subscriptionPlansJson =
             objectMapper.writeValueAsString(
                 update.subscriptionPlans.map { Plan(it.name, it.includedPeople, it.maxPeople, it.monthly, it.extraPerson) },

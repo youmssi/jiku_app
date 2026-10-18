@@ -83,8 +83,8 @@ class FollowUpTest {
             tenantId,
         )
         jdbc.update(
-            "INSERT INTO trial_grant (id, tenant_id, event_id, tier, granted_allowance, expires_at, status, created_at, updated_at) " +
-                "VALUES (?, ?, CAST(? AS UUID), 'STANDARD', 100, ?, 'ACTIVE', now(), now())",
+            "INSERT INTO trial_grant (id, tenant_id, event_id, granted_allowance, expires_at, status, created_at, updated_at) " +
+                "VALUES (?, ?, CAST(? AS UUID), 100, ?, 'ACTIVE', now(), now())",
             UUID.randomUUID(),
             tenantId,
             eventId,

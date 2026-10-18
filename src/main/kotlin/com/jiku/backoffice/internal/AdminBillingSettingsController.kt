@@ -37,7 +37,7 @@ class AdminBillingSettingsController(
         auditService.record(
             action = "BILLING_SETTINGS_UPDATED",
             target = "billing-settings",
-            note = "payee=${view.payee.payeeName ?: "-"}, tiers=${view.tiers.size}, plans=${view.subscriptionPlans.size}",
+            note = "payee=${view.payee.payeeName ?: "-"}, perGuest=${view.perGuest.gnf}, plans=${view.subscriptionPlans.size}",
         )
         return view
     }

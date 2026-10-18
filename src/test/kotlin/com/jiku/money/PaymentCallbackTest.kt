@@ -29,10 +29,10 @@ import javax.crypto.spec.SecretKeySpec
 /**
  * JIKU-105: each provider confirms payments on its own callback URL, and a
  * provider can only settle the payments it started — a second adapter that
- * verifies its own callback still cannot unlock a tier paid through another one.
+ * verifies its own callback still cannot unlock guests paid through another one.
  *
  * JIKU-106: a payment still awaiting the payer stays open, and a payment reported
- * for another amount or currency never unlocks the tier.
+ * for another amount or currency never unlocks the guests.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -102,7 +102,7 @@ class PaymentCallbackTest {
     }
 
     @Test
-    fun `a payment reported for another amount does not unlock the tier`() {
+    fun `a payment reported for another amount does not unlock the guests`() {
         val token = register()
         val eventId = createPublishedEvent(token)
         val reference = "${tenantId(token)}:${initiateBronze(token, eventId)}"
@@ -163,7 +163,7 @@ class PaymentCallbackTest {
                     post("/api/v1/events/$eventId/payments")
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"tier":"BRONZE"}"""),
+                        .content("""{"guests":300}"""),
                 ).andExpect(status().isOk())
                 .andReturn()
                 .response.contentAsString

@@ -26,7 +26,7 @@ class TrialNoticeListener(
         val reason = notice.note?.takeIf { it.isNotBlank() }?.let { catalog.text(language, "trial.reason", mapOf("note" to it)) }
         val values =
             mapOf(
-                "tier" to notice.tier,
+                "guests" to notice.guests.toString(),
                 "until" to catalog.formatOperationalInstant(language, notice.expiresAt),
                 "reason" to reason.orEmpty(),
             )

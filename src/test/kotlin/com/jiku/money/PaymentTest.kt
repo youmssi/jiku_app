@@ -19,7 +19,7 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 /**
- * JIKU-33: a Mobile Money payment unlocks an event's usage tier only when confirmed
+ * JIKU-33: a Mobile Money payment unlocks an event's guests only when confirmed
  * server-to-server via the signature-verified callback; an unsigned/failed payment
  * leaves the allowance unchanged.
  */
@@ -39,7 +39,7 @@ class PaymentTest {
     private val secret = "test-payment-secret"
 
     @Test
-    fun `a confirmed payment unlocks the tier, while unsigned and failed callbacks do not`() {
+    fun `a confirmed payment unlocks the guests, while unsigned and failed callbacks do not`() {
         val token = register()
         val tenantId = tenantId(token)
         val eventId = createPublishedEvent(token)
@@ -47,14 +47,14 @@ class PaymentTest {
         // Baseline: free tier allowance.
         assert(JsonPath.read<Int>(usage(token, eventId), "$.allowance") == 100)
 
-        // Initiate a BRONZE payment: recorded PENDING with a client instruction.
+        // Initiate a payment for 300 guests: recorded PENDING with a client instruction.
         val initiation =
             mockMvc
                 .perform(
                     post("/api/v1/events/$eventId/payments")
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"tier":"BRONZE"}"""),
+                        .content("""{"guests":300}"""),
                 ).andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PENDING"))
                 .andExpect(jsonPath("$.instruction.type").value("REDIRECT"))
@@ -72,7 +72,7 @@ class PaymentTest {
             ).andExpect(status().isUnauthorized())
         assert(JsonPath.read<Int>(usage(token, eventId), "$.allowance") == 100)
 
-        // A properly signed success callback unlocks the BRONZE allowance (300).
+        // A properly signed success callback unlocks the 300 guests.
         val body = callbackBody(reference, "SUCCEEDED")
         mockMvc
             .perform(
@@ -83,7 +83,7 @@ class PaymentTest {
             ).andExpect(status().isOk())
         assert(JsonPath.read<Int>(usage(token, eventId), "$.allowance") == 300)
 
-        // A second event's failed payment leaves that event on the free tier.
+        // A second event's failed payment leaves that event on the free guests.
         val otherEvent = createPublishedEvent(token)
         val other =
             mockMvc
@@ -91,7 +91,7 @@ class PaymentTest {
                     post("/api/v1/events/$otherEvent/payments")
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"tier":"BRONZE"}"""),
+                        .content("""{"guests":300}"""),
                 ).andReturn()
                 .response.contentAsString
         val otherRef = "$tenantId:${JsonPath.read<String>(other, "$.paymentId")}"

@@ -46,8 +46,8 @@ On sort alors Chatwoot, n8n et leur base sur un second serveur, avant de toucher
 
 ## Décision 2 — Conversations commerciales : Chatwoot, n8n, un assistant et une personne
 
-- **Chatwoot** reçoit les messages du numéro WhatsApp « conversations » (ventes,
-  puis assistance) par l'API officielle de Meta.
+- **Chatwoot** reçoit les messages des numéros WhatsApp « ventes » et
+  « assistance » par l'API officielle de Meta.
 - **n8n** relie Chatwoot à l'assistant : une nouvelle conversation reste « en
   attente » et l'assistant répond. Il qualifie le besoin, répond aux questions
   à partir d'une base de réponses validées, propose un lien **Cal.com** pour un
@@ -64,13 +64,19 @@ On sort alors Chatwoot, n8n et leur base sur un second serveur, avant de toucher
   les données des invités et clients des organisations. Les pages légales les
   citent (JIKU-263).
 
-## Décision 3 — Trois numéros WhatsApp
+## Décision 3 — Quatre numéros WhatsApp
 
-| Numéro | Usage |
-|---|---|
-| Conversations | Ventes et assistance, dans Chatwoot ; c'est le numéro affiché sur le site |
-| Invitations | Envois de Jikū pour les organisations (invitations, rappels, codes) |
-| Réserve | Prend le relais si un numéro est restreint par Meta |
+Mise à jour du 2026-10-18 : les ventes et l'assistance ont chacune leur numéro,
+et les lignes sont réparties entre deux opérateurs.
+
+| Numéro | Opérateur | Usage |
+|---|---|---|
+| Ventes | Orange | Conversations ouvertes par la publicité, dans Chatwoot |
+| Assistance | Areeba | Clients en cours d'usage, dans Chatwoot ; c'est le numéro affiché sur le site |
+| Invitations | Orange | Envois de Jikū pour les organisations (invitations, rappels, codes) |
+| Réserve | Areeba | Prend le relais si un numéro est restreint par Meta |
+
+Aucun numéro personnel n'est relié à l'API.
 
 Un problème de qualité sur les ventes ne bloque donc jamais les invitations.
 Les lignes sont de préférence au nom de MRVIN100 SARLU ; des lignes personnelles

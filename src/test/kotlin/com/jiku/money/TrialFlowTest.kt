@@ -67,7 +67,7 @@ class TrialFlowTest {
                 .perform(
                     post("/api/v1/admin/trials")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(grantBody(tenantId, eventId, "BRONZE", Instant.now().plus(1, ChronoUnit.HOURS)))
+                        .content(grantBody(tenantId, eventId, 300, Instant.now().plus(1, ChronoUnit.HOURS)))
                         .header("Authorization", "Bearer $adminToken"),
                 ).andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ACTIVE"))
@@ -105,7 +105,7 @@ class TrialFlowTest {
             .perform(
                 post("/api/v1/admin/trials")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(grantBody(tenantId, eventId, "ARGENT", Instant.now().plus(1, ChronoUnit.HOURS)))
+                    .content(grantBody(tenantId, eventId, 600, Instant.now().plus(1, ChronoUnit.HOURS)))
                     .header("Authorization", "Bearer $adminToken"),
             ).andExpect(status().isConflict())
 
@@ -138,7 +138,7 @@ class TrialFlowTest {
 
         // Unpaid: expiry reverts the allowance.
         val unpaidEvent = createPublishedEvent(token)
-        val unpaidTrialId = grantTrial(adminToken, tenantId, unpaidEvent, "BRONZE")
+        val unpaidTrialId = grantTrial(adminToken, tenantId, unpaidEvent, 300)
         assert(allowance(token, unpaidEvent) == 300)
         forceExpiry(tenantId, unpaidTrialId)
         trialService.expireDue()
@@ -149,14 +149,14 @@ class TrialFlowTest {
 
         // Paid during the trial: expiry converts, allowance stays (paid unlock).
         val paidEvent = createPublishedEvent(token)
-        val paidTrialId = grantTrial(adminToken, tenantId, paidEvent, "BRONZE")
+        val paidTrialId = grantTrial(adminToken, tenantId, paidEvent, 300)
         val instructions =
             mockMvc
                 .perform(
                     post("/api/v1/events/$paidEvent/payments/manual")
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"tier":"BRONZE"}"""),
+                        .content("""{"guests":300}"""),
                 ).andExpect(status().isOk())
                 .andReturn()
                 .response.contentAsString
@@ -181,14 +181,14 @@ class TrialFlowTest {
         adminToken: String,
         tenantId: String,
         eventId: String,
-        tier: String,
+        guests: Int,
     ): String {
         val body =
             mockMvc
                 .perform(
                     post("/api/v1/admin/trials")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(grantBody(tenantId, eventId, tier, Instant.now().plus(1, ChronoUnit.HOURS)))
+                        .content(grantBody(tenantId, eventId, guests, Instant.now().plus(1, ChronoUnit.HOURS)))
                         .header("Authorization", "Bearer $adminToken"),
                 ).andExpect(status().isOk())
                 .andReturn()
@@ -223,9 +223,9 @@ class TrialFlowTest {
     private fun grantBody(
         tenantId: String,
         eventId: String,
-        tier: String,
+        guests: Int,
         expiresAt: Instant,
-    ): String = """{"tenantId":"$tenantId","eventId":"$eventId","tier":"$tier","expiresAt":"$expiresAt"}"""
+    ): String = """{"tenantId":"$tenantId","eventId":"$eventId","guests":$guests,"expiresAt":"$expiresAt"}"""
 
     private fun allowance(
         token: String,

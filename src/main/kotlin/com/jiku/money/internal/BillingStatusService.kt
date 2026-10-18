@@ -7,7 +7,7 @@ import java.time.Instant
 
 /**
  * One read of where the organization stands with everything it pays for
- * (JIKU-254): the services subscription, the Organizer Pack, its own WhatsApp
+ * (JIKU-254): the services subscription, Pro Organisateur, its own WhatsApp
  * number and the free plan's reminders. [BillingStatusView.attention] names
  * the one thing to act on now, so the app shows a single, clear reminder.
  */

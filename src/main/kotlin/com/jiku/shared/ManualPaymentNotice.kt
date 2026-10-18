@@ -14,7 +14,8 @@ data class ManualPaymentNotice(
     val paymentId: UUID,
     val tenantId: String,
     val eventId: UUID,
-    val tier: String,
+    /** Paid guests the event is raised to. */
+    val guests: Long,
     val amountMinor: Long,
     val currency: String,
     /** The transfer reference the client must include with their payment. */

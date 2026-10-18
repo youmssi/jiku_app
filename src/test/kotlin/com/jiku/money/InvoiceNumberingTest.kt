@@ -157,6 +157,19 @@ class InvoiceNumberingTest {
     }
 
     @Test
+    fun `the paid price includes the tax, which the invoice extracts`() {
+        val tenantId = organizationReadyToInvoice("inclusive")
+
+        val invoice = withTenant(tenantId) { service.issueForPayment(settledPayment()) }
+
+        assertThat(invoice.totalMinor).isEqualTo(300_000)
+        assertThat(invoice.taxAmountMinor).isEqualTo(45_763)
+        assertThat(invoice.subtotalMinor).isEqualTo(254_237)
+        assertThat(invoice.taxLabel).isEqualTo("TVA 18 %")
+        assertThat(invoice.lines.single().description).isEqualTo("Jiku — Event: 300 guests")
+    }
+
+    @Test
     fun `a credit note reverses the invoice it corrects and can only be issued once`() {
         val tenantId = organizationReadyToInvoice("credit")
 
@@ -166,6 +179,7 @@ class InvoiceNumberingTest {
         assertThat(credit.documentType).isEqualTo(DocumentType.CREDIT_NOTE)
         assertThat(credit.correctedInvoiceId).isEqualTo(invoice.id)
         assertThat(credit.totalMinor).isEqualTo(-invoice.totalMinor)
+        assertThat(credit.taxAmountMinor).isEqualTo(-invoice.taxAmountMinor)
         // The original is untouched — that is the whole point of a credit note.
         assertThat(withTenant(tenantId) { service.find(requireNotNull(invoice.id)).totalMinor })
             .isEqualTo(invoice.totalMinor)
@@ -178,10 +192,11 @@ class InvoiceNumberingTest {
         val payment =
             Payment(
                 eventId = UUID.randomUUID(),
-                tier = "ARGENT",
+                tier = Payment.GUESTS_TIER,
                 amountMinor = 300_000,
                 currency = "GNF",
                 provider = "SANDBOX",
+                guests = 300,
             ).apply { status = PaymentStatus.SUCCEEDED }
         return requireNotNull(payments.saveAndFlush(payment).id)
     }

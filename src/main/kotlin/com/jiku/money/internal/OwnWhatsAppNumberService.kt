@@ -11,8 +11,8 @@ import java.time.ZoneOffset
 
 /**
  * Sending from the organization's own WhatsApp number (ADR 105). Meta then
- * bills the messages to the organization directly. The Organisation plan and
- * an active Organizer Pack include it; any other plan buys it as a monthly
+ * bills the messages to the organization directly. The Services Pro plan and
+ * an active Pro Organisateur include it; any other plan buys it as a monthly
  * add-on, months counted from the payment and a year charged as ten months.
  */
 @Service
@@ -102,7 +102,7 @@ enum class OwnNumberSource { PLAN, PACK, ADDON, NONE }
 /** Whether the organization may send from its own WhatsApp number, and the add-on's price in its billing currency. */
 data class OwnWhatsAppNumberView(
     val allowed: Boolean,
-    /** What includes it: the plan, the Organizer Pack, the paid add-on, or nothing yet. */
+    /** What includes it: the plan, Pro Organisateur, the paid add-on, or nothing yet. */
     val source: OwnNumberSource,
     val addonExpiresAt: Instant?,
     val includedPlans: List<String>,

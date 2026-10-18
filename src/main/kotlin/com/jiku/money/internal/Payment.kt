@@ -13,7 +13,7 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * A Mobile Money payment attempt for an event's usage tier (JIKU-33) or for a
+ * A Mobile Money payment attempt for an event's guests (JIKU-268) or for a
  * prepaid subscription renewal (JIKU-90, kind SUBSCRIPTION). Recorded on
  * initiation and updated when the provider confirms the outcome server-side;
  * every attempt is retained (with provider reference, amount, currency,
@@ -34,16 +34,16 @@ class Payment(
     @Column(name = "provider", nullable = false, updatable = false)
     val provider: String,
     @Column(name = "kind", nullable = false, length = 32)
-    val kind: String = KIND_TIER,
+    val kind: String = KIND_GUESTS,
     /** Mois de prépaiement achetés, pour un renouvellement d'abonnement. */
     @Column(name = "subscription_months")
     val subscriptionMonths: Int? = null,
-    /** Guests a payment adds or settles: an Organizer Pack block, or the guests owed a renewal pays for. */
+    /**
+     * Guests a payment buys or settles: the paid guests an event is raised to, a
+     * Pro Organisateur block, or the guests owed a renewal pays for.
+     */
     @Column(name = "guests", updatable = false)
     val guests: Long? = null,
-    /** The tier was paid with the interactive WhatsApp surcharge (ADR 105). */
-    @Column(name = "interactive", nullable = false, updatable = false)
-    val interactive: Boolean = false,
 ) : BaseTenantEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -67,17 +67,20 @@ class Payment(
     var updatedAt: Instant = Instant.now()
 
     companion object {
-        const val KIND_TIER = "TIER"
+        const val KIND_GUESTS = "GUESTS"
         const val KIND_SUBSCRIPTION = "SUBSCRIPTION"
         const val KIND_PACK = "PACK"
         const val KIND_PACK_EXTRA = "PACK_EXTRA"
         const val KIND_WHATSAPP_NUMBER = "WHATSAPP_NUMBER"
         const val KIND_COMMISSION = "COMMISSION"
 
+        /** The [tier] label of an event's guests payment. */
+        const val GUESTS_TIER = "GUESTS"
+
         /** The [tier] label of a commission batch payment. */
         const val COMMISSION_TIER = "COMMISSION"
 
-        /** The [tier] label of an Organizer Pack or pack extra payment. */
+        /** The [tier] label of a Pro Organisateur or pack extra payment. */
         const val PACK_TIER = "PACK"
 
         /** The [tier] label of an own WhatsApp number payment. */

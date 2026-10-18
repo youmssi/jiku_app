@@ -67,11 +67,11 @@ interface BillingModuleApi {
     /** Platform-wide trial funnel snapshot (JIKU-99) for the back-office overview strip. */
     fun adminTrialStats(): AdminTrialStats
 
-    /** Grants a time-boxed trial of a paid tier to one event. */
+    /** Lends one event [guests] guests until [expiresAt]. */
     fun adminGrantTrial(
         tenantId: UUID,
         eventId: UUID,
-        tier: String,
+        guests: Long,
         expiresAt: Instant,
     ): AdminTrialView
 
@@ -80,17 +80,6 @@ interface BillingModuleApi {
         trialId: UUID,
         reason: String,
     ): AdminTrialView
-
-    /** The reference currency of the price grid shown to the admin desk (GNF; ADR 105 prices every currency). */
-    fun currency(): String
-
-    /**
-     * The configured fixed-price tiers, ascending by allowance. Exposed so
-     * operator-facing surfaces (the admin back-office's trial and agreement
-     * forms) offer exactly the tiers the platform is configured with, instead of
-     * a hardcoded copy that silently drifts the next time pricing changes.
-     */
-    fun tierOptions(): List<BillingTierOption>
 
     /**
      * Réglages de facturation complets (bénéficiaire + grilles de prix) tels que
@@ -111,18 +100,6 @@ interface BillingModuleApi {
     fun adminActiveTrialEnds(): TenantMilestones
 }
 
-/** One configured fixed-price tier: what it costs and how many guests it unlocks. */
-data class BillingTierOption(
-    val name: String,
-    val maxGuests: Long,
-    /** The tier's price in GNF, FCFA and USD (ADR 105). */
-    val price: PriceList,
-) {
-    /** Kept for /v1 clients written before ADR 105: the GNF price. */
-    @Deprecated("Use price")
-    val priceMinor: Long get() = price.gnf
-}
-
 /**
  * A snapshot of one event's billing position. [invitedGuests] is the billable
  * usage (distinct guests with at least one sent invitation); [allowance] is the
@@ -133,8 +110,11 @@ data class BillingAllowance(
     val allowance: Long,
     val remaining: Long,
     val withinAllowance: Boolean,
+    /** FREE while on the organization's free guests, PAID once the event bought guests, PACK under Pro Organisateur. */
     val tier: String,
     val guestsImported: Long,
     val invitationsSentEmail: Long,
     val invitationsSentWhatsapp: Long,
+    /** Guests the event bought (JIKU-268); buying more charges only those above it. */
+    val paidGuests: Long = 0,
 )

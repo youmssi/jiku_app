@@ -69,42 +69,51 @@ peut répondre à leurs questions (§4.2), mais la publicité ne les vise pas en
 
 ## 4. Les prix
 
-Prix fixés à la main dans chaque monnaie (jamais convertis). FCFA = XOF et XAF.
+Tous les prix sont **toutes taxes comprises** (TVA de 18 % incluse en Guinée, en
+Côte d'Ivoire et au Sénégal) : le montant affiché est le montant payé. Prix fixés
+à la main dans chaque monnaie (jamais convertis). FCFA = XOF et XAF.
 
-### 4.1 Événements
-
-| | GNF | FCFA | USD |
-|---|---|---|---|
-| Jusqu'à 100 invités cumulés sur l'année | Gratuit | Gratuit | Gratuit |
-| Bronze, jusqu'à 300 invités (par événement) | 225 000 | 15 000 | 25 |
-| Argent, jusqu'à 600 invités | 375 000 | 25 000 | 45 |
-| Or, jusqu'à 1 000 invités | 600 000 | 40 000 | 70 |
-| Chaque invité au-delà de 1 000 | 500 | 35 | 0,06 |
-| Invitation interactive WhatsApp (par invité, en plus) | 150 | 10 | 0,02 |
-
-- Pour une carte partagée, seuls les « oui » et leurs accompagnants comptent.
-- **Pack Organisateur** (agences, wedding planners, salles) : **600 000 GNF / 40 000 FCFA / 70 USD par mois**, 1 000 invités inclus sur tous les événements du mois, puis 600 GNF / 40 FCFA / 0,07 USD par invité en plus. **C'est l'offre à proposer en premier à un organisateur professionnel** qui fait plus d'un événement par mois.
-
-### 4.2 Services (abonnement d'équipe, par mois)
-
-| Offre | GNF | FCFA | USD | Pour |
+| Offre | GNF | FCFA | USD | Pour qui |
 |---|---|---|---|---|
-| Solo | Gratuit pour toujours | Gratuit | Gratuit | 1 personne qui reçoit des clients |
-| Solo Plus | 50 000 | 3 500 | 6 | 1 personne |
-| Teams | 150 000 | 10 000 | 17 | 2 personnes, puis 50 000 GNF / 3 500 FCFA / 6 USD par personne en plus ; jusqu'à 10 clients par créneau |
-| Organisation | 350 000 | 25 000 | 40 | 5 personnes, puis 40 000 GNF / 2 500 FCFA / 5 USD par personne en plus ; jusqu'à 30 clients par créneau |
-| Entreprise | Sur devis | | | |
+| **Gratuit** | 0 | 0 | 0 | Pour essayer : 100 invités par an sur tous les événements, et Solo (1 personne, 50 rappels WhatsApp par mois) |
+| **Par événement** | 750 par invité | 50 par invité | 0,08 par invité | Un événement de temps en temps ; tout est inclus (réponse dans WhatsApp, billets, contrôle) |
+| **Pro Organisateur** | 600 000 par mois | 40 000 par mois | 70 par mois | Wedding planners, agences, salles : 1 000 invités par mois sur tous les événements, puis 600 GNF / 40 FCFA / 0,07 USD par invité |
+| **Services Pro** | 60 000 par personne et par mois | 4 000 | 7 | Salons, cliniques, coachs : séances de groupe jusqu'à 30 clients, 1 000 rappels WhatsApp par personne et par mois (usage raisonnable) |
+| **Entreprise** | Sur devis | | | Gros volumes, besoins sur mesure |
 
-- Paiement à l'année : 10 mois payés, **2 mois offerts**.
-- Les administrateurs et les contrôleurs sont gratuits ; seules les personnes qui reçoivent des clients comptent. Aucune commission sur les clients.
+- **Repère de choix** : Pro Organisateur devient moins cher que « Par événement »
+  dès **800 invités par mois**. Sous ce seuil, payer à l'événement.
+- Exemple : un mariage de 300 invités = 300 × 750 = **225 000 GNF**, tout compris.
+- Un événement qui a déjà payé ses invités et en ajoute ne paie que les nouveaux.
+- Pour une carte partagée, seuls les « oui » et leurs accompagnants comptent.
+- Paiement à l'année sur Pro Organisateur et Services Pro : 10 mois payés,
+  **2 mois offerts**.
+- Pour les services, les administrateurs et les contrôleurs sont gratuits ; seules
+  les personnes qui reçoivent des clients comptent. Aucune commission sur les clients.
+- **Pro Organisateur est l'offre à proposer en premier** à un organisateur
+  professionnel qui fait plus d'un événement par mois.
 
-### 4.3 Vente de billets
+### 4.1 Son propre numéro WhatsApp
+
+- **Argument** : « Vos invitations partent de **votre** numéro, avec **votre** nom ;
+  vos contacts restent les vôtres. » Le branchement prend quelques minutes depuis
+  les réglages et ne coûte rien à Jikū ni au client.
+- **Inclus** dans Pro Organisateur et Services Pro ; en option à 100 000 GNF /
+  7 000 FCFA / 12 USD par mois pour les autres.
+- Meta facture alors les messages directement à l'organisation : il faut une carte
+  bancaire acceptée sur son compte WhatsApp Business. Si ce n'est pas possible, le
+  numéro Jikū reste le choix par défaut.
+- Sur le numéro Jikū : 50 messages par jour tant que l'organisation n'est pas
+  vérifiée, puis jusqu'à 3 000 messages sur 30 jours ; au-delà, l'organisation
+  branche son propre numéro.
+
+### 4.2 Vente de billets
 
 - **3 % du prix de chaque billet vendu**, rien si rien n'est vendu.
 - L'argent des ventes arrive directement chez l'organisateur.
 - La commission se règle d'avance par tranche de 50 billets ; **la première tranche est offerte** ; ce qui n'a pas servi est reporté.
 
-### 4.4 Comment payer Jikū
+### 4.3 Comment payer Jikū
 
 - Depuis **Facturation** dans l'espace de l'organisation ; le montant exact s'affiche avant le paiement.
 - En ligne via CinetPay (Mobile Money, carte) ou par transfert Mobile Money manuel avec une référence ; l'activation d'un transfert manuel est confirmée par l'équipe, pas instantanée.
@@ -134,7 +143,7 @@ propose de commencer avec ce qui existe déjà.
 |---|---|
 | « Mes invités doivent-ils installer une application ? » | Non. Un simple lien ouvert dans le navigateur du téléphone. |
 | « Et si le réseau tombe le jour J ? » | Le contrôle continue sans réseau ; la liste est déjà sur le téléphone du contrôleur, et un billet ne passe jamais deux fois. |
-| « C'est trop cher. » | Commencer gratuitement : jusqu'à 100 invités sur l'année. Comparer avec le coût des cartes imprimées, des resquilleurs et du temps passé à relancer. Pour un professionnel : le Pack Organisateur couvre tous ses événements du mois. Pas de remise improvisée : une demande de remise passe à une personne. |
+| « C'est trop cher. » | Commencer gratuitement : jusqu'à 100 invités sur l'année. Comparer avec le coût des cartes imprimées, des resquilleurs et du temps passé à relancer. Pour un professionnel : Pro Organisateur couvre tous ses événements du mois. Pas de remise improvisée : une demande de remise passe à une personne. |
 | « J'utilise déjà un groupe WhatsApp. » | Le groupe ne dit pas qui vient, ni avec combien de personnes, et n'empêche pas d'entrer sans invitation. Jikū garde WhatsApp et y ajoute les réponses, les billets et le contrôle. |
 | « Mes invités sont âgés / peu à l'aise avec le téléphone. » | Ils touchent un seul bouton dans le message reçu ; le billet s'affiche. Passer la main si l'organisateur décrit un cas particulier. |
 | « Vous touchez à l'argent de mes clients ? » | Jamais : ils paient l'organisation directement. |

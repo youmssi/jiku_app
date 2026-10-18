@@ -21,9 +21,9 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.util.UUID
 
 /**
- * JIKU-41 end to end: an organizer requests a paid tier and receives transfer
+ * JIKU-41 end to end: an organizer requests paid guests and receives transfer
  * instructions with a reference; re-requesting is idempotent; an admin confirming
- * the transfer unlocks the tier (same effect as a provider callback) and the
+ * the transfer unlocks the guests (same effect as a provider callback) and the
  * action lands in the audit log; rejecting leaves the allowance untouched.
  */
 @SpringBootTest
@@ -55,14 +55,14 @@ class ManualPaymentFlowTest {
 
         assert(JsonPath.read<Int>(usage(token, eventId), "$.allowance") == 100)
 
-        // Request the BRONZE tier: pending payment with reference and payee details.
+        // Request 300 guests: pending payment with reference and payee details.
         val instructions =
             mockMvc
                 .perform(
                     post("/api/v1/events/$eventId/payments/manual")
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"tier":"BRONZE"}"""),
+                        .content("""{"guests":300}"""),
                 ).andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PENDING"))
                 .andExpect(jsonPath("$.payee.payeeName").value("Jiku Operations"))
@@ -79,7 +79,7 @@ class ManualPaymentFlowTest {
                 post("/api/v1/events/$eventId/payments/manual")
                     .header("Authorization", "Bearer $token")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content("""{"tier":"BRONZE"}"""),
+                    .content("""{"guests":300}"""),
             ).andExpect(status().isOk())
             .andExpect(jsonPath("$.paymentId").value(paymentId))
             .andExpect(jsonPath("$.reference").value(reference))
@@ -105,7 +105,7 @@ class ManualPaymentFlowTest {
             ).andExpect(status().isOk())
             .andExpect(jsonPath("$[?(@.id == '$paymentId')].reference").value(reference))
 
-        // Confirm: transfer reference required, tier unlocks, audit trail written.
+        // Confirm: transfer reference required, guests unlock, audit trail written.
         mockMvc
             .perform(
                 post("/api/v1/admin/payments/$paymentId/confirm")
@@ -154,7 +154,7 @@ class ManualPaymentFlowTest {
                     post("/api/v1/events/$eventId/payments/manual")
                         .header("Authorization", "Bearer $token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""{"tier":"ARGENT"}"""),
+                        .content("""{"guests":600}"""),
                 ).andExpect(status().isOk())
                 .andReturn()
                 .response.contentAsString
@@ -177,7 +177,7 @@ class ManualPaymentFlowTest {
                 post("/api/v1/events/$eventId/payments/manual")
                     .header("Authorization", "Bearer $token")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content("""{"tier":"ARGENT"}"""),
+                    .content("""{"guests":600}"""),
             ).andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("PENDING"))
     }

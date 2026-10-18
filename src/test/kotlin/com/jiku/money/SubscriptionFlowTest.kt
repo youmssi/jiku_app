@@ -68,25 +68,24 @@ class SubscriptionFlowTest {
         val outgrown = subscriptionJson(token)
         assertEquals(true, JsonPath.read<Boolean>(outgrown, "$.overLimit"))
         assertTrue(JsonPath.read<String?>(outgrown, "$.expiresAt") != null, "outgrowing Solo starts the window to choose")
-        assertEquals(150_000, JsonPath.read<List<Int>>(outgrown, "$.plans[?(@.name == 'Teams')].teamMonthlyMinor").single())
+        assertEquals(120_000, JsonPath.read<List<Int>>(outgrown, "$.plans[?(@.name == 'Services Pro')].teamMonthlyMinor").single())
 
-        requestAndConfirm(token, plan = "Teams", months = 1)
+        requestAndConfirm(token, plan = "Services Pro", months = 1)
         createResource(token)
-        val teams = subscriptionJson(token)
-        assertEquals("Teams", JsonPath.read<String>(teams, "$.plan"))
-        assertEquals(false, JsonPath.read<Boolean>(teams, "$.overLimit"))
-        assertEquals(200_000, JsonPath.read<Int>(teams, "$.monthlyMinor"), "150 000 for two people, 50 000 for the third")
+        val pro = subscriptionJson(token)
+        assertEquals("Services Pro", JsonPath.read<String>(pro, "$.plan"))
+        assertEquals(false, JsonPath.read<Boolean>(pro, "$.overLimit"))
+        assertEquals(180_000, JsonPath.read<Int>(pro, "$.monthlyMinor"), "60 000 for each of the three people")
     }
 
     @Test
-    fun `a free plan cannot be bought and Solo Plus cannot hold a team`() {
+    fun `a free plan cannot be bought, nor an unsupported length`() {
         val token = register("Free Org", uniqueEmail())
         createResource(token)
         createResource(token)
 
         requestSubscription(token, plan = "Solo", months = 1, expected = 400)
-        requestSubscription(token, plan = "Solo Plus", months = 1, expected = 409)
-        requestSubscription(token, plan = "Teams", months = 3, expected = 400)
+        requestSubscription(token, plan = "Services Pro", months = 3, expected = 400)
     }
 
     @Test
@@ -106,10 +105,10 @@ class SubscriptionFlowTest {
         assertTrue(noticed.expiryNoticeSent)
         TenantContext.clear()
 
-        val requested = requestSubscription(token, plan = "Teams", months = 12)
+        val requested = requestSubscription(token, plan = "Services Pro", months = 12)
         val paymentId = JsonPath.read<String>(requested, "$.paymentId")
-        assertEquals(1_500_000, JsonPath.read<Int>(requested, "$.amountMinor"), "a year of Teams charges ten months")
-        val again = requestSubscription(token, plan = "Teams", months = 12)
+        assertEquals(1_200_000, JsonPath.read<Int>(requested, "$.amountMinor"), "a year of Services Pro for two charges ten months")
+        val again = requestSubscription(token, plan = "Services Pro", months = 12)
         assertEquals(paymentId, JsonPath.read<String>(again, "$.paymentId"))
 
         forceExpiry(tenantId, Instant.now().minusSeconds(60))
@@ -158,8 +157,8 @@ class SubscriptionFlowTest {
         billingModuleApi.adminConfirmManualPayment(UUID.fromString(paymentId))
         val reactivated = subscriptionJson(token)
         assertEquals("ACTIVE", JsonPath.read<String>(reactivated, "$.status"))
-        assertEquals("Teams", JsonPath.read<String>(reactivated, "$.plan"))
-        assertEquals(2, JsonPath.read<Int>(reactivated, "$.resourcesIncluded"))
+        assertEquals("Services Pro", JsonPath.read<String>(reactivated, "$.plan"))
+        assertEquals(1, JsonPath.read<Int>(reactivated, "$.resourcesIncluded"))
         assertTrue(JsonPath.read<String>(reactivated, "$.expiresAt") > JsonPath.read<String>(reactivated, "$.startedAt"))
         billingStatus(token).andExpect(jsonPath("$.attention").value("NONE"))
         forceExpiry(tenantId, Instant.now().plusSeconds(86400))

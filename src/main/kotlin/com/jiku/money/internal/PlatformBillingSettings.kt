@@ -9,8 +9,8 @@ import java.time.Instant
 
 /**
  * La ligne unique (id=1) des réglages de facturation pilotés par le bureau
- * admin : le bénéficiaire des virements (Mobile Money ou banque) et les grilles
- * de prix. Les colonnes JSON restent nulles tant que l'opérateur n'a rien
+ * admin : le bénéficiaire des virements (Mobile Money ou banque), le prix par
+ * invité et les formules de services. Les colonnes JSON restent nulles tant que l'opérateur n'a rien
  * personnalisé — les valeurs de configuration d'environnement demeurent alors le
  * défaut (voir [PlatformBillingSettingsService]).
  */
@@ -39,8 +39,8 @@ class PlatformBillingSettings(
     @Column(name = "bank_details")
     var bankDetails: String? = null
 
-    @Column(name = "tier_prices_json")
-    var tierPricesJson: String? = null
+    @Column(name = "per_guest_price_json")
+    var perGuestPriceJson: String? = null
 
     @Column(name = "subscription_plans_json")
     var subscriptionPlansJson: String? = null
