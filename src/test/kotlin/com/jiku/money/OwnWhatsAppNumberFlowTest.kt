@@ -16,8 +16,8 @@ import java.util.UUID
 import kotlin.test.assertEquals
 
 /**
- * The organization's own WhatsApp number (ADR 105): included in the
- * Organisation plan and the Organizer Pack, a monthly add-on otherwise, with
+ * The organization's own WhatsApp number (ADR 105): included in Services Pro
+ * and Pro Organisateur, a monthly add-on otherwise, with
  * a year charged as ten months.
  */
 @SpringBootTest
@@ -46,7 +46,7 @@ class OwnWhatsAppNumberFlowTest {
             .andExpect(jsonPath("$.allowed").value(false))
             .andExpect(jsonPath("$.source").value("NONE"))
             .andExpect(jsonPath("$.monthlyMinor").value(100_000))
-            .andExpect(jsonPath("$.includedPlans[0]").value("Organisation"))
+            .andExpect(jsonPath("$.includedPlans[0]").value("Services Pro"))
 
         request(token, """{"months":12}""", 1_000_000)
         confirm(request(token, """{"months":1}""", 100_000))
@@ -62,14 +62,14 @@ class OwnWhatsAppNumberFlowTest {
     }
 
     @Test
-    fun `the Organisation plan and the Organizer Pack include the own number`() {
+    fun `Services Pro and Pro Organisateur include the own number`() {
         val organisation = api.register()
         api
             .post(organisation, "/api/v1/resources", """{"name":"Accueil","type":"PERSON","timezone":"Africa/Conakry"}""")
             .andExpect(status().is2xxSuccessful())
         confirm(
             api
-                .post(organisation, "/api/v1/billing/subscription/request", """{"plan":"Organisation","months":1}""")
+                .post(organisation, "/api/v1/billing/subscription/request", """{"plan":"Services Pro","months":1}""")
                 .andExpect(status().isOk())
                 .andReturn()
                 .response.contentAsString,

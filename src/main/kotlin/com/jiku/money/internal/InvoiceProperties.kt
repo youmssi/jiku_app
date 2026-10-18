@@ -4,15 +4,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import java.math.BigDecimal
 
 /**
- * Invoicing configuration (JIKU-69): who the seller is, and how consumption tax is
- * treated in each country the platform bills into.
- *
- * **No rate is hardcoded and none has a non-zero default.** The GTM plan records
- * Guinea's rate as unconfirmed and warns explicitly that Cameroon's should not be
- * planned against an assumed figure — so shipping a guess here would put a wrong
- * number on a legal document. An unconfigured country bills at zero tax with no
- * tax line, which is visibly wrong to whoever configures it rather than quietly
- * wrong on a customer's invoice.
+ * Invoicing configuration (JIKU-69): who the seller is, and the consumption tax
+ * included in prices in each country the platform bills into (JIKU-268). Rates
+ * come from configuration, never code; a country without one bills at zero
+ * tax with a zero tax line.
  */
 @ConfigurationProperties(prefix = "billing.invoice")
 data class InvoiceProperties(

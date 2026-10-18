@@ -5,6 +5,7 @@ import com.jiku.money.AdminTrialStats
 import com.jiku.money.AdminTrialView
 import com.jiku.money.BillingModuleApi
 import jakarta.validation.Valid
+import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import org.springframework.security.access.prepost.PreAuthorize
@@ -48,13 +49,13 @@ class AdminTrialController(
             billingModuleApi.adminGrantTrial(
                 tenantId = requireNotNull(request.tenantId),
                 eventId = requireNotNull(request.eventId),
-                tier = request.tier,
+                guests = requireNotNull(request.guests),
                 expiresAt = requireNotNull(request.expiresAt),
             )
         auditService.record(
             action = "TRIAL_GRANTED",
             target = "trial:${view.id}",
-            note = "event:${view.eventId} tier:${view.tier} until:${view.expiresAt}",
+            note = "event:${view.eventId} guests:${view.grantedAllowance} until:${view.expiresAt}",
         )
         return view
     }
@@ -75,8 +76,9 @@ data class GrantTrialRequest(
     val tenantId: UUID?,
     @field:NotNull
     val eventId: UUID?,
-    @field:NotBlank
-    val tier: String,
+    @field:NotNull
+    @field:Min(1)
+    val guests: Long?,
     @field:NotNull
     val expiresAt: Instant?,
 )

@@ -23,8 +23,8 @@ import java.util.UUID
  * and auditing are the notification module's job.
  *
  * The people who answered an open invitation "yes" or "maybe" (JIKU-187) are
- * told by WhatsApp, the number they answered with: always on a paid tier, and
- * on the free tier when the organizer chose it in the invitation's settings.
+ * told by WhatsApp, the number they answered with: always on a paid event, and
+ * on the free guests when the organizer chose it in the invitation's settings.
  * A number also on the guest list is told once, through its invitation.
  *
  * Runs on the tenant-aware executor so tenant-scoped reads resolve correctly off
@@ -97,7 +97,7 @@ class EventCancellationNoticeDispatcher(
             }
 
         val open = openInvitations.findByEventId(cancelled.eventId) ?: return
-        if (!open.notifyOnCancel && !allowanceGate.paidTier(cancelled.eventId)) {
+        if (!open.notifyOnCancel && !allowanceGate.paidEvent(cancelled.eventId)) {
             return
         }
         openResponses

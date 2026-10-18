@@ -3,8 +3,9 @@
 **Date :** 2026-09-24, mis à jour le 2026-09-26 (section 6)
 **Statut :** estimation de travail. Les tarifs des prestataires changent ; les
 chiffres sont à revoir à chaque renégociation ou changement de grille.
-**Référence :** ADR 104. La grille et les marges à jour sont dans l'ADR 105,
-qui remplace les prix utilisés ci-dessous.
+**Référence :** ADR 104. La grille à jour est dans l'ADR 109 (prix par invité,
+Pro Organisateur, Services Pro, prix TTC), qui remplace les prix utilisés
+ci-dessous et ceux de l'ADR 105.
 
 Toutes les valeurs sont en francs guinéens (GNF), au taux configuré dans
 l'application : **1 USD = 8 760 GNF** (`billing.custom.usd-to-gnf-rate`).

@@ -12,11 +12,11 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * Orchestrates online payments (JIKU-33): an event's usage tier, and since
- * JIKU-164 every other purchase — plan months, Organizer Pack months and extra
+ * Orchestrates online payments (JIKU-33): an event's guests, and since
+ * JIKU-164 every other purchase — plan months, Pro Organisateur months and extra
  * guests, the own WhatsApp number add-on. Initiation records
- * a PENDING payment and asks the provider to start the flow; a tier is only ever
- * unlocked when the provider confirms the payment server-to-server via the
+ * a PENDING payment and asks the provider to start the flow; a purchase is only
+ * ever granted when the provider confirms the payment server-to-server via the
  * signature-verified callback — never on a client-side "success" — and granted
  * through [PaymentFulfillment], the same step an admin confirmation uses. A failed or
  * timed-out payment leaves the allowance untouched. Callback handling is idempotent.
@@ -50,25 +50,23 @@ class PaymentService(
     private val log = LoggerFactory.getLogger(PaymentService::class.java)
     private val transactions = TransactionTemplate(transactionManager)
 
+    /** Pays for raising [eventId] to [guests] paid guests online. */
     @Transactional
     fun initiate(
         eventId: UUID,
-        tierName: String,
+        guests: Long,
     ): PaymentInitiationResult {
-        val tier =
-            platformSettings.tierByName(tierName)
-                ?: throw IllegalArgumentException("Unknown tier: $tierName")
-        val quote = eventPricing.upgradeQuote(eventId, tier)
+        val quote = eventPricing.quote(eventId, guests)
         return start(
             Payment(
                 eventId = eventId,
-                tier = tier.name,
+                tier = Payment.GUESTS_TIER,
                 amountMinor = quote.amountMinor,
                 currency = quote.currency,
-                interactive = quote.interactive,
                 provider = providers.active.name,
+                guests = guests,
             ),
-            "Unlock ${tier.name} tier",
+            "$guests guests",
         )
     }
 
@@ -88,13 +86,13 @@ class PaymentService(
         )
     }
 
-    /** Pays [months] of Organizer Pack online, with the guests still owed (JIKU-164). */
+    /** Pays [months] of Pro Organisateur online, with the guests still owed (JIKU-164). */
     @Transactional
     fun checkoutPack(months: Int): PaymentInitiationResult {
         val quote = organizerPack.quote(months)
         return start(
             tenantPayment(Payment.KIND_PACK, Payment.PACK_TIER, quote.amountMinor, quote.currency, months, quote.owedGuests),
-            "Organizer Pack for $months months",
+            "Pro Organisateur for $months months",
         )
     }
 
@@ -104,7 +102,7 @@ class PaymentService(
         val quote = organizerPack.quoteExtra(blocks)
         return start(
             tenantPayment(Payment.KIND_PACK_EXTRA, Payment.PACK_TIER, quote.amountMinor, quote.currency, null, quote.guests),
-            "Organizer Pack ${quote.guests} extra guests",
+            "Pro Organisateur ${quote.guests} extra guests",
         )
     }
 
@@ -295,7 +293,7 @@ class PaymentService(
 /** Where a payment stands, for the page the payer lands on after the provider's (JIKU-164). */
 data class PaymentStatusView(
     val paymentId: UUID,
-    /** TIER, SUBSCRIPTION, PACK, PACK_EXTRA, WHATSAPP_NUMBER or COMMISSION. */
+    /** GUESTS, SUBSCRIPTION, PACK, PACK_EXTRA, WHATSAPP_NUMBER or COMMISSION. */
     val kind: String,
     val tier: String,
     val eventId: UUID?,

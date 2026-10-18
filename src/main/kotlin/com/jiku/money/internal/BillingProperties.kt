@@ -5,13 +5,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import java.time.Duration
 
 /**
- * Event pricing (JIKU-32, re-based in ADR 105). The free allowance, the fixed
- * tiers and the per-guest price beyond the last tier are configuration, each
- * price set in GNF, FCFA and USD, so pricing changes without a code change.
+ * Event pricing (JIKU-268). An organization gets [freeTierGuests] guests a
+ * year for free; past that an event buys its guests at [perGuest] each, every
+ * delivery mode included. Prices are tax-inclusive and set in GNF, FCFA and
+ * USD, so pricing changes without a code change.
  */
 @ConfigurationProperties(prefix = "billing")
 data class BillingProperties(
-    /** Distinct invited guests allowed cumulatively per tenant account before a paid tier is required (JIKU-54). */
+    /** Distinct invited guests allowed cumulatively per tenant account before an event must buy its guests (JIKU-54). */
     val freeTierGuests: Long = 100,
     /**
      * Rolling window over which [freeTierGuests] accumulates, per tenant
@@ -21,32 +22,22 @@ data class BillingProperties(
      * "rolling 12 months".
      */
     val freeTierWindow: Duration = Duration.ofDays(365),
-    /** Fixed-price paid tiers, ascending by allowance. Each unlocks up to [Tier.maxGuests]. */
-    val tiers: List<Tier> =
-        listOf(
-            Tier(name = "BRONZE", maxGuests = 300, price = PriceList(225_000, 15_000, 2_500)),
-            Tier(name = "ARGENT", maxGuests = 600, price = PriceList(375_000, 25_000, 4_500)),
-            Tier(name = "OR", maxGuests = 1_000, price = PriceList(600_000, 40_000, 7_000)),
-        ),
-    /** Price of each guest beyond the last fixed tier, added to that tier's price. */
-    val beyondPerGuest: PriceList = PriceList(500, 35, 6),
-    /**
-     * Added per guest of a paid tier when the event's guests answer in WhatsApp
-     * (ADR 105, INTERACTIVE mode). The free tier includes every mode.
-     */
-    val interactivePerGuest: PriceList = PriceList(150, 10, 2),
-    /** The Organizer Pack (ADR 105), for planners, agencies and venues. */
+    /** Price of one guest of an event, all delivery modes included. */
+    val perGuest: PriceList = PriceList(750, 50, 8),
+    /** Most guests one event purchase may cover, a guard against a mistyped figure. */
+    val maxGuestsPerEvent: Long = 100_000,
+    /** Pro Organisateur (the Organizer Pack in code), for planners, agencies and venues. */
     val pack: Pack = Pack(),
     /** Sending from the organization's own WhatsApp number (ADR 105). */
     val ownWhatsAppNumber: OwnWhatsAppNumber = OwnWhatsAppNumber(),
 ) {
     /**
      * The own-number add-on's monthly price; the plans in [includedPlans] and
-     * an active Organizer Pack include it.
+     * an active Pro Organisateur include it.
      */
     data class OwnWhatsAppNumber(
         val monthly: PriceList = PriceList(100_000, 7_000, 1_200),
-        val includedPlans: List<String> = listOf("Organisation"),
+        val includedPlans: List<String> = listOf("Services Pro"),
     )
 
     /**
@@ -61,25 +52,14 @@ data class BillingProperties(
         val extraBlockGuests: Long = 100,
     )
 
-    data class Tier(
-        val name: String,
-        /** Inclusive upper bound of invited guests this tier unlocks. */
-        val maxGuests: Long,
-        val price: PriceList,
-    )
-
-    /** Tier name for a given number of invited guests (usage volume). */
-    fun tierForUsage(invitedGuests: Long): String =
-        when {
-            invitedGuests <= freeTierGuests -> FREE_TIER
-            else -> tiers.firstOrNull { invitedGuests <= it.maxGuests }?.name ?: CUSTOM_TIER
-        }
-
-    /** The smallest fixed-price tier that unlocks at least [invitedGuests]; null beyond the last tier. */
-    fun tierForAllowance(invitedGuests: Long): Tier? = tiers.firstOrNull { invitedGuests <= it.maxGuests }
-
     companion object {
+        /** An event within the organization's free guests. */
         const val FREE_TIER = "FREE"
-        const val CUSTOM_TIER = "CUSTOM"
+
+        /** An event that bought its guests. */
+        const val PAID_TIER = "PAID"
+
+        /** An event covered by Pro Organisateur. */
+        const val PACK_TIER = "PACK"
     }
 }

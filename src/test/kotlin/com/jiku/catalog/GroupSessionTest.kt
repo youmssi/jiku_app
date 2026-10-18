@@ -37,7 +37,7 @@ import kotlin.test.assertTrue
 /**
  * Group sessions (JIKU-174): one resource serves several clients in the same
  * slot, up to the service's clients per slot, itself capped by the plan (Solo 1,
- * Teams 10, Organisation 30). Each client takes one place; a place is never sold
+ * Services Pro 30). Each client takes one place; a place is never sold
  * twice, even under concurrent bookings.
  */
 @SpringBootTest
@@ -71,7 +71,7 @@ class GroupSessionTest {
 
     @Test
     fun `a group session fills place by place, then closes`() {
-        val tenant = tenantOnPlan("Teams")
+        val tenant = tenantOnPlan("Services Pro")
         addRoom(tenant, "Studio")
         val yoga = addService(tenant, "Yoga", clientsPerSlot = 3)
 
@@ -87,7 +87,7 @@ class GroupSessionTest {
 
     @Test
     fun `a resource in one session offers no place to another service or another start`() {
-        val tenant = tenantOnPlan("Teams")
+        val tenant = tenantOnPlan("Services Pro")
         addRoom(tenant, "Studio")
         val yoga = addService(tenant, "Yoga", clientsPerSlot = 5)
         configService.update(yoga, ServiceConfigUpdate(durationMinutes = 60))
@@ -115,15 +115,15 @@ class GroupSessionTest {
         assertEquals(HttpStatus.CONFLICT, refused.statusCode)
         assertEquals(1, configService.effective(service).maxClientsPerSlot)
 
-        val organisation = tenantOnPlan("Organisation")
-        val big = addService(organisation, "Visite guidée", clientsPerSlot = 30)
+        val pro = tenantOnPlan("Services Pro")
+        val big = addService(pro, "Visite guidée", clientsPerSlot = 30)
         assertEquals(30, configService.effective(big).clientsPerSlot)
         assertThrows<ResponseStatusException> { configService.update(big, ServiceConfigUpdate(clientsPerSlot = 31)) }
     }
 
     @Test
     fun `a downgrade never leaves a session larger than the new plan`() {
-        val tenant = tenantOnPlan("Teams")
+        val tenant = tenantOnPlan("Services Pro")
         val service = addService(tenant, "Yoga", clientsPerSlot = 8)
         assertEquals(8, configService.effective(service).clientsPerSlot)
 
@@ -135,7 +135,7 @@ class GroupSessionTest {
 
     @Test
     fun `concurrent bookings never sell more places than the session holds`() {
-        val tenant = tenantOnPlan("Teams")
+        val tenant = tenantOnPlan("Services Pro")
         addRoom(tenant, "Studio")
         val yoga = addService(tenant, "Yoga", clientsPerSlot = 3)
 

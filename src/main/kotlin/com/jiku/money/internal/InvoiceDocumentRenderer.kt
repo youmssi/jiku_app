@@ -103,13 +103,13 @@ class InvoiceDocumentRenderer {
         PdfPTable(floatArrayOf(6f, 3f)).apply {
             widthPercentage = 100f
             horizontalAlignment = Element.ALIGN_RIGHT
-            addCell(PdfDocument.bodyCell("Subtotal", Element.ALIGN_RIGHT))
+            addCell(PdfDocument.bodyCell("Total excl. tax", Element.ALIGN_RIGHT))
             addCell(PdfDocument.bodyCell(MoneyFormat.format(invoice.subtotalMinor, invoice.currency), Element.ALIGN_RIGHT))
             // The tax row is printed even at zero so the document never leaves a
             // reader guessing whether tax was considered.
-            addCell(PdfDocument.bodyCell(invoice.taxLabel ?: "Tax (${percent(invoice.taxRate)})", Element.ALIGN_RIGHT))
+            addCell(PdfDocument.bodyCell("${invoice.taxLabel ?: "Tax (${percent(invoice.taxRate)})"} included", Element.ALIGN_RIGHT))
             addCell(PdfDocument.bodyCell(MoneyFormat.format(invoice.taxAmountMinor, invoice.currency), Element.ALIGN_RIGHT))
-            addCell(PdfDocument.totalCell("Total"))
+            addCell(PdfDocument.totalCell("Total incl. tax"))
             addCell(PdfDocument.totalCell(MoneyFormat.format(invoice.totalMinor, invoice.currency)))
         }
 

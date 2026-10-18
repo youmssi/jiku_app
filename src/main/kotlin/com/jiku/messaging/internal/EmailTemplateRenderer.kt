@@ -254,7 +254,7 @@ class EmailTemplateRenderer(
     private fun paymentValues(notice: ManualPaymentNotice): Map<String, String> =
         mapOf(
             "organizerName" to notice.organizerName,
-            "tier" to notice.tier,
+            "guests" to notice.guests.toString(),
             "reference" to notice.reference,
         )
 
@@ -264,7 +264,7 @@ class EmailTemplateRenderer(
     ): String =
         detailsTable(
             listOf(
-                catalog.text(language, "label.tier") to notice.tier,
+                catalog.text(language, "label.guests") to notice.guests.toString(),
                 catalog.text(language, "label.reference") to notice.reference,
                 catalog.text(language, "label.amount") to formatAmount(notice.amountMinor, notice.currency),
             ),

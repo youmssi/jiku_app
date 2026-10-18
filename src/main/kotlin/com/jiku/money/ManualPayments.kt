@@ -12,6 +12,8 @@ data class ManualPaymentInstructions(
     val paymentId: UUID,
     val reference: String,
     val tier: String,
+    /** Paid guests the event is raised to; null for any other purchase. */
+    val guests: Long?,
     val amountMinor: Long,
     val currency: String,
     val status: String,
@@ -34,6 +36,8 @@ data class AdminPaymentView(
     /** Nul pour un renouvellement d'abonnement (JIKU-90). */
     val eventId: UUID?,
     val tier: String,
+    /** Guests the payment buys or settles; null when it buys none. */
+    val guests: Long?,
     val amountMinor: Long,
     val currency: String,
     val provider: String,
@@ -42,11 +46,12 @@ data class AdminPaymentView(
     val createdAt: Instant,
 )
 
-/** Réglages de facturation lus par le bureau admin (bénéficiaire + grilles de prix). */
+/** Réglages de facturation lus par le bureau admin (bénéficiaire, prix par invité, formules). */
 data class PlatformBillingSettingsView(
     val currency: String,
     val payee: PayeeDetails,
-    val tiers: List<BillingTierOption>,
+    /** Tax-inclusive price of one event guest (JIKU-268). */
+    val perGuest: PriceList,
     val subscriptionPlans: List<SubscriptionPlanOption>,
     /** Vrai quand la base remplace la configuration d'environnement. */
     val managedInDatabase: Boolean,
@@ -55,7 +60,7 @@ data class PlatformBillingSettingsView(
 /** Mise à jour du bureau admin : listes complètes (une soumission remplace tout). */
 data class PlatformBillingSettingsUpdate(
     val payee: PayeeDetails,
-    val tiers: List<BillingTierOption>,
+    val perGuest: PriceList,
     val subscriptionPlans: List<SubscriptionPlanOption>,
 )
 

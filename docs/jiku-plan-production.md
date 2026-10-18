@@ -50,7 +50,7 @@ décrite dans `docs/backlog/phase-7-suite.md` et datée au §5.
 | Opérateur avec périmètre, équipe, console unique | ✅ Prêt | JIKU-116, JIKU-162, JIKU-163 |
 | Plusieurs monnaies (GNF, FCFA, USD) | ✅ Prêt | ADR 105, JIKU-137, JIKU-138 |
 | Votre propre numéro WhatsApp (Embedded Signup) | ✅ Prêt | JIKU-154, JIKU-155, JIKU-156 |
-| Séances collectives (plusieurs clients par créneau) | ✅ Prêt | JIKU-174 : Solo 1, Teams 10, Organisation 30 |
+| Séances collectives (plusieurs clients par créneau) | ✅ Prêt | JIKU-174 : Solo 1, Services Pro 30 (ADR 109) |
 | Vérification des organisateurs | ✅ Prêt | JIKU-175, JIKU-176 : personnelle ou entreprise, documents sur R2, file de revue, badge public |
 | Vente publique de billets (commande, page d'achat) | ✅ Prêt | JIKU-177 : places gardées, paiement déclaré puis confirmé, onglet Commandes |
 | Commission de 3 % par tranche | ✅ Prêt | JIKU-178 : tranche offerte, à crédit, jamais de pause le jour J, avoir de 12 mois |
@@ -111,7 +111,7 @@ l'ordre.
 | 2.2 | app, web | Réglages « moyens de paiement » de l'organisation : coordonnées Mobile Money, lien de paiement |
 | 2.3 | app, web | Statut de paiement du ticket ; action « payé » (ou « payé en espèces ») dans les consoles de scan et de file ; ticket émis seulement après paiement quand la règle est « Avant » |
 | 2.4 | app, web | Paiement du palier d'un événement en une fois, au moment de l'action : retrait de l'acompte de 30 % et de sa grille de remboursement (simulateur, parcours `/reserver`, module `booking`) |
-| 2.5 | app, web | Séances collectives : plusieurs clients par ressource et par créneau, plafond selon l'offre (Solo 1, Teams 10, Organisation 30, Entreprise sur devis), proposition de créer un événement au-delà |
+| 2.5 | app, web | Séances collectives : plusieurs clients par ressource et par créneau, plafond selon l'offre (Solo 1, Services Pro 30 depuis l'ADR 109, Entreprise sur devis), proposition de créer un événement au-delà |
 | 2.6 | web | Refonte du simulateur (référentiel métier, §11) |
 
 ### Phase 3 — SMS et repli

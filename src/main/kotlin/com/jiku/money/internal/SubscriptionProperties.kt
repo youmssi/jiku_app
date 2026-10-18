@@ -5,28 +5,22 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import java.time.Duration
 
 /**
- * Services plans (ADR 105, decision 2). A plan is priced for the team: a
- * monthly price that includes [Plan.includedPeople] people who serve clients,
- * plus [Plan.extraPerson] for each one beyond. Paying yearly charges
- * [Period.chargedMonths] of the twelve. Everything here is configuration.
+ * Services plans (JIKU-268): Solo, free for one person, and Services Pro,
+ * priced per person who serves clients. A plan's monthly price includes
+ * [Plan.includedPeople] people, plus [Plan.extraPerson] for each one beyond.
+ * Paying yearly charges [Period.chargedMonths] of the twelve. Everything here
+ * is configuration.
  */
 @ConfigurationProperties(prefix = "billing.subscription")
 data class SubscriptionProperties(
     val plans: List<Plan> =
         listOf(
             Plan(name = "Solo", includedPeople = 1, maxPeople = 1, monthly = PriceList.FREE),
-            Plan(name = "Solo Plus", includedPeople = 1, maxPeople = 1, monthly = PriceList(50_000, 3_500, 600)),
             Plan(
-                name = "Teams",
-                includedPeople = 2,
-                monthly = PriceList(150_000, 10_000, 1_700),
-                extraPerson = PriceList(50_000, 3_500, 600),
-            ),
-            Plan(
-                name = "Organisation",
-                includedPeople = 5,
-                monthly = PriceList(350_000, 25_000, 4_000),
-                extraPerson = PriceList(40_000, 2_500, 500),
+                name = "Services Pro",
+                includedPeople = 1,
+                monthly = PriceList(60_000, 4_000, 700),
+                extraPerson = PriceList(60_000, 4_000, 700),
             ),
         ),
     val periods: List<Period> =
@@ -46,7 +40,7 @@ data class SubscriptionProperties(
      * Clients one resource may serve in the same slot, by plan name (référentiel
      * métier §3). A plan missing here serves one client at a time.
      */
-    val clientsPerSlot: Map<String, Int> = mapOf("Solo" to 1, "Solo Plus" to 1, "Teams" to 10, "Organisation" to 30),
+    val clientsPerSlot: Map<String, Int> = mapOf("Solo" to 1, "Services Pro" to 30),
 ) {
     fun period(months: Int): Period? = periods.firstOrNull { it.months == months }
 }
