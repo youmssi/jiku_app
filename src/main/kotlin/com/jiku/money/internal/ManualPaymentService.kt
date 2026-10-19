@@ -19,10 +19,10 @@ import java.util.UUID
 
 /**
  * The manual ("concierge") payment flow (JIKU-41), the interim path while no
- * automated payment provider is integrated: the organizer requests a tier, pays
- * the displayed payee by Mobile Money or bank transfer quoting a generated
- * reference, and a platform admin confirms receipt — which unlocks the tier
- * through the same [TierUnlockService] a provider callback uses. Money always
+ * automated payment provider is integrated: the organizer requests guests or a
+ * plan, pays the displayed payee by Mobile Money or bank transfer quoting a
+ * generated reference, and a platform admin confirms receipt — which grants it
+ * through the same [PaymentFulfillment] a provider callback uses. Money always
  * moves before activation; the platform never collects any payment credential.
  */
 @Service
@@ -262,8 +262,8 @@ class ManualPaymentService(
     }
 
     /**
-     * Admin confirms the transfer arrived: the payment succeeds and the tier
-     * unlocks — atomically, under the payment's own tenant. Idempotence: a
+     * Admin confirms the transfer arrived: the payment succeeds and what it paid
+     * for is granted — atomically, under the payment's own tenant. Idempotence: a
      * non-PENDING payment is refused rather than silently re-processed.
      */
     fun confirm(paymentId: UUID): AdminPaymentView = resolve(paymentId, succeeded = true, note = null)

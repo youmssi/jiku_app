@@ -1,7 +1,7 @@
 # ADR 109 — Tarification simplifiée : un prix par invité, deux offres Pro, prix TTC
 
 **Statut :** accepté.
-**Date :** 2026-10-18
+**Date :** 2026-10-18, complété le 2026-10-19 (JIKU-270)
 **Remplace :** la grille de l'ADR 105 (paliers Bronze, Argent, Or, palier sur
 mesure, supplément interactif, formules Solo Plus, Teams et Organisation).
 L'ADR 105 reste valable pour les trois monnaies, le numéro WhatsApp propre et
@@ -28,8 +28,8 @@ honorer.
 | Offre | GNF | FCFA | USD |
 |---|---|---|---|
 | Gratuit : 100 invités par an, et Solo (1 personne, 50 rappels WhatsApp par mois) | 0 | 0 | 0 |
-| Par événement, par invité, tout inclus | 750 | 50 | 0,08 |
-| Pro Organisateur, par mois : 1 000 invités, puis par invité | 600 000, puis 600 | 40 000, puis 40 | 70, puis 0,07 |
+| Par événement, par invité au-delà des invités gratuits, tout inclus | 750 | 50 | 0,09 |
+| Pro Organisateur, par mois : 1 000 invités, puis par invité | 600 000, puis 600 | 40 000, puis 40 | 72, puis 0,07 |
 | Services Pro, par personne et par mois : groupes jusqu'à 30, 1 000 rappels WhatsApp par personne (usage raisonnable) | 60 000 | 4 000 | 7 |
 | Entreprise | sur devis | | |
 
@@ -76,3 +76,51 @@ rédaction et à l'envoi, sans coût par message.
   livraison.
 - Les conditions générales mentionnent l'usage raisonnable des rappels de
   Services Pro et les prix TTC.
+
+## Décision 5 — Le même seuil dans les trois monnaies (JIKU-270)
+
+À 70 USD et 0,08 USD par invité, Pro Organisateur devenait rentable à 875
+invités en dollars contre 800 en francs. Le dollar suit maintenant le même
+rapport : **72 USD par mois et 0,09 USD par invité**, soit 800 invités partout.
+Les deux prix montent légèrement au lieu de baisser le pack : aucune marge
+n'est perdue, et ils restent proches des prix en FCFA (40 000 FCFA ≈ 71 USD,
+50 FCFA ≈ 0,09 USD).
+
+## Décision 6 — Seuls les invités au-delà des invités gratuits sont payés
+
+À son premier achat, un événement est couvert par les invités gratuits que
+l'organisation peut encore utiliser : un événement de 120 invités qui n'a pas
+entamé les 100 invités gratuits paie 20 invités, pas 120. Ces invités gratuits
+sont alors réservés à cet événement, pour qu'un autre ne les utilise pas aussi.
+Le premier paiement reste petit, ce qui facilite la première conversion ; le
+manque à gagner est au plus 100 invités par organisation et par an.
+
+## Décision 7 — Une marge le jour de l'événement
+
+Dans les 24 heures autour du début d'un événement payé par invité ou gratuit,
+l'envoi continue jusqu'à 20 % au-delà de ses invités, au moins 20 invités
+(`billing.event-day-grace`). Les invités en plus restent comptés et apparaissent
+comme à payer sur l'écran de facturation. Pro Organisateur n'a pas de limite ce
+jour-là (ADR 105). La validation à l'entrée n'est jamais bloquée.
+
+## Décision 8 — L'usage raisonnable de Services Pro est appliqué
+
+Une offre payante de services envoie au plus 1 000 rappels WhatsApp par personne
+et par mois depuis le numéro Jikū (`billing.subscription.paid-plan-whatsapp-reminders-per-person`).
+Au-delà, les rappels passent par les autres canaux jusqu'au mois suivant. Les
+rappels envoyés depuis le numéro propre de l'organisation ne comptent pas.
+
+## Décision 9 — Factures en français et en anglais
+
+Chaque libellé de la facture est écrit en français puis en anglais. Le français
+est la langue officielle des pays où Jikū facture ; l'anglais sert un client
+ailleurs, sans produire un document par langue.
+
+## Décision 10 — Mots promotionnels comparés par mots entiers
+
+Meta ne publie pas de liste de mots interdits : il classe un modèle selon son
+contenu. La liste suit ses règles (offres, remises, coupons, « achetez
+maintenant », urgence d'achat) et n'utilise que des expressions là où un mot
+seul est courant dans une invitation (« entrée gratuite », une liste de
+cadeaux, un solde à régler, la remise des diplômes, une promotion d'étudiants).
+Chaque entrée est comparée comme mot entier.

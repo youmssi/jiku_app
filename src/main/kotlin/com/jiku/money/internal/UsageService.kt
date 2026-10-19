@@ -24,6 +24,8 @@ class UsageService(
     private val trialService: TrialService,
     private val tenantQuota: TenantQuotaService,
     private val organizerPack: OrganizerPackService,
+    private val eventDay: EventDay,
+    private val properties: BillingProperties,
 ) {
     @Transactional
     fun allowance(eventId: UUID): BillingAllowance {
@@ -79,6 +81,7 @@ class UsageService(
             invitationsSentEmail = sent.email,
             invitationsSentWhatsapp = sent.whatsapp,
             paidGuests = paidGuests,
+            freeGuests = if (paidGuests > 0 || organizerPack.isActive()) 0 else tenantQuota.freeCeilingFor(invited),
         )
     }
 
@@ -114,6 +117,7 @@ class UsageService(
                 pack != null -> pack
                 else -> tenantQuota.freeCeilingFor(alreadyCommitted)
             }
-        return maxOf(base, trialService.liveTrialAllowance(eventId) ?: 0)
+        val ceiling = maxOf(base, trialService.liveTrialAllowance(eventId) ?: 0)
+        return if (unlimitedOnEventDay && eventDay.isEventDay(eventId)) properties.eventDayGrace.raise(ceiling) else ceiling
     }
 }

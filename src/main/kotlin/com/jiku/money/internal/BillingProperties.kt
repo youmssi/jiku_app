@@ -23,9 +23,11 @@ data class BillingProperties(
      */
     val freeTierWindow: Duration = Duration.ofDays(365),
     /** Price of one guest of an event, all delivery modes included. */
-    val perGuest: PriceList = PriceList(750, 50, 8),
+    val perGuest: PriceList = PriceList(750, 50, 9),
     /** Most guests one event purchase may cover, a guard against a mistyped figure. */
     val maxGuestsPerEvent: Long = 100_000,
+    /** Room an event gets past its guests on its day, so a last-minute guest is never refused at the door. */
+    val eventDayGrace: EventDayGrace = EventDayGrace(),
     /** Pro Organisateur (the Organizer Pack in code), for planners, agencies and venues. */
     val pack: Pack = Pack(),
     /** Sending from the organization's own WhatsApp number (ADR 105). */
@@ -41,12 +43,28 @@ data class BillingProperties(
     )
 
     /**
+     * Within a day of an event's start, an event past its guests may still send
+     * to [percent] % more, at least [minGuests]. Those guests stay counted and
+     * show as owed on the billing screen.
+     */
+    data class EventDayGrace(
+        val percent: Long = 20,
+        val minGuests: Long = 20,
+    ) {
+        /** The ceiling in force on the event's day for a [ceiling] that applies otherwise. */
+        fun raise(ceiling: Long): Long {
+            if (ceiling >= Long.MAX_VALUE / 2) return ceiling
+            return ceiling + maxOf(minGuests, ceiling * percent / 100)
+        }
+    }
+
+    /**
      * A monthly price for [includedGuests] guests a month across every event,
      * all delivery modes included. More guests are bought ahead in blocks of
      * [extraBlockGuests] at [extraPerGuest] each; unused guests do not carry over.
      */
     data class Pack(
-        val monthly: PriceList = PriceList(600_000, 40_000, 7_000),
+        val monthly: PriceList = PriceList(600_000, 40_000, 7_200),
         val includedGuests: Long = 1_000,
         val extraPerGuest: PriceList = PriceList(600, 40, 7),
         val extraBlockGuests: Long = 100,
