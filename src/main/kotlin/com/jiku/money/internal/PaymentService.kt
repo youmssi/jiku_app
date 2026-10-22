@@ -14,7 +14,7 @@ import java.util.UUID
 /**
  * Orchestrates online payments (JIKU-33): an event's guests, and since
  * JIKU-164 every other purchase — plan months, Pro Organisateur months and extra
- * guests, the own WhatsApp number add-on. Initiation records
+ * guests, commission batches. Initiation records
  * a PENDING payment and asks the provider to start the flow; a purchase is only
  * ever granted when the provider confirms the payment server-to-server via the
  * signature-verified callback — never on a client-side "success" — and granted
@@ -33,7 +33,6 @@ class PaymentService(
     private val eventPricing: EventPricing,
     private val subscriptionService: SubscriptionService,
     private val organizerPack: OrganizerPackService,
-    private val ownWhatsAppNumber: OwnWhatsAppNumberService,
     transactionManager: PlatformTransactionManager,
 ) {
     enum class CallbackOutcome {
@@ -103,16 +102,6 @@ class PaymentService(
         return start(
             tenantPayment(Payment.KIND_PACK_EXTRA, Payment.PACK_TIER, quote.amountMinor, quote.currency, null, quote.guests),
             "Pro Organisateur ${quote.guests} extra guests",
-        )
-    }
-
-    /** Pays [months] of the own WhatsApp number add-on online (JIKU-164). */
-    @Transactional
-    fun checkoutOwnWhatsAppNumber(months: Int): PaymentInitiationResult {
-        val quote = ownWhatsAppNumber.quote(months)
-        return start(
-            tenantPayment(Payment.KIND_WHATSAPP_NUMBER, Payment.OWN_NUMBER_TIER, quote.amountMinor, quote.currency, months, 0),
-            "Own WhatsApp number for $months months",
         )
     }
 
@@ -293,7 +282,7 @@ class PaymentService(
 /** Where a payment stands, for the page the payer lands on after the provider's (JIKU-164). */
 data class PaymentStatusView(
     val paymentId: UUID,
-    /** GUESTS, SUBSCRIPTION, PACK, PACK_EXTRA, WHATSAPP_NUMBER or COMMISSION. */
+    /** GUESTS, SUBSCRIPTION, PACK, PACK_EXTRA or COMMISSION. */
     val kind: String,
     val tier: String,
     val eventId: UUID?,

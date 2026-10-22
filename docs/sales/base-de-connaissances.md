@@ -57,7 +57,7 @@ peut répondre à leurs questions (§4.2), mais la publicité ne les vise pas en
 - **Marque de l'organisation** : logo, couleurs et nom sur les invitations, billets et pages ; Jikū reste en coulisses.
 - **Équipe** : membres avec rôles ; opérateurs (contrôle, guichet, encaissement) avec un lien personnel révocable.
 - **Vérification de l'organisation** (personnelle ou entreprise), demandée avant d'encaisser ; badge « vérifié » visible des invités.
-- **Son propre numéro WhatsApp** : en option, les messages partent du numéro de l'organisation (Meta lui facture ces messages).
+- **Son propre numéro WhatsApp** : gratuit dans toutes les offres ; les messages partent du numéro de l'organisation (Meta lui facture ces messages).
 - **Deux langues** : français et anglais, sur le site et les pages des invités.
 - **Données** : chaque invité peut demander la suppression de ses données ; anonymisation automatique après la période de conservation.
 
@@ -108,8 +108,11 @@ Côte d'Ivoire et au Sénégal) : le montant affiché est le montant payé. Prix
 - **Argument** : « Vos invitations partent de **votre** numéro, avec **votre** nom ;
   vos contacts restent les vôtres. » Le branchement prend quelques minutes depuis
   les réglages.
-- **Inclus** dans Pro Organisateur et Services Pro ; en option à 100 000 GNF /
-  7 000 FCFA / 12 USD par mois pour les autres.
+- **Gratuit dans toutes les offres**, y compris Gratuit et Solo. Jikū ne facture
+  rien pour le brancher ; Meta facture directement les messages à l'organisation.
+- Les étapes (compte Meta Business, vérification de l'entreprise, moyen de
+  paiement, nom affiché) sont dans le guide « Brancher votre numéro WhatsApp »
+  de /docs.
 - Meta facture alors les messages directement à l'organisation : il faut une carte
   bancaire acceptée sur son compte WhatsApp Business. Si ce n'est pas possible, le
   numéro Jikū reste le choix par défaut.
@@ -126,8 +129,8 @@ Côte d'Ivoire et au Sénégal) : le montant affiché est le montant payé. Prix
 ### 4.3 Comment payer Jikū
 
 - Depuis **Facturation** dans l'espace de l'organisation ; le montant exact s'affiche avant le paiement.
-- En ligne via CinetPay (Mobile Money, carte) ou par transfert Mobile Money manuel avec une référence ; l'activation d'un transfert manuel est confirmée par l'équipe, pas instantanée.
-- **En Guinée, en Côte d'Ivoire et au Sénégal**, le paiement en ligne passe par CinetPay, qui accepte les Mobile Money des opérateurs de chaque pays et la carte bancaire ; l'organisation paie dans sa monnaie (GNF ou FCFA), ou en USD par carte. Un moyen de paiement précis (un opérateur donné) n'est jamais promis : si la personne ne le trouve pas au moment de payer, l'assistant passe la main.
+- Par transfert Orange Money, MTN MoMo ou virement bancaire, avec la référence affichée dans **Demander l'activation** ; l'équipe confirme et active, en général en quelques heures. Ce n'est pas instantané.
+- Le paiement en ligne n'est pas encore ouvert : ne jamais le promettre ni donner de date. Un moyen de paiement précis (un opérateur donné) n'est jamais promis : si la personne ne le trouve pas, l'assistant passe la main.
 - **L'assistant ne demande jamais** de numéro de carte, de code ou de mot de passe.
 
 ## 5. Feuille de route

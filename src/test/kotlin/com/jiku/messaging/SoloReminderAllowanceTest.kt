@@ -1,7 +1,6 @@
 package com.jiku.messaging
 
 import com.jiku.TestcontainersConfiguration
-import com.jiku.money.internal.OwnWhatsAppNumberService
 import com.jiku.money.internal.ReminderAllowanceService
 import com.jiku.money.internal.Subscription
 import com.jiku.money.internal.SubscriptionRepository
@@ -63,9 +62,6 @@ class SoloReminderAllowanceTest {
     lateinit var deliveries: Deliveries
 
     @Autowired
-    lateinit var ownNumber: OwnWhatsAppNumberService
-
-    @Autowired
     lateinit var subscriptions: SubscriptionRepository
 
     @AfterEach
@@ -119,9 +115,6 @@ class SoloReminderAllowanceTest {
         val api = OrganizerApi(mockMvc)
         val token = api.register()
         val tenantId = api.tenantId(token)
-        TenantContext.set(tenantId)
-        ownNumber.confirm(1)
-        TenantContext.clear()
         api
             .put(token, "/api/v1/settings/providers/whatsapp", """{"accessToken":"EAAown1234","phoneNumberId":"1098765432"}""")
             .andExpect(status().isOk())

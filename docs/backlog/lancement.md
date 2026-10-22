@@ -34,6 +34,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-268 | Tarification simplifiée, prix TTC, limite WhatsApp à 3 000 (ADR 109) | app, web | — |
 | JIKU-269 | Vérification des messages WhatsApp pendant la rédaction et guide d'écriture | app, web | JIKU-268 |
 | JIKU-270 | Tarifs alignés, invités gratuits déduits, marge le jour J, usage raisonnable appliqué, devise par pays | app, web | JIKU-269 |
+| JIKU-271 | Numéro WhatsApp propre gratuit dans toutes les offres et guide de branchement | app, web | JIKU-270 |
 
 ---
 
@@ -479,4 +480,16 @@ bloqué le jour de son événement et l'usage raisonnable de Services Pro n'éta
 - [x] Les mots promotionnels sont comparés par mots entiers et ne repèrent plus les tournures courantes d'une invitation
 - [x] Web : la devise affichée suit le pays du visiteur (GNF en Guinée, FCFA dans l'UEMOA et la CEMAC, USD ailleurs), FCFA par défaut en français et USD en anglais, avec un sélecteur retenu
 - [x] Web : l'écran de facturation déduit les invités gratuits de l'estimation
+
+## JIKU-271 — Numéro WhatsApp propre gratuit et guide de branchement
+
+**Pourquoi.** Brancher son numéro ne coûte rien à Jikū et soulage le numéro
+partagé ; le faire payer contredisait le discours (ADR 109, décision 11).
+
+**Critères d'acceptation.**
+
+- [x] Toute offre, Gratuit compris, peut brancher son propre numéro WhatsApp ; l'option payante et sa table sont retirées
+- [x] Les pages publiques, les CGU et la base de connaissances le disent
+- [x] Un guide FR/EN « Brancher votre numéro WhatsApp » détaille le compte Meta Business, la vérification, le moyen de paiement, le nom affiché, les limites et les erreurs courantes
+- [x] Le guide « Écrire un message WhatsApp qui passe » cite la liste de mots de JIKU-270
 

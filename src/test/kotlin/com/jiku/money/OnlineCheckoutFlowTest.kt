@@ -85,15 +85,9 @@ class OnlineCheckoutFlowTest {
     }
 
     @Test
-    fun `extra guests, the own number and a plan are all paid online`() {
+    fun `extra guests and a plan are paid online`() {
         val token = api.register()
         val tenantId = api.tenantId(token)
-
-        pay(token, tenantId, "/api/v1/billing/whatsapp-number/checkout", """{"months":1}""")
-        api
-            .get(token, "/api/v1/billing/whatsapp-number")
-            .andExpect(jsonPath("$.allowed").value(true))
-            .andExpect(jsonPath("$.source").value("ADDON"))
 
         api.post(token, "/api/v1/billing/pack/extra/checkout", """{"blocks":1}""").andExpect(status().isConflict())
         pay(token, tenantId, "/api/v1/billing/pack/checkout", """{"months":1}""")
