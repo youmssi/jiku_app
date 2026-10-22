@@ -3,7 +3,6 @@ package com.jiku.messaging
 import com.jiku.TestcontainersConfiguration
 import com.jiku.messaging.internal.MetaWebhookSignature
 import com.jiku.messaging.internal.WhatsAppTemplateKind
-import com.jiku.money.internal.OwnWhatsAppNumberService
 import com.jiku.shared.TenantContext
 import com.jiku.support.OrganizerApi
 import com.sun.net.httpserver.HttpServer
@@ -55,9 +54,6 @@ class EmbeddedSignupTest {
     @Autowired
     lateinit var mockMvc: MockMvc
 
-    @Autowired
-    lateinit var ownNumber: OwnWhatsAppNumberService
-
     private lateinit var api: OrganizerApi
 
     @BeforeEach
@@ -82,10 +78,6 @@ class EmbeddedSignupTest {
             .andExpect(jsonPath("$.configId").value("cfg-42"))
         val phoneNumberId = numberId()
         val body = """{"code":"good-code","wabaId":"waba-1","phoneNumberId":"$phoneNumberId"}"""
-        api.post(token, SIGNUP, body).andExpect(status().isPaymentRequired())
-        assertTrue(calls.isEmpty(), "nothing reaches Meta without an offer that includes the number")
-
-        allowOwnNumber(token)
         api
             .post(token, SIGNUP, body)
             .andExpect(status().isOk())
@@ -118,7 +110,6 @@ class EmbeddedSignupTest {
     @Test
     fun `a refused code or a number another organization holds connects nothing`() {
         val token = api.register()
-        allowOwnNumber(token)
         val phoneNumberId = numberId()
         api
             .post(token, SIGNUP, """{"code":"bad-code","wabaId":"waba-2","phoneNumberId":"$phoneNumberId"}""")
@@ -127,7 +118,6 @@ class EmbeddedSignupTest {
 
         api.post(token, SIGNUP, """{"code":"good-code","wabaId":"waba-2","phoneNumberId":"$phoneNumberId"}""").andExpect(status().isOk())
         val other = api.register()
-        allowOwnNumber(other)
         api
             .post(other, SIGNUP, """{"code":"good-code","wabaId":"waba-3","phoneNumberId":"$phoneNumberId"}""")
             .andExpect(status().isConflict())
@@ -136,7 +126,6 @@ class EmbeddedSignupTest {
     @Test
     fun `a guest who writes to the organization's number is answered from it`() {
         val token = api.register()
-        allowOwnNumber(token)
         val phoneNumberId = numberId()
         api.post(token, SIGNUP, """{"code":"good-code","wabaId":"waba-4","phoneNumberId":"$phoneNumberId"}""").andExpect(status().isOk())
         calls.clear()
@@ -155,12 +144,6 @@ class EmbeddedSignupTest {
         val answer = calls.single { it.path == "/$phoneNumberId/messages" }
         assertEquals("Bearer BIZTOKEN", answer.auth)
         assertTrue("+224611223344" in answer.body, answer.body)
-    }
-
-    private fun allowOwnNumber(token: String) {
-        TenantContext.set(api.tenantId(token))
-        ownNumber.confirm(1)
-        TenantContext.clear()
     }
 
     private fun numberId(): String = Random.nextLong(100_000_000_000, 999_999_999_999).toString()

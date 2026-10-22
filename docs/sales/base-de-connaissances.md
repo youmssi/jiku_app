@@ -57,7 +57,7 @@ peut répondre à leurs questions (§4.2), mais la publicité ne les vise pas en
 - **Marque de l'organisation** : logo, couleurs et nom sur les invitations, billets et pages ; Jikū reste en coulisses.
 - **Équipe** : membres avec rôles ; opérateurs (contrôle, guichet, encaissement) avec un lien personnel révocable.
 - **Vérification de l'organisation** (personnelle ou entreprise), demandée avant d'encaisser ; badge « vérifié » visible des invités.
-- **Son propre numéro WhatsApp** : en option, les messages partent du numéro de l'organisation (Meta lui facture ces messages).
+- **Son propre numéro WhatsApp** : gratuit dans toutes les offres ; les messages partent du numéro de l'organisation (Meta lui facture ces messages).
 - **Deux langues** : français et anglais, sur le site et les pages des invités.
 - **Données** : chaque invité peut demander la suppression de ses données ; anonymisation automatique après la période de conservation.
 
@@ -76,15 +76,25 @@ Côte d'Ivoire et au Sénégal) : le montant affiché est le montant payé. Prix
 | Offre | GNF | FCFA | USD | Pour qui |
 |---|---|---|---|---|
 | **Gratuit** | 0 | 0 | 0 | Pour essayer : 100 invités par an sur tous les événements, et Solo (1 personne, 50 rappels WhatsApp par mois) |
-| **Par événement** | 750 par invité | 50 par invité | 0,08 par invité | Un événement de temps en temps ; tout est inclus (réponse dans WhatsApp, billets, contrôle) |
-| **Pro Organisateur** | 600 000 par mois | 40 000 par mois | 70 par mois | Wedding planners, agences, salles : 1 000 invités par mois sur tous les événements, puis 600 GNF / 40 FCFA / 0,07 USD par invité |
+| **Par événement** | 750 par invité | 50 par invité | 0,09 par invité | Un événement de temps en temps ; tout est inclus (réponse dans WhatsApp, billets, contrôle). Seuls les invités au-delà des invités gratuits sont payés |
+| **Pro Organisateur** | 600 000 par mois | 40 000 par mois | 72 par mois | Wedding planners, agences, salles : 1 000 invités par mois sur tous les événements, puis 600 GNF / 40 FCFA / 0,07 USD par invité |
 | **Services Pro** | 60 000 par personne et par mois | 4 000 | 7 | Salons, cliniques, coachs : séances de groupe jusqu'à 30 clients, 1 000 rappels WhatsApp par personne et par mois (usage raisonnable) |
 | **Entreprise** | Sur devis | | | Gros volumes, besoins sur mesure |
 
 - **Repère de choix** : Pro Organisateur devient moins cher que « Par événement »
   dès **800 invités par mois**. Sous ce seuil, payer à l'événement.
-- Exemple : un mariage de 300 invités = 300 × 750 = **225 000 GNF**, tout compris.
+- Exemple : un mariage de 300 invités = 300 × 750 = **225 000 GNF**, tout compris ;
+  si c'est le premier événement de l'année, les 100 invités gratuits sont déduits :
+  200 × 750 = **150 000 GNF**.
+- Les invités gratuits restants sont déduits du premier achat : un événement de
+  120 invités, sans autre événement dans l'année, paie 20 invités (15 000 GNF).
 - Un événement qui a déjà payé ses invités et en ajoute ne paie que les nouveaux.
+- Le jour de l'événement, l'envoi ne s'arrête pas net : il continue jusqu'à 20 %
+  au-delà (au moins 20 invités), à régler ensuite. La validation à l'entrée
+  n'est jamais bloquée.
+- Services Pro : au-delà de 1 000 rappels WhatsApp par personne et par mois sur
+  le numéro Jikū, les rappels passent par les autres canaux du service ; sur le numéro propre du
+  client, pas de limite.
 - Pour une carte partagée, seuls les « oui » et leurs accompagnants comptent.
 - Paiement à l'année sur Pro Organisateur et Services Pro : 10 mois payés,
   **2 mois offerts**.
@@ -97,9 +107,12 @@ Côte d'Ivoire et au Sénégal) : le montant affiché est le montant payé. Prix
 
 - **Argument** : « Vos invitations partent de **votre** numéro, avec **votre** nom ;
   vos contacts restent les vôtres. » Le branchement prend quelques minutes depuis
-  les réglages et ne coûte rien à Jikū ni au client.
-- **Inclus** dans Pro Organisateur et Services Pro ; en option à 100 000 GNF /
-  7 000 FCFA / 12 USD par mois pour les autres.
+  les réglages.
+- **Gratuit dans toutes les offres**, y compris Gratuit et Solo. Jikū ne facture
+  rien pour le brancher ; Meta facture directement les messages à l'organisation.
+- Les étapes (compte Meta Business, vérification de l'entreprise, moyen de
+  paiement, nom affiché) sont dans le guide « Brancher votre numéro WhatsApp »
+  de /docs.
 - Meta facture alors les messages directement à l'organisation : il faut une carte
   bancaire acceptée sur son compte WhatsApp Business. Si ce n'est pas possible, le
   numéro Jikū reste le choix par défaut.
@@ -116,8 +129,8 @@ Côte d'Ivoire et au Sénégal) : le montant affiché est le montant payé. Prix
 ### 4.3 Comment payer Jikū
 
 - Depuis **Facturation** dans l'espace de l'organisation ; le montant exact s'affiche avant le paiement.
-- En ligne via CinetPay (Mobile Money, carte) ou par transfert Mobile Money manuel avec une référence ; l'activation d'un transfert manuel est confirmée par l'équipe, pas instantanée.
-- **En Guinée, en Côte d'Ivoire et au Sénégal**, le paiement en ligne passe par CinetPay, qui accepte les Mobile Money des opérateurs de chaque pays et la carte bancaire ; l'organisation paie dans sa monnaie (GNF ou FCFA), ou en USD par carte. Un moyen de paiement précis (un opérateur donné) n'est jamais promis : si la personne ne le trouve pas au moment de payer, l'assistant passe la main.
+- Par transfert Orange Money, MTN MoMo ou virement bancaire, avec la référence affichée dans **Demander l'activation** ; l'équipe confirme et active, en général en quelques heures. Ce n'est pas instantané.
+- Le paiement en ligne n'est pas encore ouvert : ne jamais le promettre ni donner de date. Un moyen de paiement précis (un opérateur donné) n'est jamais promis : si la personne ne le trouve pas, l'assistant passe la main.
 - **L'assistant ne demande jamais** de numéro de carte, de code ou de mot de passe.
 
 ## 5. Feuille de route

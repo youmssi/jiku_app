@@ -1,6 +1,5 @@
 package com.jiku.messaging.internal
 
-import com.jiku.shared.OwnWhatsAppNumberGate
 import com.jiku.shared.TenantContext
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -20,7 +19,6 @@ class TenantProviderSettingsService(
     private val cipher: CredentialsCipher,
     private val objectMapper: ObjectMapper,
     private val resolver: MessagingProviderResolver,
-    private val ownNumberGate: OwnWhatsAppNumberGate,
     private val numbers: WhatsAppBusinessNumberRepository,
     private val platformLimits: WhatsAppPlatformLimits,
 ) {
@@ -46,7 +44,6 @@ class TenantProviderSettingsService(
 
     @Transactional
     fun updateWhatsApp(request: UpdateWhatsAppProviderRequest): ProviderSettingsResponse {
-        requireOwnNumberAllowed()
         saveWhatsApp(
             MetaCloudCredentials(
                 phoneNumberId = request.phoneNumberId.trim(),
@@ -57,15 +54,6 @@ class TenantProviderSettingsService(
             TenantProviderSettings.PROVIDER_META_CLOUD,
         )
         return overview()
-    }
-
-    fun requireOwnNumberAllowed() {
-        if (!ownNumberGate.ownNumberAllowed()) {
-            throw ResponseStatusException(
-                HttpStatus.PAYMENT_REQUIRED,
-                "Your own WhatsApp number comes with Services Pro, Pro Organisateur or its monthly add-on",
-            )
-        }
     }
 
     /** Saves the organization's WhatsApp credentials and routes its number's incoming messages to it. */
@@ -189,7 +177,7 @@ class TenantProviderSettingsService(
     private fun whatsAppView(): WhatsAppProviderView {
         val row =
             repository.findByChannel(TenantProviderSettings.CHANNEL_WHATSAPP)
-                ?: return WhatsAppProviderView(configured = false, allowed = ownNumberGate.ownNumberAllowed())
+                ?: return WhatsAppProviderView(configured = false)
         val credentials = objectMapper.readValue(cipher.decrypt(row.credentials), MetaCloudCredentials::class.java)
         return WhatsAppProviderView(
             configured = true,
@@ -198,7 +186,6 @@ class TenantProviderSettingsService(
             accessTokenMasked = maskSecret(credentials.accessToken),
             templateName = credentials.templateName,
             templateLanguage = credentials.templateLanguage,
-            allowed = ownNumberGate.ownNumberAllowed(),
             displayPhoneNumber = credentials.displayPhoneNumber,
             verifiedName = credentials.verifiedName,
         )

@@ -47,7 +47,7 @@ interface BillingModuleApi {
         size: Int,
     ): List<AdminPaymentView>
 
-    /** Confirms a manual payment's transfer arrived and unlocks its tier. */
+    /** Confirms a manual payment's transfer arrived and grants what it paid for. */
     fun adminConfirmManualPayment(paymentId: UUID): AdminPaymentView
 
     /** Rejects a pending manual payment with a reason. */
@@ -117,4 +117,9 @@ data class BillingAllowance(
     val invitationsSentWhatsapp: Long,
     /** Guests the event bought (JIKU-268); buying more charges only those above it. */
     val paidGuests: Long = 0,
+    /**
+     * Free guests a first purchase leaves out of the price (JIKU-270): the event's
+     * own plus those the organization has left, until it buys guests.
+     */
+    val freeGuests: Long = 0,
 )

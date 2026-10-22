@@ -28,12 +28,19 @@ class WhatsAppContentGuard(
      * gets the verdict the send will get.
      */
     fun promotionalWords(body: String): List<String> {
-        val normalized = body.lowercase()
+        val normalized = body.lowercase().replace(WHITESPACE, " ")
         return properties.marketingMarkers
             .split(",")
             .map { it.trim().lowercase() }
-            .filter { it.isNotEmpty() && normalized.contains(it) }
+            .filter { it.isNotEmpty() && wholeWords(it).containsMatchIn(normalized) }
             .distinct()
+    }
+
+    /** [marker] as whole words, so "promo" does not flag "promotionnel". */
+    private fun wholeWords(marker: String): Regex {
+        val start = if (marker.first().isLetterOrDigit()) "(?<![\\p{L}\\p{N}])" else ""
+        val end = if (marker.last().isLetterOrDigit()) "(?![\\p{L}\\p{N}])" else ""
+        return Regex(start + Regex.escape(marker.replace(WHITESPACE, " ")) + end)
     }
 
     fun assertAllowed(category: String) {
@@ -47,5 +54,9 @@ class WhatsAppContentGuard(
                     "enable the admin content override to send it anyway",
             )
         }
+    }
+
+    private companion object {
+        val WHITESPACE = Regex("\\s+")
     }
 }

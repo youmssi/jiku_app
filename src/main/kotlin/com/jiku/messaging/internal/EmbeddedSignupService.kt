@@ -47,7 +47,6 @@ class EmbeddedSignupService(
 
     fun complete(request: CompleteEmbeddedSignupRequest): ProviderSettingsResponse {
         if (!enabled()) throw ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Embedded Signup is not configured")
-        settings.requireOwnNumberAllowed()
         val wabaId = request.wabaId.trim()
         val phoneNumberId = request.phoneNumberId.trim()
         val credentials =

@@ -3,6 +3,7 @@ package com.jiku.messaging.internal
 import com.jiku.shared.ManualPaymentNotice
 import com.jiku.shared.MemberInvitationNotice
 import com.jiku.shared.MessageLanguage
+import com.jiku.shared.MoneyFormat
 import com.jiku.shared.TicketConfirmedNotice
 import org.springframework.stereotype.Component
 import java.util.Locale
@@ -318,7 +319,7 @@ class EmailTemplateRenderer(
         amountMinor: Long,
         currency: String,
     ): String {
-        val major = if (currency.uppercase() in ZERO_DECIMAL_CURRENCIES) amountMinor else amountMinor / 100
+        val major = if (MoneyFormat.isZeroDecimal(currency)) amountMinor else amountMinor / 100
         val grouped = String.format(Locale.ROOT, "%,d", major).replace(',', ' ')
         return "$grouped $currency"
     }
@@ -334,8 +335,5 @@ class EmailTemplateRenderer(
         const val PLATFORM_ACCENT = "#1d1a16"
 
         const val SANS = "-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
-
-        val ZERO_DECIMAL_CURRENCIES =
-            setOf("BIF", "CLP", "DJF", "GNF", "JPY", "KMF", "KRW", "MGA", "PYG", "RWF", "UGX", "VND", "VUV", "XAF", "XOF", "XPF")
     }
 }

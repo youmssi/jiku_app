@@ -18,10 +18,10 @@ d'affaires ni dans les coûts ci-dessous.
 
 | Action | Prestataire | Coût unitaire | En GNF |
 |---|---|---|---|
-| E-mail | Resend (au-delà du forfait) | 0,90 USD / 1 000 | ≈ 8 |
+| E-mail | useSend sur AWS SES | 0,10 USD / 1 000 | ≈ 1 |
 | Message WhatsApp utilitaire (Afrique hors pays listés) | Meta | 0,004 USD | ≈ 35 |
 | Message WhatsApp marketing (même zone) | Meta | 0,0225 USD | ≈ 197 |
-| SMS en Guinée | Nimba SMS | jusqu'à 110 GNF | 110 |
+| SMS en Guinée (coupé au lancement, ADR 108) | Nimba SMS | jusqu'à 110 GNF | 110 |
 | Encaissement d'un revenu de Jikū | CinetPay, taux public brut | 3,5 % du montant | — |
 
 Trois conséquences directes :
@@ -75,19 +75,23 @@ la vente (ADR 104, §8).
 
 ## 3. Coûts fixes mensuels
 
-| Poste | ~100 organisations clientes | ~1 000 organisations clientes |
-|---|---|---|
-| API (Render Standard, puis Pro ou deux instances) | 25 USD | 85 USD |
-| Web (Vercel Pro) | 20 USD | 20 USD |
-| Base de données (Neon, à l'usage) | ≈ 20 USD | ≈ 70 USD |
-| E-mail (Resend Pro, puis Scale) | 20 USD | 90 USD |
-| Suivi des erreurs (Sentry) | 0 USD | 26 USD |
-| Débordement e-mail, domaine, divers | ≈ 5 USD | ≈ 40 USD |
-| **Total** | **≈ 90 USD (≈ 0,8 M GNF)** | **≈ 330 USD (≈ 2,9 M GNF)** |
+La pile de lancement tient sur un serveur (ADR 107 et 108) :
 
-L'infrastructure pèse peu. Le runbook Hetzner de `docs/deploy.md` peut encore
-réduire le poste API (une petite machine coûte quelques euros par mois), au
-prix d'une exploitation à assurer soi-même.
+| Poste | $ par mois |
+|---|---|
+| Serveur Hetzner CX43 (web, API, PostgreSQL, Chatwoot, n8n) | ≈ 16 |
+| E-mail (useSend sur AWS SES) | 10 |
+| Nom de domaine | 1 |
+| Assistant commercial (Haiku, plafond 15 $) | ≈ 5 |
+| Crédit prépayé Meta (WhatsApp) | ≈ 20 |
+| SMS | 0 |
+| Publicité Facebook vers WhatsApp | 150 |
+| Réserve | ≈ 28 |
+| **Total** | **≈ 230 $ (≈ 2 M GNF)** |
+
+Sans la publicité, l'infrastructure coûte environ 80 $ par mois. Le serveur
+suffit jusqu'à ce que la mémoire ou le processeur dépassent 70 % en continu
+(ADR 108, décision 1).
 
 **Non compté ici :** salaires, support, marketing et vente, frais juridiques
 et comptables, impôts, frais de création de l'entreprise. Ce sont eux, et non
@@ -111,6 +115,9 @@ et un équivalent en USD est affiché à titre indicatif, comme sur le simulateu
 aujourd'hui.
 
 ## 5. Scénarios de revenus et valorisation
+
+> Calculés sur une grille antérieure (paliers, Teams). Les chiffres à jour sont
+> dans la section 7.
 
 Hypothèses (à ajuster) sur la répartition des organisations **payantes** :
 
@@ -144,6 +151,9 @@ Lecture :
   plutôt vers plusieurs centaines d'organisations payantes.
 
 ## 6. Mise à jour du 26 septembre 2026
+
+> Grille de l'ADR 105, remplacée par l'ADR 109. Les chiffres à jour sont dans
+> la section 7.
 
 Recalcul avec la grille de l'ADR 105 et les tarifs publics vérifiés ce jour.
 
@@ -217,15 +227,47 @@ Un investissement de 60 M GNF est remboursé en environ 13 mois au niveau
 prudent et en 3 mois au niveau central, une fois ce niveau atteint. La
 commission sur les billets vendus suppose la phase 6, pas encore construite.
 
+## 7. Mise à jour du 22 octobre 2026 (ADR 109)
+
+Grille de l'ADR 109 (décisions 1 à 11) et pile de l'ADR 108. Hypothèses : prix
+TTC, TVA de 18 % extraite, 3,5 % de frais d'encaissement, 121 GNF de messages
+par invité, 35 GNF par rappel WhatsApp.
+
+### Ce qui reste par vente
+
+| Produit | Prix TTC | Hors taxe | Ce qui reste | Marge sur le hors taxe |
+|---|---|---|---|---|
+| Événement de 300 invités payés | 225 000 | 190 678 | 146 503 | 77 % |
+| Le même, premier de l'année (100 invités gratuits déduits) | 150 000 | 127 119 | 85 569 | 67 % |
+| Pro Organisateur, 1 000 invités dans le mois | 600 000 | 508 475 | 366 475 | 72 % |
+| Services Pro, une personne, 300 rappels WhatsApp | 60 000 | 50 847 | 38 247 | 75 % |
+| Numéro WhatsApp propre | 0 | 0 | 0 | Meta facture l'organisation ; Jikū ne paie plus ses messages |
+
+### Seuil de rentabilité
+
+Les charges fixes de lancement sont d'environ 230 $ par mois, soit environ
+2 M GNF, publicité comprise (ADR 108). Elles sont couvertes par **l'une** de ces
+combinaisons :
+
+- 6 Pro Organisateur ;
+- 53 personnes en Services Pro ;
+- environ 4 100 invités payés par événement, chaque mois.
+
+### Encaissement
+
+CinetPay a refusé le compte le 20 octobre 2026 : la Guinée est temporairement
+indisponible chez eux, et une structure doit être enregistrée en Côte d'Ivoire,
+au Burkina Faso, au Cameroun, au Togo ou en RDC. Jusqu'à la signature d'un
+prestataire, les paiements passent par le circuit manuel Mobile Money, sans
+frais de prestataire (les 3,5 % ci-dessus sont alors une marge de sécurité).
+
 ## Sources
 
 - CinetPay : [tarification des paiements](https://support.cinetpay.com/d/52-tarifications-des-paiements-entrants-et-sortants), [solde et délai de règlement](https://docs.cinetpay.com/api/1.0-fr/BO/finance)
 - WhatsApp : [tarifs Meta](https://developers.facebook.com/documentation/business-messaging/whatsapp/pricing), [synthèse 2026](https://sleekflow.io/blog/whatsapp-business-price)
 - Nimba SMS : [tarifs](https://www.nimbasms.com/nos-tarifs)
-- Resend : [tarifs](https://resend.com/docs/knowledge-base/what-is-resend-pricing)
-- Render : [coûts d'hébergement](https://render.com/articles/how-much-does-cloud-application-hosting-cost-for-small-businesses)
-- Neon : [tarifs](https://neon.com/pricing)
+- AWS SES : [tarifs](https://aws.amazon.com/ses/pricing/)
+- Hetzner : [serveurs cloud](https://www.hetzner.com/cloud)
 - WhatsApp, 1er octobre 2026 : [YCloud](https://www.ycloud.com/blog/whatsapp-api-message-pricing-update-effective-october-1-2026), [360dialog](https://360dialog.com/blog/whatsapp-service-message-charging-october-2026/)
 - CinetPay : [conditions (réserve carte)](https://cinetpay.com/legal/cgu-services), [retards de reversement](https://techcabal.com/2026/02/01/cinetpay-cyberattack/)
-- Hébergement : [Vercel Pro](https://vercel.com/docs/plans/pro-plan), [Render](https://render.com/pricing), [Google Workspace](https://workspace.google.com/pricing)
 - Valorisation : [SaaS Capital, SaaS autofinancés 2026](https://www.saas-capital.com/blog-posts/benchmarking-metrics-for-bootstrapped-saas-companies/), [multiples par tranche de revenu](https://windsordrake.com/saas-valuation-multiples/)

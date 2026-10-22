@@ -608,6 +608,10 @@
             "format" : "int64",
             "type" : "integer"
           },
+          "freeGuests" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
           "guestsImported" : {
             "format" : "int64",
             "type" : "integer"
@@ -653,16 +657,6 @@
             ],
             "type" : "string"
           },
-          "ownWhatsAppNumber" : {
-            "type" : "boolean"
-          },
-          "ownWhatsAppNumberAddonExpiresAt" : {
-            "format" : "date-time",
-            "type" : [
-              "string",
-              "null"
-            ]
-          },
           "packActive" : {
             "type" : "boolean"
           },
@@ -684,14 +678,7 @@
             ]
           },
           "whatsAppReminders" : {
-            "oneOf" : [
-              {
-                "$ref" : "#/components/schemas/ReminderAllowance"
-              },
-              {
-                "type" : "null"
-              }
-            ]
+            "$ref" : "#/components/schemas/ReminderAllowance"
           }
         },
         "type" : "object"
@@ -1701,6 +1688,10 @@
           },
           "currency" : {
             "type" : "string"
+          },
+          "freeGuests" : {
+            "format" : "int64",
+            "type" : "integer"
           },
           "guests" : {
             "format" : "int64",
@@ -3735,49 +3726,6 @@
           "totalMinor" : {
             "format" : "int64",
             "type" : "integer"
-          }
-        },
-        "type" : "object"
-      },
-      "OwnWhatsAppNumberView" : {
-        "properties" : {
-          "addonExpiresAt" : {
-            "format" : "date-time",
-            "type" : [
-              "string",
-              "null"
-            ]
-          },
-          "allowed" : {
-            "type" : "boolean"
-          },
-          "currency" : {
-            "type" : "string"
-          },
-          "includedPlans" : {
-            "items" : {
-              "type" : "string"
-            },
-            "type" : "array"
-          },
-          "monthlyMinor" : {
-            "format" : "int64",
-            "type" : "integer"
-          },
-          "months" : {
-            "items" : {
-              "$ref" : "#/components/schemas/MonthOption"
-            },
-            "type" : "array"
-          },
-          "source" : {
-            "enum" : [
-              "PLAN",
-              "PACK",
-              "ADDON",
-              "NONE"
-            ],
-            "type" : "string"
           }
         },
         "type" : "object"
@@ -7481,9 +7429,6 @@
               "null"
             ]
           },
-          "allowed" : {
-            "type" : "boolean"
-          },
           "configured" : {
             "type" : "boolean"
           },
@@ -10088,86 +10033,6 @@
         },
         "tags" : [
           "subscription-controller"
-        ]
-      }
-    },
-    "/api/v1/billing/whatsapp-number" : {
-      "get" : {
-        "operationId" : "ownWhatsAppNumberOwnNumberView",
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/OwnWhatsAppNumberView"
-                }
-              }
-            },
-            "description" : "OK"
-          }
-        },
-        "tags" : [
-          "own-whats-app-number-controller"
-        ]
-      }
-    },
-    "/api/v1/billing/whatsapp-number/checkout" : {
-      "post" : {
-        "operationId" : "ownWhatsAppNumberCheckoutOwnNumber",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/PackRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PaymentInitiationResult"
-                }
-              }
-            },
-            "description" : "OK"
-          }
-        },
-        "tags" : [
-          "own-whats-app-number-controller"
-        ]
-      }
-    },
-    "/api/v1/billing/whatsapp-number/request" : {
-      "post" : {
-        "operationId" : "ownWhatsAppNumberRequestOwnNumber",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/PackRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ManualPaymentInstructions"
-                }
-              }
-            },
-            "description" : "OK"
-          }
-        },
-        "tags" : [
-          "own-whats-app-number-controller"
         ]
       }
     },

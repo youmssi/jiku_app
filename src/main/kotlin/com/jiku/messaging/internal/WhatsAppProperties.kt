@@ -22,15 +22,22 @@ data class WhatsAppProperties(
     /** USD-to-GNF rate used to record WhatsApp message cost in both currencies. */
     val usdToGnfRate: Long = 8760,
     /**
-     * Comma-separated, case-insensitive substrings that mark a rendered body as
-     * promotional (MARKETING) rather than transactional (UTILITY) content, in
-     * French and English since organizers write in both. Configurable, not
+     * Comma-separated, case-insensitive words and phrases that mark a rendered
+     * body as promotional (MARKETING) rather than transactional (UTILITY)
+     * content, in French and English since organizers write in both. Meta
+     * publishes no word list; these follow its template guidelines (offers,
+     * discounts, coupons, buy-now calls, limited-time pressure) and stay phrases
+     * where a single word is common in invitations ("entrée gratuite", a gift
+     * list, an amount still due). Matched as whole words. Configurable, not
      * hardcoded, because what counts as promotional is a judgment call that may
      * need tuning without a redeploy.
      */
     val marketingMarkers: String =
-        "promo,réduction,solde,gratuit,offre spéciale,cadeau,bon plan,code promo,achetez maintenant," +
-            "discount,special offer,free gift,buy now,limited offer,% off",
+        "promo,code promo,coupon,réduction,rabais,soldes,prix cassé,offre spéciale," +
+            "offre exclusive,offre limitée,bon plan,achetez maintenant,achetez vite,commandez maintenant," +
+            "essai gratuit,cadeau offert,cadeau gratuit,livraison gratuite,black friday,discount,promo code," +
+            "special offer,exclusive offer,limited offer,limited time,buy now,shop now,order now,free gift," +
+            "free trial,free shipping,% off",
     val health: Health = Health(),
 ) {
     /** How Jikū reacts to what Meta reports about its templates and numbers (JIKU-209). */

@@ -4,8 +4,7 @@ import org.springframework.stereotype.Component
 
 /**
  * What a succeeded payment grants, by kind (JIKU-164): an event's guests, months
- * of a services plan or of Pro Organisateur, extra pack guests, or months of the own
- * WhatsApp number add-on. The one place both confirmation paths go through — an
+ * of a services plan or of Pro Organisateur, or extra pack guests. The one place both confirmation paths go through — an
  * admin confirming a manual transfer and a provider confirming an online payment —
  * so a kind is never granted differently depending on how it was paid.
  */
@@ -14,7 +13,6 @@ class PaymentFulfillment(
     private val eventGuests: EventGuestsUnlock,
     private val subscriptionService: SubscriptionService,
     private val organizerPack: OrganizerPackService,
-    private val ownWhatsAppNumber: OwnWhatsAppNumberService,
     private val commission: CommissionService,
 ) {
     /** Grants what [payment] paid for. Runs in the caller's transaction, under the payment's tenant. */
@@ -26,8 +24,6 @@ class PaymentFulfillment(
             Payment.KIND_PACK -> organizerPack.confirmPack(requireNotNull(payment.subscriptionMonths), payment.guests ?: 0)
 
             Payment.KIND_PACK_EXTRA -> organizerPack.confirmExtra(payment.guests ?: 0)
-
-            Payment.KIND_WHATSAPP_NUMBER -> ownWhatsAppNumber.confirm(requireNotNull(payment.subscriptionMonths))
 
             Payment.KIND_COMMISSION -> commission.activatePaid(requireNotNull(payment.commissionBatchId))
 

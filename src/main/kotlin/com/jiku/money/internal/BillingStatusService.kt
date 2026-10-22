@@ -18,20 +18,16 @@ class BillingStatusService(
     private val properties: SubscriptionProperties,
     private val platformSettings: PlatformBillingSettingsService,
     private val packs: OrganizerPackService,
-    private val ownNumber: OwnWhatsAppNumberService,
     private val reminders: ReminderAllowanceService,
 ) {
     fun status(now: Instant = Instant.now()): BillingStatusView {
         val subscription = subscriptions.findCurrent().firstOrNull()?.let { summarize(it, now) }
         val pack = packs.view()
-        val number = ownNumber.view()
         return BillingStatusView(
             attention = subscription?.attention ?: BillingAttention.NONE,
             subscription = subscription,
             packActive = pack.active,
             packExpiresAt = pack.expiresAt,
-            ownWhatsAppNumber = number.allowed,
-            ownWhatsAppNumberAddonExpiresAt = number.addonExpiresAt,
             whatsAppReminders = reminders.view(),
         )
     }
@@ -86,11 +82,8 @@ data class BillingStatusView(
     val subscription: SubscriptionStatusSummary?,
     val packActive: Boolean,
     val packExpiresAt: Instant?,
-    val ownWhatsAppNumber: Boolean,
-    /** End of the paid add-on, when that is what provides the number. */
-    val ownWhatsAppNumberAddonExpiresAt: Instant?,
-    /** WhatsApp reminders used this month; null without a monthly cap. */
-    val whatsAppReminders: ReminderAllowance?,
+    /** WhatsApp reminders sent this month from Jikū's number, and the plan's monthly cap. */
+    val whatsAppReminders: ReminderAllowance,
 )
 
 data class SubscriptionStatusSummary(

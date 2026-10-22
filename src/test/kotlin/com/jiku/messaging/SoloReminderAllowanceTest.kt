@@ -1,8 +1,9 @@
 package com.jiku.messaging
 
 import com.jiku.TestcontainersConfiguration
-import com.jiku.money.internal.OwnWhatsAppNumberService
 import com.jiku.money.internal.ReminderAllowanceService
+import com.jiku.money.internal.Subscription
+import com.jiku.money.internal.SubscriptionRepository
 import com.jiku.shared.ReminderChannel
 import com.jiku.shared.ReminderDelivered
 import com.jiku.shared.ReminderDue
@@ -36,9 +37,15 @@ import kotlin.test.assertEquals
  * ADR 105: a free services plan includes a set number of WhatsApp reminders a
  * month. Past them, reminders stop by WhatsApp; a channel with an SMS fallback
  * still reaches the client by SMS. Reminders sent from the organization's own
- * number are billed to it by Meta and do not count.
+ * number are billed to it by Meta and do not count. A paid plan's fair use
+ * (JIKU-268) caps them per person who serves clients the same way.
  */
-@SpringBootTest(properties = ["billing.subscription.free-plan-whatsapp-reminders=2"])
+@SpringBootTest(
+    properties = [
+        "billing.subscription.free-plan-whatsapp-reminders=2",
+        "billing.subscription.paid-plan-whatsapp-reminders-per-person=3",
+    ],
+)
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration::class, SoloReminderAllowanceTest.Deliveries::class)
 class SoloReminderAllowanceTest {
@@ -55,7 +62,7 @@ class SoloReminderAllowanceTest {
     lateinit var deliveries: Deliveries
 
     @Autowired
-    lateinit var ownNumber: OwnWhatsAppNumberService
+    lateinit var subscriptions: SubscriptionRepository
 
     @AfterEach
     fun clearTenant() {
@@ -72,11 +79,35 @@ class SoloReminderAllowanceTest {
 
         assertEquals(listOf(true, true, false), outcomes.map { it.delivered })
         TenantContext.set(tenantId)
-        assertEquals(2, allowance.view()?.sent)
-        assertEquals(2, allowance.view()?.limit)
+        assertEquals(2, allowance.view().sent)
+        assertEquals(2, allowance.view().limit)
         TenantContext.clear()
 
         assertEquals(true, remind(tenantId, phone, ReminderChannel.WHATSAPP_OR_SMS).delivered)
+    }
+
+    @Test
+    fun `a paid plan's reminders stop by WhatsApp past its fair use`() {
+        val api = OrganizerApi(mockMvc)
+        val tenantId = api.tenantId(api.register())
+        TenantContext.set(tenantId)
+        subscriptions.save(
+            Subscription(
+                plan = "Services Pro",
+                resourceLimit = null,
+                resourcesActive = 1,
+                startedAt = Instant.now(),
+                expiresAt = Instant.now().plus(Duration.ofDays(30)),
+            ),
+        )
+        TenantContext.clear()
+        val phone = "+22462" + Random.nextInt(1_000_000, 9_999_999)
+
+        val outcomes = (1..4).map { remind(tenantId, phone, ReminderChannel.WHATSAPP) }
+
+        assertEquals(listOf(true, true, true, false), outcomes.map { it.delivered })
+        TenantContext.set(tenantId)
+        assertEquals(3, allowance.view().limit)
     }
 
     @Test
@@ -84,9 +115,6 @@ class SoloReminderAllowanceTest {
         val api = OrganizerApi(mockMvc)
         val token = api.register()
         val tenantId = api.tenantId(token)
-        TenantContext.set(tenantId)
-        ownNumber.confirm(1)
-        TenantContext.clear()
         api
             .put(token, "/api/v1/settings/providers/whatsapp", """{"accessToken":"EAAown1234","phoneNumberId":"1098765432"}""")
             .andExpect(status().isOk())
@@ -96,7 +124,7 @@ class SoloReminderAllowanceTest {
 
         assertEquals(listOf(true, true, true), outcomes.map { it.delivered })
         TenantContext.set(tenantId)
-        assertEquals(0, allowance.view()?.sent)
+        assertEquals(0, allowance.view().sent)
     }
 
     private fun remind(

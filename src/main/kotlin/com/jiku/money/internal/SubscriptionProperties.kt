@@ -37,6 +37,12 @@ data class SubscriptionProperties(
     /** WhatsApp appointment reminders a free plan includes each calendar month (ADR 105). */
     val freePlanWhatsAppReminders: Int = 50,
     /**
+     * Fair use of a paid plan (JIKU-268): WhatsApp reminders each person who
+     * serves clients may send each calendar month from Jikū's number. Past it,
+     * reminders go by the other channels until the next month.
+     */
+    val paidPlanWhatsAppRemindersPerPerson: Int = 1_000,
+    /**
      * Clients one resource may serve in the same slot, by plan name (référentiel
      * métier §3). A plan missing here serves one client at a time.
      */
