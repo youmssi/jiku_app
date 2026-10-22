@@ -71,7 +71,6 @@ class Payment(
         const val KIND_SUBSCRIPTION = "SUBSCRIPTION"
         const val KIND_PACK = "PACK"
         const val KIND_PACK_EXTRA = "PACK_EXTRA"
-        const val KIND_WHATSAPP_NUMBER = "WHATSAPP_NUMBER"
         const val KIND_COMMISSION = "COMMISSION"
 
         /** The [tier] label of an event's guests payment. */
@@ -82,8 +81,5 @@ class Payment(
 
         /** The [tier] label of a Pro Organisateur or pack extra payment. */
         const val PACK_TIER = "PACK"
-
-        /** The [tier] label of an own WhatsApp number payment. */
-        const val OWN_NUMBER_TIER = "WHATSAPP_NUMBER"
     }
 }

@@ -116,6 +116,9 @@ aujourd'hui.
 
 ## 5. Scénarios de revenus et valorisation
 
+> Calculés sur une grille antérieure (paliers, Teams). Les chiffres à jour sont
+> dans la section 7.
+
 Hypothèses (à ajuster) sur la répartition des organisations **payantes** :
 
 - 50 % font des événements avec tickets gratuits : 1,5 événement par an, prix
@@ -148,6 +151,9 @@ Lecture :
   plutôt vers plusieurs centaines d'organisations payantes.
 
 ## 6. Mise à jour du 26 septembre 2026
+
+> Grille de l'ADR 105, remplacée par l'ADR 109. Les chiffres à jour sont dans
+> la section 7.
 
 Recalcul avec la grille de l'ADR 105 et les tarifs publics vérifiés ce jour.
 
@@ -220,6 +226,40 @@ Organisation, 11 Packs Organisateur, 9 événements Or ou 116 Solo Plus par mois
 Un investissement de 60 M GNF est remboursé en environ 13 mois au niveau
 prudent et en 3 mois au niveau central, une fois ce niveau atteint. La
 commission sur les billets vendus suppose la phase 6, pas encore construite.
+
+## 7. Mise à jour du 22 octobre 2026 (ADR 109)
+
+Grille de l'ADR 109 (décisions 1 à 11) et pile de l'ADR 108. Hypothèses : prix
+TTC, TVA de 18 % extraite, 3,5 % de frais d'encaissement, 121 GNF de messages
+par invité, 35 GNF par rappel WhatsApp.
+
+### Ce qui reste par vente
+
+| Produit | Prix TTC | Hors taxe | Ce qui reste | Marge sur le hors taxe |
+|---|---|---|---|---|
+| Événement de 300 invités payés | 225 000 | 190 678 | 146 503 | 77 % |
+| Le même, premier de l'année (100 invités gratuits déduits) | 150 000 | 127 119 | 85 569 | 67 % |
+| Pro Organisateur, 1 000 invités dans le mois | 600 000 | 508 475 | 366 475 | 72 % |
+| Services Pro, une personne, 300 rappels WhatsApp | 60 000 | 50 847 | 38 247 | 75 % |
+| Numéro WhatsApp propre | 0 | 0 | 0 | Meta facture l'organisation ; Jikū ne paie plus ses messages |
+
+### Seuil de rentabilité
+
+Les charges fixes de lancement sont d'environ 230 $ par mois, soit environ
+2 M GNF, publicité comprise (ADR 108). Elles sont couvertes par **l'une** de ces
+combinaisons :
+
+- 6 Pro Organisateur ;
+- 53 personnes en Services Pro ;
+- environ 4 100 invités payés par événement, chaque mois.
+
+### Encaissement
+
+CinetPay a refusé le compte le 20 octobre 2026 : la Guinée est temporairement
+indisponible chez eux, et une structure doit être enregistrée en Côte d'Ivoire,
+au Burkina Faso, au Cameroun, au Togo ou en RDC. Jusqu'à la signature d'un
+prestataire, les paiements passent par le circuit manuel Mobile Money, sans
+frais de prestataire (les 3,5 % ci-dessus sont alors une marge de sécurité).
 
 ## Sources
 

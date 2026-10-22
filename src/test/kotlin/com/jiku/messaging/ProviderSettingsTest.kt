@@ -3,8 +3,6 @@ package com.jiku.messaging
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.messaging.internal.MessagingProviderResolver
-import com.jiku.money.internal.OwnWhatsAppNumberService
-import com.jiku.money.internal.WhatsAppNumberAddonRepository
 import com.jiku.shared.TenantContext
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -20,7 +18,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import java.time.Instant
 import kotlin.test.assertEquals
 
 /**
@@ -38,12 +35,6 @@ import kotlin.test.assertEquals
 class ProviderSettingsTest {
     @Autowired
     lateinit var mockMvc: MockMvc
-
-    @Autowired
-    lateinit var ownNumber: OwnWhatsAppNumberService
-
-    @Autowired
-    lateinit var addons: WhatsAppNumberAddonRepository
 
     @Autowired
     lateinit var resolver: MessagingProviderResolver
@@ -90,39 +81,22 @@ class ProviderSettingsTest {
     }
 
     @Test
-    fun `saving a whatsapp provider needs an offer with the own number, masks the token and keeps template fields`() {
+    fun `any offer saves a whatsapp provider, masks the token and keeps template fields`() {
         val token = register("Wa Org", "wa@acme.test")
         val body =
             """{"accessToken":"EAAxxxxxxxx9999","phoneNumberId":"123456789012345",""" +
                 """"templateName":"event_invitation","templateLanguage":"fr"}"""
-        saveWhatsApp(token, body).andExpect(status().isPaymentRequired())
-
-        val tenantId = tenantId(token)
-        TenantContext.set(tenantId)
-        ownNumber.confirm(1)
-        TenantContext.clear()
 
         saveWhatsApp(token, body)
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.whatsapp.configured").value(true))
-            .andExpect(jsonPath("$.whatsapp.allowed").value(true))
             .andExpect(jsonPath("$.whatsapp.provider").value("META_CLOUD"))
             .andExpect(jsonPath("$.whatsapp.phoneNumberId").value("123456789012345"))
             .andExpect(jsonPath("$.whatsapp.accessTokenMasked").value("••••9999"))
             .andExpect(jsonPath("$.whatsapp.templateName").value("event_invitation"))
-        TenantContext.set(tenantId)
+        TenantContext.set(tenantId(token))
         assertEquals(true, resolver.whatsApp().tenantOverride)
-
-        addons.findFirstByOrderByExpiresAtDesc()!!.let {
-            it.expiresAt = Instant.now().minusSeconds(60)
-            addons.saveAndFlush(it)
-        }
-        assertEquals(false, resolver.whatsApp().tenantOverride, "a lapsed add-on sends through the platform number")
         TenantContext.clear()
-        mockMvc
-            .perform(get("/api/v1/settings/providers").header("Authorization", "Bearer $token"))
-            .andExpect(jsonPath("$.whatsapp.configured").value(true))
-            .andExpect(jsonPath("$.whatsapp.allowed").value(false))
     }
 
     private fun saveWhatsApp(

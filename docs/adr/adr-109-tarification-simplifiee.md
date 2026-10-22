@@ -1,7 +1,7 @@
 # ADR 109 — Tarification simplifiée : un prix par invité, deux offres Pro, prix TTC
 
 **Statut :** accepté.
-**Date :** 2026-10-18, complété le 2026-10-19 (JIKU-270)
+**Date :** 2026-10-18, complété le 2026-10-19 (JIKU-270) et le 2026-10-22 (JIKU-271)
 **Remplace :** la grille de l'ADR 105 (paliers Bronze, Argent, Or, palier sur
 mesure, supplément interactif, formules Solo Plus, Teams et Organisation).
 L'ADR 105 reste valable pour les trois monnaies, le numéro WhatsApp propre et
@@ -41,8 +41,7 @@ honorer.
   Services Pro.
 - La vente de billets reste à 3 % par billet, la première tranche de 50 billets
   offerte.
-- Le numéro WhatsApp propre est inclus dans Pro Organisateur et Services Pro,
-  et reste une option mensuelle pour les autres.
+- Le numéro WhatsApp propre est gratuit dans toutes les offres (décision 11).
 
 ## Décision 2 — Prix toutes taxes comprises
 
@@ -124,3 +123,13 @@ maintenant », urgence d'achat) et n'utilise que des expressions là où un mot
 seul est courant dans une invitation (« entrée gratuite », une liste de
 cadeaux, un solde à régler, la remise des diplômes, une promotion d'étudiants).
 Chaque entrée est comparée comme mot entier.
+
+## Décision 11 — Le numéro WhatsApp propre est gratuit partout (JIKU-271)
+
+Brancher son numéro ne coûte rien à Jikū : Meta facture les messages à
+l'organisation, et ses envois quittent le numéro Jikū, dont la limite et le
+budget sont partagés. Le vendre 100 000 GNF par mois contredisait ce message et
+freinait les organisations qu'on veut justement voir partir sur leur propre
+numéro. L'option mensuelle et sa table disparaissent (`V100`), et toute offre
+peut brancher son numéro.
+

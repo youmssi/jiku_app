@@ -98,7 +98,7 @@ data class PaymentHistoryItem(
     val eventId: UUID?,
     val eventName: String,
     val tier: String,
-    /** GUESTS, SUBSCRIPTION, PACK, PACK_EXTRA, WHATSAPP_NUMBER or COMMISSION. */
+    /** GUESTS, SUBSCRIPTION, PACK, PACK_EXTRA or COMMISSION. */
     val kind: String,
     /** Guests the payment bought or settled; null when it bought none. */
     val guests: Long?,

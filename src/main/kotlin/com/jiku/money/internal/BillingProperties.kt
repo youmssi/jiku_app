@@ -30,18 +30,7 @@ data class BillingProperties(
     val eventDayGrace: EventDayGrace = EventDayGrace(),
     /** Pro Organisateur (the Organizer Pack in code), for planners, agencies and venues. */
     val pack: Pack = Pack(),
-    /** Sending from the organization's own WhatsApp number (ADR 105). */
-    val ownWhatsAppNumber: OwnWhatsAppNumber = OwnWhatsAppNumber(),
 ) {
-    /**
-     * The own-number add-on's monthly price; the plans in [includedPlans] and
-     * an active Pro Organisateur include it.
-     */
-    data class OwnWhatsAppNumber(
-        val monthly: PriceList = PriceList(100_000, 7_000, 1_200),
-        val includedPlans: List<String> = listOf("Services Pro"),
-    )
-
     /**
      * Within a day of an event's start, an event past its guests may still send
      * to [percent] % more, at least [minGuests]. Those guests stay counted and
