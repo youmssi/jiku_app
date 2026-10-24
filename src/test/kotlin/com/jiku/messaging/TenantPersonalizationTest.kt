@@ -118,6 +118,6 @@ class TenantPersonalizationTest {
             eventName = "Coupe + soin",
             eventWhen = "Tuesday 3 Nov at 15:00",
             organizerName = "Salon Aminata",
-            invitationUrl = "https://jiku.app/r/abc123",
+            invitationUrl = "https://hellojiku.com/r/abc123",
         )
 }

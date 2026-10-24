@@ -92,7 +92,7 @@ class EmailTemplateRendererTest {
                 organizerName = "Maison Aminata",
                 primaryColor = "#7C3AED",
                 logoUrl = null,
-                ticketUrl = "https://jiku.app/invitation/abc/ticket",
+                ticketUrl = "https://hellojiku.com/invitation/abc/ticket",
                 language = MessageLanguage.FRENCH,
             )
 
@@ -100,7 +100,7 @@ class EmailTemplateRendererTest {
         val undated = renderer.renderTicketConfirmed(notice.copy(eventStart = null), null)
 
         assertEquals("Votre billet : Gala", withCalendar.subject)
-        assertTrue(withCalendar.html.contains("https://jiku.app/invitation/abc/ticket"))
+        assertTrue(withCalendar.html.contains("https://hellojiku.com/invitation/abc/ticket"))
         assertTrue(withCalendar.html.contains("Samedi 12 décembre 2026 à 18:00"))
         assertTrue(withCalendar.html.contains("VIP"))
         assertTrue(withCalendar.html.contains("Ajouter à Google Agenda"))
@@ -144,7 +144,7 @@ class EmailTemplateRendererTest {
                     organizationName = "Maison Aminata",
                     inviterEmail = "owner@example.com",
                     role = "ADMIN",
-                    actionUrl = "https://jiku.app/join?token=abc",
+                    actionUrl = "https://hellojiku.com/join?token=abc",
                     language = MessageLanguage.FRENCH,
                 ),
             )
@@ -171,7 +171,7 @@ class EmailTemplateRendererTest {
                     eventName = "Gala",
                     eventWhen = "Mardi 3 novembre 2026 à 15:00",
                     organizerName = "Maison Aminata",
-                    invitationUrl = "https://jiku.app/invitation/abc",
+                    invitationUrl = "https://hellojiku.com/invitation/abc",
                 ),
                 MessageLanguage.FRENCH,
             )
@@ -189,13 +189,13 @@ class EmailTemplateRendererTest {
                     eventName = "Gala",
                     eventWhen = "Samedi 12 décembre 2026 à 18:00",
                     organizerName = "Maison Aminata",
-                    invitationUrl = "https://jiku.app/invitation/abc/ticket",
+                    invitationUrl = "https://hellojiku.com/invitation/abc/ticket",
                 ),
                 MessageLanguage.FRENCH,
             )
 
         assertTrue(text.startsWith("Bonjour Awa, voici votre billet pour Gala le samedi 12 décembre 2026 à 18:00"))
-        assertTrue(text.contains("https://jiku.app/invitation/abc/ticket"))
+        assertTrue(text.contains("https://hellojiku.com/invitation/abc/ticket"))
         assertFalse(text.contains("{{"))
     }
 
@@ -209,7 +209,7 @@ class EmailTemplateRendererTest {
             organizerName = "Maison Aminata",
             primaryColor = "#7C3AED",
             logoUrl = null,
-            invitationUrl = "https://jiku.app/invitation/abc",
+            invitationUrl = "https://hellojiku.com/invitation/abc",
         )
 
     /** Without a tenant in context the resolver never reaches its collaborators. */
