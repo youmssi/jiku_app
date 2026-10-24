@@ -19,7 +19,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 /**
- * JIKU-62: Resend-first, Brevo-fallback email routing under a global daily cap.
+ * JIKU-62, JIKU-275: email routing through a chain of providers under a global daily cap.
  * [RoutingEmailSender] is constructed directly here (rather than switching the
  * whole app's `jiku.mail.transport` to `routing`, which would break every other
  * test's assumption of the default `log` transport) with fake provider adapters
@@ -53,6 +53,12 @@ class EmailRoutingTest {
         }
     }
 
+    private fun routing(
+        properties: EmailRoutingProperties,
+        senders: Map<String, EmailSender>,
+        overflow: EmailSender? = null,
+    ) = RoutingEmailSender(RoutingEmailSender.buildChain(properties) { senders.getValue(it) }, overflow, quota, properties)
+
     @Test
     fun `the atomic reservation enforces the cap under repeated calls and survives being re-read`() {
         val provider = UUID.randomUUID().toString().take(16)
@@ -72,7 +78,7 @@ class EmailRoutingTest {
         val resend = RecordingSender()
         val brevo = RecordingSender()
         val properties = EmailRoutingProperties(resendDailyCap = 1, brevoDailyCap = 1, globalDailyCap = 3)
-        val sender = RoutingEmailSender(resend, brevo, quota, properties)
+        val sender = routing(properties, mapOf("resend" to resend, "brevo" to brevo))
 
         sender.send("no-reply@hellojiku.com", message)
         assertEquals(1, resend.sent)
@@ -88,7 +94,7 @@ class EmailRoutingTest {
         val resend = RecordingSender()
         val brevo = RecordingSender()
         val properties = EmailRoutingProperties(resendDailyCap = 1, brevoDailyCap = 1, globalDailyCap = 3)
-        val sender = RoutingEmailSender(resend, brevo, quota, properties)
+        val sender = routing(properties, mapOf("resend" to resend, "brevo" to brevo))
 
         sender.send("no-reply@hellojiku.com", message)
         sender.send("no-reply@hellojiku.com", message)
@@ -103,10 +109,51 @@ class EmailRoutingTest {
         val resend = RecordingSender()
         val brevo = RecordingSender()
         val properties = EmailRoutingProperties(resendDailyCap = 10, brevoDailyCap = 10, globalDailyCap = 1)
-        val sender = RoutingEmailSender(resend, brevo, quota, properties)
+        val sender = routing(properties, mapOf("resend" to resend, "brevo" to brevo))
 
         sender.send("no-reply@hellojiku.com", message)
         assertFailsWith<EmailQuotaExceededException> { sender.send("no-reply@hellojiku.com", message) }
         assertTrue(resend.sent + brevo.sent == 1)
+    }
+
+    @Test
+    fun `the configured order sends through useSend, then Resend, then Brevo`() {
+        val usesend = RecordingSender()
+        val resend = RecordingSender()
+        val brevo = RecordingSender()
+        val properties =
+            EmailRoutingProperties(
+                order = listOf("usesend", "resend", "brevo"),
+                usesendDailyCap = 1,
+                resendDailyCap = 1,
+                brevoDailyCap = 1,
+                globalDailyCap = 3,
+            )
+        val sender = routing(properties, mapOf("usesend" to usesend, "resend" to resend, "brevo" to brevo))
+
+        repeat(3) { sender.send("no-reply@hellojiku.com", message) }
+
+        assertEquals(listOf(1, 1, 1), listOf(usesend.sent, resend.sent, brevo.sent))
+        assertFailsWith<EmailQuotaExceededException> { sender.send("no-reply@hellojiku.com", message) }
+    }
+
+    @Test
+    fun `past every cap the paid overflow takes the send instead of refusing it`() {
+        val usesend = RecordingSender()
+        val paid = RecordingSender()
+        val properties = EmailRoutingProperties(order = listOf("usesend"), usesendDailyCap = 1, globalDailyCap = 5)
+        val sender = routing(properties, mapOf("usesend" to usesend), overflow = paid)
+
+        repeat(3) { sender.send("no-reply@hellojiku.com", message) }
+
+        assertEquals(1, usesend.sent)
+        assertEquals(2, paid.sent)
+    }
+
+    @Test
+    fun `an unknown provider in the order is refused at startup`() {
+        assertFailsWith<IllegalStateException> {
+            RoutingEmailSender.buildChain(EmailRoutingProperties(order = listOf("mailgun"))) { RecordingSender() }
+        }
     }
 }

@@ -21,7 +21,7 @@ Cloudflare, enregistrement chez Porkbun. Sous-domaines publics : `www`, `api`,
 | Sauvegardes | Cloudflare R2 | Journal en continu + sauvegarde complète chaque nuit |
 | TLS, routage | Traefik (fourni par Dokploy) | Domaines déclarés dans Dokploy |
 | DNS, cache, pare-feu web | Cloudflare (offre gratuite) | Enregistrements « proxied » |
-| E-mails | useSend sur AWS SES | `MAIL_TRANSPORT=usesend` (JIKU-200) |
+| E-mails | useSend (AWS SES), Resend, Brevo | `MAIL_TRANSPORT=routing`, chaîne `usesend,resend,brevo` (ADR 110, JIKU-275) |
 | Surveillance | Hors du serveur | Moniteur de disponibilité, Sentry, Grafana Cloud |
 
 Fichiers utilisés : `docker-compose.vps.yml`, `deploy/postgres/`,
@@ -87,7 +87,11 @@ curl -sSL https://dokploy.com/install.sh | sh
    | `WALG_ENDPOINT` | adresse S3 R2 |
    | `SERVER_BASE_URL`, `CORS_ALLOWED_ORIGINS` | `https://<domaine>` |
    | `API_PUBLIC_URL` | `https://api.<domaine>` |
-   | `MAIL_TRANSPORT` | `usesend` (+ `USESEND_API_KEY`, `USESEND_WEBHOOK_SECRET`) |
+   | `MAIL_TRANSPORT` | `routing` |
+   | `EMAIL_ROUTING_ORDER` | `usesend,resend,brevo`, avec `EMAIL_GLOBAL_DAILY_CAP=480` |
+   | `USESEND_API_KEY`, `RESEND_API_KEY`, `BREVO_API_KEY` | une clé par fournisseur de la chaîne |
+   | `USESEND_WEBHOOK_SECRET`, `RESEND_WEBHOOK_SECRET`, `BREVO_WEBHOOK_TOKEN` | retours (rebonds, plaintes) de chaque fournisseur |
+   | `EMAIL_USESEND_OVERFLOW` | `false` au lancement ; `true` une fois l'offre payante de useSend activée |
    | `UMAMI_APP_SECRET` | secret fort (statistiques de visite) |
    | `WHATSAPP_META_BUSINESS_ACCOUNT_ID` | compte WhatsApp Business du numéro de la plateforme |
    | `OBSERVABILITY_*`, `MESSAGING_DAILY_*` | voir l'étape 9 bis |
@@ -119,6 +123,10 @@ l'image à la construction : les changer impose une nouvelle image.
 - Security → WAF : règle de limitation sur `/api/v1/auth/*` (par exemple
   20 requêtes par minute et par adresse), en plus de celle de l'API.
 - Email Routing : `support@` et `contact@` vers la boîte de l'équipe.
+- E-mails envoyés : vérifier `hellojiku.com` chez useSend, Resend et Brevo, et
+  ajouter leurs enregistrements en **DNS only**. Leurs SPF vont en principe sur
+  un sous-domaine d'envoi ; s'il en faut un à la racine, le fusionner avec celui
+  d'Email Routing : un domaine n'a jamais qu'**un seul** enregistrement SPF.
 
 ## 7. Basculer depuis Neon (fenêtre de 15 minutes)
 
@@ -157,7 +165,9 @@ l'image à la construction : les changer impose une nouvelle image.
 |---|---|
 | Meta (WhatsApp) | Webhook → `https://api.<domaine>/api/v1/whatsapp/webhook`, abonné à `messages`, `message_template_status_update`, `message_template_quality_update`, `template_category_update`, `phone_number_quality_update` et `account_update` (JIKU-209) |
 | Prestataire de paiement (JIKU-272, quand il est ouvert) | URL de notification et de retour |
-| useSend | Webhook `.../api/v1/notifications/email-feedback/usesend` |
+| useSend | Webhook `.../api/v1/notifications/email-feedback/usesend` (`email.bounced`, `email.complained`) |
+| Resend | Webhook `.../api/v1/notifications/email-feedback/resend` (`email.bounced`, `email.complained`) |
+| Brevo | Webhook transactionnel `.../api/v1/notifications/email-feedback/brevo` (rebond définitif et temporaire, adresse invalide, spam), authentification par jeton porteur `BREVO_WEBHOOK_TOKEN` |
 | Google (connexion) | Origines JavaScript autorisées : `https://<domaine>` |
 | Moniteur de disponibilité | `https://api.<domaine>/api/v1/health` |
 

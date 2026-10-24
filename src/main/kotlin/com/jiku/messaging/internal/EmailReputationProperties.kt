@@ -17,6 +17,8 @@ data class EmailReputationProperties(
     val resendWebhookSecret: String? = null,
     /** Signing secret of the useSend webhook (ADR 107); endpoint is inert until set. */
     val usesendWebhookSecret: String? = null,
+    /** Bearer token Brevo presents on its transactional webhook (JIKU-275); endpoint is inert until set. */
+    val brevoWebhookToken: String? = null,
     val windowHours: Long = 24,
     val bounceRateThreshold: Double = 0.02,
     val complaintRateThreshold: Double = 0.0008,
