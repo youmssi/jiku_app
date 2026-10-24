@@ -1144,6 +1144,9 @@
       },
       "CreateEventRequest" : {
         "properties" : {
+          "channelFallback" : {
+            "type" : "boolean"
+          },
           "description" : {
             "type" : [
               "string",
@@ -1184,6 +1187,16 @@
           "name" : {
             "minLength" : 1,
             "type" : "string"
+          },
+          "primaryChannel" : {
+            "enum" : [
+              "EMAIL",
+              "WHATSAPP"
+            ],
+            "type" : [
+              "string",
+              "null"
+            ]
           },
           "settings" : {
             "$ref" : "#/components/schemas/EventSettingsDto"
@@ -1706,6 +1719,9 @@
       },
       "EventResponse" : {
         "properties" : {
+          "channelFallback" : {
+            "type" : "boolean"
+          },
           "description" : {
             "type" : [
               "string",
@@ -1749,6 +1765,16 @@
           },
           "name" : {
             "type" : "string"
+          },
+          "primaryChannel" : {
+            "enum" : [
+              "EMAIL",
+              "WHATSAPP"
+            ],
+            "type" : [
+              "string",
+              "null"
+            ]
           },
           "quorum" : {
             "oneOf" : [
@@ -2319,6 +2345,16 @@
             ]
           },
           "phoneNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "preferredChannel" : {
+            "enum" : [
+              "EMAIL",
+              "WHATSAPP"
+            ],
             "type" : [
               "string",
               "null"
@@ -6747,6 +6783,9 @@
       },
       "UpdateEventRequest" : {
         "properties" : {
+          "channelFallback" : {
+            "type" : "boolean"
+          },
           "description" : {
             "type" : [
               "string",
@@ -6787,6 +6826,16 @@
           "name" : {
             "minLength" : 1,
             "type" : "string"
+          },
+          "primaryChannel" : {
+            "enum" : [
+              "EMAIL",
+              "WHATSAPP"
+            ],
+            "type" : [
+              "string",
+              "null"
+            ]
           },
           "settings" : {
             "$ref" : "#/components/schemas/EventSettingsDto"
@@ -11448,9 +11497,6 @@
             "name" : "channels",
             "required" : false,
             "schema" : {
-              "default" : [
-                "EMAIL"
-              ],
               "items" : {
                 "enum" : [
                   "EMAIL",
@@ -11468,6 +11514,15 @@
             "required" : false,
             "schema" : {
               "default" : true,
+              "type" : "boolean"
+            }
+          },
+          {
+            "in" : "query",
+            "name" : "onlyUnanswered",
+            "required" : false,
+            "schema" : {
+              "default" : false,
               "type" : "boolean"
             }
           }

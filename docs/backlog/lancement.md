@@ -516,11 +516,11 @@ moment ressemble à du spam et paie deux messages pour un (ADR 110, décision 4)
 
 **Critères d'acceptation.**
 
-- [ ] Un événement a un canal prioritaire (WhatsApp ou e-mail) et une option « l'autre canal si le premier est impossible », active par défaut
-- [ ] Un envoi crée au plus une invitation par invité : le canal prioritaire s'il a la coordonnée, sinon l'autre
-- [ ] Un échec définitif de livraison déclenche une seule tentative sur l'autre canal, visible dans la liste des invités
-- [ ] L'import accepte une colonne facultative « Canal » qui fixe le canal d'un invité
-- [ ] La relance des invités sans réponse choisit son canal ; le billet et les rappels suivent le canal de l'invitation
+- [x] Un événement a un canal prioritaire (WhatsApp ou e-mail) et une option « l'autre canal si le premier est impossible », active par défaut
+- [x] Un envoi crée au plus une invitation par invité : le canal prioritaire s'il a la coordonnée, sinon l'autre
+- [x] Un échec définitif de livraison déclenche une seule tentative sur l'autre canal, visible dans la liste des invités
+- [x] L'import accepte une colonne facultative « Canal » qui fixe le canal d'un invité
+- [x] La relance des invités sans réponse choisit son canal ; le billet et les rappels suivent le canal de l'invitation
 
 ## JIKU-274 — Domaine hellojiku.com et pages publiques alignées
 

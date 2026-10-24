@@ -1,5 +1,6 @@
 package com.jiku.invitation.internal
 
+import com.jiku.catalog.InvitationChannel
 import com.jiku.shared.BaseTenantEntity
 import com.jiku.shared.LiveScoped
 import com.jiku.shared.LiveTopics
@@ -94,6 +95,18 @@ class Guest(
     /** People coming with this guest on the same ticket, from an open invitation (JIKU-184). */
     @Column(name = "companions", nullable = false)
     var companions: Int = 0
+
+    /** Channel set for this guest at import (JIKU-273); null follows the event's rule. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "preferred_channel", length = 16)
+    var preferredChannel: InvitationChannel? = null
+
+    /** Whether the guest has the contact a [channel] needs. */
+    fun canBeReachedOn(channel: InvitationChannel): Boolean =
+        when (channel) {
+            InvitationChannel.EMAIL -> email != null
+            InvitationChannel.WHATSAPP -> phoneNumber != null
+        }
 
     /** The short code of this guest's personal link (JIKU-248), drawn on first send. */
     @Column(name = "invite_code", length = 16)

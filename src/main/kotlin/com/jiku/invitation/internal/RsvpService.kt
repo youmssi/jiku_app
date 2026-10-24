@@ -36,10 +36,16 @@ class RsvpService(
     @Transactional(readOnly = true)
     fun view(guestId: UUID): RsvpView = buildView(loadGuest(guestId))
 
+    /**
+     * Confirms the guest and issues the ticket. [sendTicket] is off when the
+     * caller delivers the ticket itself, like the WhatsApp chat answering a tap,
+     * so the guest gets it once, on one channel (JIKU-273).
+     */
     @Transactional
     fun confirm(
         guestId: UUID,
         eventId: UUID,
+        sendTicket: Boolean = true,
     ): RsvpView {
         requireOpen(eventId)
         val guest = loadGuest(guestId)
@@ -56,7 +62,9 @@ class RsvpService(
             guests.save(guest)
             val charge = guest.ticketTypeId?.let { typeId -> events.ticketTypes(eventId).firstOrNull { it.id == typeId } }?.clientCharge()
             ticketing.issueTicket(eventId, guestId, guest.ticketTypeId, charge)
-            eventPublisher.publishEvent(TicketConfirmed(guestId, eventId, TenantContext.get().orEmpty()))
+            if (sendTicket) {
+                eventPublisher.publishEvent(TicketConfirmed(guestId, eventId, TenantContext.get().orEmpty()))
+            }
         }
         return buildView(guest)
     }
@@ -188,10 +196,10 @@ class RsvpService(
     }
 
     /**
-     * Queues the recipient's own invitation on every channel their contact details
-     * support. Delivery itself runs after commit, driven by the same dispatcher the
-     * organizer's send uses — the recipient's link resolves straight to their
-     * ticket, since they are already confirmed.
+     * Queues the recipient's own invitation on one channel (JIKU-273): the event's
+     * order, kept to the contact they were given. Delivery itself runs after commit,
+     * driven by the same dispatcher the organizer's send uses — the recipient's link
+     * resolves straight to their ticket, since they are already confirmed.
      */
     private fun queueRecipientInvitation(
         eventId: UUID,
@@ -199,12 +207,21 @@ class RsvpService(
         email: String?,
         phone: String?,
     ) {
-        val channels =
-            listOfNotNull(
-                email?.let { InvitationChannel.EMAIL },
-                phone?.let { InvitationChannel.WHATSAPP },
+        // A transferred place must reach its new holder, so the other channel stays open here.
+        val order =
+            InvitationChannel.channelOrder(
+                InvitationChannel.entries.toSet(),
+                events.findEvent(eventId)?.primaryChannel,
+                fallback = true,
             )
-        channels.forEach { channel -> invitations.save(Invitation(eventId, recipientId, channel)) }
+        val channel =
+            order.firstOrNull {
+                when (it) {
+                    InvitationChannel.EMAIL -> email != null
+                    InvitationChannel.WHATSAPP -> phone != null
+                }
+            } ?: return
+        invitations.save(Invitation(eventId, recipientId, channel))
     }
 
     private fun loadGuest(guestId: UUID): Guest =

@@ -2,6 +2,7 @@ package com.jiku.catalog.internal
 
 import com.jiku.catalog.EventBrand
 import com.jiku.catalog.EventInfo
+import com.jiku.catalog.InvitationChannel
 
 fun Event.toResponse(): EventResponse =
     EventResponse(
@@ -26,6 +27,8 @@ fun Event.toResponse(): EventResponse =
                 brandColor = settings.brandColor,
             ),
         invitationChannels = invitationChannels.toSet(),
+        primaryChannel = InvitationChannel.channelOrder(invitationChannels, primaryChannel, fallback = false).firstOrNull(),
+        channelFallback = channelFallback,
         // Null quand aucun quorum n'est configuré, ce qui est le cas de la
         // quasi-totalité des événements : un mariage n'a pas de quorum.
         quorum =
@@ -53,6 +56,8 @@ fun Event.toEventInfo(bannerUrl: String? = null): EventInfo =
         transferAllowed = settings.transferAllowed,
         transferDeadline = settings.transferDeadline,
         invitationChannels = invitationChannels.toSet(),
+        primaryChannel = primaryChannel,
+        channelFallback = channelFallback,
         deliveryMode = settings.deliveryMode,
         brand = EventBrand(settings.brandName, settings.brandLogoUrl, settings.brandColor, cardStyle, bannerUrl),
     )

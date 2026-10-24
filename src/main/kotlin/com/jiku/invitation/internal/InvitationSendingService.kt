@@ -32,11 +32,13 @@ class InvitationSendingService(
     @Transactional
     fun queue(
         eventId: UUID,
-        channels: Set<InvitationChannel>,
+        requestedChannels: Set<InvitationChannel>?,
         onlyUnsent: Boolean,
+        onlyUnanswered: Boolean = false,
     ): SendInvitationsResult {
         val event = events.findEvent(eventId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found")
         requireOpenForSending(event)
+        val channels = requestedChannels?.takeIf { it.isNotEmpty() } ?: event.invitationChannels
         val unsupported = channels - event.invitationChannels
         if (unsupported.isNotEmpty()) {
             throw ResponseStatusException(
@@ -63,22 +65,15 @@ class InvitationSendingService(
             if (guest.excludedFromInvitations) {
                 continue
             }
-            val guestId = requireNotNull(guest.id)
-            for (channel in channels) {
-                val eligible =
-                    when (channel) {
-                        InvitationChannel.EMAIL -> guest.email != null
-                        InvitationChannel.WHATSAPP -> guest.phoneNumber != null
-                    }
-                if (!eligible) {
-                    continue
-                }
-                val existing = existingByGuestAndChannel[guestId to channel]
-                if (onlyUnsent && existing?.status == InvitationStatus.SENT) {
-                    continue
-                }
-                toQueue += (existing ?: Invitation(eventId, guestId, channel))
+            if (onlyUnanswered && guest.rsvpStatus != RsvpStatus.PENDING) {
+                continue
             }
+            val guestId = requireNotNull(guest.id)
+            if (onlyUnsent && existingByGuestAndChannel.any { (key, it) -> key.first == guestId && it.status == InvitationStatus.SENT }) {
+                continue
+            }
+            val channel = channelFor(guest, event, channels) ?: continue
+            toQueue += (existingByGuestAndChannel[guestId to channel] ?: Invitation(eventId, guestId, channel))
         }
 
         val batchGuestIds = toQueue.map { it.guestId }.toSet()
@@ -97,6 +92,23 @@ class InvitationSendingService(
             allowanceGate.recordCommitment(eventId, newGuestCount)
         }
         return SendInvitationsResult(toQueue.size)
+    }
+
+    /**
+     * The one channel a guest is invited on (JIKU-273, ADR 110): the guest's own
+     * channel when the import set one, else the event's order (primary, then the
+     * other when fallback is on), kept to the channels this send asked for and to
+     * a contact the guest has. A send naming one channel, like a reminder on the
+     * other channel, uses only that one.
+     */
+    private fun channelFor(
+        guest: Guest,
+        event: EventInfo,
+        requested: Set<InvitationChannel>,
+    ): InvitationChannel? {
+        val order = guest.preferredChannel?.let { listOf(it) } ?: event.channelOrder()
+        val candidates = if (requested.size == 1) requested.toList() else order.filter { it in requested }
+        return candidates.firstOrNull { guest.canBeReachedOn(it) }
     }
 
     /**

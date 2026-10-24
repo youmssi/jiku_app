@@ -38,7 +38,7 @@ peut répondre à leurs questions (§4.2), mais la publicité ne les vise pas en
 ### 3.1 Événements
 
 - **Liste d'invités** : import depuis Excel ou CSV, ou ajout un par un ; doublons signalés.
-- **Envoi** par e-mail, par WhatsApp, ou les deux. Chaque invité reçoit un lien personnel et répond « Je viens » en un geste ; son billet QR s'affiche aussitôt.
+- **Envoi** par WhatsApp ou par e-mail, **une seule invitation par invité** : le canal choisi pour l'événement, et l'autre seulement si le premier est impossible. Chaque invité reçoit un lien personnel et répond « Je viens » en un geste ; son billet QR s'affiche aussitôt.
 - **Carte d'invitation à partager** quand il n'y a pas de liste : une carte publiée dans les groupes et statuts WhatsApp ; chacun répond, chaque « oui » reçoit son billet. Trois styles (Élégant, Moderne, Festif), photo de bandeau, nombre d'accompagnants et date limite de réponse.
 - **Catégories de billets** (VIP, presse, standard…) avec jauge et prix.
 - **Suivi en direct** : qui a répondu, qui vient, qui n'a pas reçu son invitation, liste « Sans réponse » à relancer.

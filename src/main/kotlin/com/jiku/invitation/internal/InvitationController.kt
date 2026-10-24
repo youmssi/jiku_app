@@ -25,11 +25,14 @@ class InvitationController(
     fun send(
         authentication: Authentication,
         @PathVariable eventId: UUID,
-        @RequestParam(name = "channels", defaultValue = "EMAIL") channels: Set<InvitationChannel>,
+        // Absent, the event's channels apply, one per guest (JIKU-273); one channel only, like a reminder, forces it.
+        @RequestParam(name = "channels", required = false) channels: Set<InvitationChannel>?,
         @RequestParam(name = "onlyUnsent", defaultValue = "true") onlyUnsent: Boolean,
+        // A reminder reaches only the guests who have not answered yet (JIKU-273).
+        @RequestParam(name = "onlyUnanswered", defaultValue = "false") onlyUnanswered: Boolean,
     ): SendInvitationsResult {
         senders.requireVerifiedSender(authentication.name)
-        val result = sendingService.queue(eventId, channels, onlyUnsent)
+        val result = sendingService.queue(eventId, channels, onlyUnsent, onlyUnanswered)
         dispatcher.dispatchPending(eventId)
         return result
     }
