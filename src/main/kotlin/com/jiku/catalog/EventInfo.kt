@@ -23,11 +23,18 @@ data class EventInfo(
     val transferDeadline: Instant? = null,
     /** Channels the organizer enabled on the event (EMAIL/WHATSAPP), enforced at send. */
     val invitationChannels: Set<InvitationChannel> = emptySet(),
+    /** The channel tried first (JIKU-273); null picks WhatsApp when enabled. */
+    val primaryChannel: InvitationChannel? = null,
+    /** Whether a guest the primary channel cannot reach gets the other enabled channel. */
+    val channelFallback: Boolean = true,
     /** How guests receive their ticket (ADR 105). */
     val deliveryMode: DeliveryMode = DeliveryMode.LINK,
     /** The client this event is branded for, over the organization's own branding. */
     val brand: EventBrand = EventBrand(),
 ) {
+    /** The channels tried for one guest, in order (JIKU-273): the primary, then the other when fallback is on. */
+    fun channelOrder(): List<InvitationChannel> = InvitationChannel.channelOrder(invitationChannels, primaryChannel, channelFallback)
+
     companion object {
         /** [status] value of a draft event, shared so consumers avoid magic strings. */
         const val STATUS_DRAFT = "DRAFT"
