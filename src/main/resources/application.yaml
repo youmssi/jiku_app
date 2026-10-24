@@ -46,12 +46,16 @@ jiku:
       api-key: ${BREVO_API_KEY:}
       base-url: ${BREVO_BASE_URL:https://api.brevo.com/v3}
     routing:
-      # Kept comfortably under each provider's actual free-tier ceiling and
-      # under their naive sum — the two free tiers are not reliably additive in
-      # practice once a safety margin is applied (JIKU-62).
+      # Providers tried in order with MAIL_TRANSPORT=routing (JIKU-275); ADR 110
+      # launches with usesend,resend,brevo. Caps stay under each free tier and
+      # the global cap under their sum (JIKU-62).
+      order: ${EMAIL_ROUTING_ORDER:resend,brevo}
+      usesend-daily-cap: ${EMAIL_USESEND_DAILY_CAP:100}
       resend-daily-cap: ${EMAIL_RESEND_DAILY_CAP:100}
       brevo-daily-cap: ${EMAIL_BREVO_DAILY_CAP:300}
       global-daily-cap: ${EMAIL_GLOBAL_DAILY_CAP:350}
+      # Past every cap, useSend's paid plan takes the rest instead of a next-day retry.
+      usesend-overflow: ${EMAIL_USESEND_OVERFLOW:false}
   whatsapp:
     # WhatsApp delivery transport: log (default — records sends without
     # delivering) or meta (WhatsApp Cloud API with the credentials below).
@@ -702,6 +706,9 @@ notification:
     # Signing secret of the useSend webhook; the useSend-specific endpoint rejects
     # everything until this is set (ADR 107).
     usesend-webhook-secret: ${USESEND_WEBHOOK_SECRET:}
+    # Token Brevo sends as `Authorization: Bearer …` on its transactional webhook;
+    # the Brevo endpoint rejects everything until this is set (JIKU-275).
+    brevo-webhook-token: ${BREVO_WEBHOOK_TOKEN:}
     # Rolling window and alert thresholds, kept below AWS SES's own review limits
     # (5% bounce, 0.1% complaint) because SES judges the whole account (ADR 107).
     # Optional ops address emailed when a threshold breaks.

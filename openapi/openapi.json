@@ -13625,6 +13625,39 @@
         ]
       }
     },
+    "/api/v1/notifications/email-feedback/brevo" : {
+      "post" : {
+        "operationId" : "brevoEmailFeedbackReceive",
+        "parameters" : [
+          {
+            "in" : "header",
+            "name" : "Authorization",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "202" : {
+            "description" : "Accepted"
+          }
+        },
+        "tags" : [
+          "brevo-email-feedback-controller"
+        ]
+      }
+    },
     "/api/v1/notifications/email-feedback/resend" : {
       "post" : {
         "operationId" : "resendEmailFeedbackReceive",

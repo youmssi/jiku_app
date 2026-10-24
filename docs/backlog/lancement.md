@@ -543,7 +543,7 @@ décision 3).
 
 **Critères d'acceptation.**
 
-- [ ] Une chaîne ordonnée et configurable de fournisseurs (useSend, Resend, Brevo), chacun avec son plafond journalier
-- [ ] Un fournisseur sans plafond (offre payante) prend tout ce qui dépasse ; sans lui, l'envoi attend le lendemain comme aujourd'hui
-- [ ] Les rebonds et plaintes de Brevo alimentent la réputation, comme ceux de Resend et useSend
+- [x] Une chaîne ordonnée et configurable de fournisseurs (useSend, Resend, Brevo), chacun avec son plafond journalier
+- [x] Un fournisseur sans plafond (offre payante) prend tout ce qui dépasse ; sans lui, l'envoi attend le lendemain comme aujourd'hui
+- [x] Les rebonds et plaintes de Brevo alimentent la réputation, comme ceux de Resend et useSend
 
