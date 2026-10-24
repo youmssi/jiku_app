@@ -96,7 +96,6 @@ class Guest(
     @Column(name = "companions", nullable = false)
     var companions: Int = 0
 
-    /** The short code of this guest's personal link (JIKU-248), drawn on first send. */
     /** Channel set for this guest at import (JIKU-273); null follows the event's rule. */
     @Enumerated(EnumType.STRING)
     @Column(name = "preferred_channel", length = 16)
@@ -109,6 +108,7 @@ class Guest(
             InvitationChannel.WHATSAPP -> phoneNumber != null
         }
 
+    /** The short code of this guest's personal link (JIKU-248), drawn on first send. */
     @Column(name = "invite_code", length = 16)
     var inviteCode: String? = null
 }
