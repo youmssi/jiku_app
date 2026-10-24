@@ -36,10 +36,16 @@ class RsvpService(
     @Transactional(readOnly = true)
     fun view(guestId: UUID): RsvpView = buildView(loadGuest(guestId))
 
+    /**
+     * Confirms the guest and issues the ticket. [sendTicket] is off when the
+     * caller delivers the ticket itself, like the WhatsApp chat answering a tap,
+     * so the guest gets it once, on one channel (JIKU-273).
+     */
     @Transactional
     fun confirm(
         guestId: UUID,
         eventId: UUID,
+        sendTicket: Boolean = true,
     ): RsvpView {
         requireOpen(eventId)
         val guest = loadGuest(guestId)
@@ -56,7 +62,9 @@ class RsvpService(
             guests.save(guest)
             val charge = guest.ticketTypeId?.let { typeId -> events.ticketTypes(eventId).firstOrNull { it.id == typeId } }?.clientCharge()
             ticketing.issueTicket(eventId, guestId, guest.ticketTypeId, charge)
-            eventPublisher.publishEvent(TicketConfirmed(guestId, eventId, TenantContext.get().orEmpty()))
+            if (sendTicket) {
+                eventPublisher.publishEvent(TicketConfirmed(guestId, eventId, TenantContext.get().orEmpty()))
+            }
         }
         return buildView(guest)
     }
