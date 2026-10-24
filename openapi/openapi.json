@@ -11516,6 +11516,15 @@
               "default" : true,
               "type" : "boolean"
             }
+          },
+          {
+            "in" : "query",
+            "name" : "onlyUnanswered",
+            "required" : false,
+            "schema" : {
+              "default" : false,
+              "type" : "boolean"
+            }
           }
         ],
         "responses" : {

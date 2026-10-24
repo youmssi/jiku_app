@@ -34,6 +34,7 @@ class InvitationSendingService(
         eventId: UUID,
         requestedChannels: Set<InvitationChannel>?,
         onlyUnsent: Boolean,
+        onlyUnanswered: Boolean = false,
     ): SendInvitationsResult {
         val event = events.findEvent(eventId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found")
         requireOpenForSending(event)
@@ -62,6 +63,9 @@ class InvitationSendingService(
         val toQueue = mutableListOf<Invitation>()
         for (guest in guests.findByEventId(eventId)) {
             if (guest.excludedFromInvitations) {
+                continue
+            }
+            if (onlyUnanswered && guest.rsvpStatus != RsvpStatus.PENDING) {
                 continue
             }
             val guestId = requireNotNull(guest.id)

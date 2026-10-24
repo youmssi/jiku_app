@@ -3,12 +3,16 @@ package com.jiku.invitation
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.catalog.InvitationChannel
+import com.jiku.invitation.internal.InvitationTokenService
 import com.jiku.invitation.internal.NotificationQueueSweepJob
 import com.jiku.support.TestDates.EVENT_YEAR
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.system.CapturedOutput
+import org.springframework.boot.test.system.OutputCaptureExtension
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
@@ -27,12 +31,16 @@ import kotlin.test.assertEquals
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration::class)
+@ExtendWith(OutputCaptureExtension::class)
 class OneChannelPerGuestTest {
     @Autowired
     lateinit var mockMvc: MockMvc
 
     @Autowired
     lateinit var sweep: NotificationQueueSweepJob
+
+    @Autowired
+    lateinit var tokenService: InvitationTokenService
 
     @Test
     fun `the channel order puts the primary first and adds the other only with fallback`() {
@@ -109,6 +117,43 @@ class OneChannelPerGuestTest {
     }
 
     @Test
+    fun `a reminder to the unanswered skips the guests who already answered`() {
+        val token = register()
+        val eventId = createEvent(token, primary = "EMAIL")
+        importGuests(token, eventId, "Ada,Lovelace,ada@test.example,", rows = listOf("Grace,Hopper,grace@test.example,"))
+        send(token, eventId).andExpect(jsonPath("$.queued").value(2))
+        awaitChannels(token, eventId, 2)
+        confirm(token, eventId, guestIndex = 0)
+
+        mockMvc
+            .perform(
+                post("/api/v1/events/$eventId/invitations/send")
+                    .param("channels", "EMAIL")
+                    .param("onlyUnsent", "false")
+                    .param("onlyUnanswered", "true")
+                    .header("Authorization", "Bearer $token"),
+            ).andExpect(status().isOk())
+            .andExpect(jsonPath("$.queued").value(1))
+    }
+
+    @Test
+    fun `a guest invited on WhatsApp gets the ticket in WhatsApp, not by email`(output: CapturedOutput) {
+        val token = register()
+        val eventId = createEvent(token, primary = "WHATSAPP")
+        importGuests(token, eventId, "Ada,Lovelace,ada@test.example,+2250700000106")
+        send(token, eventId).andExpect(jsonPath("$.queued").value(1))
+        assertEquals(listOf("WHATSAPP"), awaitChannels(token, eventId, 1))
+        confirm(token, eventId, guestIndex = 0)
+
+        await().atMost(Duration.ofSeconds(10)).pollInterval(Duration.ofMillis(250)).untilAsserted {
+            assert(Regex("to=\\+2250700000106 buttons=\\[[^]]*] image=\\S+/qr\\.png").containsMatchIn(output.out)) {
+                "the ticket was not sent in WhatsApp"
+            }
+        }
+        assert(!output.out.contains("subject=\"Votre billet : Gala\"")) { "the ticket also went by email" }
+    }
+
+    @Test
     fun `a WhatsApp invitation that fails for good is sent once by email`() {
         val token = register()
         val eventId = createEvent(token, primary = "WHATSAPP")
@@ -138,6 +183,31 @@ class OneChannelPerGuestTest {
                         "invitationChannels":["EMAIL"],"primaryChannel":"WHATSAPP"}""",
                     ),
             ).andExpect(status().isBadRequest())
+    }
+
+    private fun confirm(
+        token: String,
+        eventId: String,
+        guestIndex: Int,
+    ) {
+        val guests =
+            mockMvc
+                .perform(get("/api/v1/events/$eventId/guests").header("Authorization", "Bearer $token"))
+                .andReturn()
+                .response
+                .contentAsString
+        val guestId = JsonPath.read<String>(guests, "$[$guestIndex].id")
+        val tenantId =
+            JsonPath.read<String>(
+                mockMvc
+                    .perform(get("/api/v1/auth/me").header("Authorization", "Bearer $token"))
+                    .andReturn()
+                    .response
+                    .contentAsString,
+                "$.tenantId",
+            )
+        val rsvp = tokenService.issue(UUID.fromString(guestId), UUID.fromString(eventId), tenantId)
+        mockMvc.perform(post("/api/v1/rsvp/$rsvp/confirm")).andExpect(status().isOk())
     }
 
     private fun send(
@@ -193,15 +263,17 @@ class OneChannelPerGuestTest {
         row: String,
         header: String = "firstName,lastName,email,phone",
         attested: Boolean = true,
+        rows: List<String> = emptyList(),
     ) {
+        val lines = (listOf(header, row) + rows).joinToString("\n")
         mockMvc
             .perform(
                 multipart("/api/v1/events/$eventId/guests/import")
                     .param("consentAttested", attested.toString())
-                    .file(MockMultipartFile("file", "guests.csv", "text/csv", "$header\n$row".toByteArray()))
+                    .file(MockMultipartFile("file", "guests.csv", "text/csv", lines.toByteArray()))
                     .header("Authorization", "Bearer $token"),
             ).andExpect(status().isOk())
-            .andExpect(jsonPath("$.imported").value(1))
+            .andExpect(jsonPath("$.imported").value(1 + rows.size))
     }
 
     private fun createEvent(

@@ -79,7 +79,7 @@ class InvitationDispatchWorker(
                     fail(invitation, "No ticket could be issued: the event is full or the guest's data was erased")
                     return
                 }
-                ticketNotices.build(guest, event, tenantId, recipient)
+                ticketNotices.build(guest, event, tenantId, recipient, channelName)
             } else {
                 null
             }
@@ -120,7 +120,7 @@ class InvitationDispatchWorker(
         invitations.save(invitation)
     }
 
-    private companion object {
+    internal companion object {
         const val DEFAULT_COLOR = "#1E293B"
         val E164 = Regex("^\\+[1-9]\\d{6,14}$")
     }
