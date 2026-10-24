@@ -35,6 +35,10 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-269 | Vérification des messages WhatsApp pendant la rédaction et guide d'écriture | app, web | JIKU-268 |
 | JIKU-270 | Tarifs alignés, invités gratuits déduits, marge le jour J, usage raisonnable appliqué, devise par pays | app, web | JIKU-269 |
 | JIKU-271 | Numéro WhatsApp propre gratuit dans toutes les offres et guide de branchement | app, web | JIKU-270 |
+| JIKU-272 | Paiement en ligne : Lengo Pay (GNF) et DexPay (FCFA), choix selon la monnaie | app, web | contrat avec un prestataire |
+| JIKU-273 | Un seul canal par invité : canal prioritaire, l'autre en secours | app, web | — |
+| JIKU-274 | Domaine hellojiku.com et pages publiques alignées (ADR 110) | app, web | — |
+| JIKU-275 | Chaîne d'envoi d'e-mails : useSend, Resend, Brevo | app | JIKU-274 |
 
 ---
 
@@ -492,4 +496,54 @@ partagé ; le faire payer contredisait le discours (ADR 109, décision 11).
 - [x] Les pages publiques, les CGU et la base de connaissances le disent
 - [x] Un guide FR/EN « Brancher votre numéro WhatsApp » détaille le compte Meta Business, la vérification, le moyen de paiement, le nom affiché, les limites et les erreurs courantes
 - [x] Le guide « Écrire un message WhatsApp qui passe » cite la liste de mots de JIKU-270
+
+## JIKU-272 — Paiement en ligne selon la monnaie
+
+**Pourquoi.** Le paiement manuel demande une vérification humaine par paiement
+et ne couvre ni la carte ni le FCFA (ADR 110, décision 2).
+
+**Critères d'acceptation.**
+
+- [ ] Un adaptateur par prestataire derrière `PaymentProvider` : Lengo Pay pour le GNF, DexPay pour le FCFA, la carte pour l'USD
+- [ ] La confirmation du prestataire (signature vérifiée) active l'offre sans intervention
+- [ ] Le paiement manuel reste proposé en secours
+- [ ] Les pages publiques, les CGU et la base de connaissances citent le prestataire seulement une fois le contrat signé
+
+## JIKU-273 — Un seul canal par invité
+
+**Pourquoi.** Recevoir la même invitation par e-mail et par WhatsApp au même
+moment ressemble à du spam et paie deux messages pour un (ADR 110, décision 4).
+
+**Critères d'acceptation.**
+
+- [ ] Un événement a un canal prioritaire (WhatsApp ou e-mail) et une option « l'autre canal si le premier est impossible », active par défaut
+- [ ] Un envoi crée au plus une invitation par invité : le canal prioritaire s'il a la coordonnée, sinon l'autre
+- [ ] Un échec définitif de livraison déclenche une seule tentative sur l'autre canal, visible dans la liste des invités
+- [ ] L'import accepte une colonne facultative « Canal » qui fixe le canal d'un invité
+- [ ] La relance des invités sans réponse choisit son canal ; le billet et les rappels suivent le canal de l'invitation
+
+## JIKU-274 — Domaine hellojiku.com et pages publiques alignées
+
+**Pourquoi.** `jiku.app` n'est pas à nous ; le domaine de la marque est
+`hellojiku.com` (ADR 110, décision 1).
+
+**Critères d'acceptation.**
+
+- [x] Les valeurs par défaut, exemples, modèles WhatsApp et textes affichés utilisent `hellojiku.com`
+- [x] Les pages légales donnent `contact@hellojiku.com` et `privacy@hellojiku.com`, et la liste des prestataires cite les fournisseurs d'e-mails utilisés
+- [x] Les pages publiques et la base de connaissances donnent les moyens de paiement réels : Orange Money et virement bancaire
+- [x] La préproduction `jiku-web.vercel.app` est exclue des moteurs de recherche
+- [x] La redirection de `jiku.mrvin100.de` est décrite dans `docs/deploy-vps.md`, à activer après la vérification Meta
+
+## JIKU-275 — Chaîne d'envoi d'e-mails
+
+**Pourquoi.** Trois offres gratuites enchaînées couvrent le lancement sans
+minimum mensuel, et l'offre payante de useSend prend le relais (ADR 110,
+décision 3).
+
+**Critères d'acceptation.**
+
+- [ ] Une chaîne ordonnée et configurable de fournisseurs (useSend, Resend, Brevo), chacun avec son plafond journalier
+- [ ] Un fournisseur sans plafond (offre payante) prend tout ce qui dépasse ; sans lui, l'envoi attend le lendemain comme aujourd'hui
+- [ ] Les rebonds et plaintes de Brevo alimentent la réputation, comme ceux de Resend et useSend
 

@@ -74,11 +74,11 @@ class EmailRoutingTest {
         val properties = EmailRoutingProperties(resendDailyCap = 1, brevoDailyCap = 1, globalDailyCap = 3)
         val sender = RoutingEmailSender(resend, brevo, quota, properties)
 
-        sender.send("no-reply@jiku.app", message)
+        sender.send("no-reply@hellojiku.com", message)
         assertEquals(1, resend.sent)
         assertEquals(0, brevo.sent)
 
-        sender.send("no-reply@jiku.app", message)
+        sender.send("no-reply@hellojiku.com", message)
         assertEquals(1, resend.sent)
         assertEquals(1, brevo.sent)
     }
@@ -90,10 +90,10 @@ class EmailRoutingTest {
         val properties = EmailRoutingProperties(resendDailyCap = 1, brevoDailyCap = 1, globalDailyCap = 3)
         val sender = RoutingEmailSender(resend, brevo, quota, properties)
 
-        sender.send("no-reply@jiku.app", message)
-        sender.send("no-reply@jiku.app", message)
+        sender.send("no-reply@hellojiku.com", message)
+        sender.send("no-reply@hellojiku.com", message)
 
-        assertFailsWith<EmailQuotaExceededException> { sender.send("no-reply@jiku.app", message) }
+        assertFailsWith<EmailQuotaExceededException> { sender.send("no-reply@hellojiku.com", message) }
         assertEquals(1, resend.sent)
         assertEquals(1, brevo.sent)
     }
@@ -105,8 +105,8 @@ class EmailRoutingTest {
         val properties = EmailRoutingProperties(resendDailyCap = 10, brevoDailyCap = 10, globalDailyCap = 1)
         val sender = RoutingEmailSender(resend, brevo, quota, properties)
 
-        sender.send("no-reply@jiku.app", message)
-        assertFailsWith<EmailQuotaExceededException> { sender.send("no-reply@jiku.app", message) }
+        sender.send("no-reply@hellojiku.com", message)
+        assertFailsWith<EmailQuotaExceededException> { sender.send("no-reply@hellojiku.com", message) }
         assertTrue(resend.sent + brevo.sent == 1)
     }
 }

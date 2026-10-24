@@ -9,6 +9,10 @@ n8n) s'ajoutent comme applications Dokploy séparées, avec les limites de
 mémoire de l'ADR 108. Les SMS sont coupés par défaut (`SMS_TRANSPORT=off`,
 JIKU-261).
 
+Dans ce guide, `<domaine>` vaut **`hellojiku.com`** (ADR 110) : DNS chez
+Cloudflare, enregistrement chez Porkbun. Sous-domaines publics : `www`, `api`,
+`stats` et `chat` ; Dokploy et n8n restent derrière Tailscale.
+
 | Pièce | Où | Comment |
 |---|---|---|
 | Web (Next.js) | Serveur, conteneur `web` | Image `ghcr.io/youmssi/jiku_web` |
@@ -152,7 +156,7 @@ l'image à la construction : les changer impose une nouvelle image.
 | Fournisseur | Adresse à changer |
 |---|---|
 | Meta (WhatsApp) | Webhook → `https://api.<domaine>/api/v1/whatsapp/webhook`, abonné à `messages`, `message_template_status_update`, `message_template_quality_update`, `template_category_update`, `phone_number_quality_update` et `account_update` (JIKU-209) |
-| CinetPay | URL de notification et de retour |
+| Prestataire de paiement (JIKU-272, quand il est ouvert) | URL de notification et de retour |
 | useSend | Webhook `.../api/v1/notifications/email-feedback/usesend` |
 | Google (connexion) | Origines JavaScript autorisées : `https://<domaine>` |
 | Moniteur de disponibilité | `https://api.<domaine>/api/v1/health` |
@@ -202,6 +206,14 @@ puis vérifie que l'API est prête. Ordre inchangé : l'API d'abord, le web ensu
    `NEXT_PUBLIC_UMAMI_WEBSITE_ID`. La base `umami` est créée avec le volume ; sur
    un volume plus ancien, la créer une fois :
    `docker compose -f docker-compose.vps.yml exec postgres psql -U jiku -d jiku -c "CREATE DATABASE umami;"`.
+
+## 9 ter. Rediriger l'ancien domaine (ADR 110)
+
+Une fois la vérification Meta de MRVIN100 SARLU terminée, ajouter au
+`vercel.json` du dépôt web une redirection 308 de `jiku.mrvin100.de/:path*`
+vers `https://hellojiku.com/:path*` (condition `has` sur l'hôte), la livrer sur
+`main`, puis vérifier qu'un ancien lien d'invitation ouvre la même page sur le
+nouveau domaine. La garder au moins un an.
 
 ## 10. Après deux semaines sans incident
 

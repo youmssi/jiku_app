@@ -79,14 +79,14 @@ class DedicatedWhatsAppTemplatesTest {
                 eventName = "Mariage\nd'Awa",
                 eventWhen = "Samedi 12 octobre à 18 h",
                 organizerName = "Famille Diallo",
-                invitationUrl = "https://jiku.app/r/abc",
+                invitationUrl = "https://hellojiku.com/r/abc",
             )
 
         val withLink = calls.invitation(invitation, "fr-FR", withButtons = false)
         assertEquals(WhatsAppTemplateKind.INVITATION, withLink.kind)
         assertEquals("fr", withLink.language)
         assertEquals(
-            listOf("à vous", "Famille Diallo", "Mariage d'Awa", "samedi 12 octobre à 18 h", "https://jiku.app/r/abc"),
+            listOf("à vous", "Famille Diallo", "Mariage d'Awa", "samedi 12 octobre à 18 h", "https://hellojiku.com/r/abc"),
             withLink.parameters,
         )
 
@@ -110,13 +110,13 @@ class DedicatedWhatsAppTemplatesTest {
                 eventName = "Gala gratuit sur https://bit.ly/x1 et www.promo.xyz/win",
                 eventWhen = null,
                 organizerName = "Lots.top Events",
-                invitationUrl = "https://jiku.app/r/abc",
+                invitationUrl = "https://hellojiku.com/r/abc",
             )
 
         val call = calls.invitation(invitation, "fr", withButtons = false)
 
         assertEquals("Gala gratuit sur et", call.parameters[2])
         assertEquals("Events", call.parameters[1])
-        assertEquals("https://jiku.app/r/abc", call.parameters[4])
+        assertEquals("https://hellojiku.com/r/abc", call.parameters[4])
     }
 }
