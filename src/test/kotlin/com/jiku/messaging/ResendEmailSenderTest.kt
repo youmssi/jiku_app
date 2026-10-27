@@ -38,6 +38,7 @@ class ResendEmailSenderTest {
                 assertTrue(body.contains("\"from\":\"no-reply@hellojiku.com\""))
                 assertTrue(body.contains("Awa Diop <awa@example.com>"))
                 assertTrue(body.contains("\"subject\":\"Invitation\""))
+                assertTrue(body.contains("\"text\":\"Bienvenue\""))
             }.andRespond(withSuccess("""{"id":"email_1"}""", MediaType.APPLICATION_JSON))
 
         ResendEmailSender(builder.build()).send("no-reply@hellojiku.com", message)

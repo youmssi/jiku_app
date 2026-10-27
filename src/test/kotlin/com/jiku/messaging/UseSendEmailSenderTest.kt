@@ -43,6 +43,7 @@ class UseSendEmailSenderTest {
                 assertTrue(body.contains("\"to\":\"Awa Diop <awa@example.com>\""))
                 assertTrue(body.contains("\"subject\":\"Invitation\""))
                 assertTrue(body.contains("\"html\":\"<p>Bienvenue</p>\""))
+                assertTrue(body.contains("\"text\":\"Bienvenue\""))
                 assertTrue(body.contains("{\"filename\":\"billet.ics\",\"content\":\"$encoded\"}"))
             }.andRespond(withSuccess("""{"emailId":"email_1"}""", MediaType.APPLICATION_JSON))
 

@@ -42,6 +42,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-276 | Paiement à Jikū : virement bancaire et paiement en ligne, sans numéro marchand | app, web | JIKU-272 |
 | JIKU-277 | Facture émise et envoyée par e-mail dès la confirmation du paiement | app | JIKU-276 |
 | JIKU-278 | E-mails à l'image de la marque, lisibles en mode clair et sombre | app, web | JIKU-274 |
+| JIKU-279 | Version texte de chaque e-mail, pour la délivrabilité | app | JIKU-278 |
 
 ---
 
@@ -594,4 +595,19 @@ billetterie, sans trahir la charte.
 - [x] La facture montre le numéro, le total payé, la pièce jointe et un lien vers la facturation
 - [x] Boutons d'au moins 48 px de haut, lien de secours sous chaque bouton, mise en page lisible à 320 px
 - [x] Les gabarits personnalisables par l'organisation reçoivent les mêmes variables de mise en page
+
+---
+
+## JIKU-279 — Version texte de chaque e-mail
+
+**Pourquoi.** Un e-mail uniquement en HTML est mieux noté par les filtres
+anti-spam s'il porte aussi sa version texte, et certaines messageries,
+montres et lecteurs d'écran n'affichent que celle-ci.
+
+**Critères d'acceptation.**
+
+- [x] Chaque e-mail part en deux versions, HTML et texte, chez chaque fournisseur (useSend, Resend, Brevo, SMTP)
+- [x] La version texte est tirée du HTML rendu, y compris pour les modèles personnalisés par l'organisation : rien à maintenir en double
+- [x] Elle garde l'ordre de lecture, l'adresse de chaque lien entre parenthèses et des paragraphes séparés ; un libellé reste au-dessus de sa valeur
+- [x] Ni balise, ni style, ni texte d'aperçu caché, ni image n'y apparaissent
 
