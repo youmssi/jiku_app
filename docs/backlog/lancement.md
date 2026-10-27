@@ -35,7 +35,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-269 | Vérification des messages WhatsApp pendant la rédaction et guide d'écriture | app, web | JIKU-268 |
 | JIKU-270 | Tarifs alignés, invités gratuits déduits, marge le jour J, usage raisonnable appliqué, devise par pays | app, web | JIKU-269 |
 | JIKU-271 | Numéro WhatsApp propre gratuit dans toutes les offres et guide de branchement | app, web | JIKU-270 |
-| JIKU-272 | Paiement en ligne : Lengo Pay (GNF) et DexPay (FCFA), choix selon la monnaie | app, web | contrat avec un prestataire |
+| JIKU-272 | Paiement en ligne : DEXPAY (GNF, XOF, XAF), prestataire choisi selon la monnaie | app, web | contrat DEXPAY (le code se teste en bac à sable) |
 | JIKU-273 | Un seul canal par invité : canal prioritaire, l'autre en secours | app, web | — |
 | JIKU-274 | Domaine hellojiku.com et pages publiques alignées (ADR 110) | app, web | — |
 | JIKU-275 | Chaîne d'envoi d'e-mails : useSend, Resend, Brevo | app | JIKU-274 |
@@ -504,8 +504,8 @@ et ne couvre ni la carte ni le FCFA (ADR 110, décision 2).
 
 **Critères d'acceptation.**
 
-- [ ] Un adaptateur par prestataire derrière `PaymentProvider` : Lengo Pay pour le GNF, DexPay pour le FCFA, la carte pour l'USD
-- [ ] La confirmation du prestataire (signature vérifiée) active l'offre sans intervention
+- [x] Un adaptateur par prestataire derrière `PaymentProvider`, choisi par monnaie dans la configuration : DEXPAY pour le GNF, le XOF et le XAF au lancement ; l'USD par virement (`none`)
+- [x] La confirmation du prestataire (signature vérifiée) active l'offre sans intervention
 - [ ] Le paiement manuel reste proposé en secours
 - [ ] Les pages publiques, les CGU et la base de connaissances citent le prestataire seulement une fois le contrat signé
 

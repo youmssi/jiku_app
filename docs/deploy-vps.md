@@ -94,6 +94,11 @@ curl -sSL https://dokploy.com/install.sh | sh
    | `EMAIL_USESEND_OVERFLOW` | `false` au lancement ; `true` une fois l'offre payante de useSend activée |
    | `UMAMI_APP_SECRET` | secret fort (statistiques de visite) |
    | `WHATSAPP_META_BUSINESS_ACCOUNT_ID` | compte WhatsApp Business du numéro de la plateforme |
+   | `DEXPAY_API_KEY`, `DEXPAY_API_SECRET` | clés `pk_live_…` et `sk_live_…` d'une même paire DEXPAY (JIKU-272) ; la clé secrète vérifie la signature des webhooks |
+   | `DEXPAY_BASE_URL` | `https://api.dexpay.africa/api/v1` (le bac à sable est `https://api-sandbox.dexpay.africa/api/v1`) |
+   | `DEXPAY_WEBHOOK_URL`, `DEXPAY_RETURN_URL` | `https://api.<domaine>/api/v1/billing/payments/callback/dexpay` et `https://<domaine>/billing/return` |
+   | `PAYMENT_PROVIDER_GNF`, `PAYMENT_PROVIDER_XOF`, `PAYMENT_PROVIDER_XAF` | `dexpay` |
+   | `PAYMENT_PROVIDER_USD` | `none` : l'USD se paie par virement |
    | `OBSERVABILITY_*`, `MESSAGING_DAILY_*` | voir l'étape 9 bis |
 
    Dokploy écrit ces variables dans le `.env` lu par le conteneur `api`.
@@ -164,7 +169,7 @@ l'image à la construction : les changer impose une nouvelle image.
 | Fournisseur | Adresse à changer |
 |---|---|
 | Meta (WhatsApp) | Webhook → `https://api.<domaine>/api/v1/whatsapp/webhook`, abonné à `messages`, `message_template_status_update`, `message_template_quality_update`, `template_category_update`, `phone_number_quality_update` et `account_update` (JIKU-209) |
-| Prestataire de paiement (JIKU-272, quand il est ouvert) | URL de notification et de retour |
+| DEXPAY (JIKU-272) | Rien à saisir chez DEXPAY : chaque session de paiement porte elle-même `DEXPAY_WEBHOOK_URL` et `DEXPAY_RETURN_URL`. Côté web, `ONLINE_PAYMENT_ENABLED=true` une fois le contrat signé et les clés de production en place |
 | useSend | Webhook `.../api/v1/notifications/email-feedback/usesend` (`email.bounced`, `email.complained`) |
 | Resend | Webhook `.../api/v1/notifications/email-feedback/resend` (`email.bounced`, `email.complained`) |
 | Brevo | Webhook transactionnel `.../api/v1/notifications/email-feedback/brevo` (rebond définitif et temporaire, adresse invalide, spam), authentification par jeton porteur `BREVO_WEBHOOK_TOKEN` |
