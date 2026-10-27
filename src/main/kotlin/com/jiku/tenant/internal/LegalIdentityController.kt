@@ -1,9 +1,11 @@
 package com.jiku.tenant.internal
 
+import com.jiku.shared.LegalIdentityCompleted
 import com.jiku.shared.TenantContext
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
@@ -48,6 +50,7 @@ class LegalIdentityController(
 @Service
 class LegalIdentityService(
     private val tenants: TenantRepository,
+    private val events: ApplicationEventPublisher,
 ) {
     fun get(tenantId: UUID): LegalIdentityResponse = load(tenantId).legalIdentity.toResponse()
 
@@ -69,7 +72,10 @@ class LegalIdentityService(
                     ?.uppercase()
                     ?.ifBlank { null }
         }
-        return tenants.save(tenant).legalIdentity.toResponse()
+        val saved = tenants.save(tenant)
+        // Invoices waiting for this identity are issued once it can address them (JIKU-277).
+        if (saved.legalIdentity?.isComplete() == true) events.publishEvent(LegalIdentityCompleted(tenantId.toString()))
+        return saved.legalIdentity.toResponse()
     }
 
     private fun load(tenantId: UUID) =

@@ -1,5 +1,6 @@
 package com.jiku.messaging.internal
 
+import com.jiku.shared.InvoiceIssuedNotice
 import com.jiku.shared.ManualPaymentNotice
 import com.jiku.shared.MemberInvitationNotice
 import com.jiku.shared.MessageLanguage
@@ -195,6 +196,26 @@ class EmailTemplateRenderer(
             mapOf("paymentDetails" to paymentDetails(notice, language), "reasonBlock" to reasonBlock),
         )
     }
+
+    /** An invoice issued when a payment was confirmed (JIKU-277); the PDF travels as an attachment. */
+    fun renderInvoiceIssued(
+        notice: InvoiceIssuedNotice,
+        language: String,
+    ): RenderedEmail =
+        renderPlatform(
+            "invoice-issued",
+            language,
+            mapOf("recipientName" to notice.recipientName, "invoiceNumber" to notice.invoiceNumber),
+            mapOf(
+                "invoiceDetails" to
+                    detailsTable(
+                        listOf(
+                            catalog.text(language, "label.invoice") to notice.invoiceNumber,
+                            catalog.text(language, "label.amount") to formatAmount(notice.totalMinor, notice.currency),
+                        ),
+                    ),
+            ),
+        )
 
     /** A plain organizer notice (trial, subscription): a heading and one paragraph. */
     fun renderNotice(
