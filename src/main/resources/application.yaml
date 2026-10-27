@@ -563,6 +563,14 @@ billing:
     # secret verifies the sandbox callback signature and MUST be set to a strong
     # value outside local.
     provider: ${PAYMENT_PROVIDER:sandbox}
+    # The adapter per currency (JIKU-272). A blank value falls back to `provider`;
+    # "none" offers no online payment in that currency (transfer only). Startup
+    # fails when a name matches no adapter.
+    by-currency:
+      GNF: ${PAYMENT_PROVIDER_GNF:}
+      XOF: ${PAYMENT_PROVIDER_XOF:}
+      XAF: ${PAYMENT_PROVIDER_XAF:}
+      USD: ${PAYMENT_PROVIDER_USD:}
     webhook-secret: ${PAYMENT_WEBHOOK_SECRET:local-development-payment-webhook-secret}
     sandbox-return-url: ${PAYMENT_SANDBOX_RETURN_URL:http://localhost:3000/billing/return}
     # CinetPay (JIKU-106): Orange Money, MTN MoMo and card. The adapter exists only
@@ -577,6 +585,19 @@ billing:
       notify-url: ${CINETPAY_NOTIFY_URL:}
       return-url: ${CINETPAY_RETURN_URL:}
       channels: ${CINETPAY_CHANNELS:ALL}
+    # DEXPAY (JIKU-272, ADR 110): Orange Money, MTN, Wave, Moov and card in GNF,
+    # XOF and XAF. The adapter exists only when DEXPAY_API_KEY (pk_...) is set; the
+    # other fields are then required. DEXPAY_API_SECRET (sk_... of the same key)
+    # verifies the webhook signature. DEXPAY_BASE_URL is the sandbox
+    # (https://api-sandbox.dexpay.africa/api/v1) with test keys.
+    # DEXPAY_WEBHOOK_URL is this API's public /api/v1/billing/payments/callback/dexpay;
+    # DEXPAY_RETURN_URL is the web's /billing/return page.
+    dexpay:
+      api-key: ${DEXPAY_API_KEY:}
+      api-secret: ${DEXPAY_API_SECRET:}
+      base-url: ${DEXPAY_BASE_URL:https://api.dexpay.africa/api/v1}
+      webhook-url: ${DEXPAY_WEBHOOK_URL:}
+      return-url: ${DEXPAY_RETURN_URL:}
   trial:
     # Trial sweep (JIKU-42): cron for the expiry/notice job and how far before
     # expiry the organizer's heads-up email goes out.

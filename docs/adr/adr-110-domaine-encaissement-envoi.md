@@ -47,10 +47,13 @@ chaque semaine vers le compte bancaire, et le **virement bancaire**. Pas de
 second numéro Mobile Money : un client sur MTN MoMo paie par virement.
 
 Quand un prestataire est ouvert (JIKU-272), le paiement en ligne devient le
-moyen principal, choisi selon la monnaie (Lengo Pay pour le GNF, DexPay pour le
-FCFA, la carte pour l'USD), avec versement sur le compte bancaire. Le paiement
-manuel reste en secours : virement sur facture des entreprises et des
-administrations, panne du prestataire.
+moyen principal, avec versement sur le compte bancaire. Le prestataire est
+choisi par monnaie dans la configuration. Au lancement, **DEXPAY seul** couvre
+le GNF, le XOF et le XAF (Orange Money, MTN, Wave, Moov et carte, selon le
+pays) : un seul contrat, un seul relevé. L'USD se paie par virement. Un autre
+prestataire (Lengo Pay, un service de carte en USD) s'ajoute plus tard sans
+toucher au parcours de paiement. Le paiement manuel reste en secours : virement
+sur facture des entreprises et des administrations, panne du prestataire.
 
 ## Décision 3 — E-mails : une chaîne de fournisseurs, useSend en premier
 

@@ -52,6 +52,48 @@ class PaymentProviderSelectorTest {
     }
 
     @Test
+    fun `a currency uses its own adapter, or the default one when none is set`() {
+        val selector =
+            PaymentProviderSelector(
+                listOf(sandbox, aggregator),
+                PaymentProperties(provider = "sandbox", byCurrency = mapOf("GNF" to "aggregator", "XOF" to " ")),
+            )
+
+        assertSame(aggregator, selector.forCurrency("GNF"))
+        assertSame(aggregator, selector.forCurrency("gnf"))
+        assertSame(sandbox, selector.forCurrency("XOF"))
+        assertSame(sandbox, selector.forCurrency("XAF"))
+    }
+
+    @Test
+    fun `a currency set to none offers no online payment`() {
+        val selector =
+            PaymentProviderSelector(
+                listOf(sandbox, aggregator),
+                PaymentProperties(
+                    provider = "aggregator",
+                    byCurrency =
+                        mapOf(
+                            "USD" to "none",
+                        ),
+                ),
+            )
+
+        assertNull(selector.forCurrency("USD"))
+        assertSame(aggregator, selector.forCurrency("GNF"))
+    }
+
+    @Test
+    fun `a currency naming no adapter stops startup`() {
+        val failure =
+            assertFailsWith<IllegalStateException> {
+                PaymentProviderSelector(listOf(sandbox), PaymentProperties(byCurrency = mapOf("GNF" to "dexpay")))
+            }
+
+        assertTrue(failure.message!!.contains("by-currency.GNF 'dexpay'"), failure.message)
+    }
+
+    @Test
     fun `two adapters sharing a name stop startup`() {
         val failure =
             assertFailsWith<IllegalStateException> {

@@ -25,6 +25,9 @@ open class CodedRefusal(
         /** An event's guest allowance would be exceeded. */
         const val GUEST_ALLOWANCE = "billing.guest-allowance"
 
+        /** No online payment is offered in this currency: the organization pays by transfer. */
+        const val ONLINE_PAYMENT_UNAVAILABLE = "billing.online-payment-unavailable"
+
         /** The organization's services subscription ended: new bookings and walk-ins are paused. */
         const val SERVICES_PAUSED = "billing.services-paused"
 

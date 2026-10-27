@@ -9901,6 +9901,14 @@
             "schema" : {
               "type" : "string"
             }
+          },
+          {
+            "in" : "header",
+            "name" : "X-Webhook-Signature",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
           }
         ],
         "requestBody" : {
