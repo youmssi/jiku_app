@@ -42,9 +42,11 @@ Deux flux d'argent restent séparés :
   MRVIN100 SARLU, la seule trésorerie ; chaque paiement produit une facture
   numérotée (JIKU-69).
 
-Au lancement : un numéro marchand **Orange Money** au nom de la société, vidé
-chaque semaine vers le compte bancaire, et le **virement bancaire**. Pas de
-second numéro Mobile Money : un client sur MTN MoMo paie par virement.
+Avant l'ouverture du paiement en ligne : le **virement bancaire** seul (Ecobank,
+au nom de MRVIN100 SARLU). Pas de numéro marchand Mobile Money (JIKU-276) : le
+prestataire en ligne encaisse déjà Orange Money et MTN avec une confirmation
+automatique, alors qu'un numéro marchand demanderait une vérification à la main
+de chaque paiement et un versement hebdomadaire vers la banque.
 
 Quand un prestataire est ouvert (JIKU-272), le paiement en ligne devient le
 moyen principal, avec versement sur le compte bancaire. Le prestataire est

@@ -39,6 +39,8 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-273 | Un seul canal par invité : canal prioritaire, l'autre en secours | app, web | — |
 | JIKU-274 | Domaine hellojiku.com et pages publiques alignées (ADR 110) | app, web | — |
 | JIKU-275 | Chaîne d'envoi d'e-mails : useSend, Resend, Brevo | app | JIKU-274 |
+| JIKU-276 | Paiement à Jikū : virement bancaire et paiement en ligne, sans numéro marchand | app, web | JIKU-272 |
+| JIKU-277 | Facture émise et envoyée par e-mail dès la confirmation du paiement | app | JIKU-276 |
 
 ---
 
@@ -531,7 +533,7 @@ moment ressemble à du spam et paie deux messages pour un (ADR 110, décision 4)
 
 - [x] Les valeurs par défaut, exemples, modèles WhatsApp et textes affichés utilisent `hellojiku.com`
 - [x] Les pages légales donnent `contact@hellojiku.com` et `privacy@hellojiku.com`, et la liste des prestataires cite les fournisseurs d'e-mails utilisés
-- [x] Les pages publiques et la base de connaissances donnent les moyens de paiement réels : Orange Money et virement bancaire
+- [x] Les pages publiques et la base de connaissances donnent les moyens de paiement réels (JIKU-276 : virement bancaire, puis paiement en ligne)
 - [x] La préproduction `jiku-web.vercel.app` est exclue des moteurs de recherche
 - [x] La redirection de `jiku.mrvin100.de` est décrite dans `docs/deploy-vps.md`, à activer après la vérification Meta
 
@@ -546,4 +548,28 @@ décision 3).
 - [x] Une chaîne ordonnée et configurable de fournisseurs (useSend, Resend, Brevo), chacun avec son plafond journalier
 - [x] Un fournisseur sans plafond (offre payante) prend tout ce qui dépasse ; sans lui, l'envoi attend le lendemain comme aujourd'hui
 - [x] Les rebonds et plaintes de Brevo alimentent la réputation, comme ceux de Resend et useSend
+
+## JIKU-276 — Paiement à Jikū : virement bancaire et paiement en ligne
+
+**Pourquoi.** Le prestataire en ligne encaisse déjà Orange Money et MTN avec
+une confirmation automatique ; un numéro marchand demanderait une vérification
+à la main de chaque paiement (ADR 110, décision 2).
+
+**Critères d'acceptation.**
+
+- [x] Les CGU, la liste des prestataires, la page des tarifs, la FAQ des organisateurs et le guide « Paiements » ne proposent plus Orange Money pour payer Jikū : virement bancaire, puis paiement en ligne
+- [x] La base de connaissances commerciale et le référentiel métier disent la même chose
+- [ ] En production, les champs Mobile Money des instructions de paiement restent vides : seuls le bénéficiaire et les coordonnées bancaires s'affichent
+
+## JIKU-277 — Facture émise dès la confirmation du paiement
+
+**Pourquoi.** L'organisation attend sa facture au moment où elle paie, comme
+sur les grandes plateformes, sans avoir à la demander.
+
+**Critères d'acceptation.**
+
+- [ ] Un paiement confirmé (en ligne ou par l'équipe) émet sa facture numérotée dans la même minute, une seule fois même si la confirmation est rejouée
+- [ ] La facture part par e-mail en PDF aux administrateurs de l'organisation
+- [ ] Sans identité légale renseignée, la facture est émise dès que l'identité l'est, et l'écran de facturation le dit
+- [ ] Un échec d'émission ou d'envoi ne bloque jamais l'activation de l'offre
 

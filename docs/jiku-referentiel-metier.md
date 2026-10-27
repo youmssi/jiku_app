@@ -170,8 +170,9 @@ lancement.
 | **Tranche de commission** | Avant de vendre, puis à chaque tranche épuisée | 3 % × prix du billet × taille de la tranche |
 | **SMS** | Au moment de l'envoi | Prix exact affiché avant d'envoyer |
 
-Moyens de paiement proposés à l'organisation, dans cet ordre : Orange Money,
-MTN MoMo, carte, puis Wave.
+Moyens de paiement proposés à l'organisation (ADR 110) : le paiement en ligne
+(Mobile Money et carte, par le prestataire choisi pour sa monnaie) et, en
+secours, le virement bancaire.
 
 **Qui compte comme utilisateur payant :** seules les personnes qui rendent le
 service (médecin, agent de guichet, coiffeur, serveur). Les administrateurs,
