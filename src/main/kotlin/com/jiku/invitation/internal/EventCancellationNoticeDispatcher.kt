@@ -69,6 +69,8 @@ class EventCancellationNoticeDispatcher(
                 primaryColor = event.brand.primaryColor ?: tenant?.primaryColor ?: DEFAULT_COLOR,
                 logoUrl = event.brand.logoUrl ?: tenant?.logoUrl,
                 language = language,
+                eventStart = event.startDateTime,
+                eventTimezone = event.timezone,
             )
         val toldPhones = mutableSetOf<String>()
 

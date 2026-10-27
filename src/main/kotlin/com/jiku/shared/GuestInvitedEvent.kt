@@ -1,5 +1,6 @@
 package com.jiku.shared
 
+import java.time.Instant
 import java.util.UUID
 
 /**
@@ -43,6 +44,9 @@ data class GuestInvitedEvent(
      * WhatsApp invitation from the Jikū number is only sent with it.
      */
     val consentAttested: Boolean = true,
+    /** The event's start and its IANA zone, for the email's date tile (JIKU-278). */
+    val eventStart: Instant? = null,
+    val eventTimezone: String? = null,
 ) {
     companion object {
         const val CHANNEL_EMAIL = "EMAIL"

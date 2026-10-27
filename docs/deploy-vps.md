@@ -88,6 +88,8 @@ curl -sSL https://dokploy.com/install.sh | sh
    | `SERVER_BASE_URL`, `CORS_ALLOWED_ORIGINS` | `https://<domaine>` |
    | `API_PUBLIC_URL` | `https://api.<domaine>` |
    | `MAIL_TRANSPORT` | `routing` |
+   | `MAIL_FROM` | `Jikū <no-reply@mail.hellojiku.com>` : une adresse du domaine d'envoi vérifié chez chaque fournisseur |
+   | `EMAIL_ASSET_BASE_URL` | à laisser vide : les images des e-mails (filigrane, Bande, logos) sont servies par le site à `https://<domaine>/email` (JIKU-278) |
    | `EMAIL_ROUTING_ORDER` | `usesend,resend,brevo`, avec `EMAIL_GLOBAL_DAILY_CAP=480` |
    | `USESEND_API_KEY`, `RESEND_API_KEY`, `BREVO_API_KEY` | une clé par fournisseur de la chaîne |
    | `USESEND_WEBHOOK_SECRET`, `RESEND_WEBHOOK_SECRET`, `BREVO_WEBHOOK_TOKEN` | retours (rebonds, plaintes) de chaque fournisseur |

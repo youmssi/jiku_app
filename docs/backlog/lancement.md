@@ -41,6 +41,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-275 | Chaîne d'envoi d'e-mails : useSend, Resend, Brevo | app | JIKU-274 |
 | JIKU-276 | Paiement à Jikū : virement bancaire et paiement en ligne, sans numéro marchand | app, web | JIKU-272 |
 | JIKU-277 | Facture émise et envoyée par e-mail dès la confirmation du paiement | app | JIKU-276 |
+| JIKU-278 | E-mails à l'image de la marque, lisibles en mode clair et sombre | app, web | JIKU-274 |
 
 ---
 
@@ -572,4 +573,25 @@ sur les grandes plateformes, sans avoir à la demander.
 - [x] La facture part par e-mail en PDF à l'adresse de contact de l'organisation
 - [x] Sans identité légale renseignée, la facture est émise dès que l'identité l'est, et l'écran de facturation le dit
 - [x] Un échec d'émission ou d'envoi ne bloque jamais l'activation de l'offre
+
+---
+
+## JIKU-278 — E-mails à l'image de la marque
+
+**Pourquoi.** Chaque e-mail (invitation, billet, facture, compte) est souvent le
+premier contact d'un invité ou d'une organisation avec Jikū. Il doit être
+reconnaissable, soigné et lisible partout, comme ceux des grandes plateformes de
+billetterie, sans trahir la charte.
+
+**Critères d'acceptation.**
+
+- [x] Un seul gabarit pour les 11 e-mails, en français et en anglais : en-tête à la couleur de l'organisation (ou bleu nuit pour les e-mails de la plateforme), Leppi en filigrane à 7 %, Bande en signature au bas de l'en-tête, jamais de Médaillon
+- [x] Les motifs sont redessinés en vectoriel depuis la charte, puis servis en PNG par le site (`/email`), car Gmail bloque le SVG
+- [x] Le texte posé sur la couleur de l'organisation garde un contraste d'au moins 4,5:1 : sur une couleur claire, le texte et les motifs passent en encre
+- [x] En mode sombre (Apple Mail, iOS, Outlook.com), fonds, textes, bordures, logos et boutons basculent sans perdre de contraste
+- [x] L'invitation et l'annulation montrent la date en vignette (mois, jour, jour de la semaine) dans le fuseau de l'événement
+- [x] Le billet montre l'invité, la catégorie, la date, le lieu, le QR code sur fond blanc et le code lisible `XXXX-XXXX`
+- [x] La facture montre le numéro, le total payé, la pièce jointe et un lien vers la facturation
+- [x] Boutons d'au moins 48 px de haut, lien de secours sous chaque bouton, mise en page lisible à 320 px
+- [x] Les gabarits personnalisables par l'organisation reçoivent les mêmes variables de mise en page
 

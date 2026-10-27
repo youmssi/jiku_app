@@ -107,6 +107,8 @@ class InvitationDispatchWorker(
                     event?.deliveryMode == DeliveryMode.INTERACTIVE &&
                         channelName == GuestInvitedEvent.CHANNEL_WHATSAPP,
                 consentAttested = guest.consentAttestedAt != null,
+                eventStart = event?.startDateTime,
+                eventTimezone = event?.timezone,
             ),
         )
     }

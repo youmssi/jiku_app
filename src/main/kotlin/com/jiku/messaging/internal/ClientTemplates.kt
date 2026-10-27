@@ -42,6 +42,23 @@ object ClientTemplates {
             }.orEmpty()
     }
 
+    /**
+     * What the shared email layout reads (JIKU-278): the header and the colours
+     * worked out from the brand colour. Advanced, so an edited document that
+     * keeps the layout stays valid.
+     */
+    private val LAYOUT_VARIABLES =
+        listOf(
+            Variable("headerBlock", "Header: logo, kind of email and organizer name (advanced)", ""),
+            Variable("accent", "Brand colour, checked (advanced)", "#1E293B"),
+            Variable("onAccent", "Text colour on the brand colour (advanced)", "#FFFFFF"),
+            Variable("accentText", "Brand colour as text on white (advanced)", "#1E293B"),
+            Variable("watermarkUrl", "Header watermark image (advanced)", ""),
+            Variable("bandeUrl", "Header border image (advanced)", ""),
+            Variable("assetBaseUrl", "Brand images folder (advanced)", ""),
+            Variable("siteUrl", "Jikū web address (advanced)", ""),
+        )
+
     val definitions: List<Definition> =
         listOf(
             Definition(
@@ -59,7 +76,7 @@ object ClientTemplates {
                         Variable("primaryColor", "Brand color", "#1E293B"),
                         Variable("eventDetails", "Formatted date/location block (advanced)", ""),
                         Variable("logoBlock", "Logo image (advanced)", ""),
-                    ),
+                    ) + LAYOUT_VARIABLES,
                 whatsappVariables =
                     listOf(
                         Variable("guestName", "Guest name", "Awa Diallo", required = true),
@@ -101,7 +118,7 @@ object ClientTemplates {
                         Variable("primaryColor", "Brand color", "#1E293B"),
                         Variable("eventDetails", "Formatted date/location block (advanced)", ""),
                         Variable("logoBlock", "Logo image (advanced)", ""),
-                    ),
+                    ) + LAYOUT_VARIABLES,
                 whatsappVariables =
                     listOf(
                         Variable("guestName", "Guest name", "Awa Diallo", required = true),

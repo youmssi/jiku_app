@@ -720,6 +720,10 @@ notification:
     # Language of the emails the platform team itself receives (activation
     # requests). Organizers and guests get their organization's language.
     platform-language: ${NOTIFICATION_PLATFORM_LANGUAGE:fr}
+    # Links in emails open the web app; the brand images (motifs, logos) are
+    # served from its /email folder (JIKU-278).
+    site-url: ${SERVER_BASE_URL:http://localhost:3000}
+    asset-base-url: ${EMAIL_ASSET_BASE_URL:${SERVER_BASE_URL:http://localhost:3000}/email}
   send:
     # Delivery attempts before a notification is recorded as permanently failed.
     max-attempts: ${NOTIFICATION_MAX_ATTEMPTS:3}
