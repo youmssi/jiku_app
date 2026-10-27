@@ -568,8 +568,8 @@ sur les grandes plateformes, sans avoir à la demander.
 
 **Critères d'acceptation.**
 
-- [ ] Un paiement confirmé (en ligne ou par l'équipe) émet sa facture numérotée dans la même minute, une seule fois même si la confirmation est rejouée
-- [ ] La facture part par e-mail en PDF aux administrateurs de l'organisation
-- [ ] Sans identité légale renseignée, la facture est émise dès que l'identité l'est, et l'écran de facturation le dit
-- [ ] Un échec d'émission ou d'envoi ne bloque jamais l'activation de l'offre
+- [x] Un paiement confirmé (en ligne ou par l'équipe) émet sa facture numérotée dans la même minute, une seule fois même si la confirmation est rejouée
+- [x] La facture part par e-mail en PDF à l'adresse de contact de l'organisation
+- [x] Sans identité légale renseignée, la facture est émise dès que l'identité l'est, et l'écran de facturation le dit
+- [x] Un échec d'émission ou d'envoi ne bloque jamais l'activation de l'offre
 

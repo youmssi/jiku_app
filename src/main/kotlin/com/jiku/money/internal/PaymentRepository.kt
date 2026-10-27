@@ -82,6 +82,13 @@ interface PaymentRepository : JpaRepository<Payment, UUID> {
         @Param("limit") limit: Int,
     ): List<Array<Any?>>
 
+    /** The current tenant's settled payments with no invoice yet (JIKU-277), oldest first. */
+    @Query(
+        "SELECT p.id FROM Payment p WHERE p.status = com.jiku.money.internal.PaymentStatus.SUCCEEDED " +
+            "AND NOT EXISTS (SELECT 1 FROM Invoice i WHERE i.paymentId = p.id) ORDER BY p.createdAt",
+    )
+    fun findSucceededWithoutInvoice(): List<UUID>
+
     /** Tenant owning a payment, for rebinding context before an admin mutation. */
     @Query(value = "SELECT tenant_id FROM payment WHERE id = :id", nativeQuery = true)
     fun findTenantIdById(
