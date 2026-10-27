@@ -158,6 +158,7 @@ class TenantPersonalizationService(
                 .associate { it.name to it.sample }
         return if (channel == ClientTemplates.CHANNEL_EMAIL) {
             samples +
+                emailRenderer.sampleStyleValues(language, samples["primaryColor"] ?: "#1E293B", samples["organizerName"].orEmpty()) +
                 mapOf(
                     "eventDetails" to emailRenderer.sampleEventDetails(language),
                     "logoBlock" to "",

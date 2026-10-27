@@ -4,6 +4,7 @@ import com.jiku.messaging.internal.CancellationEmail
 import com.jiku.messaging.internal.EmailTemplateRenderer
 import com.jiku.messaging.internal.InvitationEmail
 import com.jiku.messaging.internal.MessageCatalog
+import com.jiku.messaging.internal.NotificationEmailProperties
 import com.jiku.messaging.internal.TenantTemplateRepository
 import com.jiku.messaging.internal.TenantTemplateResolver
 import com.jiku.messaging.internal.WhatsAppInvitation
@@ -25,7 +26,12 @@ import kotlin.test.assertTrue
 class EmailTemplateRendererTest {
     private val catalog = MessageCatalog { MessageLanguage.FRENCH }
     private val resolver = TenantTemplateResolver(unused<TenantTemplateRepository>(), unused<ApplicationEventPublisher>())
-    private val renderer = EmailTemplateRenderer(resolver, catalog)
+    private val renderer =
+        EmailTemplateRenderer(
+            resolver,
+            catalog,
+            NotificationEmailProperties(siteUrl = "https://hellojiku.com", assetBaseUrl = "https://hellojiku.com/email"),
+        )
     private val whatsApp = WhatsAppTemplateRenderer(resolver, catalog)
 
     @Test
