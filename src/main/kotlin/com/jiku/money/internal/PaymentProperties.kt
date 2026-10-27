@@ -1,6 +1,7 @@
 package com.jiku.money.internal
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import java.time.Duration
 
 /**
  * Payment integration configuration (JIKU-33). The provider name, the webhook
@@ -18,6 +19,10 @@ data class PaymentProperties(
      * organization pays that currency by transfer.
      */
     val byCurrency: Map<String, String> = emptyMap(),
+    /** How long a payment waits for its callback before its provider is asked directly (JIKU-272). */
+    val reconcileAfter: Duration = Duration.ofMinutes(2),
+    /** A payment its provider still reports as unfinished after this long is closed as FAILED. */
+    val abandonAfter: Duration = Duration.ofDays(2),
     /** Shared secret used to verify the HMAC signature on provider callbacks. */
     val webhookSecret: String = "local-development-payment-webhook-secret",
     /** Where the sandbox provider tells the client to return after "paying". */

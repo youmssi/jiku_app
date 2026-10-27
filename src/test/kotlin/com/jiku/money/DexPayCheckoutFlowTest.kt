@@ -2,6 +2,7 @@ package com.jiku.money
 
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
+import com.jiku.money.internal.PaymentReconciliationJob
 import com.jiku.support.OrganizerApi
 import com.sun.net.httpserver.HttpServer
 import org.junit.jupiter.api.AfterAll
@@ -18,6 +19,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.net.InetSocketAddress
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -39,6 +41,9 @@ private const val SECRET_KEY = "sk_test_flow"
         "billing.payment.dexpay.api-secret=$SECRET_KEY",
         "billing.payment.dexpay.webhook-url=https://api.jiku.test/api/v1/billing/payments/callback/dexpay",
         "billing.payment.dexpay.return-url=https://jiku.test/billing/return",
+        "billing.payment.reconcile-delay=PT1H",
+        "billing.payment.reconcile-after=PT0S",
+        "billing.payment.abandon-after=PT1S",
     ],
 )
 @AutoConfigureMockMvc
@@ -46,6 +51,9 @@ private const val SECRET_KEY = "sk_test_flow"
 class DexPayCheckoutFlowTest {
     @Autowired
     lateinit var mockMvc: MockMvc
+
+    @Autowired
+    lateinit var reconciliation: PaymentReconciliationJob
 
     @Test
     fun `a pack paid through DEXPAY is granted by its signed webhook only`() {
@@ -80,6 +88,39 @@ class DexPayCheckoutFlowTest {
         api.get(token, "/api/v1/billing/pack").andExpect(jsonPath("$.active").value(true))
     }
 
+    @Test
+    fun `a payment whose webhook was lost is settled from DEXPAY's record, and an abandoned one is closed`() {
+        val api = OrganizerApi(mockMvc)
+        val token = api.register()
+        val abandonedToken = api.register()
+        val paid = checkoutPack(api, token)
+        val abandoned = checkoutPack(api, abandonedToken)
+        sessionStatus[paid] = "completed"
+        sessionStatus[abandoned] = "initiated"
+        // Past abandon-after for both; only DEXPAY's record decides which one is paid.
+        Thread.sleep(1_500)
+
+        reconciliation.sweep()
+
+        api.get(token, "/api/v1/billing/payments/$paid").andExpect(jsonPath("$.status").value("SUCCEEDED"))
+        api.get(token, "/api/v1/billing/pack").andExpect(jsonPath("$.active").value(true))
+        api.get(abandonedToken, "/api/v1/billing/payments/$abandoned").andExpect(jsonPath("$.status").value("FAILED"))
+        api.get(abandonedToken, "/api/v1/billing/pack").andExpect(jsonPath("$.active").value(false))
+    }
+
+    private fun checkoutPack(
+        api: OrganizerApi,
+        token: String,
+    ): String =
+        JsonPath.read(
+            api
+                .post(token, "/api/v1/billing/pack/checkout", """{"months":1}""")
+                .andExpect(status().isOk())
+                .andReturn()
+                .response.contentAsString,
+            "$.paymentId",
+        )
+
     private fun webhook(
         body: String,
         signature: String,
@@ -107,10 +148,17 @@ class DexPayCheckoutFlowTest {
     companion object {
         val sessions = CopyOnWriteArrayList<Session>()
 
+        /** What the stand-in reports for each session it is asked about; unknown ones are 404. */
+        val sessionStatus = ConcurrentHashMap<String, String>()
+
         /** Stands in for DEXPAY's checkout API and records the sessions Jikū opened. */
         private val dexpay =
             HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0).apply {
                 createContext("/api/v1/checkout-sessions") { exchange ->
+                    if (exchange.requestMethod == "GET") {
+                        lookup(exchange)
+                        return@createContext
+                    }
                     val body = exchange.requestBody.readAllBytes().toString(Charsets.UTF_8)
                     sessions += Session(exchange.requestHeaders.getFirst("x-api-key"), body)
                     val reference = Regex("\"reference\":\"([^\"]+)\"").find(body)?.groupValues?.get(1)
@@ -123,6 +171,26 @@ class DexPayCheckoutFlowTest {
                 }
                 start()
             }
+
+        private fun lookup(exchange: com.sun.net.httpserver.HttpExchange) {
+            val reference = exchange.requestURI.rawPath.substringAfterLast('/')
+            val opened = sessions.firstOrNull { "\"reference\":\"$reference\"" in it.body }
+            val status = sessionStatus[reference]
+            if (opened == null || status == null) {
+                exchange.sendResponseHeaders(404, -1)
+                exchange.close()
+                return
+            }
+            val jikuReference = Regex("\"jiku_reference\":\"([^\"]+)\"").find(opened.body)!!.groupValues[1]
+            val amount = Regex("\"amount\":(\\d+)").find(opened.body)!!.groupValues[1]
+            val bytes =
+                """{"status":200,"data":{"reference":"$reference","amount":$amount,"currency":"GNF","status":"$status",""" +
+                    """"metadata":{"jiku_reference":"$jikuReference"}}}"""
+            exchange.responseHeaders.add("Content-Type", "application/json")
+            val payload = bytes.toByteArray()
+            exchange.sendResponseHeaders(200, payload.size.toLong())
+            exchange.responseBody.use { it.write(payload) }
+        }
 
         @JvmStatic
         @DynamicPropertySource

@@ -3,6 +3,7 @@ package com.jiku.money.internal
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import java.time.Instant
 import java.util.UUID
 
 interface PaymentRepository : JpaRepository<Payment, UUID> {
@@ -57,6 +58,29 @@ interface PaymentRepository : JpaRepository<Payment, UUID> {
         @Param("limit") limit: Int,
         @Param("offset") offset: Int,
     ): List<Payment>
+
+    /**
+     * Payments still PENDING with one of [providers], started between [after] and
+     * [before], across tenants (JIKU-272): their callback may have been lost.
+     * Native SQL for the same reason as [adminList]; each row is then settled
+     * under its own tenant.
+     */
+    @Query(
+        value = """
+            SELECT id, tenant_id FROM payment
+            WHERE status = 'PENDING' AND provider IN (:providers)
+              AND created_at < :before AND created_at > :after
+            ORDER BY created_at
+            LIMIT :limit
+        """,
+        nativeQuery = true,
+    )
+    fun findPendingToReconcile(
+        @Param("providers") providers: Collection<String>,
+        @Param("before") before: Instant,
+        @Param("after") after: Instant,
+        @Param("limit") limit: Int,
+    ): List<Array<Any?>>
 
     /** Tenant owning a payment, for rebinding context before an admin mutation. */
     @Query(value = "SELECT tenant_id FROM payment WHERE id = :id", nativeQuery = true)

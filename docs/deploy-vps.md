@@ -99,6 +99,7 @@ curl -sSL https://dokploy.com/install.sh | sh
    | `DEXPAY_WEBHOOK_URL`, `DEXPAY_RETURN_URL` | `https://api.<domaine>/api/v1/billing/payments/callback/dexpay` et `https://<domaine>/billing/return` |
    | `PAYMENT_PROVIDER_GNF`, `PAYMENT_PROVIDER_XOF`, `PAYMENT_PROVIDER_XAF` | `dexpay` |
    | `PAYMENT_PROVIDER_USD` | `none` : l'USD se paie par virement |
+   | `DEXPAY_CLIENT_PAYS_FEES` | `false` : le client paie le prix affiché et facturé, Jikū supporte les frais DEXPAY |
    | `OBSERVABILITY_*`, `MESSAGING_DAILY_*` | voir l'étape 9 bis |
 
    Dokploy écrit ces variables dans le `.env` lu par le conteneur `api`.

@@ -571,6 +571,12 @@ billing:
       XOF: ${PAYMENT_PROVIDER_XOF:}
       XAF: ${PAYMENT_PROVIDER_XAF:}
       USD: ${PAYMENT_PROVIDER_USD:}
+    # A payment whose provider callback has not come after reconcile-after is
+    # checked with the provider every reconcile-delay (JIKU-272); one the provider
+    # still reports unfinished after abandon-after is closed as FAILED.
+    reconcile-delay: ${PAYMENT_RECONCILE_DELAY:PT2M}
+    reconcile-after: ${PAYMENT_RECONCILE_AFTER:PT2M}
+    abandon-after: ${PAYMENT_ABANDON_AFTER:P2D}
     webhook-secret: ${PAYMENT_WEBHOOK_SECRET:local-development-payment-webhook-secret}
     sandbox-return-url: ${PAYMENT_SANDBOX_RETURN_URL:http://localhost:3000/billing/return}
     # CinetPay (JIKU-106): Orange Money, MTN MoMo and card. The adapter exists only
@@ -598,6 +604,8 @@ billing:
       base-url: ${DEXPAY_BASE_URL:https://api.dexpay.africa/api/v1}
       webhook-url: ${DEXPAY_WEBHOOK_URL:}
       return-url: ${DEXPAY_RETURN_URL:}
+      # Off: the payer pays the price shown and invoiced, and Jikū bears DEXPAY's fee.
+      client-pays-fees: ${DEXPAY_CLIENT_PAYS_FEES:false}
   trial:
     # Trial sweep (JIKU-42): cron for the expiry/notice job and how far before
     # expiry the organizer's heads-up email goes out.
