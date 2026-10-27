@@ -129,7 +129,7 @@ Côte d'Ivoire et au Sénégal) : le montant affiché est le montant payé. Prix
 ### 4.3 Comment payer Jikū
 
 - Depuis **Facturation** dans l'espace de l'organisation ; le montant exact s'affiche avant le paiement.
-- Par transfert **Orange Money** (numéro marchand de MRVIN100 SARLU) ou **virement bancaire**, avec la référence affichée dans **Demander l'activation** ; l'équipe confirme et active, en général en quelques heures. Ce n'est pas instantané. Un client sur MTN MoMo paie par virement en attendant le paiement en ligne.
+- Par **virement bancaire** au compte de MRVIN100 SARLU, avec la référence affichée dans **Demander l'activation** ; l'équipe confirme et active, en général en quelques heures. Ce n'est pas instantané. Il n'y a pas de numéro Mobile Money pour payer Jikū : une personne qui veut payer par Mobile Money attend le paiement en ligne.
 - Le paiement en ligne n'est pas encore ouvert : ne jamais le promettre ni donner de date. Un moyen de paiement précis (un opérateur donné) n'est jamais promis : si la personne ne le trouve pas, l'assistant passe la main.
 - **L'assistant ne demande jamais** de numéro de carte, de code ou de mot de passe.
 
