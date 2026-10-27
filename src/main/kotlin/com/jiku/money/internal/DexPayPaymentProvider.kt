@@ -34,6 +34,12 @@ data class DexPayProperties(
     val webhookUrl: String = "",
     /** Where the payer lands after paying or giving up; the payment id is appended as `paymentId`. */
     val returnUrl: String = "",
+    /**
+     * Whether the payer pays DEXPAY's fee on top of the price. Off by default: the
+     * price shown, invoiced and paid stay the same, and the portal's own setting
+     * never decides it.
+     */
+    val clientPaysFees: Boolean = false,
 )
 
 /**
@@ -70,6 +76,7 @@ class DexPayPaymentProvider(
                     "success_url" to returnUrl,
                     "failure_url" to returnUrl,
                     "webhook_url" to properties.webhookUrl,
+                    "client_support_fee" to properties.clientPaysFees,
                     "metadata" to mapOf(METADATA_REFERENCE to request.reference),
                 ),
             )
@@ -103,6 +110,38 @@ class DexPayPaymentProvider(
                 },
             amountMinor = node.path("amount").takeIf { it.isNumber }?.asLong(),
             currency = currency,
+        )
+    }
+
+    override fun lookup(providerReference: String): PaymentCallback? {
+        val response =
+            try {
+                client
+                    .get()
+                    .uri("/checkout-sessions/{reference}", providerReference)
+                    .retrieve()
+                    .body(JsonNode::class.java)
+            } catch (ex: HttpStatusCodeException) {
+                if (ex.statusCode.value() == NOT_FOUND) return null
+                throw PaymentProviderException("DEXPAY rejected the lookup of $providerReference (${ex.statusCode})", ex)
+            } catch (ex: ResourceAccessException) {
+                throw PaymentProviderException("DEXPAY is unreachable for the lookup of $providerReference", ex)
+            } ?: return null
+        // The documentation shows the session both wrapped in `data` and bare.
+        val session = response.path("data").takeIf { it.isObject } ?: response
+        if (session.text("reference") != providerReference) return null
+        val reference = session.path("metadata").text(METADATA_REFERENCE)?.takeIf { it.endsWith(":$providerReference") } ?: return null
+        return PaymentCallback(
+            reference = reference,
+            providerReference = providerReference,
+            outcome =
+                when (session.text("status")) {
+                    STATUS_COMPLETED -> PaymentOutcome.SUCCEEDED
+                    in FINAL_FAILED_STATUSES -> PaymentOutcome.FAILED
+                    else -> PaymentOutcome.PENDING
+                },
+            amountMinor = session.path("amount").takeIf { it.isNumber }?.asLong(),
+            currency = session.text("currency"),
         )
     }
 
@@ -140,6 +179,9 @@ class DexPayPaymentProvider(
         private const val METADATA_REFERENCE = "jiku_reference"
         private const val EVENT_COMPLETED = "checkout.completed"
         private val FINAL_FAILURES = setOf("checkout.failed", "checkout.cancelled")
+        private const val STATUS_COMPLETED = "completed"
+        private val FINAL_FAILED_STATUSES = setOf("failed", "cancelled")
+        private const val NOT_FOUND = 404
 
         /** The currencies DEXPAY collects; all three have no decimals. */
         val CURRENCIES = setOf("GNF", "XOF", "XAF")

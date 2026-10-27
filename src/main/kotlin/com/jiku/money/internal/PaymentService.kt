@@ -262,7 +262,12 @@ class PaymentService(
         val payment = payments.findById(paymentId).orElse(null) ?: return CallbackOutcome.UNKNOWN
         // A provider can only vouch for the payments it started itself.
         if (payment.provider != providerName) return CallbackOutcome.UNKNOWN
-        if (payment.status != PaymentStatus.PENDING) return CallbackOutcome.ALREADY_PROCESSED
+        if (payment.status != PaymentStatus.PENDING) {
+            if (payment.status == PaymentStatus.FAILED && callback.outcome == PaymentOutcome.SUCCEEDED) {
+                log.warn("Payment {} was closed as FAILED but {} now reports it paid; settle it by hand", paymentId, providerName)
+            }
+            return CallbackOutcome.ALREADY_PROCESSED
+        }
         if (callback.outcome == PaymentOutcome.PENDING) return CallbackOutcome.PENDING
 
         val succeeded = callback.outcome == PaymentOutcome.SUCCEEDED && paidInFull(payment, callback)
@@ -272,6 +277,47 @@ class PaymentService(
         if (!succeeded) return CallbackOutcome.FAILED
         fulfillment.fulfill(payment)
         return CallbackOutcome.SUCCEEDED
+    }
+
+    /**
+     * Settles a PENDING payment from its provider's own record when its callback
+     * never came (JIKU-272): a provider retries a webhook only briefly, and a
+     * restart of this API in that window must not leave a paid purchase locked.
+     * The caller binds the payment's tenant. A payment still unfinished at the
+     * provider after [PaymentProperties.abandonAfter] is closed as FAILED.
+     */
+    fun reconcile(
+        paymentId: UUID,
+        abandonBefore: Instant,
+    ): CallbackOutcome {
+        val payment =
+            transactions.execute { payments.findById(paymentId).orElse(null) } ?: return CallbackOutcome.UNKNOWN
+        if (payment.status != PaymentStatus.PENDING) return CallbackOutcome.ALREADY_PROCESSED
+        val provider = providers.byName(payment.provider) ?: return CallbackOutcome.UNKNOWN_PROVIDER
+        val providerReference = payment.providerReference ?: return CallbackOutcome.UNKNOWN
+        val callback =
+            try {
+                provider.lookup(providerReference)
+            } catch (ex: PaymentProviderException) {
+                log.warn("Payment provider {} could not be asked about payment {}: {}", provider.name, paymentId, ex.message)
+                return CallbackOutcome.PROVIDER_UNAVAILABLE
+            }
+        if (callback == null || callback.outcome == PaymentOutcome.PENDING) {
+            if (payment.createdAt.isAfter(abandonBefore)) return CallbackOutcome.PENDING
+            return transactions.execute { abandon(paymentId) } ?: CallbackOutcome.UNKNOWN
+        }
+        // The provider's record must name this very payment, under this tenant.
+        if (callback.reference != "${TenantContext.get()}:$paymentId") return CallbackOutcome.UNKNOWN
+        return transactions.execute { confirm(paymentId, provider.name, callback) } ?: CallbackOutcome.UNKNOWN
+    }
+
+    private fun abandon(paymentId: UUID): CallbackOutcome {
+        val payment = payments.findById(paymentId).orElse(null) ?: return CallbackOutcome.UNKNOWN
+        if (payment.status != PaymentStatus.PENDING) return CallbackOutcome.ALREADY_PROCESSED
+        payment.status = PaymentStatus.FAILED
+        payment.updatedAt = Instant.now()
+        payments.save(payment)
+        return CallbackOutcome.FAILED
     }
 
     /** A provider that reports what was paid must report exactly what was asked. */

@@ -60,6 +60,7 @@ class DexPayPaymentProviderTest {
                 assertTrue(body.contains("\"failure_url\":\"https://jiku.test/billing/return?paymentId=$paymentId\""), body)
                 assertTrue(body.contains("\"webhook_url\":\"${properties.webhookUrl}\""), body)
                 assertTrue(body.contains("\"jiku_reference\":\"$reference\""), body)
+                assertTrue(body.contains("\"client_support_fee\":false"), body)
             }.andRespond(
                 withStatus(HttpStatus.CREATED)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -144,6 +145,69 @@ class DexPayPaymentProviderTest {
 
         assertNull(provider.parseCallback(body, sign(body)))
     }
+
+    @Test
+    fun `a lookup reads the session's outcome with its amount`() {
+        server
+            .expect(requestTo("https://dexpay.test/api/v1/checkout-sessions/$paymentId"))
+            .andExpect(method(HttpMethod.GET))
+            .andRespond(withSuccess(session("completed"), MediaType.APPLICATION_JSON))
+
+        val callback = provider.lookup(paymentId.toString())!!
+
+        assertEquals(PaymentOutcome.SUCCEEDED, callback.outcome)
+        assertEquals(reference, callback.reference)
+        assertEquals(150_000L, callback.amountMinor)
+        assertEquals("GNF", callback.currency)
+        server.verify()
+    }
+
+    @Test
+    fun `a lookup also reads a session wrapped in data, and maps unfinished and failed sessions`() {
+        server
+            .expect(requestTo("https://dexpay.test/api/v1/checkout-sessions/$paymentId"))
+            .andRespond(withSuccess("""{"status":200,"data":${session("initiated")}}""", MediaType.APPLICATION_JSON))
+        server
+            .expect(requestTo("https://dexpay.test/api/v1/checkout-sessions/$paymentId"))
+            .andRespond(withSuccess(session("cancelled"), MediaType.APPLICATION_JSON))
+
+        assertEquals(PaymentOutcome.PENDING, provider.lookup(paymentId.toString())!!.outcome)
+        assertEquals(PaymentOutcome.FAILED, provider.lookup(paymentId.toString())!!.outcome)
+    }
+
+    @Test
+    fun `a lookup of an unknown session or one naming another payment gives nothing`() {
+        server
+            .expect(requestTo("https://dexpay.test/api/v1/checkout-sessions/$paymentId"))
+            .andRespond(withStatus(HttpStatus.NOT_FOUND))
+        server
+            .expect(requestTo("https://dexpay.test/api/v1/checkout-sessions/$paymentId"))
+            .andRespond(
+                withSuccess(
+                    session("completed", metadataReference = "${UUID.randomUUID()}:${UUID.randomUUID()}"),
+                    MediaType.APPLICATION_JSON,
+                ),
+            )
+
+        assertNull(provider.lookup(paymentId.toString()))
+        assertNull(provider.lookup(paymentId.toString()))
+    }
+
+    @Test
+    fun `an unreachable DEXPAY during a lookup is reported, not taken as unpaid`() {
+        server
+            .expect(requestTo("https://dexpay.test/api/v1/checkout-sessions/$paymentId"))
+            .andRespond(withStatus(HttpStatus.BAD_GATEWAY))
+
+        assertFailsWith<PaymentProviderException> { provider.lookup(paymentId.toString()) }
+    }
+
+    private fun session(
+        status: String,
+        metadataReference: String = reference,
+    ): String =
+        """{"id":"507f1f77bcf86cd799439011","reference":"$paymentId","amount":150000,"currency":"GNF",""" +
+            """"status":"$status","metadata":{"jiku_reference":"$metadataReference"}}"""
 
     private fun request(
         currency: String = "GNF",
