@@ -3109,6 +3109,12 @@
               "null"
             ]
           },
+          "showComing" : {
+            "type" : [
+              "boolean",
+              "null"
+            ]
+          },
           "welcomeMessage" : {
             "maxLength" : 500,
             "minLength" : 0,
@@ -3179,6 +3185,9 @@
               "integer",
               "null"
             ]
+          },
+          "showComing" : {
+            "type" : "boolean"
           },
           "welcomeMessage" : {
             "type" : [
@@ -4632,6 +4641,13 @@
           },
           "code" : {
             "type" : "string"
+          },
+          "comingCount" : {
+            "format" : "int32",
+            "type" : [
+              "integer",
+              "null"
+            ]
           },
           "eventEnd" : {
             "format" : "date-time",

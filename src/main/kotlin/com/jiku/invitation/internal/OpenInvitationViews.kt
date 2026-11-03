@@ -35,6 +35,8 @@ data class OpenInvitationSettingsRequest(
     val closesAt: Instant? = null,
     /** Free tier only: tell the people who answered, by WhatsApp, if the event is cancelled. Null keeps the current choice. */
     val notifyOnCancel: Boolean? = null,
+    /** Show "23 people are coming" on the card (JIKU-286). Null keeps the current choice. */
+    val showComing: Boolean? = null,
 )
 
 data class OpenResponseRequest(
@@ -92,6 +94,8 @@ data class OpenInvitationView(
     val cancelNoticeIncluded: Boolean,
     /** The dedicated WhatsApp number a card opens, digits only; null when answers go through the web only. */
     val whatsappNumber: String?,
+    /** Whether the card shows how many people are coming (JIKU-286). */
+    val showComing: Boolean,
 )
 
 /** What a person opening a shared card sees, before answering. */
@@ -124,6 +128,12 @@ data class PublicOpenInvitationView(
      * brand alone.
      */
     val jikuSignature: Boolean,
+    /**
+     * How many people are coming, when the organizer shows it and at least
+     * [OpenInvitationService.SHOW_COMING_FROM] are (JIKU-286); null otherwise. A
+     * number only: nobody is named.
+     */
+    val comingCount: Int?,
 )
 
 /** A recorded answer, as the person who gave it sees it. */

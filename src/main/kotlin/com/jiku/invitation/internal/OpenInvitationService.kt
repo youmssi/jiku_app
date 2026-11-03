@@ -86,6 +86,7 @@ class OpenInvitationService(
                     maxCompanions = companions
                     closesAt = request.closesAt
                     request.notifyOnCancel?.let { notifyOnCancel = it }
+                    request.showComing?.let { showComing = it }
                 }
         return organizerView(openInvitations.save(invitation), event, now)
     }
@@ -144,6 +145,7 @@ class OpenInvitationService(
             closedReason = closed,
             whatsappNumber = whatsappNumber(),
             jikuSignature = !allowanceGate.paidEvent(eventId),
+            comingCount = if (invitation.showComing) comingCount(eventId) else null,
         )
     }
 
@@ -308,8 +310,17 @@ class OpenInvitationService(
             notifyOnCancel = invitation.notifyOnCancel,
             cancelNoticeIncluded = allowanceGate.paidEvent(invitation.eventId),
             whatsappNumber = whatsappNumber(),
+            showComing = invitation.showComing,
         )
     }
+
+    /** People coming, once there are enough for the number to encourage rather than discourage. */
+    private fun comingCount(eventId: UUID): Int? =
+        responses
+            .findByEventIdOrderByUpdatedAtDesc(eventId)
+            .filter { it.removedAt == null && it.answer == OpenAnswer.YES }
+            .sumOf { it.heads }
+            .takeIf { it >= SHOW_COMING_FROM }
 
     private fun closedReason(
         invitation: OpenInvitation,
@@ -357,6 +368,9 @@ class OpenInvitationService(
         private const val CODE_ATTEMPTS = 5
         private const val MIN_PHONE_DIGITS = 8
         private const val MAX_PHONE_DIGITS = 15
+
+        /** Below this many people, "2 people are coming" would put guests off rather than draw them (JIKU-286). */
+        const val SHOW_COMING_FROM = 5
 
         /** A number as WhatsApp reports a sender: digits only, with the country code. */
         fun phoneDigits(phone: String): String {

@@ -218,6 +218,26 @@ class OpenInvitationFlowTest {
         settings(open).andExpect(jsonPath("$.counts.yes").value(1)).andExpect(jsonPath("$.remainingPlaces").value(0))
     }
 
+    @Test
+    fun `the card shows how many are coming only when the organizer chooses, and from five people`() {
+        val open = openInvitation(capacity = null)
+        respond(open.code, "Awa Diallo", "+224 620 00 10 01", "YES", companions = 3).andExpect(status().isOk())
+        page(open.code).andExpect(jsonPath("$.comingCount").doesNotExist())
+
+        api
+            .put(open.token, "/api/v1/events/${open.eventId}/open-invitation", """{"maxCompanions":3,"showComing":true}""")
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.showComing").value(true))
+        page(open.code).andExpect(jsonPath("$.comingCount").doesNotExist())
+
+        respond(open.code, "Mamadou Bah", "+224 620 00 10 02", "YES").andExpect(status().isOk())
+        page(open.code).andExpect(jsonPath("$.comingCount").value(5))
+
+        api
+            .put(open.token, "/api/v1/events/${open.eventId}/open-invitation", """{"maxCompanions":3}""")
+            .andExpect(jsonPath("$.showComing").value(true))
+    }
+
     private data class Open(
         val token: String,
         val eventId: String,
