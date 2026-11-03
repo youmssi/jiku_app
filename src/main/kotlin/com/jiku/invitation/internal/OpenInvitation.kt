@@ -119,6 +119,10 @@ class OpenResponse(
     @Column(name = "removed_at")
     var removedAt: Instant? = null
 
+    /** The network of the link this person first answered from (JIKU-282); null when unknown. */
+    @Column(name = "source", length = 16)
+    var source: String? = null
+
     /** People this answer brings: the person and their companions for a yes, none otherwise. */
     val heads: Int
         get() = if (answer == OpenAnswer.YES) 1 + companions else 0

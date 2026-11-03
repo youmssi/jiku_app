@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
@@ -24,7 +25,22 @@ import java.util.UUID
 @PreAuthorize("hasRole('ORGANIZER')")
 class OpenInvitationController(
     private val service: OpenInvitationService,
+    private val funnel: CardFunnelService,
 ) {
+    /** Shares, visits and answers per network (JIKU-282). */
+    @GetMapping("/funnel")
+    fun funnel(
+        @PathVariable eventId: UUID,
+    ): List<CardFunnelRow> = funnel.funnel(eventId)
+
+    /** The organizer shared the card through [source]; counted, never tied to anyone. */
+    @PostMapping("/shares")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun share(
+        @PathVariable eventId: UUID,
+        @RequestParam source: String,
+    ) = funnel.recordShare(eventId, CardSource.of(source))
+
     /** 204 while the event has no open invitation yet. */
     @GetMapping
     fun settings(
@@ -60,7 +76,16 @@ class OpenInvitationController(
 @RequestMapping("/open/{code}")
 class PublicOpenInvitationController(
     private val service: OpenInvitationService,
+    private val funnel: CardFunnelService,
 ) {
+    /** The card page was opened from a link tagged [source] (JIKU-282). Sent by the page's script, so link previews never count. */
+    @PostMapping("/visits")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun visit(
+        @PathVariable code: String,
+        @RequestParam(required = false) source: String?,
+    ) = service.route(code) { eventId -> funnel.recordVisit(eventId, CardSource.of(source)) }
+
     @GetMapping
     fun view(
         @PathVariable code: String,

@@ -187,6 +187,8 @@ class OpenInvitationService(
                 createdAt = now,
             )
         response.name = name
+        // The first network a person answered from keeps the credit; a later change of answer does not move it.
+        if (response.source == null && request.source != null) response.source = CardSource.of(request.source).tag
         response.answer = request.answer
         response.companions = companions
         response.channel = channel
