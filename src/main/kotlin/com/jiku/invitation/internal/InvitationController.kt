@@ -49,6 +49,19 @@ class InvitationController(
         @PathVariable eventId: UUID,
     ): List<OrganizerWhatsAppGuest> = organizerWhatsApp.prepare(eventId)
 
+    /** The invited guests who have not answered, to remind from the organizer's own WhatsApp (JIKU-290). */
+    @PostMapping("/own-whatsapp/reminders")
+    fun ownWhatsAppReminders(
+        @PathVariable eventId: UUID,
+    ): List<OrganizerWhatsAppReminder> = organizerWhatsApp.reminders(eventId)
+
+    /** The organizer opened the guest's chat with a reminder. */
+    @PostMapping("/own-whatsapp/{guestId}/reminded")
+    fun markRemindedFromOwnWhatsApp(
+        @PathVariable eventId: UUID,
+        @PathVariable guestId: UUID,
+    ): OrganizerWhatsAppReminder = organizerWhatsApp.markReminded(eventId, guestId)
+
     /** The organizer opened the guest's chat with the link: the invitation counts as sent. */
     @PostMapping("/own-whatsapp/{guestId}/sent")
     fun markSentFromOwnWhatsApp(

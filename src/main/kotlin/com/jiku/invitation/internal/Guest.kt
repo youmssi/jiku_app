@@ -111,6 +111,10 @@ class Guest(
     /** The short code of this guest's personal link (JIKU-248), drawn on first send. */
     @Column(name = "invite_code", length = 16)
     var inviteCode: String? = null
+
+    /** When the organizer last reminded this guest from their own WhatsApp (JIKU-290); written by [GuestRepository.markOrganizerReminded]. */
+    @Column(name = "organizer_reminded_at", insertable = false, updatable = false)
+    var organizerRemindedAt: Instant? = null
 }
 
 enum class GuestOrigin {

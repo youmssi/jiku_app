@@ -117,6 +117,58 @@ class OrganizerWhatsAppService(
         )
     }
 
+    /**
+     * The guests already invited who have not answered and have a WhatsApp number
+     * (JIKU-290), each with the same personal link: a reminder adds no guest and
+     * never counts against the allowance. Those never reminded come first, then
+     * the longest ago.
+     */
+    @Transactional
+    fun reminders(eventId: UUID): List<OrganizerWhatsAppReminder> {
+        sending.openForSending(eventId)
+        val tenantId = TenantContext.get().orEmpty()
+        val invited =
+            invitations
+                .findByEventId(eventId)
+                .filter { it.status == InvitationStatus.SENT }
+                .map { it.guestId }
+                .toSet()
+        return guests
+            .findByEventId(eventId)
+            .filter { it.id in invited && it.rsvpStatus == RsvpStatus.PENDING }
+            .filter { !it.excludedFromInvitations && !it.personalDataErased }
+            .filter { it.phoneNumber?.let(InvitationDispatchWorker.E164::matches) == true }
+            .sortedWith(compareBy(nullsFirst()) { it.organizerRemindedAt })
+            .map { guest ->
+                OrganizerWhatsAppReminder(
+                    guestId = requireNotNull(guest.id),
+                    firstName = guest.firstName,
+                    lastName = guest.lastName,
+                    phone = requireNotNull(guest.phoneNumber),
+                    link = link(guest, tenantId),
+                    remindedAt = guest.organizerRemindedAt,
+                )
+            }
+    }
+
+    /** The organizer opened the guest's chat with a reminder: its time is kept, to show "reminded yesterday". */
+    @Transactional
+    fun markReminded(
+        eventId: UUID,
+        guestId: UUID,
+        now: Instant = Instant.now(),
+    ): OrganizerWhatsAppReminder {
+        sending.openForSending(eventId)
+        val guest =
+            guests.findById(guestId).orElse(null)?.takeIf { it.eventId == eventId }
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Guest not found")
+        val invited = invitations.findByGuestId(guestId).any { it.status == InvitationStatus.SENT }
+        if (!invited) throw ResponseStatusException(HttpStatus.CONFLICT, "Invite the guest before reminding them")
+        val link = link(guest, TenantContext.get().orEmpty())
+        guests.markOrganizerReminded(guestId, now)
+        return OrganizerWhatsAppReminder(guestId, guest.firstName, guest.lastName, guest.phoneNumber.orEmpty(), link, now)
+    }
+
     private fun link(
         guest: Guest,
         tenantId: String,
@@ -136,4 +188,14 @@ data class OrganizerWhatsAppGuest(
     val link: String?,
     val sentAt: Instant?,
     val sentByOrganizer: Boolean,
+)
+
+/** A guest to remind from the organizer's own WhatsApp, with their personal link and the last reminder sent. */
+data class OrganizerWhatsAppReminder(
+    val guestId: UUID,
+    val firstName: String,
+    val lastName: String,
+    val phone: String,
+    val link: String,
+    val remindedAt: Instant?,
 )
