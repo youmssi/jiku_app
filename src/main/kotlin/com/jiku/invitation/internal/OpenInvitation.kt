@@ -41,6 +41,9 @@ class OpenInvitation(
     /** On the free tier, whether the people who answered are told by WhatsApp when the event is cancelled. */
     @Column(name = "notify_on_cancel", nullable = false)
     var notifyOnCancel: Boolean = false,
+    /** Whether the card shows how many people are coming (JIKU-286); off until the organizer turns it on. */
+    @Column(name = "show_coming", nullable = false)
+    var showComing: Boolean = false,
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now(),
 ) : BaseTenantEntity() {
