@@ -42,6 +42,8 @@ data class OpenResponseRequest(
     @field:NotBlank @field:Size(max = 32) val phone: String,
     val answer: OpenAnswer,
     @field:Min(0) @field:Max(100) val companions: Int = 0,
+    /** The network tag of the link the card was opened from (JIKU-282); unknown tags count as other. */
+    @field:Size(max = 16) val source: String? = null,
 )
 
 /** Why an open invitation takes no answer right now; null in the views when it does. */

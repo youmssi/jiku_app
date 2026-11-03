@@ -45,6 +45,15 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-279 | Version texte de chaque e-mail, pour la délivrabilité | app | JIKU-278 |
 | JIKU-280 | Partager une carte par le menu de partage du téléphone (image et message) | web | — |
 | JIKU-281 | Envoyer les invitations depuis mon WhatsApp, avec un lien personnel par invité | app, web | — |
+| JIKU-282 | Mesurer partages, visites et réponses d'une carte par réseau | app, web | JIKU-280 |
+| JIKU-283 | Aperçus justes partout et image de la carte au format statut | web | — |
+| JIKU-284 | Message vocal de l'hôte sur la carte | app, web | décision D1 |
+| JIKU-285 | Inviter un proche depuis la carte | app, web | JIKU-282, décision D2 |
+| JIKU-286 | « Ils viennent » : nombre de présents sur la carte | app, web | décision D3 |
+| JIKU-287 | Une page de carte légère sur réseau lent, avec budget de poids | web | — |
+| JIKU-288 | Signature « Créé avec Jikū » sur les cartes gratuites | web | décision D4 |
+| JIKU-289 | Agenda, itinéraire et compte à rebours sur la carte | web | — |
+| JIKU-290 | Relancer depuis mon WhatsApp les invités sans réponse | app, web | JIKU-281 |
 
 ---
 
@@ -647,4 +656,12 @@ discussion à la fois.
 - [x] Jikū n'envoie rien de lui-même à ces invités : le billet s'affiche sur leur lien personnel et part par e-mail s'ils en ont un ; l'avis d'annulation part toujours
 - [x] En mode billet direct, le billet est émis au moment où l'organisateur ouvre la discussion
 - [x] L'événement doit être publié, comme pour un envoi
+
+---
+
+## JIKU-282 à JIKU-290 — Cartes premium
+
+Les récits, leurs critères d'acceptation UX et les décisions à prendre (D1 à
+D4) sont dans [`cartes-premium-ux.md`](cartes-premium-ux.md), rédigé en mode
+Design de la compétence ux-expert.
 
