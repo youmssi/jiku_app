@@ -140,7 +140,7 @@ class OneChannelPerGuestTest {
     fun `a guest invited on WhatsApp gets the ticket in WhatsApp, not by email`(output: CapturedOutput) {
         val token = register()
         val eventId = createEvent(token, primary = "WHATSAPP")
-        importGuests(token, eventId, "Ada,Lovelace,ada@test.example,+2250700000106")
+        importGuests(token, eventId, "Ada,Lovelace,ada-ticket@test.example,+2250700000106")
         send(token, eventId).andExpect(jsonPath("$.queued").value(1))
         assertEquals(listOf("WHATSAPP"), awaitChannels(token, eventId, 1))
         confirm(token, eventId, guestIndex = 0)
@@ -150,7 +150,8 @@ class OneChannelPerGuestTest {
                 "the ticket was not sent in WhatsApp"
             }
         }
-        assert(!output.out.contains("subject=\"Votre billet : Gala\"")) { "the ticket also went by email" }
+        // Matched on this guest's address: other tests' tickets share the subject and the captured output.
+        assert(!output.out.contains("to=ada-ticket@test.example subject=\"Votre billet")) { "the ticket also went by email" }
     }
 
     @Test
