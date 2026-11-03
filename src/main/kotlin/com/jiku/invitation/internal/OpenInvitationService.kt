@@ -46,6 +46,7 @@ class OpenInvitationService(
     private val allowanceGate: UsageAllowanceGate,
     private val inviteCodes: GuestInviteCodes,
     private val properties: OpenInvitationProperties,
+    private val voices: CardVoiceService,
 ) {
     /** Runs [block] under the tenant of [code], with its event id; 404 for an unknown code or a suspended organization. */
     fun <T> route(
@@ -156,6 +157,7 @@ class OpenInvitationService(
             jikuSignature = !allowanceGate.paidEvent(eventId),
             comingCount = if (invitation.showComing) comingCount(eventId) else null,
             relay = invitation.relay && closed == null,
+            voice = voices.view(eventId, invitation.code),
         )
     }
 
@@ -322,6 +324,7 @@ class OpenInvitationService(
             whatsappNumber = whatsappNumber(),
             showComing = invitation.showComing,
             relay = invitation.relay,
+            voice = voices.view(invitation.eventId, invitation.code),
         )
     }
 

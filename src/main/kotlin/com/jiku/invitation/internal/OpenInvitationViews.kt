@@ -26,6 +26,12 @@ data class OpenInvitationProperties(
      * card image it draws at `/api/cards/{code}`. Blank: the message has no image.
      */
     val cardImageBaseUrl: String = "",
+    /** This API's public URL, where guests' phones fetch the host's voice message (JIKU-284). */
+    val apiPublicUrl: String = "http://localhost:8080",
+    /** The largest voice message accepted: 30 seconds of compressed speech fit well under it. */
+    val voiceMaxBytes: Int = 300_000,
+    /** The longest voice message, in seconds (decision D1). */
+    val voiceMaxSeconds: Int = 30,
 )
 
 data class OpenInvitationSettingsRequest(
@@ -100,6 +106,8 @@ data class OpenInvitationView(
     val showComing: Boolean,
     /** Whether a guest who is coming may invite someone from the card (JIKU-285). */
     val relay: Boolean,
+    /** The host's voice message (JIKU-284); null without one. */
+    val voice: CardVoiceView?,
 )
 
 /** What a person opening a shared card sees, before answering. */
@@ -140,6 +148,8 @@ data class PublicOpenInvitationView(
     val comingCount: Int?,
     /** Whether the page offers "Invite someone" once a guest says yes (JIKU-285): on, and the card takes answers. */
     val relay: Boolean,
+    /** The host's voice message (JIKU-284), played on demand; null without one. */
+    val voice: CardVoiceView?,
 )
 
 /** A recorded answer, as the person who gave it sees it. */

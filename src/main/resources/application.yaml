@@ -386,6 +386,12 @@ api:
         token-segment: 1
         max-requests: ${RATE_LIMIT_OPEN_INVITATION_PAGE_MAX_REQUESTS:120}
         window: ${RATE_LIMIT_OPEN_INVITATION_PAGE_WINDOW:PT1M}
+      open-invitation-voice:
+        # The host's voice message (JIKU-284), fetched when a guest taps play;
+        # per address, as a phone fetches it once and caches it.
+        paths: [/open/*/voice]
+        max-requests: ${RATE_LIMIT_OPEN_INVITATION_VOICE_MAX_REQUESTS:60}
+        window: ${RATE_LIMIT_OPEN_INVITATION_VOICE_WINDOW:PT10M}
       open-invitation-visit:
         # A card page counting its own visit (JIKU-282), per address: counts stay
         # indicative, and one phone reloading cannot inflate them much.
@@ -796,6 +802,10 @@ open-invitation:
   # The web app's public URL: the WhatsApp card message shows the card image it
   # draws (JIKU-194). Blank: the message goes without an image.
   card-image-base-url: ${SERVER_BASE_URL:http://localhost:3000}
+  # The host's voice message (JIKU-284), served by this API to guests' phones.
+  api-public-url: ${API_PUBLIC_URL:http://localhost:8080}
+  voice-max-bytes: ${OPEN_INVITATION_VOICE_MAX_BYTES:300000}
+  voice-max-seconds: ${OPEN_INVITATION_VOICE_MAX_SECONDS:30}
 
 verification:
   # Time the documents of an approved request are kept before deletion; a

@@ -210,7 +210,12 @@ s'ouvre vite, pour répondre avant d'abandonner. **Domaines :** PERF, STATE, RES
 **Critères UX.**
 - [ ] Premier chargement de la page de la carte, mesuré en 4G lente émulée sur
   un appareil moyen :
-  - moins de 100 Ko transférés hors bannière ;
+  - **révisé à la mesure** : React, Next et Sentry pèsent à eux seuls environ
+    190 Ko compressés, donc 100 Ko n'est pas tenable. La page est passée de
+    755 Ko à 585 Ko transférés (JavaScript de 490 Ko à 342 Ko), et un budget de
+    340 Ko de JavaScript compressé est vérifié en intégration continue
+    (`pnpm budget:card`). Pistes suivantes : n'envoyer au navigateur que les
+    traductions utiles (environ 38 Ko) et alléger les polices ;
   - bannière d'au plus 60 Ko en WebP, dimensionnée à l'écran ;
   - réponse possible en moins de 3 s.
 
@@ -368,3 +373,18 @@ naturelle dans le parcours ; les bons choix sont faits par défaut, sans réglag
 | AES-02, AES-10 | 283 |
 | A11Y-29 | 283, 284 |
 | RESP-07 | 283, 284, 288, 289 |
+
+## 7. JIKU-291 — Contraste garanti sur la couleur de l'organisateur
+
+Trouvé pendant la vérification de ces récits : le texte blanc des cartes, des
+billets et des images reposait sur la couleur choisie telle quelle. Sur un
+jaune clair (#F5D76E), il ne contrastait qu'à 1,42:1 [A11Y-15, COL]. L'outil
+axe ne le signalait pas, car il ne mesure pas un texte posé sur un dégradé : la
+capture et `contrast.py` l'ont révélé.
+
+- [x] La couleur est foncée juste assez pour que le blanc atteigne 4,5:1, et
+  les couleurs foncées restent inchangées. #F5D76E devient #7B6C37 (5,19:1).
+- [x] La règle s'applique partout : en-tête de la carte et du billet, trois
+  formats d'image, aperçu des styles, initiale de la page publique.
+- [x] Les réglages de l'événement disent quand la couleur choisie sera foncée.
+

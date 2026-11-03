@@ -752,6 +752,24 @@
         },
         "type" : "object"
       },
+      "CardVoiceView" : {
+        "properties" : {
+          "durationSeconds" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "transcript" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "url" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "ChangeRoleRequest" : {
         "properties" : {
           "role" : {
@@ -3198,6 +3216,16 @@
           "showComing" : {
             "type" : "boolean"
           },
+          "voice" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/CardVoiceView"
+              },
+              {
+                "type" : "null"
+              }
+            ]
+          },
           "welcomeMessage" : {
             "type" : [
               "string",
@@ -4714,6 +4742,16 @@
           },
           "relay" : {
             "type" : "boolean"
+          },
+          "voice" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/CardVoiceView"
+              },
+              {
+                "type" : "null"
+              }
+            ]
           },
           "welcomeMessage" : {
             "type" : [
@@ -12204,6 +12242,94 @@
         ]
       }
     },
+    "/api/v1/events/{eventId}/open-invitation/voice" : {
+      "delete" : {
+        "operationId" : "openInvitationRemoveVoice",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [
+          "open-invitation-controller"
+        ]
+      },
+      "put" : {
+        "operationId" : "openInvitationReplaceVoice",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          },
+          {
+            "in" : "query",
+            "name" : "durationSeconds",
+            "required" : true,
+            "schema" : {
+              "format" : "int32",
+              "type" : "integer"
+            }
+          },
+          {
+            "in" : "query",
+            "name" : "transcript",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "properties" : {
+                  "file" : {
+                    "format" : "binary",
+                    "type" : "string"
+                  }
+                },
+                "required" : [
+                  "file"
+                ],
+                "type" : "object"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CardVoiceView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "open-invitation-controller"
+        ]
+      }
+    },
     "/api/v1/events/{eventId}/orders" : {
       "get" : {
         "operationId" : "ticketOrderList",
@@ -14244,6 +14370,37 @@
         "responses" : {
           "204" : {
             "description" : "No Content"
+          }
+        },
+        "tags" : [
+          "public-open-invitation-controller"
+        ]
+      }
+    },
+    "/api/v1/open/{code}/voice" : {
+      "get" : {
+        "operationId" : "publicOpenInvitationVoice",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "code",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "format" : "byte",
+                  "type" : "string"
+                }
+              }
+            },
+            "description" : "OK"
           }
         },
         "tags" : [

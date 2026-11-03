@@ -54,6 +54,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-288 | Signature « Créé avec Jikū » sur les cartes gratuites | web | décision D4 |
 | JIKU-289 | Agenda, itinéraire et compte à rebours sur la carte | web | — |
 | JIKU-290 | Relancer depuis mon WhatsApp les invités sans réponse | app, web | JIKU-281 |
+| JIKU-291 | Texte toujours lisible sur la couleur de l'organisateur (contraste WCAG) | web | — |
 
 ---
 
