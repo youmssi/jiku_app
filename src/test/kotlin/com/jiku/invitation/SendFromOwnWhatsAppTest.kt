@@ -123,6 +123,56 @@ class SendFromOwnWhatsAppTest {
         assertTrue(!output.out.contains("to=+2250700000205"), "the ticket went through Jikū's WhatsApp")
     }
 
+    @Test
+    fun `invited guests who have not answered are listed to remind, the never reminded first`() {
+        val token = register()
+        val eventId = createEvent(token)
+        importGuests(token, eventId, "Ada,Lovelace,,+2250700000211", "Grace,Hopper,,+2250700000212", "Alan,Turing,,+2250700000213")
+        val prepared = prepare(token, eventId)
+        val ids = JsonPath.read<List<String>>(prepared, "$[*].guestId")
+        ids.forEach { markSent(token, eventId, it).andExpect(status().isOk()) }
+        val ada = ids[JsonPath.read<List<String>>(prepared, "$[*].firstName").indexOf("Ada")]
+        val alan = ids[JsonPath.read<List<String>>(prepared, "$[*].firstName").indexOf("Alan")]
+        confirm(token, eventId, alan)
+
+        mockMvc
+            .perform(post("/api/v1/events/$eventId/invitations/own-whatsapp/$ada/reminded").header("Authorization", "Bearer $token"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.remindedAt").exists())
+        val reminders = reminders(token, eventId)
+
+        assertEquals(listOf("Grace", "Ada"), JsonPath.read<List<String>>(reminders, "$[*].firstName"))
+        assertNull(JsonPath.read<String?>(reminders, "$[0].remindedAt"))
+        assertNotNull(JsonPath.read<String?>(reminders, "$[1].remindedAt"))
+        assertEquals(
+            JsonPath.read<List<String>>(prepared, "$[?(@.guestId == '$ada')].link").single(),
+            JsonPath.read(reminders, "$[1].link"),
+        )
+    }
+
+    @Test
+    fun `a guest never invited cannot be reminded`() {
+        val token = register()
+        val eventId = createEvent(token)
+        importGuests(token, eventId, "Ada,Lovelace,,+2250700000214")
+        val guestId = JsonPath.read<String>(guests(token, eventId), "$[0].id")
+        mockMvc
+            .perform(post("/api/v1/events/$eventId/invitations/own-whatsapp/$guestId/reminded").header("Authorization", "Bearer $token"))
+            .andExpect(status().isConflict())
+        assertEquals(0, JsonPath.read<List<Any>>(reminders(token, eventId), "$").size)
+    }
+
+    private fun reminders(
+        token: String,
+        eventId: String,
+    ): String =
+        mockMvc
+            .perform(post("/api/v1/events/$eventId/invitations/own-whatsapp/reminders").header("Authorization", "Bearer $token"))
+            .andExpect(status().isOk())
+            .andReturn()
+            .response
+            .contentAsString
+
     private fun prepare(
         token: String,
         eventId: String,

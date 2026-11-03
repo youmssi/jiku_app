@@ -3832,6 +3832,34 @@
         },
         "type" : "object"
       },
+      "OrganizerWhatsAppReminder" : {
+        "properties" : {
+          "firstName" : {
+            "type" : "string"
+          },
+          "guestId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "lastName" : {
+            "type" : "string"
+          },
+          "link" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "remindedAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type" : "object"
+      },
       "PackExtraRequest" : {
         "properties" : {
           "blocks" : {
@@ -11579,6 +11607,80 @@
                     "$ref" : "#/components/schemas/OrganizerWhatsAppGuest"
                   },
                   "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "invitation-controller"
+        ]
+      }
+    },
+    "/api/v1/events/{eventId}/invitations/own-whatsapp/reminders" : {
+      "post" : {
+        "operationId" : "invitationOwnWhatsAppReminders",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/OrganizerWhatsAppReminder"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "invitation-controller"
+        ]
+      }
+    },
+    "/api/v1/events/{eventId}/invitations/own-whatsapp/{guestId}/reminded" : {
+      "post" : {
+        "operationId" : "invitationMarkRemindedFromOwnWhatsApp",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          },
+          {
+            "in" : "path",
+            "name" : "guestId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrganizerWhatsAppReminder"
                 }
               }
             },
