@@ -44,6 +44,9 @@ class OpenInvitation(
     /** Whether the card shows how many people are coming (JIKU-286); off until the organizer turns it on. */
     @Column(name = "show_coming", nullable = false)
     var showComing: Boolean = false,
+    /** Whether a guest who is coming may invite someone from the card (JIKU-285). */
+    @Column(name = "relay", nullable = false)
+    var relay: Boolean = true,
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now(),
 ) : BaseTenantEntity() {

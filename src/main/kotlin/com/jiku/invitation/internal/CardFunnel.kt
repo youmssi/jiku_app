@@ -25,6 +25,7 @@ enum class CardSource(
     SHARE_SHEET("share"),
     LINK("link"),
     QR("qr"),
+    RELAY("relay"),
     OTHER("other"),
     ;
 

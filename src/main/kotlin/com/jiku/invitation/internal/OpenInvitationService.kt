@@ -79,15 +79,24 @@ class OpenInvitationService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "At most ${properties.maxCompanions} companions per answer")
         }
         val invitation =
-            (openInvitations.findByEventId(eventId) ?: OpenInvitation(eventId = eventId, code = newCode(), maxCompanions = companions))
-                .apply {
-                    enabled = request.enabled
-                    welcomeMessage = request.welcomeMessage?.trim()?.takeIf { it.isNotEmpty() }
-                    maxCompanions = companions
-                    closesAt = request.closesAt
-                    request.notifyOnCancel?.let { notifyOnCancel = it }
-                    request.showComing?.let { showComing = it }
-                }
+            (
+                openInvitations.findByEventId(eventId)
+                    // Decision D2: guests may pass the card on when places are unlimited, not when the host set a limit.
+                    ?: OpenInvitation(
+                        eventId = eventId,
+                        code = newCode(),
+                        maxCompanions = companions,
+                        relay = events.remainingAttendance(eventId) == null,
+                    )
+            ).apply {
+                enabled = request.enabled
+                welcomeMessage = request.welcomeMessage?.trim()?.takeIf { it.isNotEmpty() }
+                maxCompanions = companions
+                closesAt = request.closesAt
+                request.notifyOnCancel?.let { notifyOnCancel = it }
+                request.showComing?.let { showComing = it }
+                request.relay?.let { relay = it }
+            }
         return organizerView(openInvitations.save(invitation), event, now)
     }
 
@@ -146,6 +155,7 @@ class OpenInvitationService(
             whatsappNumber = whatsappNumber(),
             jikuSignature = !allowanceGate.paidEvent(eventId),
             comingCount = if (invitation.showComing) comingCount(eventId) else null,
+            relay = invitation.relay && closed == null,
         )
     }
 
@@ -311,6 +321,7 @@ class OpenInvitationService(
             cancelNoticeIncluded = allowanceGate.paidEvent(invitation.eventId),
             whatsappNumber = whatsappNumber(),
             showComing = invitation.showComing,
+            relay = invitation.relay,
         )
     }
 

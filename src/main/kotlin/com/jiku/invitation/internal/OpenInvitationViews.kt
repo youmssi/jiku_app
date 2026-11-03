@@ -37,6 +37,8 @@ data class OpenInvitationSettingsRequest(
     val notifyOnCancel: Boolean? = null,
     /** Show "23 people are coming" on the card (JIKU-286). Null keeps the current choice. */
     val showComing: Boolean? = null,
+    /** Let a guest who is coming invite someone from the card (JIKU-285). Null keeps the current choice. */
+    val relay: Boolean? = null,
 )
 
 data class OpenResponseRequest(
@@ -96,6 +98,8 @@ data class OpenInvitationView(
     val whatsappNumber: String?,
     /** Whether the card shows how many people are coming (JIKU-286). */
     val showComing: Boolean,
+    /** Whether a guest who is coming may invite someone from the card (JIKU-285). */
+    val relay: Boolean,
 )
 
 /** What a person opening a shared card sees, before answering. */
@@ -134,6 +138,8 @@ data class PublicOpenInvitationView(
      * number only: nobody is named.
      */
     val comingCount: Int?,
+    /** Whether the page offers "Invite someone" once a guest says yes (JIKU-285): on, and the card takes answers. */
+    val relay: Boolean,
 )
 
 /** A recorded answer, as the person who gave it sees it. */

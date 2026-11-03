@@ -3109,6 +3109,12 @@
               "null"
             ]
           },
+          "relay" : {
+            "type" : [
+              "boolean",
+              "null"
+            ]
+          },
           "showComing" : {
             "type" : [
               "boolean",
@@ -3177,6 +3183,9 @@
             "type" : "integer"
           },
           "notifyOnCancel" : {
+            "type" : "boolean"
+          },
+          "relay" : {
             "type" : "boolean"
           },
           "remainingPlaces" : {
@@ -4702,6 +4711,9 @@
               "string",
               "null"
             ]
+          },
+          "relay" : {
+            "type" : "boolean"
           },
           "welcomeMessage" : {
             "type" : [
