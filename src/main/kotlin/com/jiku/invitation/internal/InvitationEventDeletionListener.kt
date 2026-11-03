@@ -15,11 +15,14 @@ import org.springframework.transaction.annotation.Transactional
 class InvitationEventDeletionListener(
     private val guests: GuestRepository,
     private val invitations: InvitationRepository,
+    private val voices: CardVoiceRepository,
 ) {
     @EventListener
     @Transactional(propagation = Propagation.MANDATORY)
     fun onEventDeleted(event: EventDeletedEvent) {
         invitations.deleteAll(invitations.findByEventId(event.eventId))
         guests.deleteAll(guests.findByEventId(event.eventId))
+        // The host's recorded voice is personal data: it leaves with the event (JIKU-284).
+        voices.findById(event.eventId).ifPresent(voices::delete)
     }
 }
