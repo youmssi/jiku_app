@@ -47,6 +47,7 @@ class OpenInvitationFlowTest {
             .andExpect(jsonPath("$.welcomeMessage").value("Come celebrate!"))
             .andExpect(jsonPath("$.accepting").value(true))
             .andExpect(jsonPath("$.maxCompanions").value(3))
+            .andExpect(jsonPath("$.jikuSignature").value(true))
 
         val answered =
             respond(open.code, "Awa Diallo", "+224 620 11 22 33", "YES", companions = 2)

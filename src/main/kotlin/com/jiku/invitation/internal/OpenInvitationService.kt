@@ -143,6 +143,7 @@ class OpenInvitationService(
             accepting = closed == null,
             closedReason = closed,
             whatsappNumber = whatsappNumber(),
+            jikuSignature = !allowanceGate.paidEvent(eventId),
         )
     }
 

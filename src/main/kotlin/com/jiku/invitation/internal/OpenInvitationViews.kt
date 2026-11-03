@@ -118,6 +118,12 @@ data class PublicOpenInvitationView(
     val accepting: Boolean,
     val closedReason: OpenClosedReason?,
     val whatsappNumber: String?,
+    /**
+     * Whether the card carries Jikū's discreet signature (JIKU-288): on a free event
+     * only. A paid event, or one covered by Pro Organisateur, shows the organizer's
+     * brand alone.
+     */
+    val jikuSignature: Boolean,
 )
 
 /** A recorded answer, as the person who gave it sees it. */
