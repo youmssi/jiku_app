@@ -58,6 +58,10 @@ class Invitation(
     @Column(name = "dispatched_at")
     var dispatchedAt: Instant? = null
 
+    /** Sent by the organizer from their own WhatsApp (JIKU-281) rather than delivered by Jikū. */
+    @Column(name = "sent_by_organizer", nullable = false)
+    var sentByOrganizer: Boolean = false
+
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now()
 }

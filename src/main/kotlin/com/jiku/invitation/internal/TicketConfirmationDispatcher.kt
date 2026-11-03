@@ -40,8 +40,11 @@ class TicketConfirmationDispatcher(
         val event = events.findEvent(confirmed.eventId) ?: return
         val phone = guest.phoneNumber?.takeIf { InvitationDispatchWorker.E164.matches(it) }
         val email = guest.email?.takeIf { it.isNotBlank() }
+        val invitation = latestSent(guest)
+        // An organizer who sent from their own WhatsApp (JIKU-281) keeps Jikū off WhatsApp:
+        // the personal link already shows the ticket, and an email copy goes when there is one.
         val notice =
-            if (invitedOn(guest) == InvitationChannel.WHATSAPP && phone != null) {
+            if (invitation?.channel == InvitationChannel.WHATSAPP && !invitation.sentByOrganizer && phone != null) {
                 notices.build(guest, event, confirmed.tenantId, phone, GuestInvitedEvent.CHANNEL_WHATSAPP)
             } else {
                 email?.let { notices.build(guest, event, confirmed.tenantId, it) }
@@ -49,11 +52,10 @@ class TicketConfirmationDispatcher(
         eventPublisher.publishEvent(notice)
     }
 
-    /** The channel of the guest's delivered invitation, the latest one when there are two. */
-    private fun invitedOn(guest: Guest): InvitationChannel? =
+    /** The guest's delivered invitation, the latest one when there are two. */
+    private fun latestSent(guest: Guest): Invitation? =
         invitations
             .findByGuestId(requireNotNull(guest.id))
             .filter { it.status == InvitationStatus.SENT }
             .maxByOrNull { it.dispatchedAt ?: it.createdAt }
-            ?.channel
 }

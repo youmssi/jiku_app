@@ -12,4 +12,10 @@ enum class InvitationStatus {
      * automatically once capacity frees up.
      */
     QUEUED,
+
+    /**
+     * Ready for the organizer to send from their own WhatsApp (JIKU-281). Jikū
+     * never delivers it: it turns [SENT] when the organizer opens the chat.
+     */
+    PREPARED,
 }

@@ -36,8 +36,7 @@ class InvitationSendingService(
         onlyUnsent: Boolean,
         onlyUnanswered: Boolean = false,
     ): SendInvitationsResult {
-        val event = events.findEvent(eventId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found")
-        requireOpenForSending(event)
+        val event = openForSending(eventId)
         val channels = requestedChannels?.takeIf { it.isNotEmpty() } ?: event.invitationChannels
         val unsupported = channels - event.invitationChannels
         if (unsupported.isNotEmpty()) {
@@ -76,22 +75,39 @@ class InvitationSendingService(
             toQueue += (existingByGuestAndChannel[guestId to channel] ?: Invitation(eventId, guestId, channel))
         }
 
-        val batchGuestIds = toQueue.map { it.guestId }.toSet()
-        enforceAllowance(eventId, committed, batchGuestIds)
+        commitGuests(eventId, committed, toQueue.map { it.guestId }.toSet())
 
         for (invitation in toQueue) {
             invitation.status = InvitationStatus.PENDING
             invitation.lastError = null
             invitations.save(invitation)
         }
+        return SendInvitationsResult(toQueue.size)
+    }
 
-        // Lock in only the guests genuinely new to this event — re-sending to
-        // already-committed guests never re-charges the tenant's free budget.
+    /** The event, when it accepts invitations; refused otherwise (see [requireOpenForSending]). */
+    fun openForSending(eventId: UUID): EventInfo {
+        val event = events.findEvent(eventId) ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found")
+        requireOpenForSending(event)
+        return event
+    }
+
+    /**
+     * Counts [batchGuestIds] against the event's allowance, refusing the whole batch
+     * past it. Only the guests genuinely new to this event ([committed] holds the
+     * ones with an invitation already) are locked in: re-sending never re-charges
+     * the tenant's free budget.
+     */
+    fun commitGuests(
+        eventId: UUID,
+        committed: Set<UUID>,
+        batchGuestIds: Set<UUID>,
+    ) {
+        enforceAllowance(eventId, committed, batchGuestIds)
         val newGuestCount = (batchGuestIds - committed).size.toLong()
         if (newGuestCount > 0) {
             allowanceGate.recordCommitment(eventId, newGuestCount)
         }
-        return SendInvitationsResult(toQueue.size)
     }
 
     /**
