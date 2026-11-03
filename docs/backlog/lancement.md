@@ -43,6 +43,8 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-277 | Facture émise et envoyée par e-mail dès la confirmation du paiement | app | JIKU-276 |
 | JIKU-278 | E-mails à l'image de la marque, lisibles en mode clair et sombre | app, web | JIKU-274 |
 | JIKU-279 | Version texte de chaque e-mail, pour la délivrabilité | app | JIKU-278 |
+| JIKU-280 | Partager une carte par le menu de partage du téléphone (image et message) | web | — |
+| JIKU-281 | Envoyer les invitations depuis mon WhatsApp, avec un lien personnel par invité | app, web | — |
 
 ---
 
@@ -610,4 +612,39 @@ montres et lecteurs d'écran n'affichent que celle-ci.
 - [x] La version texte est tirée du HTML rendu, y compris pour les modèles personnalisés par l'organisation : rien à maintenir en double
 - [x] Elle garde l'ordre de lecture, l'adresse de chaque lien entre parenthèses et des paragraphes séparés ; un libellé reste au-dessus de sa valeur
 - [x] Ni balise, ni style, ni texte d'aperçu caché, ni image n'y apparaissent
+
+---
+
+## JIKU-280 — Partager une carte par le menu de partage du téléphone
+
+**Pourquoi.** En Guinée, beaucoup ouvrent Facebook chaque jour et WhatsApp
+quelques jours par semaine. Une carte qui ne part que vers WhatsApp manque une
+partie des invités ; le menu de partage du téléphone laisse l'organisateur
+choisir le réseau où sont ses proches.
+
+**Critères d'acceptation.**
+
+- [x] Sur téléphone, « Partager… » ouvre le menu de partage avec l'image de la carte et le message prêt (WhatsApp, Facebook, Messenger, Telegram, SMS…)
+- [x] L'image est préparée à l'avance, pour que le menu s'ouvre dans le geste ; un navigateur qui ne partage pas d'image envoie le message seul, et un échec ouvre WhatsApp
+- [x] Sur ordinateur, des liens directs WhatsApp, Facebook et Telegram, le lien à copier et l'image à télécharger
+- [x] Chaque partage est compté par réseau dans les statistiques (sans cookie)
+
+---
+
+## JIKU-281 — Envoyer les invitations depuis mon WhatsApp
+
+**Pourquoi.** Pour un mariage ou un anniversaire de 50 à 150 invités, un
+message venu d'un proche est ouvert bien plus qu'un message d'un numéro
+inconnu, et il ne coûte rien chez Meta. Jikū prépare le lien personnel de
+chaque invité ; l'organisateur l'envoie de son propre WhatsApp, une
+discussion à la fois.
+
+**Critères d'acceptation.**
+
+- [x] « Envoyer depuis mon WhatsApp » prépare le lien personnel de chaque invité qui a un numéro WhatsApp ; les invités sont comptés dans les invités de l'événement comme pour un envoi, tout ou rien
+- [x] Chaque invité a un bouton qui ouvre sa discussion WhatsApp avec le message personnel déjà écrit ; l'ouvrir marque l'invitation envoyée, une seule fois
+- [x] Un invité que Jikū invite déjà apparaît sans lien : rien n'est envoyé deux fois
+- [x] Jikū n'envoie rien de lui-même à ces invités : le billet s'affiche sur leur lien personnel et part par e-mail s'ils en ont un ; l'avis d'annulation part toujours
+- [x] En mode billet direct, le billet est émis au moment où l'organisateur ouvre la discussion
+- [x] L'événement doit être publié, comme pour un envoi
 

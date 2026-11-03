@@ -3766,6 +3766,40 @@
         },
         "type" : "object"
       },
+      "OrganizerWhatsAppGuest" : {
+        "properties" : {
+          "firstName" : {
+            "type" : "string"
+          },
+          "guestId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "lastName" : {
+            "type" : "string"
+          },
+          "link" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "sentAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "sentByOrganizer" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
       "PackExtraRequest" : {
         "properties" : {
           "blocks" : {
@@ -11476,6 +11510,80 @@
                     "$ref" : "#/components/schemas/InvitationStatusResponse"
                   },
                   "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "invitation-controller"
+        ]
+      }
+    },
+    "/api/v1/events/{eventId}/invitations/own-whatsapp" : {
+      "post" : {
+        "operationId" : "invitationPrepareOwnWhatsApp",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/OrganizerWhatsAppGuest"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "invitation-controller"
+        ]
+      }
+    },
+    "/api/v1/events/{eventId}/invitations/own-whatsapp/{guestId}/sent" : {
+      "post" : {
+        "operationId" : "invitationMarkSentFromOwnWhatsApp",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          },
+          {
+            "in" : "path",
+            "name" : "guestId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrganizerWhatsAppGuest"
                 }
               }
             },

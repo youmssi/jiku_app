@@ -19,6 +19,7 @@ class InvitationController(
     private val sendingService: InvitationSendingService,
     private val dispatcher: InvitationDispatcher,
     private val senders: SenderGate,
+    private val organizerWhatsApp: OrganizerWhatsAppService,
 ) {
     /** Sending is the first thing done on the organization's behalf: it needs a proven address (JIKU-253). */
     @PostMapping("/send")
@@ -41,4 +42,17 @@ class InvitationController(
     fun statuses(
         @PathVariable eventId: UUID,
     ): List<InvitationStatusResponse> = sendingService.statuses(eventId)
+
+    /** Prepares each guest's personal link for the organizer to send from their own WhatsApp (JIKU-281). */
+    @PostMapping("/own-whatsapp")
+    fun prepareOwnWhatsApp(
+        @PathVariable eventId: UUID,
+    ): List<OrganizerWhatsAppGuest> = organizerWhatsApp.prepare(eventId)
+
+    /** The organizer opened the guest's chat with the link: the invitation counts as sent. */
+    @PostMapping("/own-whatsapp/{guestId}/sent")
+    fun markSentFromOwnWhatsApp(
+        @PathVariable eventId: UUID,
+        @PathVariable guestId: UUID,
+    ): OrganizerWhatsAppGuest = organizerWhatsApp.markSent(eventId, guestId)
 }
