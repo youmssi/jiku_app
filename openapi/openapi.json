@@ -4631,6 +4631,9 @@
           "eventTimezone" : {
             "type" : "string"
           },
+          "jikuSignature" : {
+            "type" : "boolean"
+          },
           "logoUrl" : {
             "type" : [
               "string",

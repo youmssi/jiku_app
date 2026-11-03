@@ -315,6 +315,18 @@ Recommandation : **A**. Le chiffre seul, jamais de nom.
 
 Recommandation : **A**.
 
+**Décisions retenues (3 novembre 2026, product owner).** Les quatre
+recommandations sont approuvées :
+- **D1 = A** : vocal gratuit, 30 s ;
+- **D2** : relais activé quand la jauge est illimitée, désactivé quand l'hôte
+  en a fixé une ;
+- **D3 = A** : « Ils viennent » désactivé par défaut, seuil de 5 ;
+- **D4 = A** : signature sur les cartes gratuites seulement.
+
+Consigne transverse : chaque fonction doit rester simple à mettre en place et
+naturelle dans le parcours ; les bons choix sont faits par défaut, sans réglage
+à découvrir.
+
 **Récits manquants repérés.**
 - Un tableau de bord de performance de la page (Lighthouse CI), couvert par
   JIKU-287.
