@@ -1,5 +1,6 @@
 package com.jiku.invitation.internal
 
+import com.jiku.catalog.EventModuleApi
 import com.jiku.shared.MessageLanguage
 import com.jiku.shared.OpenCardButton
 import com.jiku.shared.OpenCardInbound
@@ -38,6 +39,7 @@ class OpenCardConversation(
     private val openInvitations: OpenInvitationRepository,
     private val threads: OpenCardThreadRepository,
     private val tenants: TenantModuleApi,
+    private val events: EventModuleApi,
     private val ticketNotices: TicketNotices,
     private val publisher: ApplicationEventPublisher,
     private val properties: OpenInvitationProperties,
@@ -245,7 +247,7 @@ class OpenCardConversation(
         reply(phone, language, key, mapOf("eventName" to view.eventName))
     }
 
-    /** Runs [block] under the invitation's tenant with the organization's language; an unknown code is told so. */
+    /** Runs [block] under the invitation's tenant in its guests' language (JIKU-293); an unknown code is told so. */
     private fun inInvitation(
         phone: String,
         code: String,
@@ -254,7 +256,7 @@ class OpenCardConversation(
         try {
             service.route(code) { eventId ->
                 val tenant = TenantContext.get()?.let { tenants.findTenant(UUID.fromString(it)) }
-                block(eventId, MessageLanguage.forCountry(tenant?.country))
+                block(eventId, MessageLanguage.forGuests(events.findEvent(eventId)?.guestLanguage, tenant?.country))
             }
         } catch (ex: ResponseStatusException) {
             if (ex.statusCode != HttpStatus.NOT_FOUND) throw ex

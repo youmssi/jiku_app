@@ -21,7 +21,7 @@ class WhatsAppTemplateCalls(
         language: String,
         withButtons: Boolean,
     ): WhatsAppTemplateCall {
-        val lang = MessageLanguage.normalize(language)
+        val lang = MessageLanguage.normalizeGuest(language)
         val people = listOf(name(invitation.recipientName, lang), organizer(invitation.organizerName), event(invitation.eventName))
         val date = date(invitation.eventWhen, lang)
         return if (withButtons) {
@@ -35,7 +35,7 @@ class WhatsAppTemplateCalls(
         ticket: WhatsAppInvitation,
         language: String,
     ): WhatsAppTemplateCall {
-        val lang = MessageLanguage.normalize(language)
+        val lang = MessageLanguage.normalizeGuest(language)
         return WhatsAppTemplateCall(
             WhatsAppTemplateKind.TICKET,
             lang,
@@ -53,7 +53,7 @@ class WhatsAppTemplateCalls(
         cancellation: WhatsAppCancellation,
         language: String,
     ): WhatsAppTemplateCall {
-        val lang = MessageLanguage.normalize(language)
+        val lang = MessageLanguage.normalizeGuest(language)
         return WhatsAppTemplateCall(
             WhatsAppTemplateKind.EVENT_CANCELLED,
             lang,
@@ -70,7 +70,7 @@ class WhatsAppTemplateCalls(
         reminder: WhatsAppReminder,
         language: String,
     ): WhatsAppTemplateCall {
-        val lang = MessageLanguage.normalize(language)
+        val lang = MessageLanguage.normalizeGuest(language)
         return WhatsAppTemplateCall(
             WhatsAppTemplateKind.APPOINTMENT_REMINDER,
             lang,
@@ -85,14 +85,14 @@ class WhatsAppTemplateCalls(
     fun phoneCode(
         code: String,
         language: String,
-    ): WhatsAppTemplateCall = WhatsAppTemplateCall(WhatsAppTemplateKind.PHONE_CODE, MessageLanguage.normalize(language), listOf(code))
+    ): WhatsAppTemplateCall = WhatsAppTemplateCall(WhatsAppTemplateKind.PHONE_CODE, MessageLanguage.normalizeGuest(language), listOf(code))
 
     fun clientCalled(
         clientName: String?,
         counter: String?,
         language: String,
     ): WhatsAppTemplateCall {
-        val lang = MessageLanguage.normalize(language)
+        val lang = MessageLanguage.normalizeGuest(language)
         return WhatsAppTemplateCall(
             WhatsAppTemplateKind.CLIENT_CALLED,
             lang,

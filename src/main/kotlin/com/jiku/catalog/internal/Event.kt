@@ -86,6 +86,10 @@ class Event(
     @Column(name = "card_style", nullable = false, length = 16)
     var cardStyle: CardStyle = CardStyle.MODERN
 
+    /** The language the guests read (JIKU-293): fr, en or ar; null keeps the organization's language. */
+    @Column(name = "guest_language", length = 2)
+    var guestLanguage: String? = null
+
     /** When the banner photo was last replaced; null without one. It versions the photo's public link. */
     @Column(name = "banner_updated_at")
     var bannerUpdatedAt: Instant? = null

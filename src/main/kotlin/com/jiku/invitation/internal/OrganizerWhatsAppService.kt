@@ -2,6 +2,7 @@ package com.jiku.invitation.internal
 
 import com.jiku.catalog.DeliveryMode
 import com.jiku.catalog.InvitationChannel
+import com.jiku.shared.MessageLanguage
 import com.jiku.shared.TenantContext
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -28,6 +29,7 @@ class OrganizerWhatsAppService(
     private val inviteCodes: GuestInviteCodes,
     private val rsvpService: RsvpService,
     private val properties: InvitationSendProperties,
+    private val guestLanguages: GuestLanguages,
 ) {
     /**
      * Every guest with a WhatsApp number, with their personal link, prepared for the
@@ -169,10 +171,14 @@ class OrganizerWhatsAppService(
         return OrganizerWhatsAppReminder(guestId, guest.firstName, guest.lastName, guest.phoneNumber.orEmpty(), link, now)
     }
 
+    /** The guest's personal link, opening in the event's guest language (JIKU-293). */
     private fun link(
         guest: Guest,
         tenantId: String,
-    ): String = "${properties.appBaseUrl}/v/${inviteCodes.linkKey(guest, tenantId)}"
+    ): String {
+        val prefix = MessageLanguage.pathPrefix(guestLanguages.of(guest.eventId, tenantId))
+        return "${properties.appBaseUrl}$prefix/v/${inviteCodes.linkKey(guest, tenantId)}"
+    }
 
     /** Jikū is delivering this invitation, or has delivered it: the organizer has nothing to send. */
     private fun Invitation.inJikuHands(): Boolean =

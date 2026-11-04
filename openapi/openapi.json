@@ -2266,6 +2266,29 @@
         },
         "type" : "object"
       },
+      "GuestLanguageRequest" : {
+        "properties" : {
+          "language" : {
+            "pattern" : "fr|en|ar",
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type" : "object"
+      },
+      "GuestLanguageView" : {
+        "properties" : {
+          "chosen" : {
+            "type" : "boolean"
+          },
+          "language" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "GuestMatch" : {
         "properties" : {
           "checkedInAt" : {
@@ -11333,6 +11356,76 @@
         },
         "tags" : [
           "dashboard-controller"
+        ]
+      }
+    },
+    "/api/v1/events/{eventId}/guest-language" : {
+      "get" : {
+        "operationId" : "eventGuestLanguageGet",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GuestLanguageView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "event-guest-language-controller"
+        ]
+      },
+      "put" : {
+        "operationId" : "eventGuestLanguageUpdate",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/GuestLanguageRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GuestLanguageView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "event-guest-language-controller"
         ]
       }
     },

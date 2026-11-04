@@ -31,6 +31,8 @@ data class EventInfo(
     val deliveryMode: DeliveryMode = DeliveryMode.LINK,
     /** The client this event is branded for, over the organization's own branding. */
     val brand: EventBrand = EventBrand(),
+    /** The language chosen for the guests (JIKU-293); null keeps the organization's. See MessageLanguage.forGuests. */
+    val guestLanguage: String? = null,
 ) {
     /** The channels tried for one guest, in order (JIKU-273): the primary, then the other when fallback is on. */
     fun channelOrder(): List<InvitationChannel> = InvitationChannel.channelOrder(invitationChannels, primaryChannel, channelFallback)

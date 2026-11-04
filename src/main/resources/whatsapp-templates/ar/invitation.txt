@@ -1,0 +1,3 @@
+مرحبًا {{guestName}}، {{organizerName}} يدعوك إلى {{eventName}}{{eventWhen}}.
+
+أكّد حضورك: {{invitationUrl}}

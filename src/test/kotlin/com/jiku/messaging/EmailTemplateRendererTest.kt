@@ -41,12 +41,30 @@ class EmailTemplateRendererTest {
 
         assertEquals("Invitation : Gala <25 ans>", french.subject)
         assertEquals("You're invited: Gala <25 ans>", english.subject)
-        assertTrue(french.html.contains("""<html lang="fr">"""))
-        assertTrue(english.html.contains("""<html lang="en">"""))
+        assertTrue(french.html.contains("""<html lang="fr" dir="ltr">"""))
+        assertTrue(english.html.contains("""<html lang="en" dir="ltr">"""))
         assertTrue(french.html.contains("Quand"))
         assertTrue(english.html.contains("Where"))
         assertTrue(french.html.contains("#7C3AED"), "the organizer's colour carries the accent")
         assertTrue(french.html.contains("Maison Aminata"))
+    }
+
+    @Test
+    fun `an invitation to read in Arabic is written right to left in Arabic`() {
+        val arabic = renderer.renderInvitation(invitation(), MessageLanguage.ARABIC)
+
+        assertEquals("دعوة: Gala <25 ans>", arabic.subject)
+        assertTrue(arabic.html.contains("""<html lang="ar" dir="rtl">"""))
+        assertTrue(arabic.html.contains("""class="card rtl""""), "the card drops letter spacing, which breaks Arabic joins")
+        assertTrue(arabic.html.contains("الرد على الدعوة"))
+        assertTrue(arabic.html.contains("المكان"))
+        assertFalse(arabic.html.contains("{{"))
+    }
+
+    @Test
+    fun `an Arabic message the guests never read falls back to French`() {
+        assertEquals(catalog.text(MessageLanguage.FRENCH, "label.reference"), catalog.text(MessageLanguage.ARABIC, "label.reference"))
+        assertEquals("سأحضر", catalog.text(MessageLanguage.ARABIC, "whatsapp.button.accept"))
     }
 
     @Test

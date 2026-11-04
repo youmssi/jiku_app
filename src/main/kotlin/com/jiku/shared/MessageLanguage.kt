@@ -14,7 +14,14 @@ object MessageLanguage {
     const val FRENCH = "fr"
     const val ENGLISH = "en"
 
+    /** Guests only (JIKU-293): an organizer's own messages stay in French or English. */
+    const val ARABIC = "ar"
+
+    /** The languages an organization and its team read. */
     val SUPPORTED: Set<String> = setOf(FRENCH, ENGLISH)
+
+    /** The languages a guest can be written to in, chosen per event. */
+    val GUEST: Set<String> = setOf(FRENCH, ENGLISH, ARABIC)
 
     /** ISO 3166-1 alpha-2 countries where French is an official or working language of business. */
     private val FRENCH_SPEAKING: Set<String> =
@@ -31,18 +38,47 @@ object MessageLanguage {
         return if (language in SUPPORTED) language!! else FRENCH
     }
 
-    fun locale(language: String): Locale = Locale.forLanguageTag(normalize(language))
+    /** A guest language from any tag; French when the tag is unknown. */
+    fun normalizeGuest(tag: String?): String {
+        val language = tag?.substringBefore('-')?.substringBefore('_')?.lowercase()
+        return if (language in GUEST) language!! else FRENCH
+    }
+
+    /**
+     * The language an event's guests read: the one chosen on the event, else the
+     * organization's ([forCountry]).
+     */
+    fun forGuests(
+        eventLanguage: String?,
+        country: String?,
+    ): String = eventLanguage?.takeIf { it in GUEST } ?: forCountry(country)
+
+    /** The path prefix of a guest page in [language]: none for French, the site's default. */
+    fun pathPrefix(language: String): String = normalizeGuest(language).let { if (it == FRENCH) "" else "/$it" }
+
+    /** Arabic keeps Western digits, as on the guest pages and in phone numbers and codes. */
+    fun locale(language: String): Locale =
+        when (val lang = normalizeGuest(language)) {
+            ARABIC -> Locale.forLanguageTag("ar-u-nu-latn")
+            else -> Locale.forLanguageTag(lang)
+        }
 
     /**
      * An event's start as a guest reads it, in the event's own timezone:
-     * "mardi 3 novembre 2026 à 15:00" or "Tuesday 3 November 2026 at 15:00".
+     * "mardi 3 novembre 2026 à 15:00", "Tuesday 3 November 2026 at 15:00" or
+     * "الثلاثاء 3 نوفمبر 2026 الساعة 15:00".
      */
     fun formatEventStart(
         instant: Instant,
         timezone: String,
         language: String,
     ): String {
-        val pattern = if (normalize(language) == FRENCH) "EEEE d MMMM uuuu 'à' HH:mm" else "EEEE d MMMM uuuu 'at' HH:mm"
+        val pattern =
+            when (normalizeGuest(language)) {
+                FRENCH -> "EEEE d MMMM uuuu 'à' HH:mm"
+                ARABIC -> "EEEE d MMMM uuuu 'الساعة' HH:mm"
+                else -> "EEEE d MMMM uuuu 'at' HH:mm"
+            }
         return DateTimeFormatter
             .ofPattern(pattern, locale(language))
             .withZone(ZoneId.of(timezone))

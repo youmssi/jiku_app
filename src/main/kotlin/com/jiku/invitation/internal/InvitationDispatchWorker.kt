@@ -71,7 +71,7 @@ class InvitationDispatchWorker(
         val event = events.findEvent(invitation.eventId)
         val tenantId = TenantContext.get().orEmpty()
         val tenant = tenantId.takeIf { it.isNotEmpty() }?.let { tenants.findTenant(UUID.fromString(it)) }
-        val language = MessageLanguage.forCountry(tenant?.country)
+        val language = MessageLanguage.forGuests(event?.guestLanguage, tenant?.country)
         val code = inviteCodes.linkKey(guest, tenantId)
         val ticket =
             if (event?.deliveryMode == DeliveryMode.DIRECT_TICKET) {
@@ -100,7 +100,7 @@ class InvitationDispatchWorker(
                 organizerName = event?.brand?.name ?: tenant?.displayName ?: "Your organizer",
                 primaryColor = event?.brand?.primaryColor ?: tenant?.primaryColor ?: DEFAULT_COLOR,
                 logoUrl = event?.brand?.logoUrl ?: tenant?.logoUrl,
-                invitationUrl = ticket?.ticketUrl ?: "${properties.appBaseUrl}/v/$code",
+                invitationUrl = ticket?.ticketUrl ?: "${properties.appBaseUrl}${MessageLanguage.pathPrefix(language)}/v/$code",
                 language = language,
                 ticket = ticket,
                 interactive =

@@ -1,0 +1,5 @@
+مرحبًا {{guestName}}، إليك تذكرتك لـ {{eventName}}{{eventWhen}}، من {{organizerName}}.
+
+تذكرتك: {{ticketUrl}}
+
+قدّم رمز QR عند الدخول. يظهر حتى دون اتصال.
