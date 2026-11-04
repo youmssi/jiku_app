@@ -105,7 +105,13 @@ class EmbeddedSignupTest {
             },
             created,
         )
-        assertTrue(templates.all { "\"category\":\"UTILITY\"" in it.body })
+        // Invitations are declared MARKETING (JIKU-296); every other template is UTILITY.
+        assertTrue(
+            templates.all {
+                val invitation = "jiku_invitation_v2\"" in it.body || "jiku_invitation_rsvp_v2\"" in it.body
+                "\"category\":\"${if (invitation) "MARKETING" else "UTILITY"}\"" in it.body
+            },
+        )
         val ticket = templates.first { "jiku_ticket_v1" in it.body }
         assertTrue("\"header_handle\":[\"HANDLE-1\"]" in ticket.body, ticket.body)
     }

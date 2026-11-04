@@ -101,7 +101,8 @@ de confirmer la cible avant d'envoyer : relire le numéro à chaque fois.
    préfixés par `WHATSAPP_META_TEMPLATE_PREFIX` (par défaut `jiku_`) :
    `invitation_v2`, `invitation_rsvp_v2`, `ticket_v1`, `event_cancelled_v1`,
    `appointment_reminder_v1`, `client_called_v2`.
-   Chaque modèle doit être approuvé en `UTILITY`. Un modèle que Meta classe
+   Chaque modèle doit être approuvé en `UTILITY`, sauf les deux invitations,
+   déclarées `MARKETING` (ADR 109, décision 12). Un autre modèle que Meta classe
    `MARKETING` n'est pas utilisé par Jikū, et Meta ne laisse pas repasser un
    modèle approuvé en `UTILITY` : on reformule le texte de façon transactionnelle
    et on le recrée sous une nouvelle version (`_v2`, `_v3`…) dans

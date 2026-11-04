@@ -182,7 +182,9 @@ class WhatsAppHealthService(
         language: String,
         category: String,
     ) {
-        if (category == "MARKETING" && properties.health.blockMarketingTemplates) {
+        // A template declared MARKETING (the invitations, JIKU-296) staying there is expected, not a downgrade.
+        val declared = WhatsAppTemplateKind.ofTemplateName(name, properties.meta.templatePrefix)?.category
+        if (category == "MARKETING" && declared != "MARKETING" && properties.health.blockMarketingTemplates) {
             block(wabaId, name, language, null, "Moved to the marketing category by Meta", FOREVER) { it.category = category }
             alert(
                 "category:$wabaId:$name:$language",

@@ -33,9 +33,13 @@ enum class WhatsAppTemplateKind(
     val category: String = UTILITY,
     val platformOnly: Boolean = false,
 ) {
-    // v2 (JIKU-295): the v1 wording was filed MARKETING by Meta; a category cannot be changed back once approved.
-    INVITATION("invitation_v2"),
-    INVITATION_RSVP("invitation_rsvp_v2"),
+    /**
+     * Invitations are MARKETING (JIKU-296): Meta files any invitation a guest did
+     * not ask for as marketing, whatever its wording (v1 and v2 alike, JIKU-295).
+     * Declared as such so the account is never flagged for miscategorizing.
+     */
+    INVITATION("invitation_v2", MARKETING),
+    INVITATION_RSVP("invitation_rsvp_v2", MARKETING),
     TICKET("ticket_v1"),
     EVENT_CANCELLED("event_cancelled_v1"),
     APPOINTMENT_REMINDER("appointment_reminder_v1"),
@@ -46,10 +50,19 @@ enum class WhatsAppTemplateKind(
     ;
 
     val authentication: Boolean get() = category == AUTHENTICATION
+
+    companion object {
+        /** The kind a published template [name] carries, given the platform's template [prefix]; null for any other template. */
+        fun ofTemplateName(
+            name: String,
+            prefix: String,
+        ): WhatsAppTemplateKind? = entries.firstOrNull { name == prefix + it.key }
+    }
 }
 
 /** Meta's template categories Jikū uses. */
 private const val UTILITY = "UTILITY"
+private const val MARKETING = "MARKETING"
 private const val AUTHENTICATION = "AUTHENTICATION"
 
 /** A dedicated template to send, in [language], with its body [parameters] in order. */

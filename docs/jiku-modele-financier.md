@@ -26,8 +26,11 @@ d'affaires ni dans les coûts ci-dessous.
 
 Trois conséquences directes :
 
-1. **Les messages WhatsApp doivent rester « utilitaires ».** Un message
-   marketing coûte plus de cinq fois plus. Le garde-fou existe déjà dans le
+1. **Les messages WhatsApp doivent rester « utilitaires », sauf l'invitation.**
+   Un message marketing coûte plus de cinq fois plus. Meta classe toute
+   invitation envoyée par le numéro Jikū en marketing (ADR 109, décision 12) :
+   on l'accepte pour ce seul message, et la carte partagée et l'envoi depuis le
+   WhatsApp de l'organisateur, sans coût Meta, passent en premier. Le garde-fou existe déjà dans le
    code (`WhatsAppContentGuard`, table `whatsapp_pricing`).
 2. **Le SMS coûte environ trois fois un WhatsApp utilitaire.** C'est pour cela
    qu'il est vendu en option, au prix affiché au moment de l'envoi.

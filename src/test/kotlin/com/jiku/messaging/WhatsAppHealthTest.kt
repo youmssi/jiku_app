@@ -66,6 +66,14 @@ class WhatsAppHealthTest {
     }
 
     @Test
+    fun `an invitation filed as marketing stays in use, as it is declared`() {
+        category("MARKETING", name = "jiku_invitation_v2")
+
+        assertThatCode { health.assertUsable(waba, "jiku_invitation_v2", "fr") }.doesNotThrowAnyException()
+        assertThat(alerts("jiku_invitation_v2 (fr) moved to MARKETING")).isEqualTo(0)
+    }
+
+    @Test
     fun `a utility category does not lift a pause`() {
         templateStatus("PAUSED")
         category("UTILITY")
@@ -111,11 +119,13 @@ class WhatsAppHealthTest {
             """{"event":"$event","message_template_name":"jiku_invitation","message_template_language":"fr","reason":"LOW_QUALITY"}""",
         )
 
-    private fun category(category: String) =
-        change(
-            "template_category_update",
-            """{"message_template_name":"jiku_ticket","message_template_language":"fr","new_category":"$category"}""",
-        )
+    private fun category(
+        category: String,
+        name: String = "jiku_ticket",
+    ) = change(
+        "template_category_update",
+        """{"message_template_name":"$name","message_template_language":"fr","new_category":"$category"}""",
+    )
 
     private fun change(
         field: String,

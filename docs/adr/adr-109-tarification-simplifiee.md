@@ -1,7 +1,7 @@
 # ADR 109 — Tarification simplifiée : un prix par invité, deux offres Pro, prix TTC
 
 **Statut :** accepté.
-**Date :** 2026-10-18, complété le 2026-10-19 (JIKU-270) et le 2026-10-22 (JIKU-271)
+**Date :** 2026-10-18, complété le 2026-10-19 (JIKU-270), le 2026-10-22 (JIKU-271) et le 2026-11-04 (JIKU-296)
 **Remplace :** la grille de l'ADR 105 (paliers Bronze, Argent, Or, palier sur
 mesure, supplément interactif, formules Solo Plus, Teams et Organisation).
 L'ADR 105 reste valable pour les trois monnaies, le numéro WhatsApp propre et
@@ -133,3 +133,26 @@ freinait les organisations qu'on veut justement voir partir sur leur propre
 numéro. L'option mensuelle et sa table disparaissent (`V100`), et toute offre
 peut brancher son numéro.
 
+## Décision 12 — Les invitations WhatsApp sont du marketing, le reste reste utilitaire (JIKU-296)
+
+Meta a classé « marketing » toutes les invitations envoyées par le numéro
+Jikū, dans les trois langues, y compris reformulées en « votre invitation
+personnelle » (JIKU-295) : l'invité n'a pas demandé à être invité. Un modèle
+approuvé ne peut plus changer de catégorie.
+
+Choix retenu (hybride) :
+
+- Les deux modèles d'invitation (`invitation_v2`, `invitation_rsvp_v2`) sont
+  déclarés `MARKETING` et utilisés comme tels ; le garde-fou ne bloque plus que
+  les modèles censés rester utilitaires.
+- Billet, rappel, annulation, rendez-vous et « c'est votre tour » restent
+  `UTILITY` : ils répondent à ce que l'invité ou le client a demandé.
+- La carte partagée, l'envoi depuis le WhatsApp de l'organisateur et l'e-mail
+  restent sans coût Meta et sont proposés en premier.
+
+Coût : 0,0225 USD (≈ 197 GNF) par invitation WhatsApp au lieu de 0,004 USD.
+Au prix « par événement » de 750 GNF, un invité invité par le numéro Jikū
+coûte ≈ 295 GNF (invitation, billet, CinetPay, TPU) et laisse ≈ 60 % de marge.
+Les prix ne changent pas. Meta plafonne aussi les messages marketing par
+destinataire : un invité qui en reçoit trop peut ne pas recevoir l'invitation,
+d'où l'e-mail en secours.

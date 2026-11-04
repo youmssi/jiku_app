@@ -59,6 +59,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-293 | Langue des invités choisie par événement, messages et images en arabe | app, web | JIKU-292 |
 | JIKU-294 | Heure relative des réponses sans erreur de console (horloge partagée) | web | — |
 | JIKU-295 | Modèles WhatsApp v2 en catégorie utilitaire (invitation, invitation à boutons, « c'est votre tour ») | app | JIKU-293 |
+| JIKU-296 | Invitations WhatsApp déclarées marketing, le reste utilitaire (ADR 109, décision 12) | app | JIKU-295 |
 
 ---
 
