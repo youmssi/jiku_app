@@ -99,13 +99,17 @@ de confirmer la cible avant d'envoyer : relire le numéro à chaque fois.
 2. `whatsapp_biz_list_templates` : on doit voir, en `fr` et `en` (et en `ar`
    pour les modèles des invités, JIKU-293), les modèles
    préfixés par `WHATSAPP_META_TEMPLATE_PREFIX` (par défaut `jiku_`) :
-   `invitation_v2`, `invitation_rsvp_v2`, `ticket_v1`, `event_cancelled_v1`,
+   `invitation_v3`, `invitation_rsvp_v3`, `ticket_v1`, `event_cancelled_v1`,
    `appointment_reminder_v1`, `client_called_v2`.
    Chaque modèle doit être approuvé en `UTILITY`. Un modèle que Meta classe
    `MARKETING` n'est pas utilisé par Jikū, et Meta ne laisse pas repasser un
    modèle approuvé en `UTILITY` : on reformule le texte de façon transactionnelle
    et on le recrée sous une nouvelle version (`_v2`, `_v3`…) dans
-   `dedicated.json` et `WhatsAppTemplateKind` (JIKU-295).
+   `dedicated.json` et `WhatsAppTemplateKind` (JIKU-295). Une invitation est
+   filée `MARKETING` dès qu'elle « invite » : écrite comme la place de l'invité
+   sur une liste de participants, avec une confirmation à donner et le billet
+   qui suit, elle est `UTILITY` (JIKU-297). Soumettre une langue à la fois et
+   passer à la suivante une fois la précédente approuvée en `UTILITY`.
 3. **Attendu :** dès que Meta change un statut (`APPROVED`, `REJECTED`,
    `PAUSED`), `GET /api/v1/admin/whatsapp/templates` affiche le même statut,
    reçu par le webhook.
@@ -116,7 +120,7 @@ de confirmer la cible avant d'envoyer : relire le numéro à chaque fois.
 
 ### 3. Envoi et réponse
 
-1. `whatsapp_biz_send_message` : envoyer `jiku_invitation_rsvp_v2` en `fr` à
+1. `whatsapp_biz_send_message` : envoyer `jiku_invitation_rsvp_v3` en `fr` à
    un numéro de l'équipe depuis le numéro de recette, avec les paramètres
    attendus par le modèle.
 2. Sur le téléphone, toucher un bouton de réponse.

@@ -33,9 +33,13 @@ enum class WhatsAppTemplateKind(
     val category: String = UTILITY,
     val platformOnly: Boolean = false,
 ) {
-    // v2 (JIKU-295): the v1 wording was filed MARKETING by Meta; a category cannot be changed back once approved.
-    INVITATION("invitation_v2"),
-    INVITATION_RSVP("invitation_rsvp_v2"),
+    /**
+     * v3 (JIKU-297): Meta filed the v1 and v2 invitations as MARKETING. Written as
+     * the guest's place on a participant list with a confirmation to give, they
+     * are UTILITY; a category cannot be changed back once approved.
+     */
+    INVITATION("invitation_v3"),
+    INVITATION_RSVP("invitation_rsvp_v3"),
     TICKET("ticket_v1"),
     EVENT_CANCELLED("event_cancelled_v1"),
     APPOINTMENT_REMINDER("appointment_reminder_v1"),

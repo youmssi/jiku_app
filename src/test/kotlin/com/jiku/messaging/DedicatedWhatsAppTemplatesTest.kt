@@ -35,7 +35,8 @@ class DedicatedWhatsAppTemplatesTest {
                 val body = components.single { it.path("type").asString("") == "BODY" }
                 val text = body.path("text").asString("")
                 val numbers = variable.findAll(text).map { it.groupValues[1].toInt() }.toList()
-                assertEquals((1..parameters).toList(), numbers, "${kind.key} $language")
+                // Each number once; the order in the text may follow the language (the v3 invitations name the event before the organizer).
+                assertEquals((1..parameters).toList(), numbers.sorted(), "${kind.key} $language")
                 assertFalse(text.trim().startsWith("{{") || text.trim().endsWith("}}"), "${kind.key} $language")
                 assertEquals(
                     parameters,
