@@ -33,12 +33,13 @@ enum class WhatsAppTemplateKind(
     val category: String = UTILITY,
     val platformOnly: Boolean = false,
 ) {
-    INVITATION("invitation_v1"),
-    INVITATION_RSVP("invitation_rsvp_v1"),
+    // v2 (JIKU-295): the v1 wording was filed MARKETING by Meta; a category cannot be changed back once approved.
+    INVITATION("invitation_v2"),
+    INVITATION_RSVP("invitation_rsvp_v2"),
     TICKET("ticket_v1"),
     EVENT_CANCELLED("event_cancelled_v1"),
     APPOINTMENT_REMINDER("appointment_reminder_v1"),
-    CLIENT_CALLED("client_called_v1"),
+    CLIENT_CALLED("client_called_v2"),
 
     /** The code that confirms an organization's phone number, SMS taking over when WhatsApp fails. */
     PHONE_CODE("phone_code_v1", AUTHENTICATION, platformOnly = true),
