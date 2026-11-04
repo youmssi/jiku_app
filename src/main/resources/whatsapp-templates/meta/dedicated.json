@@ -1,5 +1,5 @@
 {
-  "invitation_v1": {
+  "invitation_v2": {
     "parameters": [
       "guestName",
       "organizerName",
@@ -10,7 +10,7 @@
     "fr": [
       {
         "type": "BODY",
-        "text": "Bonjour {{1}},\n\n{{2}} vous invite à {{3}}, {{4}}, et vous envoie cette invitation par Jikū.\n\nConfirmez votre présence en ouvrant ce lien : {{5}}\n\nMerci et à bientôt !",
+        "text": "Bonjour {{1}},\n\nVotre invitation personnelle de la part de {{2}} pour {{3}}, {{4}}, est prête.\n\nPour confirmer ou décliner votre présence, ouvrez votre lien personnel : {{5}}\n\nCe lien vous est réservé.",
         "example": {
           "body_text": [
             [
@@ -18,7 +18,7 @@
               "Famille Diallo",
               "Mariage d'Awa et Moussa",
               "samedi 12 octobre à 18 h",
-              "https://hellojiku.com/r/AbC123"
+              "https://hellojiku.com/v/AbC123"
             ]
           ]
         }
@@ -31,7 +31,7 @@
     "en": [
       {
         "type": "BODY",
-        "text": "Hello {{1}},\n\n{{2}} invites you to {{3}}, {{4}}, and sends you this invitation through Jikū.\n\nConfirm whether you can come by opening this link: {{5}}\n\nThank you and see you soon!",
+        "text": "Hello {{1}},\n\nYour personal invitation from {{2}} for {{3}}, {{4}}, is ready.\n\nTo confirm or decline your attendance, open your personal link: {{5}}\n\nThis link is for you only.",
         "example": {
           "body_text": [
             [
@@ -39,7 +39,7 @@
               "The Diallo family",
               "Awa and Moussa's wedding",
               "Saturday 12 October at 6 pm",
-              "https://hellojiku.com/r/AbC123"
+              "https://hellojiku.com/en/v/AbC123"
             ]
           ]
         }
@@ -52,7 +52,7 @@
     "ar": [
       {
         "type": "BODY",
-        "text": "مرحبًا {{1}}،\n\n{{2}} يدعوك إلى {{3}}، {{4}}، ويرسل إليك هذه الدعوة عبر Jikū.\n\nأكّد حضورك بفتح هذا الرابط: {{5}}\n\nشكرًا لك، ونراك قريبًا!",
+        "text": "مرحبًا {{1}}،\n\nدعوتك الشخصية من {{2}} إلى {{3}}، {{4}}، جاهزة.\n\nلتأكيد حضورك أو الاعتذار، افتح رابطك الشخصي: {{5}}\n\nهذا الرابط خاص بك.",
         "example": {
           "body_text": [
             [
@@ -71,7 +71,7 @@
       }
     ]
   },
-  "invitation_rsvp_v1": {
+  "invitation_rsvp_v2": {
     "parameters": [
       "guestName",
       "organizerName",
@@ -81,7 +81,7 @@
     "fr": [
       {
         "type": "BODY",
-        "text": "Bonjour {{1}},\n\n{{2}} vous invite à {{3}}, {{4}}, et vous envoie cette invitation par Jikū.\n\nMerci de répondre avec les boutons ci-dessous.",
+        "text": "Bonjour {{1}},\n\nVotre invitation personnelle de la part de {{2}} pour {{3}}, {{4}}, attend votre réponse.\n\nIndiquez si vous serez présent avec les boutons ci-dessous.",
         "example": {
           "body_text": [
             [
@@ -114,7 +114,7 @@
     "en": [
       {
         "type": "BODY",
-        "text": "Hello {{1}},\n\n{{2}} invites you to {{3}}, {{4}}, and sends you this invitation through Jikū.\n\nPlease answer with the buttons below.",
+        "text": "Hello {{1}},\n\nYour personal invitation from {{2}} for {{3}}, {{4}}, is waiting for your answer.\n\nLet us know whether you will attend with the buttons below.",
         "example": {
           "body_text": [
             [
@@ -147,7 +147,7 @@
     "ar": [
       {
         "type": "BODY",
-        "text": "مرحبًا {{1}}،\n\n{{2}} يدعوك إلى {{3}}، {{4}}، ويرسل إليك هذه الدعوة عبر Jikū.\n\nيُرجى الرد بالأزرار أدناه.",
+        "text": "مرحبًا {{1}}،\n\nدعوتك الشخصية من {{2}} إلى {{3}}، {{4}}، بانتظار ردّك.\n\nأخبرنا إن كنت ستحضر بالأزرار أدناه.",
         "example": {
           "body_text": [
             [
@@ -391,7 +391,7 @@
       }
     ]
   },
-  "client_called_v1": {
+  "client_called_v2": {
     "parameters": [
       "clientName",
       "counter"
@@ -399,7 +399,7 @@
     "fr": [
       {
         "type": "BODY",
-        "text": "Bonjour {{1}},\n\nC'est votre tour. Présentez-vous à : {{2}}, s'il vous plaît.",
+        "text": "Bonjour {{1}},\n\nVotre ticket de file d'attente vient d'être appelé. Présentez-vous maintenant à {{2}}, merci.",
         "example": {
           "body_text": [
             [
@@ -417,7 +417,7 @@
     "en": [
       {
         "type": "BODY",
-        "text": "Hello {{1}},\n\nIt's your turn. Please go to: {{2}}, now.",
+        "text": "Hello {{1}},\n\nYour queue ticket has just been called. Please go to {{2}} now, thank you.",
         "example": {
           "body_text": [
             [
