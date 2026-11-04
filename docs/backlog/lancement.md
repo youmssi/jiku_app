@@ -57,6 +57,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-291 | Texte toujours lisible sur la couleur de l'organisateur (contraste WCAG) | web | — |
 | JIKU-292 | Écrans invités en arabe, de droite à gauche (voir `arabe-invites.md`) | web | — |
 | JIKU-293 | Langue des invités choisie par événement, messages et images en arabe | app, web | JIKU-292 |
+| JIKU-294 | Heure relative des réponses sans erreur de console (horloge partagée) | web | — |
 
 ---
 
