@@ -56,7 +56,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-290 | Relancer depuis mon WhatsApp les invités sans réponse | app, web | JIKU-281 |
 | JIKU-291 | Texte toujours lisible sur la couleur de l'organisateur (contraste WCAG) | web | — |
 | JIKU-292 | Écrans invités en arabe, de droite à gauche (voir `arabe-invites.md`) | web | — |
-| JIKU-293 | Langue de la carte choisie par événement, messages et images en arabe | app, web | JIKU-292 |
+| JIKU-293 | Langue des invités choisie par événement, messages et images en arabe | app, web | JIKU-292 |
 
 ---
 
