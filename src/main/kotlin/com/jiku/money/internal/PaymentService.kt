@@ -1,8 +1,10 @@
 package com.jiku.money.internal
 
 import com.jiku.shared.CodedRefusal
+import com.jiku.shared.OpsAlert
 import com.jiku.shared.TenantContext
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.PlatformTransactionManager
@@ -30,6 +32,7 @@ import java.util.UUID
 class PaymentService(
     private val payments: PaymentRepository,
     private val fulfillment: PaymentFulfillment,
+    private val events: ApplicationEventPublisher,
     private val providers: PaymentProviderSelector,
     private val platformSettings: PlatformBillingSettingsService,
     private val eventPricing: EventPricing,
@@ -259,12 +262,13 @@ class PaymentService(
         providerName: String,
         callback: PaymentCallback,
     ): CallbackOutcome {
-        val payment = payments.findById(paymentId).orElse(null) ?: return CallbackOutcome.UNKNOWN
+        val payment = payments.findForUpdate(paymentId) ?: return CallbackOutcome.UNKNOWN
         // A provider can only vouch for the payments it started itself.
         if (payment.provider != providerName) return CallbackOutcome.UNKNOWN
         if (payment.status != PaymentStatus.PENDING) {
             if (payment.status == PaymentStatus.FAILED && callback.outcome == PaymentOutcome.SUCCEEDED) {
                 log.warn("Payment {} was closed as FAILED but {} now reports it paid; settle it by hand", paymentId, providerName)
+                paidButNotGranted(payment, "$providerName reports it paid after it was closed as failed")
             }
             return CallbackOutcome.ALREADY_PROCESSED
         }
@@ -312,7 +316,7 @@ class PaymentService(
     }
 
     private fun abandon(paymentId: UUID): CallbackOutcome {
-        val payment = payments.findById(paymentId).orElse(null) ?: return CallbackOutcome.UNKNOWN
+        val payment = payments.findForUpdate(paymentId) ?: return CallbackOutcome.UNKNOWN
         if (payment.status != PaymentStatus.PENDING) return CallbackOutcome.ALREADY_PROCESSED
         payment.status = PaymentStatus.FAILED
         payment.updatedAt = Instant.now()
@@ -336,8 +340,31 @@ class PaymentService(
                 payment.amountMinor,
                 payment.currency,
             )
+            paidButNotGranted(
+                payment,
+                "the provider reports ${callback.amountMinor} ${callback.currency} paid instead of ${payment.amountMinor} ${payment.currency}",
+            )
         }
         return amountMatches && currencyMatches
+    }
+
+    /**
+     * Money came in and nothing was granted (JIKU-298): the team settles it by
+     * hand, granting or refunding as the runbook `payments.md` says. Only ids and
+     * amounts travel in the alert, never the payer's details.
+     */
+    private fun paidButNotGranted(
+        payment: Payment,
+        why: String,
+    ) {
+        events.publishEvent(
+            OpsAlert(
+                subject = "Jikū payment ${payment.id} paid but not granted",
+                message =
+                    "Organization ${payment.tenantId}, payment ${payment.id} (${payment.kind}, ${payment.provider}): $why. " +
+                        "Settle it by hand: grant it or refund the payer (docs/runbooks/payments.md).",
+            ),
+        )
     }
 }
 

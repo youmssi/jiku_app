@@ -60,6 +60,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-294 | Heure relative des réponses sans erreur de console (horloge partagée) | web | — |
 | JIKU-295 | Modèles WhatsApp v2 en catégorie utilitaire (invitation, invitation à boutons, « c'est votre tour ») | app | JIKU-293 |
 | JIKU-297 | Invitations WhatsApp v3 approuvées en utilitaire (liste des participants, confirmation attendue) | app | JIKU-295 |
+| JIKU-298 | Paiement en ligne accordé une seule fois, alerte « payé mais non accordé », runbook des remboursements et du test DEXPAY | app | JIKU-272 |
 
 ---
 

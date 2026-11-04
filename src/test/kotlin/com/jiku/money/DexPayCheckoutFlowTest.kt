@@ -3,6 +3,7 @@ package com.jiku.money
 import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.money.internal.PaymentReconciliationJob
+import com.jiku.shared.OpsAlert
 import com.jiku.support.OrganizerApi
 import com.sun.net.httpserver.HttpServer
 import org.junit.jupiter.api.AfterAll
@@ -12,15 +13,22 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.test.context.event.ApplicationEvents
+import org.springframework.test.context.event.RecordApplicationEvents
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.net.InetSocketAddress
+import java.time.Duration
+import java.util.concurrent.Callable
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import kotlin.test.assertEquals
@@ -48,12 +56,19 @@ private const val SECRET_KEY = "sk_test_flow"
 )
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration::class)
+@RecordApplicationEvents
 class DexPayCheckoutFlowTest {
     @Autowired
     lateinit var mockMvc: MockMvc
 
     @Autowired
     lateinit var reconciliation: PaymentReconciliationJob
+
+    @Autowired
+    lateinit var events: ApplicationEvents
+
+    @Autowired
+    lateinit var jdbc: JdbcTemplate
 
     @Test
     fun `a pack paid through DEXPAY is granted by its signed webhook only`() {
@@ -107,6 +122,66 @@ class DexPayCheckoutFlowTest {
         api.get(abandonedToken, "/api/v1/billing/payments/$abandoned").andExpect(jsonPath("$.status").value("FAILED"))
         api.get(abandonedToken, "/api/v1/billing/pack").andExpect(jsonPath("$.active").value(false))
     }
+
+    @Test
+    fun `a webhook delivered several times at once grants the payment once`() {
+        val api = OrganizerApi(mockMvc)
+        val token = api.register()
+        val tenantId = api.tenantId(token)
+        val paymentId = checkoutPack(api, token)
+        val body = completed(paymentId, tenantId, amount = 600000)
+        val signature = sign(body, SECRET_KEY)
+
+        // Released together, so the deliveries overlap as a retry racing the reconciliation job would.
+        val start = CountDownLatch(1)
+        val pool = Executors.newFixedThreadPool(8)
+        try {
+            val deliveries =
+                List(8) {
+                    Callable {
+                        start.await()
+                        webhook(body, signature).andReturn().response.status
+                    }
+                }
+            val results = deliveries.map { pool.submit(it) }
+            start.countDown()
+            results.forEach { assertEquals(200, it.get()) }
+        } finally {
+            pool.shutdown()
+        }
+
+        api.get(token, "/api/v1/billing/payments/$paymentId").andExpect(jsonPath("$.status").value("SUCCEEDED"))
+        // One grant: a second one would open a second pack, or push the first one a month further.
+        val packs = jdbc.queryForList("SELECT started_at, expires_at FROM organizer_pack WHERE tenant_id = ?", tenantId)
+        assertEquals(1, packs.size, "packs granted: $packs")
+        val started = (packs.single()["started_at"] as java.sql.Timestamp).toInstant()
+        val expires = (packs.single()["expires_at"] as java.sql.Timestamp).toInstant()
+        assertTrue(Duration.between(started, expires) <= Duration.ofDays(31), "one month granted, not $started to $expires")
+    }
+
+    @Test
+    fun `money reported for another amount grants nothing and alerts the team`() {
+        val api = OrganizerApi(mockMvc)
+        val token = api.register()
+        val tenantId = api.tenantId(token)
+        val paymentId = checkoutPack(api, token)
+        val body = completed(paymentId, tenantId, amount = 100)
+
+        webhook(body, sign(body, SECRET_KEY)).andExpect(status().isOk())
+
+        api.get(token, "/api/v1/billing/payments/$paymentId").andExpect(jsonPath("$.status").value("FAILED"))
+        api.get(token, "/api/v1/billing/pack").andExpect(jsonPath("$.active").value(false))
+        val alert = events.stream(OpsAlert::class.java).toList().single { paymentId in it.subject }
+        assertTrue("paid but not granted" in alert.subject, alert.subject)
+        assertTrue("100 GNF" in alert.message && "docs/runbooks/payments.md" in alert.message, alert.message)
+    }
+
+    private fun completed(
+        paymentId: String,
+        tenantId: String,
+        amount: Long,
+    ) = """{"event":"checkout.completed","reference":"$paymentId","status":"completed","amount":$amount,""" +
+        """"currency":"GNF","metadata":{"jiku_reference":"$tenantId:$paymentId"}}"""
 
     private fun checkoutPack(
         api: OrganizerApi,
