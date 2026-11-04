@@ -1,12 +1,25 @@
 package com.jiku.money.internal
 
+import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.time.Instant
 import java.util.UUID
 
 interface PaymentRepository : JpaRepository<Payment, UUID> {
+    /**
+     * The payment, its row locked until the transaction ends (JIKU-298): a
+     * provider's webhook, its retry and the reconciliation job settle it one
+     * after the other, so it is granted exactly once.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Payment p WHERE p.id = :id")
+    fun findForUpdate(
+        @Param("id") id: UUID,
+    ): Payment?
+
     /** First confirmed payment per organization, across tenants, for the back-office follow-up list (JIKU-202). */
     @Query(
         nativeQuery = true,
