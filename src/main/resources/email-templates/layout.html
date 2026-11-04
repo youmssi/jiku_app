@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{lang}}">
+<html lang="{{lang}}" dir="{{dir}}">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -11,6 +11,7 @@
       :root { color-scheme: light dark; supported-color-schemes: light dark; }
       body { margin: 0; padding: 0; }
       .on-dark { display: none; }
+      .rtl, .rtl * { letter-spacing: 0 !important; text-transform: none !important; }
       @media (max-width: 620px) {
         .px { padding-left: 22px !important; padding-right: 22px !important; }
         .h1 { font-size: 26px !important; }
@@ -35,7 +36,7 @@
     <table role="presentation" class="bg" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FAFAFA;">
       <tr>
         <td align="center" style="padding:32px 12px 40px;">
-          <table role="presentation" class="card" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#FFFFFF;border:1px solid #E5E5E5;border-radius:14px;border-collapse:separate;">
+          <table role="presentation" dir="{{dir}}" class="card {{dir}}" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#FFFFFF;border:1px solid #E5E5E5;border-radius:14px;border-collapse:separate;">
             <tr>
               <td class="px hd" bgcolor="{{accent}}" style="background:{{accent}} url('{{watermarkUrl}}') repeat;background-size:88px 88px;padding:28px 36px 14px;border-radius:13px 13px 0 0;">
                 {{headerBlock}}

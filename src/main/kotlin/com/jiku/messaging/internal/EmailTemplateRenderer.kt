@@ -511,7 +511,7 @@ class EmailTemplateRenderer(
         language: String,
         path: String,
     ): String {
-        val prefix = if (MessageLanguage.normalize(language) == MessageLanguage.FRENCH) "" else "/${MessageLanguage.normalize(language)}"
+        val prefix = MessageLanguage.pathPrefix(language)
         return properties.siteUrl.trimEnd('/') + prefix + path
     }
 

@@ -60,6 +60,7 @@ fun Event.toEventInfo(bannerUrl: String? = null): EventInfo =
         channelFallback = channelFallback,
         deliveryMode = settings.deliveryMode,
         brand = EventBrand(settings.brandName, settings.brandLogoUrl, settings.brandColor, cardStyle, bannerUrl),
+        guestLanguage = guestLanguage,
     )
 
 fun EventSettingsDto.toEmbeddable(): EventSettings =

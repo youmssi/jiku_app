@@ -55,19 +55,33 @@ le catalogue a été rédigé en arabe standard moderne.
 ## JIKU-293 — Langue de la carte choisie par événement
 
 **Pourquoi.** Le téléphone de l'invité ne dit pas tout : l'organisateur sait
-dans quelle langue il invite. Les messages WhatsApp et les e-mails partent
-aujourd'hui en français ou en anglais.
+dans quelle langue il invite. Décision : les invités lisent l'arabe écrit.
 
-**Comportement attendu.**
+**Comportement.**
 
-- Dans les réglages de l'événement : « Carte en français / en arabe / dans les
-  deux ». Les liens partagés ouvrent la langue choisie ; « les deux » laisse le
-  téléphone décider, avec le choix en bas de page.
-- Modèles WhatsApp de la carte, du billet et du rappel en arabe, validés par
-  Meta ; e-mails du billet en arabe.
-- Images de la carte (statut, publication, paysage) en arabe, avec une police
-  arabe embarquée dans le rendu d'image.
+- Dans **Paramètres**, **Langue des invités** : `Français`, `English`, `العربية`,
+  enregistré d'un toucher. Sans choix, la langue de l'organisation.
+- Tout ce que l'invité reçoit suit ce choix : liens (`/ar/...`), e-mails
+  d'invitation, de billet et d'annulation, messages et modèles WhatsApp, robot
+  de la carte, message de partage, image de la carte, envoi et relance depuis
+  le WhatsApp de l'organisateur. L'invité garde le choix en bas de page.
 
-**À décider avant de commencer.** Les pays et villes visés, et si les invités
-lisent l'arabe écrit ou surtout un dialecte parlé : dans ce cas, le message
-vocal compte plus que la traduction.
+**Critères d'acceptation.**
+
+- [x] `GET/PUT /events/{id}/guest-language`, isolé par organisation ; toute autre
+  valeur que fr, en, ar est refusée.
+- [x] E-mails arabes de droite à gauche (`dir="rtl"`), sans espacement de
+  lettres ; chiffres occidentaux dans les dates, comme dans les numéros et codes.
+- [x] Modèles WhatsApp dédiés en arabe pour l'invitation, la réponse par
+  boutons, le billet et l'annulation, publiés avec les autres pour revue Meta.
+- [x] Mots-clés arabes reconnus par le robot (توقف، ايقاف، ابدأ، تذكرتي),
+  quelles que soient les voyelles et la hamza.
+- [x] Une clé que les invités ne lisent jamais retombe sur le français.
+- [x] Images de la carte en arabe : lettres liées avant le rendu, mots de
+  droite à gauche, Noto Sans Arabic chargée seulement pour une carte qui
+  contient de l'arabe ; les cartes françaises sont inchangées.
+- [x] Guide « Carte d'invitation » complété, avec la capture du réglage.
+
+**Exploitation.** Après déploiement, republier les modèles WhatsApp pour que
+Meta revoie les versions arabes ; tant qu'elles ne sont pas approuvées, un
+envoi WhatsApp en arabe échoue et le canal de secours prend le relais.

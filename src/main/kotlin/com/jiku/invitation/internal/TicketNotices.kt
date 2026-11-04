@@ -34,7 +34,7 @@ class TicketNotices(
     ): TicketConfirmedNotice {
         val guestId = requireNotNull(guest.id)
         val tenant = tenants.findTenant(UUID.fromString(tenantId))
-        val language = MessageLanguage.forCountry(tenant?.country)
+        val language = MessageLanguage.forGuests(event.guestLanguage, tenant?.country)
         val code = inviteCodes.linkKey(guest, tenantId)
         val category = guest.ticketTypeId?.let { typeId -> events.ticketTypes(event.id).firstOrNull { it.id == typeId }?.label }
         return TicketConfirmedNotice(
@@ -64,7 +64,7 @@ class TicketNotices(
         code: String,
         language: String,
     ): TicketLinks {
-        val prefix = if (language == MessageLanguage.FRENCH) "" else "/$language"
+        val prefix = MessageLanguage.pathPrefix(language)
         return TicketLinks(
             ticketUrl = "${properties.appBaseUrl}$prefix/v/$code/ticket",
             qrImageUrl = "${properties.apiPublicUrl}${api.basePath}/rsvp/$code/qr.png",

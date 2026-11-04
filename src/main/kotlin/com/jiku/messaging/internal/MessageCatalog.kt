@@ -87,31 +87,47 @@ class MessageCatalog(
         footerKey: String,
         brand: String,
     ): String {
-        val lang = MessageLanguage.normalize(language)
+        val lang = MessageLanguage.normalizeGuest(language)
         return resource("email-templates/layout.html")
             .replace("{{brandName}}", brand)
             .replace("{{lang}}", lang)
+            .replace("{{dir}}", if (lang == MessageLanguage.ARABIC) "rtl" else "ltr")
             .replace("{{preheader}}", textOrNull(lang, "$name.preheader").orEmpty())
             .replace("{{footer}}", text(lang, footerKey))
-            .replace("{{content}}", resource("email-templates/$lang/$name.html").trimEnd())
+            .replace("{{content}}", localized("email-templates", lang, "$name.html").trimEnd())
     }
 
     fun whatsAppTemplate(
         language: String,
         file: String,
-    ): String = resource("whatsapp-templates/${MessageLanguage.normalize(language)}/$file").trimEnd()
+    ): String = localized("whatsapp-templates", MessageLanguage.normalizeGuest(language), file).trimEnd()
 
     fun substitute(
         body: String,
         values: Map<String, String>,
     ): String = values.entries.fold(body) { acc, (key, value) -> acc.replace("{{$key}}", value) }
 
+    /**
+     * Arabic carries only what guests read (JIKU-293); any other key reads in
+     * French, the default language.
+     */
     private fun messages(language: String): Properties =
-        messages.computeIfAbsent(MessageLanguage.normalize(language)) { lang ->
-            Properties().apply {
+        messages.computeIfAbsent(MessageLanguage.normalizeGuest(language)) { lang ->
+            val defaults = if (lang == MessageLanguage.ARABIC) messages(MessageLanguage.FRENCH) else null
+            Properties(defaults).apply {
                 ClassPathResource("email-templates/$lang/messages.properties").inputStream.reader(Charsets.UTF_8).use { load(it) }
             }
         }
+
+    /** The file [name] under [folder] in [language], or in French when that language has no such file. */
+    private fun localized(
+        folder: String,
+        language: String,
+        name: String,
+    ): String {
+        val path = "$folder/$language/$name"
+        return if (ClassPathResource(path).exists()) resource(path) else resource("$folder/${MessageLanguage.FRENCH}/$name")
+    }
 
     private fun resource(path: String): String =
         resources.computeIfAbsent(path) {

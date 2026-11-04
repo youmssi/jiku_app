@@ -47,7 +47,8 @@ class WhatsAppTemplatePublisher(
         }
         return kinds.flatMap { kind ->
             val definition = requireNotNull(definitions[kind.key]) { "No definition for WhatsApp template ${kind.key}" }
-            LANGUAGES.map { language ->
+            // Arabic covers the guest templates only (JIKU-293); the others exist in French and English.
+            LANGUAGES.filter { it in definition || it in REQUIRED_LANGUAGES }.map { language ->
                 val name = properties.meta.templatePrefix + kind.key
                 val components = definition[language] ?: error("No $language text for WhatsApp template ${kind.key}")
                 publish(name, language, kind.category, components, if (definition["image"] == true) imageHandle else null, wabaId, token)
@@ -90,7 +91,8 @@ class WhatsAppTemplatePublisher(
         const val EXAMPLE_IMAGE = "ticket-example.png"
         const val EXAMPLE_IMAGE_PATH = "whatsapp-templates/meta/$EXAMPLE_IMAGE"
         const val IMAGE_HANDLE_MARKER = "{{EXAMPLE_IMAGE_HANDLE}}"
-        val LANGUAGES = listOf("fr", "en")
+        val LANGUAGES = listOf("fr", "en", "ar")
+        val REQUIRED_LANGUAGES = setOf("fr", "en")
     }
 }
 

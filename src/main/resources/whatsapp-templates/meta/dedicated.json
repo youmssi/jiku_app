@@ -48,6 +48,27 @@
         "type": "FOOTER",
         "text": "Jikū · Reply STOP to stop these messages"
       }
+    ],
+    "ar": [
+      {
+        "type": "BODY",
+        "text": "مرحبًا {{1}}،\n\n{{2}} يدعوك إلى {{3}}، {{4}}، ويرسل إليك هذه الدعوة عبر Jikū.\n\nأكّد حضورك بفتح هذا الرابط: {{5}}\n\nشكرًا لك، ونراك قريبًا!",
+        "example": {
+          "body_text": [
+            [
+              "عائشة",
+              "عائلة ديالو",
+              "حفل زفاف عائشة وموسى",
+              "السبت 12 أكتوبر الساعة 18:00",
+              "https://hellojiku.com/ar/v/AbC123"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · أرسل STOP لإيقاف الرسائل"
+      }
     ]
   },
   "invitation_rsvp_v1": {
@@ -122,6 +143,39 @@
           }
         ]
       }
+    ],
+    "ar": [
+      {
+        "type": "BODY",
+        "text": "مرحبًا {{1}}،\n\n{{2}} يدعوك إلى {{3}}، {{4}}، ويرسل إليك هذه الدعوة عبر Jikū.\n\nيُرجى الرد بالأزرار أدناه.",
+        "example": {
+          "body_text": [
+            [
+              "عائشة",
+              "عائلة ديالو",
+              "حفل زفاف عائشة وموسى",
+              "السبت 12 أكتوبر الساعة 18:00"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · أرسل STOP لإيقاف الرسائل"
+      },
+      {
+        "type": "BUTTONS",
+        "buttons": [
+          {
+            "type": "QUICK_REPLY",
+            "text": "سأحضر"
+          },
+          {
+            "type": "QUICK_REPLY",
+            "text": "لن أحضر"
+          }
+        ]
+      }
     ]
   },
   "ticket_v1": {
@@ -192,6 +246,36 @@
         "type": "FOOTER",
         "text": "Jikū · Reply STOP to stop these messages"
       }
+    ],
+    "ar": [
+      {
+        "type": "HEADER",
+        "format": "IMAGE",
+        "example": {
+          "header_handle": [
+            "{{EXAMPLE_IMAGE_HANDLE}}"
+          ]
+        }
+      },
+      {
+        "type": "BODY",
+        "text": "مرحبًا {{1}}،\n\nإليك تذكرتك لـ {{2}}، {{3}}، من {{4}}.\n\nتذكرتك: {{5}}\n\nقدّم رمز QR عند الدخول. يظهر حتى دون اتصال.",
+        "example": {
+          "body_text": [
+            [
+              "عائشة",
+              "حفل زفاف عائشة وموسى",
+              "السبت 12 أكتوبر الساعة 18:00",
+              "عائلة ديالو",
+              "https://hellojiku.com/ar/v/AbC123/ticket"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · أرسل STOP لإيقاف الرسائل"
+      }
     ]
   },
   "event_cancelled_v1": {
@@ -239,6 +323,26 @@
       {
         "type": "FOOTER",
         "text": "Jikū · Reply STOP to stop these messages"
+      }
+    ],
+    "ar": [
+      {
+        "type": "BODY",
+        "text": "مرحبًا {{1}}،\n\nيُبلغك {{2}} بأن {{3}}، {{4}}، قد أُلغيت. لم تعد تذكرتك صالحة، وليس عليك فعل أي شيء.\n\nإذا أُعيدت جدولة المناسبة، ستصلك دعوة جديدة.",
+        "example": {
+          "body_text": [
+            [
+              "عائشة",
+              "عائلة ديالو",
+              "حفل زفاف عائشة وموسى",
+              "السبت 12 أكتوبر الساعة 18:00"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · أرسل STOP لإيقاف الرسائل"
       }
     ]
   },

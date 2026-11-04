@@ -16,7 +16,7 @@ import kotlin.test.assertTrue
 
 /**
  * The dedicated templates (JIKU-210) as Meta will review them: every kind in
- * French and English, numbered parameters used once each, no parameter at the
+ * French and English, the guests' kinds in Arabic too (JIKU-293), numbered parameters used once each, no parameter at the
  * start or end of the text, an example per parameter, a short footer.
  */
 class DedicatedWhatsAppTemplatesTest {
@@ -30,7 +30,7 @@ class DedicatedWhatsAppTemplatesTest {
         for (kind in WhatsAppTemplateKind.entries.filterNot { it.authentication }) {
             val definition = definitions.path(kind.key)
             val parameters = definition.path("parameters").size()
-            for (language in listOf("fr", "en")) {
+            for (language in listOf("fr", "en") + if (kind in GUEST_KINDS) listOf("ar") else emptyList()) {
                 val components = definition.path(language).toList()
                 val body = components.single { it.path("type").asString("") == "BODY" }
                 val text = body.path("text").asString("")
@@ -118,5 +118,15 @@ class DedicatedWhatsAppTemplatesTest {
         assertEquals("Gala gratuit sur et", call.parameters[2])
         assertEquals("Events", call.parameters[1])
         assertEquals("https://hellojiku.com/r/abc", call.parameters[4])
+    }
+
+    private companion object {
+        val GUEST_KINDS =
+            setOf(
+                WhatsAppTemplateKind.INVITATION,
+                WhatsAppTemplateKind.INVITATION_RSVP,
+                WhatsAppTemplateKind.TICKET,
+                WhatsAppTemplateKind.EVENT_CANCELLED,
+            )
     }
 }
