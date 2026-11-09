@@ -1,17 +1,18 @@
-# Déployer Jikū sur un serveur unique (ADR 107)
+# Déployer Jikū sur un serveur unique (ADR 107, ADR 111)
 
-Ce guide installe la production complète (web, API, PostgreSQL) sur un serveur
-Hetzner piloté par Dokploy, derrière Cloudflare, puis bascule depuis Vercel,
+Ce guide installe la production complète (web, API, PostgreSQL) sur un VPS
+OVHcloud piloté par Dokploy, derrière Cloudflare, puis bascule depuis Vercel,
 Render et Neon. Il se suit de haut en bas, sans connaissance préalable.
 
-Les outils de conversation commerciale (Chatwoot avec sa propre base, Redis,
-n8n) s'ajoutent comme applications Dokploy séparées, avec les limites de
-mémoire de l'ADR 108. Les SMS sont coupés par défaut (`SMS_TRANSPORT=off`,
-JIKU-261).
+Au lancement, le serveur ne porte que Jikū (ADR 111) : le fondateur répond
+lui-même aux clients sur le numéro WhatsApp Jikū Support. Chatwoot et n8n
+s'ajouteront plus tard, comme applications Dokploy séparées avec les limites de
+mémoire de l'ADR 108, après passage au VPS-4. Les SMS sont coupés par défaut
+(`SMS_TRANSPORT=off`, JIKU-261).
 
 Dans ce guide, `<domaine>` vaut **`hellojiku.com`** (ADR 110) : DNS chez
 Cloudflare, enregistrement chez Porkbun. Sous-domaines publics : `www`, `api`,
-`stats` et `chat` ; Dokploy et n8n restent derrière Tailscale.
+`stats` (et `chat` quand Chatwoot arrivera) ; Dokploy reste derrière Tailscale.
 
 | Pièce | Où | Comment |
 |---|---|---|
@@ -31,16 +32,32 @@ Fichiers utilisés : `docker-compose.vps.yml`, `deploy/postgres/`,
 
 ## 1. Créer le serveur
 
-1. Hetzner Cloud → **CX43** (8 vCPU, 16 Go, 160 Go ; ADR 108, qui y ajoute Chatwoot et n8n), image **Ubuntu 24.04**,
-   région Falkenstein ou Nuremberg, avec votre clé SSH. Activer les
-   **sauvegardes Hetzner** (+20 %).
-2. Créer un **pare-feu Hetzner** et l'attacher au serveur :
-   - entrée TCP 443 et 80 : uniquement depuis les plages de Cloudflare
-     (<https://www.cloudflare.com/ips/>) ;
-   - aucune autre entrée : SSH passe par Tailscale.
-
-   Le pare-feu Hetzner est la vraie barrière. `ufw` ne suffit pas : Docker
-   publie ses ports en contournant ses règles.
+1. OVHcloud → VPS → **VPS-3** (6 vCores, 12 Go, 100 Go NVMe ; ADR 111), image
+   **Ubuntu 24.04**, centre de données en **France**, sans option payante. La
+   sauvegarde quotidienne d'OVHcloud est incluse ; elle s'ajoute à WAL-G vers
+   R2 (section 3), elle ne la remplace pas. Déposer votre **clé SSH publique**
+   à la commande, jamais un mot de passe.
+2. Fermer tout ce qui n'est pas HTTPS venant de Cloudflare. Docker publie ses
+   ports en contournant `ufw` : la règle doit donc vivre dans la chaîne
+   `DOCKER-USER` d'iptables, que Docker consulte avant ses propres règles.
+   Après l'installation de Dokploy (section 2), créer
+   `/usr/local/sbin/jiku-firewall.sh` :
+   ```
+   #!/bin/sh
+   # Ports web des conteneurs : uniquement depuis Cloudflare.
+   iptables -F DOCKER-USER
+   iptables -A DOCKER-USER -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN
+   for net in $(curl -fsS https://www.cloudflare.com/ips-v4); do
+     iptables -A DOCKER-USER -p tcp -m multiport --dports 80,443 -s "$net" -j RETURN
+   done
+   iptables -A DOCKER-USER -p tcp -m multiport --dports 80,443 -j DROP
+   iptables -A DOCKER-USER -j RETURN
+   ```
+   puis `chmod +x` et un service systemd qui le lance au démarrage, après
+   `docker.service`. Vérifier depuis un autre poste que
+   `curl -k https://<ip-du-serveur>` échoue, et que le site répond par son
+   domaine. Le pare-feu réseau d'OVHcloud (espace client, adresse IP) peut en
+   plus bloquer en entrée tout ce qui n'est pas 80 ou 443.
 3. Première connexion (encore en SSH public, le temps d'installer Tailscale) :
    ```
    apt-get update && apt-get -y upgrade
@@ -51,7 +68,9 @@ Fichiers utilisés : `docker-compose.vps.yml`, `deploy/postgres/`,
    ```
 4. Vérifier qu'on se connecte par Tailscale (`ssh root@<nom-tailscale>`), puis
    désactiver la connexion par mot de passe (`PasswordAuthentication no` dans
-   `/etc/ssh/sshd_config`) et retirer la règle SSH publique du pare-feu.
+   `/etc/ssh/sshd_config`), puis fermer le port 22 public
+   (`ufw default deny incoming`, `ufw allow in on tailscale0`, `ufw enable` :
+   `ufw` suffit ici, car SSH ne passe pas par Docker).
 
 ## 2. Installer Dokploy
 
@@ -244,5 +263,5 @@ export conservé dans R2). Supprimer `docker-compose.prod.yml`, `Caddyfile` et
 - Restauration complète répétée (`docs/runbooks/database-restore.md`, cas 1) ;
   durée notée dans `docs/backup.md`.
 - Mémoire et CPU en pointe sous 70 % (Grafana Cloud) ; au-delà, agrandir le
-  serveur (Hetzner → Rescale, quelques minutes de coupure).
+  serveur (OVHcloud → passer au VPS-4, sans migration ; ADR 111).
 - `apt list --upgradable` vide ; Dokploy à jour.

@@ -200,8 +200,8 @@ pointing at it.
 
 ## Deployment
 
-Production runs on one Hetzner Cloud CX43 server driven by Dokploy, behind
-Cloudflare (ADR 107 and 108):
+Production runs on one OVHcloud VPS-3 (6 vCores, 12 GB) driven by Dokploy,
+behind Cloudflare (ADR 107, 108 and 111):
 
 | Piece | Where |
 |---|---|

@@ -1,6 +1,6 @@
 # ADR 108 — Pile de lancement : un serveur CX43, conversations commerciales, SMS coupés
 
-**Statut :** accepté.
+**Statut :** accepté ; décision 1 (serveur CX43) remplacée par l'ADR 111 pour le lancement.
 **Date :** 2026-10-16
 **Amont :** ADR 107 (hébergement unique et envoi), ADR 105 (canaux et tarification),
 `docs/backlog/lancement.md`.
