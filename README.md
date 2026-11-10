@@ -200,8 +200,8 @@ pointing at it.
 
 ## Deployment
 
-Production runs on one OVHcloud VPS-3 (6 vCores, 12 GB) driven by Dokploy,
-behind Cloudflare (ADR 107, 108 and 111):
+Production runs on one Contabo Cloud VPS 8 NVMe (8 vCPU, 24 GB, Ubuntu 26.04)
+driven by Dokploy, behind Cloudflare (ADR 107, 108 and 111):
 
 | Piece | Where |
 |---|---|

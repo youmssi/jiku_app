@@ -1,7 +1,7 @@
 # Déployer Jikū sur un serveur unique (ADR 107, ADR 111)
 
 Ce guide installe la production complète (web, API, PostgreSQL) sur un VPS
-OVHcloud piloté par Dokploy, derrière Cloudflare, puis bascule depuis Vercel,
+Contabo piloté par Dokploy, derrière Cloudflare, puis bascule depuis Vercel,
 Render et Neon. Il se suit de haut en bas, sans connaissance préalable.
 
 Au lancement, le serveur ne porte que Jikū (ADR 111) : le fondateur répond
@@ -32,12 +32,20 @@ Fichiers utilisés : `docker-compose.vps.yml`, `deploy/postgres/`,
 
 ## 1. Créer le serveur
 
-1. OVHcloud → VPS → **VPS-3** (6 vCores, 12 Go, 100 Go NVMe ; ADR 111), image
-   **Ubuntu 24.04**, centre de données en **France**, sans option payante. La
-   sauvegarde quotidienne d'OVHcloud est incluse ; elle s'ajoute à WAL-G vers
-   R2 (section 3), elle ne la remplace pas. Déposer votre **clé SSH publique**
-   à la commande, jamais un mot de passe.
-2. Fermer tout ce qui n'est pas HTTPS venant de Cloudflare. Docker publie ses
+1. Contabo → **Cloud VPS 8 NVMe** (8 vCPU, 24 Go, 150 Go NVMe ; ADR 111),
+   durée **1 mois**, région **European Union**, image **Ubuntu 26.04**, sans
+   Auto Backup ni autre option payante. Les sauvegardes de la base passent par
+   WAL-G vers R2 (section 3). Le mot de passe root choisi à la commande ne sert
+   qu'à la première connexion : il reste chez le fondateur, jamais dans un
+   ticket, un message ou le dépôt.
+2. Sur le poste du fondateur, créer une clé SSH et la déposer sur le serveur :
+   ```
+   ssh-keygen -t ed25519 -C "jiku-prod"
+   ssh-copy-id root@<ip-du-serveur>
+   ```
+   (Windows, PowerShell : `type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh root@<ip-du-serveur> "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"`).
+   Vérifier que `ssh root@<ip-du-serveur>` entre sans demander de mot de passe.
+3. Fermer tout ce qui n'est pas HTTPS venant de Cloudflare. Docker publie ses
    ports en contournant `ufw` : la règle doit donc vivre dans la chaîne
    `DOCKER-USER` d'iptables, que Docker consulte avant ses propres règles.
    Après l'installation de Dokploy (section 2), créer
@@ -56,9 +64,9 @@ Fichiers utilisés : `docker-compose.vps.yml`, `deploy/postgres/`,
    puis `chmod +x` et un service systemd qui le lance au démarrage, après
    `docker.service`. Vérifier depuis un autre poste que
    `curl -k https://<ip-du-serveur>` échoue, et que le site répond par son
-   domaine. Le pare-feu réseau d'OVHcloud (espace client, adresse IP) peut en
-   plus bloquer en entrée tout ce qui n'est pas 80 ou 443.
-3. Première connexion (encore en SSH public, le temps d'installer Tailscale) :
+   domaine. Le pare-feu de Contabo (panneau client) peut en plus bloquer en
+   entrée tout ce qui n'est pas 80 ou 443.
+4. Première connexion (encore en SSH public, le temps d'installer Tailscale) :
    ```
    apt-get update && apt-get -y upgrade
    apt-get -y install unattended-upgrades
@@ -66,17 +74,35 @@ Fichiers utilisés : `docker-compose.vps.yml`, `deploy/postgres/`,
    curl -fsSL https://tailscale.com/install.sh | sh
    tailscale up --ssh
    ```
-4. Vérifier qu'on se connecte par Tailscale (`ssh root@<nom-tailscale>`), puis
+5. Vérifier qu'on se connecte par Tailscale (`ssh root@<nom-tailscale>`), puis
    désactiver la connexion par mot de passe (`PasswordAuthentication no` dans
    `/etc/ssh/sshd_config`), puis fermer le port 22 public
    (`ufw default deny incoming`, `ufw allow in on tailscale0`, `ufw enable` :
    `ufw` suffit ici, car SSH ne passe pas par Docker).
 
-## 2. Installer Dokploy
+## 2. Installer Docker puis Dokploy
+
+Sur Ubuntu 26.04, le script de Dokploy impose une version de Docker (28.5.0)
+absente des dépôts de cette version d'Ubuntu. Installer d'abord Docker depuis
+son dépôt officiel :
+
+```
+apt-get -y install ca-certificates curl
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable" > /etc/apt/sources.list.d/docker.list
+apt-get update && apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+docker version
+```
+
+puis Dokploy, qui doit trouver Docker déjà installé :
 
 ```
 curl -sSL https://dokploy.com/install.sh | sh
 ```
+
+Si le script tente malgré tout d'installer Docker 28.5.0 et échoue, relire la
+documentation de Dokploy pour Ubuntu 26.04 avant d'aller plus loin.
 
 - Ouvrir `http://<adresse-tailscale>:3000` (jamais par l'adresse publique : le
   port 3000 n'est pas ouvert dans le pare-feu).
@@ -263,5 +289,6 @@ export conservé dans R2). Supprimer `docker-compose.prod.yml`, `Caddyfile` et
 - Restauration complète répétée (`docs/runbooks/database-restore.md`, cas 1) ;
   durée notée dans `docs/backup.md`.
 - Mémoire et CPU en pointe sous 70 % (Grafana Cloud) ; au-delà, agrandir le
-  serveur (OVHcloud → passer au VPS-4, sans migration ; ADR 111).
+  serveur (Contabo → offre supérieure depuis le panneau client, ou migration
+  vers netcup ou Hetzner ; ADR 111).
 - `apt list --upgradable` vide ; Dokploy à jour.
