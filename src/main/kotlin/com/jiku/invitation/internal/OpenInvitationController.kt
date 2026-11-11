@@ -1,7 +1,9 @@
 package com.jiku.invitation.internal
 
 import jakarta.validation.Valid
+import org.springframework.http.CacheControl
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -11,8 +13,11 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
+import java.time.Duration
 import java.util.UUID
 
 /**
@@ -24,7 +29,38 @@ import java.util.UUID
 @PreAuthorize("hasRole('ORGANIZER')")
 class OpenInvitationController(
     private val service: OpenInvitationService,
+    private val funnel: CardFunnelService,
+    private val voice: CardVoiceService,
 ) {
+    /** Records or replaces the host's voice message (JIKU-284): the file, its length in seconds and its words. */
+    @PutMapping("/voice", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    fun replaceVoice(
+        @PathVariable eventId: UUID,
+        @RequestParam file: MultipartFile,
+        @RequestParam durationSeconds: Int,
+        @RequestParam(required = false) transcript: String?,
+    ): CardVoiceView = voice.replace(eventId, file.bytes, durationSeconds, transcript)
+
+    @DeleteMapping("/voice")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun removeVoice(
+        @PathVariable eventId: UUID,
+    ) = voice.remove(eventId)
+
+    /** Shares, visits and answers per network (JIKU-282). */
+    @GetMapping("/funnel")
+    fun funnel(
+        @PathVariable eventId: UUID,
+    ): List<CardFunnelRow> = funnel.funnel(eventId)
+
+    /** The organizer shared the card through [source]; counted, never tied to anyone. */
+    @PostMapping("/shares")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun share(
+        @PathVariable eventId: UUID,
+        @RequestParam source: String,
+    ) = funnel.recordShare(eventId, CardSource.of(source))
+
     /** 204 while the event has no open invitation yet. */
     @GetMapping
     fun settings(
@@ -60,7 +96,30 @@ class OpenInvitationController(
 @RequestMapping("/open/{code}")
 class PublicOpenInvitationController(
     private val service: OpenInvitationService,
+    private val funnel: CardFunnelService,
+    private val voice: CardVoiceService,
 ) {
+    /** The host's voice message, fetched when a guest taps play; its address changes with each new recording. */
+    @GetMapping("/voice")
+    fun voice(
+        @PathVariable code: String,
+    ): ResponseEntity<ByteArray> {
+        val recording = service.route(code) { eventId -> voice.recording(eventId) }
+        return ResponseEntity
+            .ok()
+            .contentType(MediaType.parseMediaType(recording.contentType))
+            .cacheControl(CacheControl.maxAge(Duration.ofDays(365)).cachePublic().immutable())
+            .body(recording.content)
+    }
+
+    /** The card page was opened from a link tagged [source] (JIKU-282). Sent by the page's script, so link previews never count. */
+    @PostMapping("/visits")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun visit(
+        @PathVariable code: String,
+        @RequestParam(required = false) source: String?,
+    ) = service.route(code) { eventId -> funnel.recordVisit(eventId, CardSource.of(source)) }
+
     @GetMapping
     fun view(
         @PathVariable code: String,

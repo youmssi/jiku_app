@@ -61,7 +61,7 @@ décrite dans `docs/backlog/phase-7-suite.md` et datée au §5.
 
 | Élément | État | Constat |
 |---|---|---|
-| Hébergement toujours actif | 🟡 | prêt dans le code : serveur Hetzner CX43 avec Dokploy (ADR 107, ADR 108, JIKU-203) ; bascule et test sur le vrai domaine à faire |
+| Hébergement toujours actif | 🟡 | prêt dans le code : Cloud VPS 8 Contabo avec Dokploy (ADR 107, ADR 111, JIKU-203) ; bascule et test sur le vrai domaine à faire |
 | Envoi d'e-mails au-delà des offres gratuites | 🟡 | useSend sur AWS SES, seuils de réputation abaissés (JIKU-200) ; SPF, DKIM et DMARC à valider |
 | Domaine de marque | ❌ | web, API et e-mails encore sur `mrvin100.de` ; adresse de support sur le domaine à créer |
 | Branche `main` et mise en production | ✅ | `main` partage l'historique de `develop` depuis la version du 2026-09-26 ; une version est une PR `develop` → `main` fusionnée par commit de fusion |

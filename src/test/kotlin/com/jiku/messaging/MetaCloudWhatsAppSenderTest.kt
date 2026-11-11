@@ -251,7 +251,7 @@ class MetaCloudWhatsAppSenderTest {
             mockedSender(templateName = "jiku_invitation", buttonsTemplateName = "old_buttons", gate = gate, templatePrefix = "jiku_") {
                 expectBody(
                     it,
-                    "\"name\":\"jiku_invitation_rsvp_v1\"",
+                    "\"name\":\"jiku_invitation_rsvp_v3\"",
                     "\"code\":\"en\"",
                     "{\"type\":\"text\",\"text\":\"Gala\"}",
                     "\"payload\":\"RSVP_YES:1\"",
@@ -282,7 +282,7 @@ class MetaCloudWhatsAppSenderTest {
         val sender =
             mockedSender(
                 templateName = null,
-                gate = RecordingGate(blocked = setOf("jiku_invitation_rsvp_v1")),
+                gate = RecordingGate(blocked = setOf("jiku_invitation_rsvp_v3")),
                 templatePrefix = "jiku_",
             ) { }
 

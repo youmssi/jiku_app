@@ -1,13 +1,18 @@
-# Déployer Jikū sur un serveur unique (ADR 107)
+# Déployer Jikū sur un serveur unique (ADR 107, ADR 111)
 
-Ce guide installe la production complète (web, API, PostgreSQL) sur un serveur
-Hetzner piloté par Dokploy, derrière Cloudflare, puis bascule depuis Vercel,
+Ce guide installe la production complète (web, API, PostgreSQL) sur un VPS
+Contabo piloté par Dokploy, derrière Cloudflare, puis bascule depuis Vercel,
 Render et Neon. Il se suit de haut en bas, sans connaissance préalable.
 
-Les outils de conversation commerciale (Chatwoot avec sa propre base, Redis,
-n8n) s'ajoutent comme applications Dokploy séparées, avec les limites de
-mémoire de l'ADR 108. Les SMS sont coupés par défaut (`SMS_TRANSPORT=off`,
-JIKU-261).
+Au lancement, le serveur ne porte que Jikū (ADR 111) : le fondateur répond
+lui-même aux clients sur le numéro WhatsApp Jikū Support. Chatwoot et n8n
+s'ajouteront plus tard, comme applications Dokploy séparées avec les limites de
+mémoire de l'ADR 108, après passage au VPS-4. Les SMS sont coupés par défaut
+(`SMS_TRANSPORT=off`, JIKU-261).
+
+Dans ce guide, `<domaine>` vaut **`hellojiku.com`** (ADR 110) : DNS chez
+Cloudflare, enregistrement chez Porkbun. Sous-domaines publics : `www`, `api`,
+`stats` (et `chat` quand Chatwoot arrivera) ; Dokploy reste derrière Tailscale.
 
 | Pièce | Où | Comment |
 |---|---|---|
@@ -17,7 +22,7 @@ JIKU-261).
 | Sauvegardes | Cloudflare R2 | Journal en continu + sauvegarde complète chaque nuit |
 | TLS, routage | Traefik (fourni par Dokploy) | Domaines déclarés dans Dokploy |
 | DNS, cache, pare-feu web | Cloudflare (offre gratuite) | Enregistrements « proxied » |
-| E-mails | useSend sur AWS SES | `MAIL_TRANSPORT=usesend` (JIKU-200) |
+| E-mails | useSend (AWS SES), Resend, Brevo | `MAIL_TRANSPORT=routing`, chaîne `usesend,resend,brevo` (ADR 110, JIKU-275) |
 | Surveillance | Hors du serveur | Moniteur de disponibilité, Sentry, Grafana Cloud |
 
 Fichiers utilisés : `docker-compose.vps.yml`, `deploy/postgres/`,
@@ -27,17 +32,41 @@ Fichiers utilisés : `docker-compose.vps.yml`, `deploy/postgres/`,
 
 ## 1. Créer le serveur
 
-1. Hetzner Cloud → **CX43** (8 vCPU, 16 Go, 160 Go ; ADR 108, qui y ajoute Chatwoot et n8n), image **Ubuntu 24.04**,
-   région Falkenstein ou Nuremberg, avec votre clé SSH. Activer les
-   **sauvegardes Hetzner** (+20 %).
-2. Créer un **pare-feu Hetzner** et l'attacher au serveur :
-   - entrée TCP 443 et 80 : uniquement depuis les plages de Cloudflare
-     (<https://www.cloudflare.com/ips/>) ;
-   - aucune autre entrée : SSH passe par Tailscale.
-
-   Le pare-feu Hetzner est la vraie barrière. `ufw` ne suffit pas : Docker
-   publie ses ports en contournant ses règles.
-3. Première connexion (encore en SSH public, le temps d'installer Tailscale) :
+1. Contabo → **Cloud VPS 8 NVMe** (8 vCPU, 24 Go, 150 Go NVMe ; ADR 111),
+   durée **1 mois**, région **European Union**, image **Ubuntu 26.04**, sans
+   Auto Backup ni autre option payante. Les sauvegardes de la base passent par
+   WAL-G vers R2 (section 3). Le mot de passe root choisi à la commande ne sert
+   qu'à la première connexion : il reste chez le fondateur, jamais dans un
+   ticket, un message ou le dépôt.
+2. Sur le poste du fondateur, créer une clé SSH et la déposer sur le serveur :
+   ```
+   ssh-keygen -t ed25519 -C "jiku-prod"
+   ssh-copy-id root@<ip-du-serveur>
+   ```
+   (Windows, PowerShell : `type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh root@<ip-du-serveur> "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"`).
+   Vérifier que `ssh root@<ip-du-serveur>` entre sans demander de mot de passe.
+3. Fermer tout ce qui n'est pas HTTPS venant de Cloudflare. Docker publie ses
+   ports en contournant `ufw` : la règle doit donc vivre dans la chaîne
+   `DOCKER-USER` d'iptables, que Docker consulte avant ses propres règles.
+   Après l'installation de Dokploy (section 2), créer
+   `/usr/local/sbin/jiku-firewall.sh` :
+   ```
+   #!/bin/sh
+   # Ports web des conteneurs : uniquement depuis Cloudflare.
+   iptables -F DOCKER-USER
+   iptables -A DOCKER-USER -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN
+   for net in $(curl -fsS https://www.cloudflare.com/ips-v4); do
+     iptables -A DOCKER-USER -p tcp -m multiport --dports 80,443 -s "$net" -j RETURN
+   done
+   iptables -A DOCKER-USER -p tcp -m multiport --dports 80,443 -j DROP
+   iptables -A DOCKER-USER -j RETURN
+   ```
+   puis `chmod +x` et un service systemd qui le lance au démarrage, après
+   `docker.service`. Vérifier depuis un autre poste que
+   `curl -k https://<ip-du-serveur>` échoue, et que le site répond par son
+   domaine. Le pare-feu de Contabo (panneau client) peut en plus bloquer en
+   entrée tout ce qui n'est pas 80 ou 443.
+4. Première connexion (encore en SSH public, le temps d'installer Tailscale) :
    ```
    apt-get update && apt-get -y upgrade
    apt-get -y install unattended-upgrades
@@ -45,15 +74,35 @@ Fichiers utilisés : `docker-compose.vps.yml`, `deploy/postgres/`,
    curl -fsSL https://tailscale.com/install.sh | sh
    tailscale up --ssh
    ```
-4. Vérifier qu'on se connecte par Tailscale (`ssh root@<nom-tailscale>`), puis
+5. Vérifier qu'on se connecte par Tailscale (`ssh root@<nom-tailscale>`), puis
    désactiver la connexion par mot de passe (`PasswordAuthentication no` dans
-   `/etc/ssh/sshd_config`) et retirer la règle SSH publique du pare-feu.
+   `/etc/ssh/sshd_config`), puis fermer le port 22 public
+   (`ufw default deny incoming`, `ufw allow in on tailscale0`, `ufw enable` :
+   `ufw` suffit ici, car SSH ne passe pas par Docker).
 
-## 2. Installer Dokploy
+## 2. Installer Docker puis Dokploy
+
+Sur Ubuntu 26.04, le script de Dokploy impose une version de Docker (28.5.0)
+absente des dépôts de cette version d'Ubuntu. Installer d'abord Docker depuis
+son dépôt officiel :
+
+```
+apt-get -y install ca-certificates curl
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable" > /etc/apt/sources.list.d/docker.list
+apt-get update && apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+docker version
+```
+
+puis Dokploy, qui doit trouver Docker déjà installé :
 
 ```
 curl -sSL https://dokploy.com/install.sh | sh
 ```
+
+Si le script tente malgré tout d'installer Docker 28.5.0 et échoue, relire la
+documentation de Dokploy pour Ubuntu 26.04 avant d'aller plus loin.
 
 - Ouvrir `http://<adresse-tailscale>:3000` (jamais par l'adresse publique : le
   port 3000 n'est pas ouvert dans le pare-feu).
@@ -83,9 +132,23 @@ curl -sSL https://dokploy.com/install.sh | sh
    | `WALG_ENDPOINT` | adresse S3 R2 |
    | `SERVER_BASE_URL`, `CORS_ALLOWED_ORIGINS` | `https://<domaine>` |
    | `API_PUBLIC_URL` | `https://api.<domaine>` |
-   | `MAIL_TRANSPORT` | `usesend` (+ `USESEND_API_KEY`, `USESEND_WEBHOOK_SECRET`) |
+   | `MAIL_TRANSPORT` | `routing` |
+   | `MAIL_FROM` | `Jikū <no-reply@mail.hellojiku.com>` : une adresse du domaine d'envoi vérifié chez chaque fournisseur |
+   | `EMAIL_ASSET_BASE_URL` | à laisser vide : les images des e-mails (filigrane, Bande, logos) sont servies par le site à `https://<domaine>/email` (JIKU-278) |
+   | `EMAIL_ROUTING_ORDER` | `usesend,resend,brevo`, avec `EMAIL_GLOBAL_DAILY_CAP=480` |
+   | `USESEND_API_KEY`, `RESEND_API_KEY`, `BREVO_API_KEY` | une clé par fournisseur de la chaîne |
+   | `USESEND_WEBHOOK_SECRET`, `RESEND_WEBHOOK_SECRET`, `BREVO_WEBHOOK_TOKEN` | retours (rebonds, plaintes) de chaque fournisseur |
+   | `EMAIL_USESEND_OVERFLOW` | `false` au lancement ; `true` une fois l'offre payante de useSend activée |
    | `UMAMI_APP_SECRET` | secret fort (statistiques de visite) |
+   | `RATE_LIMIT_FORWARDED_CLIENT_IP_SECRET` | secret fort ; transmis aussi au conteneur `web` comme `API_CLIENT_IP_SECRET`, pour que les limites s'appliquent par visiteur |
+   | `ONLINE_PAYMENT_ENABLED` | `false` jusqu'aux tests du runbook paiements, puis `true` (affiche le paiement en ligne sur le site) |
    | `WHATSAPP_META_BUSINESS_ACCOUNT_ID` | compte WhatsApp Business du numéro de la plateforme |
+   | `DEXPAY_API_KEY`, `DEXPAY_API_SECRET` | clés `pk_live_…` et `sk_live_…` d'une même paire DEXPAY (JIKU-272) ; la clé secrète vérifie la signature des webhooks |
+   | `DEXPAY_BASE_URL` | `https://api.dexpay.africa/api/v1` (le bac à sable est `https://api-sandbox.dexpay.africa/api/v1`) |
+   | `DEXPAY_WEBHOOK_URL`, `DEXPAY_RETURN_URL` | `https://api.<domaine>/api/v1/billing/payments/callback/dexpay` et `https://<domaine>/billing/return` |
+   | `PAYMENT_PROVIDER_GNF`, `PAYMENT_PROVIDER_XOF`, `PAYMENT_PROVIDER_XAF` | `dexpay` |
+   | `PAYMENT_PROVIDER_USD` | `none` : l'USD se paie par virement |
+   | `DEXPAY_CLIENT_PAYS_FEES` | `false` : le client paie le prix affiché et facturé, Jikū supporte les frais DEXPAY |
    | `OBSERVABILITY_*`, `MESSAGING_DAILY_*` | voir l'étape 9 bis |
 
    Dokploy écrit ces variables dans le `.env` lu par le conteneur `api`.
@@ -115,6 +178,10 @@ l'image à la construction : les changer impose une nouvelle image.
 - Security → WAF : règle de limitation sur `/api/v1/auth/*` (par exemple
   20 requêtes par minute et par adresse), en plus de celle de l'API.
 - Email Routing : `support@` et `contact@` vers la boîte de l'équipe.
+- E-mails envoyés : vérifier `hellojiku.com` chez useSend, Resend et Brevo, et
+  ajouter leurs enregistrements en **DNS only**. Leurs SPF vont en principe sur
+  un sous-domaine d'envoi ; s'il en faut un à la racine, le fusionner avec celui
+  d'Email Routing : un domaine n'a jamais qu'**un seul** enregistrement SPF.
 
 ## 7. Basculer depuis Neon (fenêtre de 15 minutes)
 
@@ -152,8 +219,10 @@ l'image à la construction : les changer impose une nouvelle image.
 | Fournisseur | Adresse à changer |
 |---|---|
 | Meta (WhatsApp) | Webhook → `https://api.<domaine>/api/v1/whatsapp/webhook`, abonné à `messages`, `message_template_status_update`, `message_template_quality_update`, `template_category_update`, `phone_number_quality_update` et `account_update` (JIKU-209) |
-| CinetPay | URL de notification et de retour |
-| useSend | Webhook `.../api/v1/notifications/email-feedback/usesend` |
+| DEXPAY (JIKU-272) | Rien à saisir chez DEXPAY : chaque session de paiement porte elle-même `DEXPAY_WEBHOOK_URL` et `DEXPAY_RETURN_URL`. Côté web, `ONLINE_PAYMENT_ENABLED=true` une fois le contrat signé et les clés de production en place |
+| useSend | Webhook `.../api/v1/notifications/email-feedback/usesend` (`email.bounced`, `email.complained`) |
+| Resend | Webhook `.../api/v1/notifications/email-feedback/resend` (`email.bounced`, `email.complained`) |
+| Brevo | Webhook transactionnel `.../api/v1/notifications/email-feedback/brevo` (rebond définitif et temporaire, adresse invalide, spam), authentification par jeton porteur `BREVO_WEBHOOK_TOKEN` |
 | Google (connexion) | Origines JavaScript autorisées : `https://<domaine>` |
 | Moniteur de disponibilité | `https://api.<domaine>/api/v1/health` |
 
@@ -203,6 +272,14 @@ puis vérifie que l'API est prête. Ordre inchangé : l'API d'abord, le web ensu
    un volume plus ancien, la créer une fois :
    `docker compose -f docker-compose.vps.yml exec postgres psql -U jiku -d jiku -c "CREATE DATABASE umami;"`.
 
+## 9 ter. Rediriger l'ancien domaine (ADR 110)
+
+Une fois la vérification Meta de MRVIN100 SARLU terminée, ajouter au
+`vercel.json` du dépôt web une redirection 308 de `jiku.mrvin100.de/:path*`
+vers `https://hellojiku.com/:path*` (condition `has` sur l'hôte), la livrer sur
+`main`, puis vérifier qu'un ancien lien d'invitation ouvre la même page sur le
+nouveau domaine. La garder au moins un an.
+
 ## 10. Après deux semaines sans incident
 
 Fermer le service Render, le projet Vercel et le projet Neon (après un dernier
@@ -214,5 +291,6 @@ export conservé dans R2). Supprimer `docker-compose.prod.yml`, `Caddyfile` et
 - Restauration complète répétée (`docs/runbooks/database-restore.md`, cas 1) ;
   durée notée dans `docs/backup.md`.
 - Mémoire et CPU en pointe sous 70 % (Grafana Cloud) ; au-delà, agrandir le
-  serveur (Hetzner → Rescale, quelques minutes de coupure).
+  serveur (Contabo → offre supérieure depuis le panneau client, ou migration
+  vers netcup ou Hetzner ; ADR 111).
 - `apt list --upgradable` vide ; Dokploy à jour.

@@ -31,6 +31,15 @@ interface GuestRepository : JpaRepository<Guest, UUID> {
         @Param("code") code: String,
     ): Int
 
+    /** Records the organizer's own reminder; only that column is written, so a newer answer is never overwritten. */
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(nativeQuery = true, value = "UPDATE guest SET organizer_reminded_at = :at WHERE id = :id")
+    fun markOrganizerReminded(
+        @Param("id") id: UUID,
+        @Param("at") at: Instant,
+    ): Int
+
     @Query(nativeQuery = true, value = "SELECT invite_code FROM guest WHERE id = :id")
     fun inviteCodeOf(
         @Param("id") id: UUID,

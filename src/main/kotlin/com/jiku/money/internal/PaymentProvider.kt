@@ -33,6 +33,14 @@ interface PaymentProvider {
         rawBody: String,
         signature: String?,
     ): PaymentCallback?
+
+    /**
+     * Reads where the payment [providerReference] stands, with our own
+     * credentials, for a payment whose callback never arrived (JIKU-272). `null`
+     * when this provider cannot be asked, or does not know the payment. Throws
+     * [PaymentProviderException] when the provider cannot be reached.
+     */
+    fun lookup(providerReference: String): PaymentCallback? = null
 }
 
 data class PaymentInitiationRequest(

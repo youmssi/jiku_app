@@ -415,6 +415,8 @@ class NotificationService(
                             primaryColor = event.primaryColor,
                             logoUrl = event.logoUrl,
                             invitationUrl = event.invitationUrl,
+                            eventStart = event.eventStart,
+                            eventTimezone = event.eventTimezone,
                         ),
                         event.language,
                     )
@@ -481,6 +483,8 @@ class NotificationService(
                             organizerName = notice.organizerName,
                             primaryColor = notice.primaryColor,
                             logoUrl = notice.logoUrl,
+                            eventStart = notice.eventStart,
+                            eventTimezone = notice.eventTimezone,
                         ),
                         notice.language,
                     )

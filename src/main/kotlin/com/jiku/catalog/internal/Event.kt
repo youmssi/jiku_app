@@ -72,10 +72,23 @@ class Event(
     @Column(name = "channel", nullable = false)
     var invitationChannels: MutableSet<InvitationChannel> = mutableSetOf()
 
+    /** The channel tried first for each guest (JIKU-273); null picks WhatsApp when enabled. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "primary_invitation_channel", length = 16)
+    var primaryChannel: InvitationChannel? = null
+
+    /** Whether a guest the primary channel cannot reach gets the other enabled channel. */
+    @Column(name = "invitation_channel_fallback", nullable = false)
+    var channelFallback: Boolean = true
+
     /** How the guest-facing surfaces look (JIKU-194). */
     @Enumerated(EnumType.STRING)
     @Column(name = "card_style", nullable = false, length = 16)
     var cardStyle: CardStyle = CardStyle.MODERN
+
+    /** The language the guests read (JIKU-293): fr, en or ar; null keeps the organization's language. */
+    @Column(name = "guest_language", length = 2)
+    var guestLanguage: String? = null
 
     /** When the banner photo was last replaced; null without one. It versions the photo's public link. */
     @Column(name = "banner_updated_at")

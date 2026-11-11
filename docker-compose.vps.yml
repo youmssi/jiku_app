@@ -87,6 +87,7 @@ services:
       PROVIDER_CREDENTIALS_ENCRYPTION_KEY: ${PROVIDER_CREDENTIALS_ENCRYPTION_KEY:?set PROVIDER_CREDENTIALS_ENCRYPTION_KEY}
       PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:?set PAYMENT_WEBHOOK_SECRET}
       NOTIFICATION_WEBHOOK_SECRET: ${NOTIFICATION_WEBHOOK_SECRET:?set NOTIFICATION_WEBHOOK_SECRET}
+      RATE_LIMIT_FORWARDED_CLIENT_IP_SECRET: ${RATE_LIMIT_FORWARDED_CLIENT_IP_SECRET:?set RATE_LIMIT_FORWARDED_CLIENT_IP_SECRET}
       API_DOCS_ENABLED: ${API_DOCS_ENABLED:-false}
       SMS_TRANSPORT: ${SMS_TRANSPORT:-off}
     # The JVM takes 75% of the memory it sees (MaxRAMPercentage); without a
@@ -105,6 +106,12 @@ services:
       # public API URL baked into the image at build time.
       API_BASE_URL: http://api:8080/api/v1
       API_TIMEOUT_MS: ${WEB_API_TIMEOUT_MS:-15000}
+      # Runtime settings read by the web server (not baked into the image).
+      # One secret for both sides, so the API keys its rate limits on the
+      # visitor IP the web forwards instead of on the web container itself.
+      API_CLIENT_IP_SECRET: ${RATE_LIMIT_FORWARDED_CLIENT_IP_SECRET:?set RATE_LIMIT_FORWARDED_CLIENT_IP_SECRET}
+      ONLINE_PAYMENT_ENABLED: ${ONLINE_PAYMENT_ENABLED:-false}
+      INDEXNOW_KEY: ${INDEXNOW_KEY:-}
     mem_limit: ${WEB_MEMORY_LIMIT:-768m}
     depends_on: [api]
     networks: [default, dokploy-network]

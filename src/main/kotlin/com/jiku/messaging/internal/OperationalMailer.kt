@@ -46,6 +46,7 @@ class OperationalMailer(
         to: String,
         toName: String,
         email: RenderedEmail,
+        attachments: List<EmailAttachment> = emptyList(),
     ) {
         if (to.isBlank()) {
             log.warn("Skipping {} email: no recipient address", label)
@@ -54,7 +55,7 @@ class OperationalMailer(
         try {
             emailSender.send(
                 emailProperties.from,
-                EmailMessage(to = to, toName = toName, subject = email.subject, htmlBody = email.html),
+                EmailMessage(to = to, toName = toName, subject = email.subject, htmlBody = email.html, attachments = attachments),
             )
         } catch (ex: Exception) {
             log.error("Failed to send {} email to {}", label, to, ex)

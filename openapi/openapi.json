@@ -728,6 +728,48 @@
         },
         "type" : "object"
       },
+      "CardFunnelRow" : {
+        "properties" : {
+          "answers" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "coming" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "shares" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "source" : {
+            "type" : "string"
+          },
+          "visits" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "CardVoiceView" : {
+        "properties" : {
+          "durationSeconds" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "transcript" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "url" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "ChangeRoleRequest" : {
         "properties" : {
           "role" : {
@@ -1144,6 +1186,9 @@
       },
       "CreateEventRequest" : {
         "properties" : {
+          "channelFallback" : {
+            "type" : "boolean"
+          },
           "description" : {
             "type" : [
               "string",
@@ -1184,6 +1229,16 @@
           "name" : {
             "minLength" : 1,
             "type" : "string"
+          },
+          "primaryChannel" : {
+            "enum" : [
+              "EMAIL",
+              "WHATSAPP"
+            ],
+            "type" : [
+              "string",
+              "null"
+            ]
           },
           "settings" : {
             "$ref" : "#/components/schemas/EventSettingsDto"
@@ -1706,6 +1761,9 @@
       },
       "EventResponse" : {
         "properties" : {
+          "channelFallback" : {
+            "type" : "boolean"
+          },
           "description" : {
             "type" : [
               "string",
@@ -1749,6 +1807,16 @@
           },
           "name" : {
             "type" : "string"
+          },
+          "primaryChannel" : {
+            "enum" : [
+              "EMAIL",
+              "WHATSAPP"
+            ],
+            "type" : [
+              "string",
+              "null"
+            ]
           },
           "quorum" : {
             "oneOf" : [
@@ -2198,6 +2266,29 @@
         },
         "type" : "object"
       },
+      "GuestLanguageRequest" : {
+        "properties" : {
+          "language" : {
+            "pattern" : "fr|en|ar",
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type" : "object"
+      },
+      "GuestLanguageView" : {
+        "properties" : {
+          "chosen" : {
+            "type" : "boolean"
+          },
+          "language" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "GuestMatch" : {
         "properties" : {
           "checkedInAt" : {
@@ -2319,6 +2410,16 @@
             ]
           },
           "phoneNumber" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "preferredChannel" : {
+            "enum" : [
+              "EMAIL",
+              "WHATSAPP"
+            ],
             "type" : [
               "string",
               "null"
@@ -3049,6 +3150,18 @@
               "null"
             ]
           },
+          "relay" : {
+            "type" : [
+              "boolean",
+              "null"
+            ]
+          },
+          "showComing" : {
+            "type" : [
+              "boolean",
+              "null"
+            ]
+          },
           "welcomeMessage" : {
             "maxLength" : 500,
             "minLength" : 0,
@@ -3113,11 +3226,27 @@
           "notifyOnCancel" : {
             "type" : "boolean"
           },
+          "relay" : {
+            "type" : "boolean"
+          },
           "remainingPlaces" : {
             "format" : "int32",
             "type" : [
               "integer",
               "null"
+            ]
+          },
+          "showComing" : {
+            "type" : "boolean"
+          },
+          "voice" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/CardVoiceView"
+              },
+              {
+                "type" : "null"
+              }
             ]
           },
           "welcomeMessage" : {
@@ -3160,6 +3289,14 @@
             "maxLength" : 32,
             "minLength" : 0,
             "type" : "string"
+          },
+          "source" : {
+            "maxLength" : 16,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         },
         "required" : [
@@ -3726,6 +3863,68 @@
           "totalMinor" : {
             "format" : "int64",
             "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "OrganizerWhatsAppGuest" : {
+        "properties" : {
+          "firstName" : {
+            "type" : "string"
+          },
+          "guestId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "lastName" : {
+            "type" : "string"
+          },
+          "link" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "sentAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "sentByOrganizer" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "OrganizerWhatsAppReminder" : {
+        "properties" : {
+          "firstName" : {
+            "type" : "string"
+          },
+          "guestId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "lastName" : {
+            "type" : "string"
+          },
+          "link" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "remindedAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         },
         "type" : "object"
@@ -4503,6 +4702,13 @@
           "code" : {
             "type" : "string"
           },
+          "comingCount" : {
+            "format" : "int32",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
           "eventEnd" : {
             "format" : "date-time",
             "type" : [
@@ -4529,6 +4735,9 @@
           "eventTimezone" : {
             "type" : "string"
           },
+          "jikuSignature" : {
+            "type" : "boolean"
+          },
           "logoUrl" : {
             "type" : [
               "string",
@@ -4552,6 +4761,19 @@
             "type" : [
               "string",
               "null"
+            ]
+          },
+          "relay" : {
+            "type" : "boolean"
+          },
+          "voice" : {
+            "oneOf" : [
+              {
+                "$ref" : "#/components/schemas/CardVoiceView"
+              },
+              {
+                "type" : "null"
+              }
             ]
           },
           "welcomeMessage" : {
@@ -6747,6 +6969,9 @@
       },
       "UpdateEventRequest" : {
         "properties" : {
+          "channelFallback" : {
+            "type" : "boolean"
+          },
           "description" : {
             "type" : [
               "string",
@@ -6787,6 +7012,16 @@
           "name" : {
             "minLength" : 1,
             "type" : "string"
+          },
+          "primaryChannel" : {
+            "enum" : [
+              "EMAIL",
+              "WHATSAPP"
+            ],
+            "type" : [
+              "string",
+              "null"
+            ]
           },
           "settings" : {
             "$ref" : "#/components/schemas/EventSettingsDto"
@@ -9852,6 +10087,14 @@
             "schema" : {
               "type" : "string"
             }
+          },
+          {
+            "in" : "header",
+            "name" : "X-Webhook-Signature",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
           }
         ],
         "requestBody" : {
@@ -11116,6 +11359,76 @@
         ]
       }
     },
+    "/api/v1/events/{eventId}/guest-language" : {
+      "get" : {
+        "operationId" : "eventGuestLanguageGet",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GuestLanguageView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "event-guest-language-controller"
+        ]
+      },
+      "put" : {
+        "operationId" : "eventGuestLanguageUpdate",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/GuestLanguageRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GuestLanguageView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "event-guest-language-controller"
+        ]
+      }
+    },
     "/api/v1/events/{eventId}/guests" : {
       "get" : {
         "operationId" : "guestList",
@@ -11430,6 +11743,154 @@
         ]
       }
     },
+    "/api/v1/events/{eventId}/invitations/own-whatsapp" : {
+      "post" : {
+        "operationId" : "invitationPrepareOwnWhatsApp",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/OrganizerWhatsAppGuest"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "invitation-controller"
+        ]
+      }
+    },
+    "/api/v1/events/{eventId}/invitations/own-whatsapp/reminders" : {
+      "post" : {
+        "operationId" : "invitationOwnWhatsAppReminders",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/OrganizerWhatsAppReminder"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "invitation-controller"
+        ]
+      }
+    },
+    "/api/v1/events/{eventId}/invitations/own-whatsapp/{guestId}/reminded" : {
+      "post" : {
+        "operationId" : "invitationMarkRemindedFromOwnWhatsApp",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          },
+          {
+            "in" : "path",
+            "name" : "guestId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrganizerWhatsAppReminder"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "invitation-controller"
+        ]
+      }
+    },
+    "/api/v1/events/{eventId}/invitations/own-whatsapp/{guestId}/sent" : {
+      "post" : {
+        "operationId" : "invitationMarkSentFromOwnWhatsApp",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          },
+          {
+            "in" : "path",
+            "name" : "guestId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrganizerWhatsAppGuest"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "invitation-controller"
+        ]
+      }
+    },
     "/api/v1/events/{eventId}/invitations/send" : {
       "post" : {
         "operationId" : "invitationSend",
@@ -11448,9 +11909,6 @@
             "name" : "channels",
             "required" : false,
             "schema" : {
-              "default" : [
-                "EMAIL"
-              ],
               "items" : {
                 "enum" : [
                   "EMAIL",
@@ -11468,6 +11926,15 @@
             "required" : false,
             "schema" : {
               "default" : true,
+              "type" : "boolean"
+            }
+          },
+          {
+            "in" : "query",
+            "name" : "onlyUnanswered",
+            "required" : false,
+            "schema" : {
+              "default" : false,
               "type" : "boolean"
             }
           }
@@ -11735,6 +12202,40 @@
         ]
       }
     },
+    "/api/v1/events/{eventId}/open-invitation/funnel" : {
+      "get" : {
+        "operationId" : "openInvitationFunnel",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/CardFunnelRow"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "open-invitation-controller"
+        ]
+      }
+    },
     "/api/v1/events/{eventId}/open-invitation/responses" : {
       "get" : {
         "operationId" : "openInvitationResponses",
@@ -11795,6 +12296,126 @@
         "responses" : {
           "204" : {
             "description" : "No Content"
+          }
+        },
+        "tags" : [
+          "open-invitation-controller"
+        ]
+      }
+    },
+    "/api/v1/events/{eventId}/open-invitation/shares" : {
+      "post" : {
+        "operationId" : "openInvitationShare",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          },
+          {
+            "in" : "query",
+            "name" : "source",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [
+          "open-invitation-controller"
+        ]
+      }
+    },
+    "/api/v1/events/{eventId}/open-invitation/voice" : {
+      "delete" : {
+        "operationId" : "openInvitationRemoveVoice",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [
+          "open-invitation-controller"
+        ]
+      },
+      "put" : {
+        "operationId" : "openInvitationReplaceVoice",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "eventId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          },
+          {
+            "in" : "query",
+            "name" : "durationSeconds",
+            "required" : true,
+            "schema" : {
+              "format" : "int32",
+              "type" : "integer"
+            }
+          },
+          {
+            "in" : "query",
+            "name" : "transcript",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "properties" : {
+                  "file" : {
+                    "format" : "binary",
+                    "type" : "string"
+                  }
+                },
+                "required" : [
+                  "file"
+                ],
+                "type" : "object"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CardVoiceView"
+                }
+              }
+            },
+            "description" : "OK"
           }
         },
         "tags" : [
@@ -13625,6 +14246,39 @@
         ]
       }
     },
+    "/api/v1/notifications/email-feedback/brevo" : {
+      "post" : {
+        "operationId" : "brevoEmailFeedbackReceive",
+        "parameters" : [
+          {
+            "in" : "header",
+            "name" : "Authorization",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "202" : {
+            "description" : "Accepted"
+          }
+        },
+        "tags" : [
+          "brevo-email-feedback-controller"
+        ]
+      }
+    },
     "/api/v1/notifications/email-feedback/resend" : {
       "post" : {
         "operationId" : "resendEmailFeedbackReceive",
@@ -13774,6 +14428,68 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/OpenResponseView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "public-open-invitation-controller"
+        ]
+      }
+    },
+    "/api/v1/open/{code}/visits" : {
+      "post" : {
+        "operationId" : "publicOpenInvitationVisit",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "code",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "in" : "query",
+            "name" : "source",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [
+          "public-open-invitation-controller"
+        ]
+      }
+    },
+    "/api/v1/open/{code}/voice" : {
+      "get" : {
+        "operationId" : "publicOpenInvitationVoice",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "code",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "format" : "byte",
+                  "type" : "string"
                 }
               }
             },

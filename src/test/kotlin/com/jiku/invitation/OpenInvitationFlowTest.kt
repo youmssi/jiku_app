@@ -47,6 +47,7 @@ class OpenInvitationFlowTest {
             .andExpect(jsonPath("$.welcomeMessage").value("Come celebrate!"))
             .andExpect(jsonPath("$.accepting").value(true))
             .andExpect(jsonPath("$.maxCompanions").value(3))
+            .andExpect(jsonPath("$.jikuSignature").value(true))
 
         val answered =
             respond(open.code, "Awa Diallo", "+224 620 11 22 33", "YES", companions = 2)
@@ -215,6 +216,46 @@ class OpenInvitationFlowTest {
         assertEquals(1, accepted.get())
         assertEquals(people - 1, refused.get())
         settings(open).andExpect(jsonPath("$.counts.yes").value(1)).andExpect(jsonPath("$.remainingPlaces").value(0))
+    }
+
+    @Test
+    fun `the card shows how many are coming only when the organizer chooses, and from five people`() {
+        val open = openInvitation(capacity = null)
+        respond(open.code, "Awa Diallo", "+224 620 00 10 01", "YES", companions = 3).andExpect(status().isOk())
+        page(open.code).andExpect(jsonPath("$.comingCount").doesNotExist())
+
+        api
+            .put(open.token, "/api/v1/events/${open.eventId}/open-invitation", """{"maxCompanions":3,"showComing":true}""")
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.showComing").value(true))
+        page(open.code).andExpect(jsonPath("$.comingCount").doesNotExist())
+
+        respond(open.code, "Mamadou Bah", "+224 620 00 10 02", "YES").andExpect(status().isOk())
+        page(open.code).andExpect(jsonPath("$.comingCount").value(5))
+
+        api
+            .put(open.token, "/api/v1/events/${open.eventId}/open-invitation", """{"maxCompanions":3}""")
+            .andExpect(jsonPath("$.showComing").value(true))
+    }
+
+    @Test
+    fun `inviting someone from the card is on without a capacity, off with one, and the organizer decides`() {
+        val unlimited = openInvitation(capacity = null)
+        page(unlimited.code).andExpect(jsonPath("$.relay").value(true))
+        settings(unlimited).andExpect(jsonPath("$.relay").value(true))
+
+        val limited = openInvitation(capacity = 10)
+        page(limited.code).andExpect(jsonPath("$.relay").value(false))
+
+        api
+            .put(unlimited.token, "/api/v1/events/${unlimited.eventId}/open-invitation", """{"maxCompanions":3,"relay":false}""")
+            .andExpect(status().isOk())
+        page(unlimited.code).andExpect(jsonPath("$.relay").value(false))
+
+        api
+            .put(limited.token, "/api/v1/events/${limited.eventId}/open-invitation", """{"enabled":false,"maxCompanions":3,"relay":true}""")
+            .andExpect(status().isOk())
+        page(limited.code).andExpect(jsonPath("$.relay").value(false))
     }
 
     private data class Open(

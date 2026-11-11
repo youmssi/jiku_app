@@ -26,11 +26,11 @@ class SmtpEmailSender(
     ) {
         val mime = mailSender.createMimeMessage()
         try {
-            val helper = MimeMessageHelper(mime, message.attachments.isNotEmpty(), "UTF-8")
+            val helper = MimeMessageHelper(mime, true, "UTF-8")
             helper.setFrom(from)
             helper.setTo(InternetAddress(message.to, message.toName.ifBlank { null }, "UTF-8"))
             helper.setSubject(message.subject)
-            helper.setText(message.htmlBody, true)
+            helper.setText(message.textBody, message.htmlBody)
             message.attachments.forEach { helper.addAttachment(it.filename, ByteArrayResource(it.content), it.contentType) }
         } catch (e: MessagingException) {
             throw EmailDeliveryException("Failed to assemble email to ${message.to}", e)

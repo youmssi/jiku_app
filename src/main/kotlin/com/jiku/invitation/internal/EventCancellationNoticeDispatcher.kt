@@ -51,7 +51,7 @@ class EventCancellationNoticeDispatcher(
         }
         val event = events.findEvent(cancelled.eventId) ?: return
         val tenant = tenants.findTenant(UUID.fromString(cancelled.tenantId))
-        val language = MessageLanguage.forCountry(tenant?.country)
+        val language = MessageLanguage.forGuests(event.guestLanguage, tenant?.country)
         val guestsById = guests.findByEventId(cancelled.eventId).associateBy { requireNotNull(it.id) }
 
         val notice =
@@ -69,6 +69,8 @@ class EventCancellationNoticeDispatcher(
                 primaryColor = event.brand.primaryColor ?: tenant?.primaryColor ?: DEFAULT_COLOR,
                 logoUrl = event.brand.logoUrl ?: tenant?.logoUrl,
                 language = language,
+                eventStart = event.startDateTime,
+                eventTimezone = event.timezone,
             )
         val toldPhones = mutableSetOf<String>()
 

@@ -1,5 +1,5 @@
 {
-  "invitation_v1": {
+  "invitation_v3": {
     "parameters": [
       "guestName",
       "organizerName",
@@ -10,7 +10,7 @@
     "fr": [
       {
         "type": "BODY",
-        "text": "Bonjour {{1}},\n\n{{2}} vous invite à {{3}}, {{4}}, et vous envoie cette invitation par Jikū.\n\nConfirmez votre présence en ouvrant ce lien : {{5}}\n\nMerci et à bientôt !",
+        "text": "Bonjour {{1}},\n\nVous figurez sur la liste des participants de {{3}}, {{4}}, gérée par {{2}}.\n\nMerci de confirmer ou d'annuler votre présence depuis votre espace personnel : {{5}}\n\nVotre billet d'entrée vous sera envoyé après votre confirmation.",
         "example": {
           "body_text": [
             [
@@ -18,7 +18,7 @@
               "Famille Diallo",
               "Mariage d'Awa et Moussa",
               "samedi 12 octobre à 18 h",
-              "https://jiku.app/r/AbC123"
+              "https://hellojiku.com/v/AbC123"
             ]
           ]
         }
@@ -31,7 +31,7 @@
     "en": [
       {
         "type": "BODY",
-        "text": "Hello {{1}},\n\n{{2}} invites you to {{3}}, {{4}}, and sends you this invitation through Jikū.\n\nConfirm whether you can come by opening this link: {{5}}\n\nThank you and see you soon!",
+        "text": "Hello {{1}},\n\nYou are on the participant list for {{3}}, {{4}}, managed by {{2}}.\n\nPlease confirm or cancel your attendance from your personal page: {{5}}\n\nYour entry ticket will be sent to you once you confirm.",
         "example": {
           "body_text": [
             [
@@ -39,7 +39,7 @@
               "The Diallo family",
               "Awa and Moussa's wedding",
               "Saturday 12 October at 6 pm",
-              "https://jiku.app/r/AbC123"
+              "https://hellojiku.com/en/v/AbC123"
             ]
           ]
         }
@@ -48,9 +48,30 @@
         "type": "FOOTER",
         "text": "Jikū · Reply STOP to stop these messages"
       }
+    ],
+    "ar": [
+      {
+        "type": "BODY",
+        "text": "مرحبًا {{1}}،\n\nاسمك مُدرج في قائمة المشاركين في {{3}}، {{4}}، التي يديرها {{2}}.\n\nيُرجى تأكيد حضورك أو إلغاؤه من صفحتك الشخصية: {{5}}\n\nستصلك تذكرة الدخول بعد تأكيدك.",
+        "example": {
+          "body_text": [
+            [
+              "عائشة",
+              "عائلة ديالو",
+              "حفل زفاف عائشة وموسى",
+              "السبت 12 أكتوبر الساعة 18:00",
+              "https://hellojiku.com/ar/v/AbC123"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · أرسل STOP لإيقاف الرسائل"
+      }
     ]
   },
-  "invitation_rsvp_v1": {
+  "invitation_rsvp_v3": {
     "parameters": [
       "guestName",
       "organizerName",
@@ -60,7 +81,7 @@
     "fr": [
       {
         "type": "BODY",
-        "text": "Bonjour {{1}},\n\n{{2}} vous invite à {{3}}, {{4}}, et vous envoie cette invitation par Jikū.\n\nMerci de répondre avec les boutons ci-dessous.",
+        "text": "Bonjour {{1}},\n\nVous figurez sur la liste des participants de {{3}}, {{4}}, gérée par {{2}}.\n\nMerci de confirmer ou d'annuler votre présence avec les boutons ci-dessous. Votre billet d'entrée vous sera envoyé après votre confirmation.",
         "example": {
           "body_text": [
             [
@@ -81,11 +102,11 @@
         "buttons": [
           {
             "type": "QUICK_REPLY",
-            "text": "Je serai présent"
+            "text": "Je confirme ma présence"
           },
           {
             "type": "QUICK_REPLY",
-            "text": "Je ne viendrai pas"
+            "text": "J'annule ma présence"
           }
         ]
       }
@@ -93,7 +114,7 @@
     "en": [
       {
         "type": "BODY",
-        "text": "Hello {{1}},\n\n{{2}} invites you to {{3}}, {{4}}, and sends you this invitation through Jikū.\n\nPlease answer with the buttons below.",
+        "text": "Hello {{1}},\n\nYou are on the participant list for {{3}}, {{4}}, managed by {{2}}.\n\nPlease confirm or cancel your attendance with the buttons below. Your entry ticket will be sent to you once you confirm.",
         "example": {
           "body_text": [
             [
@@ -114,11 +135,44 @@
         "buttons": [
           {
             "type": "QUICK_REPLY",
-            "text": "I'll be there"
+            "text": "I confirm my attendance"
           },
           {
             "type": "QUICK_REPLY",
-            "text": "I can't make it"
+            "text": "I cancel my attendance"
+          }
+        ]
+      }
+    ],
+    "ar": [
+      {
+        "type": "BODY",
+        "text": "مرحبًا {{1}}،\n\nاسمك مُدرج في قائمة المشاركين في {{3}}، {{4}}، التي يديرها {{2}}.\n\nيُرجى تأكيد حضورك أو إلغاؤه بالأزرار أدناه. ستصلك تذكرة الدخول بعد تأكيدك.",
+        "example": {
+          "body_text": [
+            [
+              "عائشة",
+              "عائلة ديالو",
+              "حفل زفاف عائشة وموسى",
+              "السبت 12 أكتوبر الساعة 18:00"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · أرسل STOP لإيقاف الرسائل"
+      },
+      {
+        "type": "BUTTONS",
+        "buttons": [
+          {
+            "type": "QUICK_REPLY",
+            "text": "أؤكد حضوري"
+          },
+          {
+            "type": "QUICK_REPLY",
+            "text": "ألغي حضوري"
           }
         ]
       }
@@ -153,7 +207,7 @@
               "Mariage d'Awa et Moussa",
               "samedi 12 octobre à 18 h",
               "Famille Diallo",
-              "https://jiku.app/t/AbC123"
+              "https://hellojiku.com/t/AbC123"
             ]
           ]
         }
@@ -183,7 +237,7 @@
               "Awa and Moussa's wedding",
               "Saturday 12 October at 6 pm",
               "The Diallo family",
-              "https://jiku.app/t/AbC123"
+              "https://hellojiku.com/t/AbC123"
             ]
           ]
         }
@@ -191,6 +245,36 @@
       {
         "type": "FOOTER",
         "text": "Jikū · Reply STOP to stop these messages"
+      }
+    ],
+    "ar": [
+      {
+        "type": "HEADER",
+        "format": "IMAGE",
+        "example": {
+          "header_handle": [
+            "{{EXAMPLE_IMAGE_HANDLE}}"
+          ]
+        }
+      },
+      {
+        "type": "BODY",
+        "text": "مرحبًا {{1}}،\n\nإليك تذكرتك لـ {{2}}، {{3}}، من {{4}}.\n\nتذكرتك: {{5}}\n\nقدّم رمز QR عند الدخول. يظهر حتى دون اتصال.",
+        "example": {
+          "body_text": [
+            [
+              "عائشة",
+              "حفل زفاف عائشة وموسى",
+              "السبت 12 أكتوبر الساعة 18:00",
+              "عائلة ديالو",
+              "https://hellojiku.com/ar/v/AbC123/ticket"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · أرسل STOP لإيقاف الرسائل"
       }
     ]
   },
@@ -240,6 +324,26 @@
         "type": "FOOTER",
         "text": "Jikū · Reply STOP to stop these messages"
       }
+    ],
+    "ar": [
+      {
+        "type": "BODY",
+        "text": "مرحبًا {{1}}،\n\nيُبلغك {{2}} بأن {{3}}، {{4}}، قد أُلغيت. لم تعد تذكرتك صالحة، وليس عليك فعل أي شيء.\n\nإذا أُعيدت جدولة المناسبة، ستصلك دعوة جديدة.",
+        "example": {
+          "body_text": [
+            [
+              "عائشة",
+              "عائلة ديالو",
+              "حفل زفاف عائشة وموسى",
+              "السبت 12 أكتوبر الساعة 18:00"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "Jikū · أرسل STOP لإيقاف الرسائل"
+      }
     ]
   },
   "appointment_reminder_v1": {
@@ -287,7 +391,7 @@
       }
     ]
   },
-  "client_called_v1": {
+  "client_called_v2": {
     "parameters": [
       "clientName",
       "counter"
@@ -295,7 +399,7 @@
     "fr": [
       {
         "type": "BODY",
-        "text": "Bonjour {{1}},\n\nC'est votre tour. Présentez-vous à : {{2}}, s'il vous plaît.",
+        "text": "Bonjour {{1}},\n\nVotre ticket de file d'attente vient d'être appelé. Présentez-vous maintenant à {{2}}, merci.",
         "example": {
           "body_text": [
             [
@@ -313,7 +417,7 @@
     "en": [
       {
         "type": "BODY",
-        "text": "Hello {{1}},\n\nIt's your turn. Please go to: {{2}}, now.",
+        "text": "Hello {{1}},\n\nYour queue ticket has just been called. Please go to {{2}} now, thank you.",
         "example": {
           "body_text": [
             [

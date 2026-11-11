@@ -46,6 +46,7 @@ class OpenInvitationService(
     private val allowanceGate: UsageAllowanceGate,
     private val inviteCodes: GuestInviteCodes,
     private val properties: OpenInvitationProperties,
+    private val voices: CardVoiceService,
 ) {
     /** Runs [block] under the tenant of [code], with its event id; 404 for an unknown code or a suspended organization. */
     fun <T> route(
@@ -79,14 +80,24 @@ class OpenInvitationService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "At most ${properties.maxCompanions} companions per answer")
         }
         val invitation =
-            (openInvitations.findByEventId(eventId) ?: OpenInvitation(eventId = eventId, code = newCode(), maxCompanions = companions))
-                .apply {
-                    enabled = request.enabled
-                    welcomeMessage = request.welcomeMessage?.trim()?.takeIf { it.isNotEmpty() }
-                    maxCompanions = companions
-                    closesAt = request.closesAt
-                    request.notifyOnCancel?.let { notifyOnCancel = it }
-                }
+            (
+                openInvitations.findByEventId(eventId)
+                    // Decision D2: guests may pass the card on when places are unlimited, not when the host set a limit.
+                    ?: OpenInvitation(
+                        eventId = eventId,
+                        code = newCode(),
+                        maxCompanions = companions,
+                        relay = events.remainingAttendance(eventId) == null,
+                    )
+            ).apply {
+                enabled = request.enabled
+                welcomeMessage = request.welcomeMessage?.trim()?.takeIf { it.isNotEmpty() }
+                maxCompanions = companions
+                closesAt = request.closesAt
+                request.notifyOnCancel?.let { notifyOnCancel = it }
+                request.showComing?.let { showComing = it }
+                request.relay?.let { relay = it }
+            }
         return organizerView(openInvitations.save(invitation), event, now)
     }
 
@@ -143,6 +154,10 @@ class OpenInvitationService(
             accepting = closed == null,
             closedReason = closed,
             whatsappNumber = whatsappNumber(),
+            jikuSignature = !allowanceGate.paidEvent(eventId),
+            comingCount = if (invitation.showComing) comingCount(eventId) else null,
+            relay = invitation.relay && closed == null,
+            voice = voices.view(eventId, invitation.code),
         )
     }
 
@@ -187,6 +202,8 @@ class OpenInvitationService(
                 createdAt = now,
             )
         response.name = name
+        // The first network a person answered from keeps the credit; a later change of answer does not move it.
+        if (response.source == null && request.source != null) response.source = CardSource.of(request.source).tag
         response.answer = request.answer
         response.companions = companions
         response.channel = channel
@@ -305,8 +322,19 @@ class OpenInvitationService(
             notifyOnCancel = invitation.notifyOnCancel,
             cancelNoticeIncluded = allowanceGate.paidEvent(invitation.eventId),
             whatsappNumber = whatsappNumber(),
+            showComing = invitation.showComing,
+            relay = invitation.relay,
+            voice = voices.view(invitation.eventId, invitation.code),
         )
     }
+
+    /** People coming, once there are enough for the number to encourage rather than discourage. */
+    private fun comingCount(eventId: UUID): Int? =
+        responses
+            .findByEventIdOrderByUpdatedAtDesc(eventId)
+            .filter { it.removedAt == null && it.answer == OpenAnswer.YES }
+            .sumOf { it.heads }
+            .takeIf { it >= SHOW_COMING_FROM }
 
     private fun closedReason(
         invitation: OpenInvitation,
@@ -354,6 +382,9 @@ class OpenInvitationService(
         private const val CODE_ATTEMPTS = 5
         private const val MIN_PHONE_DIGITS = 8
         private const val MAX_PHONE_DIGITS = 15
+
+        /** Below this many people, "2 people are coming" would put guests off rather than draw them (JIKU-286). */
+        const val SHOW_COMING_FROM = 5
 
         /** A number as WhatsApp reports a sender: digits only, with the country code. */
         fun phoneDigits(phone: String): String {

@@ -1,11 +1,25 @@
 package com.jiku.money.internal
 
+import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import java.time.Instant
 import java.util.UUID
 
 interface PaymentRepository : JpaRepository<Payment, UUID> {
+    /**
+     * The payment, its row locked until the transaction ends (JIKU-298): a
+     * provider's webhook, its retry and the reconciliation job settle it one
+     * after the other, so it is granted exactly once.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Payment p WHERE p.id = :id")
+    fun findForUpdate(
+        @Param("id") id: UUID,
+    ): Payment?
+
     /** First confirmed payment per organization, across tenants, for the back-office follow-up list (JIKU-202). */
     @Query(
         nativeQuery = true,
@@ -57,6 +71,36 @@ interface PaymentRepository : JpaRepository<Payment, UUID> {
         @Param("limit") limit: Int,
         @Param("offset") offset: Int,
     ): List<Payment>
+
+    /**
+     * Payments still PENDING with one of [providers], started between [after] and
+     * [before], across tenants (JIKU-272): their callback may have been lost.
+     * Native SQL for the same reason as [adminList]; each row is then settled
+     * under its own tenant.
+     */
+    @Query(
+        value = """
+            SELECT id, tenant_id FROM payment
+            WHERE status = 'PENDING' AND provider IN (:providers)
+              AND created_at < :before AND created_at > :after
+            ORDER BY created_at
+            LIMIT :limit
+        """,
+        nativeQuery = true,
+    )
+    fun findPendingToReconcile(
+        @Param("providers") providers: Collection<String>,
+        @Param("before") before: Instant,
+        @Param("after") after: Instant,
+        @Param("limit") limit: Int,
+    ): List<Array<Any?>>
+
+    /** The current tenant's settled payments with no invoice yet (JIKU-277), oldest first. */
+    @Query(
+        "SELECT p.id FROM Payment p WHERE p.status = com.jiku.money.internal.PaymentStatus.SUCCEEDED " +
+            "AND NOT EXISTS (SELECT 1 FROM Invoice i WHERE i.paymentId = p.id) ORDER BY p.createdAt",
+    )
+    fun findSucceededWithoutInvoice(): List<UUID>
 
     /** Tenant owning a payment, for rebinding context before an admin mutation. */
     @Query(value = "SELECT tenant_id FROM payment WHERE id = :id", nativeQuery = true)

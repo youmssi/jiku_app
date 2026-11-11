@@ -46,12 +46,16 @@ jiku:
       api-key: ${BREVO_API_KEY:}
       base-url: ${BREVO_BASE_URL:https://api.brevo.com/v3}
     routing:
-      # Kept comfortably under each provider's actual free-tier ceiling and
-      # under their naive sum — the two free tiers are not reliably additive in
-      # practice once a safety margin is applied (JIKU-62).
+      # Providers tried in order with MAIL_TRANSPORT=routing (JIKU-275); ADR 110
+      # launches with usesend,resend,brevo. Caps stay under each free tier and
+      # the global cap under their sum (JIKU-62).
+      order: ${EMAIL_ROUTING_ORDER:resend,brevo}
+      usesend-daily-cap: ${EMAIL_USESEND_DAILY_CAP:100}
       resend-daily-cap: ${EMAIL_RESEND_DAILY_CAP:100}
       brevo-daily-cap: ${EMAIL_BREVO_DAILY_CAP:300}
       global-daily-cap: ${EMAIL_GLOBAL_DAILY_CAP:350}
+      # Past every cap, useSend's paid plan takes the rest instead of a next-day retry.
+      usesend-overflow: ${EMAIL_USESEND_OVERFLOW:false}
   whatsapp:
     # WhatsApp delivery transport: log (default — records sends without
     # delivering) or meta (WhatsApp Cloud API with the credentials below).
@@ -138,7 +142,7 @@ jiku:
   cors:
     # Comma-separated list of origins that may call this API. In development the
     # frontend runs on localhost:3000; in production set CORS_ALLOWED_ORIGINS to
-    # the deployed frontend URL (e.g. https://jiku.app).
+    # the deployed frontend URL (e.g. https://hellojiku.com).
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
 
 server:
@@ -382,6 +386,18 @@ api:
         token-segment: 1
         max-requests: ${RATE_LIMIT_OPEN_INVITATION_PAGE_MAX_REQUESTS:120}
         window: ${RATE_LIMIT_OPEN_INVITATION_PAGE_WINDOW:PT1M}
+      open-invitation-voice:
+        # The host's voice message (JIKU-284), fetched when a guest taps play;
+        # per address, as a phone fetches it once and caches it.
+        paths: [/open/*/voice]
+        max-requests: ${RATE_LIMIT_OPEN_INVITATION_VOICE_MAX_REQUESTS:60}
+        window: ${RATE_LIMIT_OPEN_INVITATION_VOICE_WINDOW:PT10M}
+      open-invitation-visit:
+        # A card page counting its own visit (JIKU-282), per address: counts stay
+        # indicative, and one phone reloading cannot inflate them much.
+        paths: [/open/*/visits]
+        max-requests: ${RATE_LIMIT_OPEN_INVITATION_VISIT_MAX_REQUESTS:30}
+        window: ${RATE_LIMIT_OPEN_INVITATION_VISIT_WINDOW:PT10M}
       open-invitation-response:
         # Answers to a card, per address. Mobile networks put many people behind
         # one address, so it allows a group answering at once, not a script.
@@ -559,6 +575,20 @@ billing:
     # secret verifies the sandbox callback signature and MUST be set to a strong
     # value outside local.
     provider: ${PAYMENT_PROVIDER:sandbox}
+    # The adapter per currency (JIKU-272). A blank value falls back to `provider`;
+    # "none" offers no online payment in that currency (transfer only). Startup
+    # fails when a name matches no adapter.
+    by-currency:
+      GNF: ${PAYMENT_PROVIDER_GNF:}
+      XOF: ${PAYMENT_PROVIDER_XOF:}
+      XAF: ${PAYMENT_PROVIDER_XAF:}
+      USD: ${PAYMENT_PROVIDER_USD:}
+    # A payment whose provider callback has not come after reconcile-after is
+    # checked with the provider every reconcile-delay (JIKU-272); one the provider
+    # still reports unfinished after abandon-after is closed as FAILED.
+    reconcile-delay: ${PAYMENT_RECONCILE_DELAY:PT2M}
+    reconcile-after: ${PAYMENT_RECONCILE_AFTER:PT2M}
+    abandon-after: ${PAYMENT_ABANDON_AFTER:P2D}
     webhook-secret: ${PAYMENT_WEBHOOK_SECRET:local-development-payment-webhook-secret}
     sandbox-return-url: ${PAYMENT_SANDBOX_RETURN_URL:http://localhost:3000/billing/return}
     # CinetPay (JIKU-106): Orange Money, MTN MoMo and card. The adapter exists only
@@ -573,6 +603,21 @@ billing:
       notify-url: ${CINETPAY_NOTIFY_URL:}
       return-url: ${CINETPAY_RETURN_URL:}
       channels: ${CINETPAY_CHANNELS:ALL}
+    # DEXPAY (JIKU-272, ADR 110): Orange Money, MTN, Wave, Moov and card in GNF,
+    # XOF and XAF. The adapter exists only when DEXPAY_API_KEY (pk_...) is set; the
+    # other fields are then required. DEXPAY_API_SECRET (sk_... of the same key)
+    # verifies the webhook signature. DEXPAY_BASE_URL is the sandbox
+    # (https://api-sandbox.dexpay.africa/api/v1) with test keys.
+    # DEXPAY_WEBHOOK_URL is this API's public /api/v1/billing/payments/callback/dexpay;
+    # DEXPAY_RETURN_URL is the web's /billing/return page.
+    dexpay:
+      api-key: ${DEXPAY_API_KEY:}
+      api-secret: ${DEXPAY_API_SECRET:}
+      base-url: ${DEXPAY_BASE_URL:https://api.dexpay.africa/api/v1}
+      webhook-url: ${DEXPAY_WEBHOOK_URL:}
+      return-url: ${DEXPAY_RETURN_URL:}
+      # Off: the payer pays the price shown and invoiced, and Jikū bears DEXPAY's fee.
+      client-pays-fees: ${DEXPAY_CLIENT_PAYS_FEES:false}
   trial:
     # Trial sweep (JIKU-42): cron for the expiry/notice job and how far before
     # expiry the organizer's heads-up email goes out.
@@ -683,10 +728,14 @@ notification:
   email:
     # Sender address for outbound mail. Set per environment; in production the
     # domain must be verified with the configured transport (jiku.mail.transport).
-    from: ${MAIL_FROM:no-reply@jiku.app}
+    from: ${MAIL_FROM:no-reply@hellojiku.com}
     # Language of the emails the platform team itself receives (activation
     # requests). Organizers and guests get their organization's language.
     platform-language: ${NOTIFICATION_PLATFORM_LANGUAGE:fr}
+    # Links in emails open the web app; the brand images (motifs, logos) are
+    # served from its /email folder (JIKU-278).
+    site-url: ${SERVER_BASE_URL:http://localhost:3000}
+    asset-base-url: ${EMAIL_ASSET_BASE_URL:${SERVER_BASE_URL:http://localhost:3000}/email}
   send:
     # Delivery attempts before a notification is recorded as permanently failed.
     max-attempts: ${NOTIFICATION_MAX_ATTEMPTS:3}
@@ -702,6 +751,9 @@ notification:
     # Signing secret of the useSend webhook; the useSend-specific endpoint rejects
     # everything until this is set (ADR 107).
     usesend-webhook-secret: ${USESEND_WEBHOOK_SECRET:}
+    # Token Brevo sends as `Authorization: Bearer …` on its transactional webhook;
+    # the Brevo endpoint rejects everything until this is set (JIKU-275).
+    brevo-webhook-token: ${BREVO_WEBHOOK_TOKEN:}
     # Rolling window and alert thresholds, kept below AWS SES's own review limits
     # (5% bounce, 0.1% complaint) because SES judges the whole account (ADR 107).
     # Optional ops address emailed when a threshold breaks.
@@ -750,6 +802,10 @@ open-invitation:
   # The web app's public URL: the WhatsApp card message shows the card image it
   # draws (JIKU-194). Blank: the message goes without an image.
   card-image-base-url: ${SERVER_BASE_URL:http://localhost:3000}
+  # The host's voice message (JIKU-284), served by this API to guests' phones.
+  api-public-url: ${API_PUBLIC_URL:http://localhost:8080}
+  voice-max-bytes: ${OPEN_INVITATION_VOICE_MAX_BYTES:300000}
+  voice-max-seconds: ${OPEN_INVITATION_VOICE_MAX_SECONDS:30}
 
 verification:
   # Time the documents of an approved request are kept before deletion; a

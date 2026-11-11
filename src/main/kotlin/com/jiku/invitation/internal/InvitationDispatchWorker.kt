@@ -71,7 +71,7 @@ class InvitationDispatchWorker(
         val event = events.findEvent(invitation.eventId)
         val tenantId = TenantContext.get().orEmpty()
         val tenant = tenantId.takeIf { it.isNotEmpty() }?.let { tenants.findTenant(UUID.fromString(it)) }
-        val language = MessageLanguage.forCountry(tenant?.country)
+        val language = MessageLanguage.forGuests(event?.guestLanguage, tenant?.country)
         val code = inviteCodes.linkKey(guest, tenantId)
         val ticket =
             if (event?.deliveryMode == DeliveryMode.DIRECT_TICKET) {
@@ -79,7 +79,7 @@ class InvitationDispatchWorker(
                     fail(invitation, "No ticket could be issued: the event is full or the guest's data was erased")
                     return
                 }
-                ticketNotices.build(guest, event, tenantId, recipient)
+                ticketNotices.build(guest, event, tenantId, recipient, channelName)
             } else {
                 null
             }
@@ -100,13 +100,15 @@ class InvitationDispatchWorker(
                 organizerName = event?.brand?.name ?: tenant?.displayName ?: "Your organizer",
                 primaryColor = event?.brand?.primaryColor ?: tenant?.primaryColor ?: DEFAULT_COLOR,
                 logoUrl = event?.brand?.logoUrl ?: tenant?.logoUrl,
-                invitationUrl = ticket?.ticketUrl ?: "${properties.appBaseUrl}/v/$code",
+                invitationUrl = ticket?.ticketUrl ?: "${properties.appBaseUrl}${MessageLanguage.pathPrefix(language)}/v/$code",
                 language = language,
                 ticket = ticket,
                 interactive =
                     event?.deliveryMode == DeliveryMode.INTERACTIVE &&
                         channelName == GuestInvitedEvent.CHANNEL_WHATSAPP,
                 consentAttested = guest.consentAttestedAt != null,
+                eventStart = event?.startDateTime,
+                eventTimezone = event?.timezone,
             ),
         )
     }
@@ -120,7 +122,7 @@ class InvitationDispatchWorker(
         invitations.save(invitation)
     }
 
-    private companion object {
+    internal companion object {
         const val DEFAULT_COLOR = "#1E293B"
         val E164 = Regex("^\\+[1-9]\\d{6,14}$")
     }

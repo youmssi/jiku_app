@@ -42,6 +42,7 @@ class UseSendEmailSender internal constructor(
                 put("to", recipient)
                 put("subject", message.subject)
                 put("html", message.htmlBody)
+                put("text", message.textBody)
                 if (message.attachments.isNotEmpty()) {
                     put(
                         "attachments",

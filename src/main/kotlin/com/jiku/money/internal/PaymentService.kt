@@ -1,7 +1,10 @@
 package com.jiku.money.internal
 
+import com.jiku.shared.CodedRefusal
+import com.jiku.shared.OpsAlert
 import com.jiku.shared.TenantContext
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.PlatformTransactionManager
@@ -21,13 +24,15 @@ import java.util.UUID
  * through [PaymentFulfillment], the same step an admin confirmation uses. A failed or
  * timed-out payment leaves the allowance untouched. Callback handling is idempotent.
  *
- * The provider comes from [PaymentProviderSelector]: the active one starts a
- * payment, and a callback only settles a payment started by the same provider.
+ * The provider comes from [PaymentProviderSelector]: the one configured for the
+ * payment's currency starts it (JIKU-272), and a callback only settles a payment
+ * started by the same provider.
  */
 @Service
 class PaymentService(
     private val payments: PaymentRepository,
     private val fulfillment: PaymentFulfillment,
+    private val events: ApplicationEventPublisher,
     private val providers: PaymentProviderSelector,
     private val platformSettings: PlatformBillingSettingsService,
     private val eventPricing: EventPricing,
@@ -62,7 +67,7 @@ class PaymentService(
                 tier = Payment.GUESTS_TIER,
                 amountMinor = quote.amountMinor,
                 currency = quote.currency,
-                provider = providers.active.name,
+                provider = providerFor(quote.currency).name,
                 guests = guests,
             ),
             "$guests guests",
@@ -117,7 +122,7 @@ class PaymentService(
                 tier = Payment.COMMISSION_TIER,
                 amountMinor = totalMinor,
                 currency = batch.currency,
-                provider = providers.active.name,
+                provider = providerFor(batch.currency).name,
                 kind = Payment.KIND_COMMISSION,
                 guests = batch.size.toLong(),
             ).apply { commissionBatchId = batch.id },
@@ -158,14 +163,27 @@ class PaymentService(
             tier = tier,
             amountMinor = amountMinor,
             currency = currency,
-            provider = providers.active.name,
+            provider = providerFor(currency).name,
             kind = kind,
             subscriptionMonths = months,
             guests = guests,
         )
 
     /**
-     * Records [payment] as PENDING and asks the active provider to start it. A
+     * The adapter that collects [currency]. A currency paid by transfer only is
+     * refused with a code the billing screens turn into the transfer instructions.
+     */
+    private fun providerFor(currency: String): PaymentProvider =
+        providers.forCurrency(currency)
+            ?: throw CodedRefusal(
+                HttpStatus.CONFLICT,
+                CodedRefusal.ONLINE_PAYMENT_UNAVAILABLE,
+                "Online payment is not offered in $currency; pay by transfer",
+                mapOf("currency" to currency),
+            )
+
+    /**
+     * Records [payment] as PENDING and asks its provider to start it. A
      * provider that refuses or cannot be reached rolls the record back, so a
      * failed start leaves no open payment behind.
      */
@@ -174,11 +192,12 @@ class PaymentService(
         description: String,
     ): PaymentInitiationResult {
         val tenantId = requireNotNull(TenantContext.get()) { "Payment initiation requires an authenticated tenant" }
+        val provider = checkNotNull(providers.byName(payment.provider)) { "No adapter named ${payment.provider}" }
         val saved = payments.save(payment)
         val paymentId = requireNotNull(saved.id)
         val initiation =
             try {
-                providers.active.initiate(
+                provider.initiate(
                     PaymentInitiationRequest(
                         paymentId = paymentId,
                         amountMinor = saved.amountMinor,
@@ -188,7 +207,7 @@ class PaymentService(
                     ),
                 )
             } catch (ex: PaymentProviderException) {
-                log.warn("Payment provider {} could not start payment {}: {}", providers.active.name, paymentId, ex.message)
+                log.warn("Payment provider {} could not start payment {}: {}", provider.name, paymentId, ex.message)
                 throw ResponseStatusException(HttpStatus.BAD_GATEWAY, "The payment provider is unavailable; try again in a moment", ex)
             }
         saved.providerReference = initiation.providerReference
@@ -243,10 +262,16 @@ class PaymentService(
         providerName: String,
         callback: PaymentCallback,
     ): CallbackOutcome {
-        val payment = payments.findById(paymentId).orElse(null) ?: return CallbackOutcome.UNKNOWN
+        val payment = payments.findForUpdate(paymentId) ?: return CallbackOutcome.UNKNOWN
         // A provider can only vouch for the payments it started itself.
         if (payment.provider != providerName) return CallbackOutcome.UNKNOWN
-        if (payment.status != PaymentStatus.PENDING) return CallbackOutcome.ALREADY_PROCESSED
+        if (payment.status != PaymentStatus.PENDING) {
+            if (payment.status == PaymentStatus.FAILED && callback.outcome == PaymentOutcome.SUCCEEDED) {
+                log.warn("Payment {} was closed as FAILED but {} now reports it paid; settle it by hand", paymentId, providerName)
+                paidButNotGranted(payment, "$providerName reports it paid after it was closed as failed")
+            }
+            return CallbackOutcome.ALREADY_PROCESSED
+        }
         if (callback.outcome == PaymentOutcome.PENDING) return CallbackOutcome.PENDING
 
         val succeeded = callback.outcome == PaymentOutcome.SUCCEEDED && paidInFull(payment, callback)
@@ -256,6 +281,47 @@ class PaymentService(
         if (!succeeded) return CallbackOutcome.FAILED
         fulfillment.fulfill(payment)
         return CallbackOutcome.SUCCEEDED
+    }
+
+    /**
+     * Settles a PENDING payment from its provider's own record when its callback
+     * never came (JIKU-272): a provider retries a webhook only briefly, and a
+     * restart of this API in that window must not leave a paid purchase locked.
+     * The caller binds the payment's tenant. A payment still unfinished at the
+     * provider after [PaymentProperties.abandonAfter] is closed as FAILED.
+     */
+    fun reconcile(
+        paymentId: UUID,
+        abandonBefore: Instant,
+    ): CallbackOutcome {
+        val payment =
+            transactions.execute { payments.findById(paymentId).orElse(null) } ?: return CallbackOutcome.UNKNOWN
+        if (payment.status != PaymentStatus.PENDING) return CallbackOutcome.ALREADY_PROCESSED
+        val provider = providers.byName(payment.provider) ?: return CallbackOutcome.UNKNOWN_PROVIDER
+        val providerReference = payment.providerReference ?: return CallbackOutcome.UNKNOWN
+        val callback =
+            try {
+                provider.lookup(providerReference)
+            } catch (ex: PaymentProviderException) {
+                log.warn("Payment provider {} could not be asked about payment {}: {}", provider.name, paymentId, ex.message)
+                return CallbackOutcome.PROVIDER_UNAVAILABLE
+            }
+        if (callback == null || callback.outcome == PaymentOutcome.PENDING) {
+            if (payment.createdAt.isAfter(abandonBefore)) return CallbackOutcome.PENDING
+            return transactions.execute { abandon(paymentId) } ?: CallbackOutcome.UNKNOWN
+        }
+        // The provider's record must name this very payment, under this tenant.
+        if (callback.reference != "${TenantContext.get()}:$paymentId") return CallbackOutcome.UNKNOWN
+        return transactions.execute { confirm(paymentId, provider.name, callback) } ?: CallbackOutcome.UNKNOWN
+    }
+
+    private fun abandon(paymentId: UUID): CallbackOutcome {
+        val payment = payments.findForUpdate(paymentId) ?: return CallbackOutcome.UNKNOWN
+        if (payment.status != PaymentStatus.PENDING) return CallbackOutcome.ALREADY_PROCESSED
+        payment.status = PaymentStatus.FAILED
+        payment.updatedAt = Instant.now()
+        payments.save(payment)
+        return CallbackOutcome.FAILED
     }
 
     /** A provider that reports what was paid must report exactly what was asked. */
@@ -274,8 +340,31 @@ class PaymentService(
                 payment.amountMinor,
                 payment.currency,
             )
+            paidButNotGranted(
+                payment,
+                "the provider reports ${callback.amountMinor} ${callback.currency} paid instead of ${payment.amountMinor} ${payment.currency}",
+            )
         }
         return amountMatches && currencyMatches
+    }
+
+    /**
+     * Money came in and nothing was granted (JIKU-298): the team settles it by
+     * hand, granting or refunding as the runbook `payments.md` says. Only ids and
+     * amounts travel in the alert, never the payer's details.
+     */
+    private fun paidButNotGranted(
+        payment: Payment,
+        why: String,
+    ) {
+        events.publishEvent(
+            OpsAlert(
+                subject = "Jikū payment ${payment.id} paid but not granted",
+                message =
+                    "Organization ${payment.tenantId}, payment ${payment.id} (${payment.kind}, ${payment.provider}): $why. " +
+                        "Settle it by hand: grant it or refund the payer (docs/runbooks/payments.md).",
+            ),
+        )
     }
 }
 

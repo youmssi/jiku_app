@@ -42,6 +42,23 @@ object ClientTemplates {
             }.orEmpty()
     }
 
+    /**
+     * What the shared email layout reads (JIKU-278): the header and the colours
+     * worked out from the brand colour. Advanced, so an edited document that
+     * keeps the layout stays valid.
+     */
+    private val LAYOUT_VARIABLES =
+        listOf(
+            Variable("headerBlock", "Header: logo, kind of email and organizer name (advanced)", ""),
+            Variable("accent", "Brand colour, checked (advanced)", "#1E293B"),
+            Variable("onAccent", "Text colour on the brand colour (advanced)", "#FFFFFF"),
+            Variable("accentText", "Brand colour as text on white (advanced)", "#1E293B"),
+            Variable("watermarkUrl", "Header watermark image (advanced)", ""),
+            Variable("bandeUrl", "Header border image (advanced)", ""),
+            Variable("assetBaseUrl", "Brand images folder (advanced)", ""),
+            Variable("siteUrl", "Jikū web address (advanced)", ""),
+        )
+
     val definitions: List<Definition> =
         listOf(
             Definition(
@@ -55,18 +72,18 @@ object ClientTemplates {
                         Variable("eventName", "Event / offer name", "Coupe + soin", required = true),
                         Variable("eventWhen", "Date and time", "Tuesday 3 Nov at 15:00"),
                         Variable("eventLocation", "Location", "Avenue de la République"),
-                        Variable("invitationUrl", "Confirmation link", "https://jiku.app/r/8f3k2a", required = true),
+                        Variable("invitationUrl", "Confirmation link", "https://hellojiku.com/r/8f3k2a", required = true),
                         Variable("primaryColor", "Brand color", "#1E293B"),
                         Variable("eventDetails", "Formatted date/location block (advanced)", ""),
                         Variable("logoBlock", "Logo image (advanced)", ""),
-                    ),
+                    ) + LAYOUT_VARIABLES,
                 whatsappVariables =
                     listOf(
                         Variable("guestName", "Guest name", "Awa Diallo", required = true),
                         Variable("organizerName", "Organizer name", "Salon Aminata", required = true),
                         Variable("eventName", "Event / offer name", "Coupe + soin", required = true),
                         Variable("eventWhen", "Date and time", "on Tuesday 3 Nov at 15:00"),
-                        Variable("invitationUrl", "Confirmation link", "https://jiku.app/r/8f3k2a", required = true),
+                        Variable("invitationUrl", "Confirmation link", "https://hellojiku.com/r/8f3k2a", required = true),
                     ),
                 emailFile = "invitation.html",
                 whatsappFile = "invitation.txt",
@@ -82,7 +99,7 @@ object ClientTemplates {
                         Variable("organizerName", "Organizer name", "Salon Aminata", required = true),
                         Variable("eventName", "Event / offer name", "Gala des 25 ans", required = true),
                         Variable("eventWhen", "Date and time", "on Saturday 12 Dec at 18:00"),
-                        Variable("ticketUrl", "Ticket link", "https://jiku.app/invitation/8f3k2a/ticket", required = true),
+                        Variable("ticketUrl", "Ticket link", "https://hellojiku.com/invitation/8f3k2a/ticket", required = true),
                     ),
                 emailFile = null,
                 whatsappFile = "ticket.txt",
@@ -101,7 +118,7 @@ object ClientTemplates {
                         Variable("primaryColor", "Brand color", "#1E293B"),
                         Variable("eventDetails", "Formatted date/location block (advanced)", ""),
                         Variable("logoBlock", "Logo image (advanced)", ""),
-                    ),
+                    ) + LAYOUT_VARIABLES,
                 whatsappVariables =
                     listOf(
                         Variable("guestName", "Guest name", "Awa Diallo", required = true),

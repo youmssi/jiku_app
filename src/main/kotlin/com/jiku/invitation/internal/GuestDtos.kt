@@ -1,5 +1,6 @@
 package com.jiku.invitation.internal
 
+import com.jiku.catalog.InvitationChannel
 import com.jiku.ticket.TicketPaymentStatus
 import java.time.Instant
 import java.util.UUID
@@ -43,6 +44,8 @@ data class GuestResponse(
     val amountDueCurrency: String? = null,
     /** Whether the guest agreed to hear from the organizer (JIKU-213): needed for a WhatsApp invitation from the Jikū number. */
     val consentAttested: Boolean = true,
+    /** Channel set for this guest at import (JIKU-273); null follows the event's rule. */
+    val preferredChannel: InvitationChannel? = null,
 )
 
 data class SetGuestExclusionRequest(

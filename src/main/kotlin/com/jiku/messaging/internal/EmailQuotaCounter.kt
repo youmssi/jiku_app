@@ -14,8 +14,8 @@ import java.util.UUID
  * so the daily cap is never exceeded even under concurrent sends, and the count
  * survives an app restart (unlike an in-memory counter). Platform-wide, not
  * tenant-scoped — the cap is per provider account, shared by every tenant on
- * the platform transport. [provider] is one of [PROVIDER_RESEND] /
- * [PROVIDER_BREVO] / [PROVIDER_GLOBAL].
+ * the platform transport. [provider] is one of [PROVIDER_USESEND] /
+ * [PROVIDER_RESEND] / [PROVIDER_BREVO] / [PROVIDER_GLOBAL].
  */
 @Entity
 @Table(
@@ -34,6 +34,7 @@ class EmailQuotaCounter(
     var id: UUID? = null
 
     companion object {
+        const val PROVIDER_USESEND = "USESEND"
         const val PROVIDER_RESEND = "RESEND"
         const val PROVIDER_BREVO = "BREVO"
         const val PROVIDER_GLOBAL = "GLOBAL"

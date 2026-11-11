@@ -4,6 +4,7 @@ import com.jiku.messaging.internal.CancellationEmail
 import com.jiku.messaging.internal.EmailTemplateRenderer
 import com.jiku.messaging.internal.InvitationEmail
 import com.jiku.messaging.internal.MessageCatalog
+import com.jiku.messaging.internal.NotificationEmailProperties
 import com.jiku.messaging.internal.TenantTemplateRepository
 import com.jiku.messaging.internal.TenantTemplateResolver
 import com.jiku.messaging.internal.WhatsAppInvitation
@@ -25,7 +26,12 @@ import kotlin.test.assertTrue
 class EmailTemplateRendererTest {
     private val catalog = MessageCatalog { MessageLanguage.FRENCH }
     private val resolver = TenantTemplateResolver(unused<TenantTemplateRepository>(), unused<ApplicationEventPublisher>())
-    private val renderer = EmailTemplateRenderer(resolver, catalog)
+    private val renderer =
+        EmailTemplateRenderer(
+            resolver,
+            catalog,
+            NotificationEmailProperties(siteUrl = "https://hellojiku.com", assetBaseUrl = "https://hellojiku.com/email"),
+        )
     private val whatsApp = WhatsAppTemplateRenderer(resolver, catalog)
 
     @Test
@@ -35,12 +41,30 @@ class EmailTemplateRendererTest {
 
         assertEquals("Invitation : Gala <25 ans>", french.subject)
         assertEquals("You're invited: Gala <25 ans>", english.subject)
-        assertTrue(french.html.contains("""<html lang="fr">"""))
-        assertTrue(english.html.contains("""<html lang="en">"""))
+        assertTrue(french.html.contains("""<html lang="fr" dir="ltr">"""))
+        assertTrue(english.html.contains("""<html lang="en" dir="ltr">"""))
         assertTrue(french.html.contains("Quand"))
         assertTrue(english.html.contains("Where"))
         assertTrue(french.html.contains("#7C3AED"), "the organizer's colour carries the accent")
         assertTrue(french.html.contains("Maison Aminata"))
+    }
+
+    @Test
+    fun `an invitation to read in Arabic is written right to left in Arabic`() {
+        val arabic = renderer.renderInvitation(invitation(), MessageLanguage.ARABIC)
+
+        assertEquals("دعوة: Gala <25 ans>", arabic.subject)
+        assertTrue(arabic.html.contains("""<html lang="ar" dir="rtl">"""))
+        assertTrue(arabic.html.contains("""class="card rtl""""), "the card drops letter spacing, which breaks Arabic joins")
+        assertTrue(arabic.html.contains("الرد على الدعوة"))
+        assertTrue(arabic.html.contains("المكان"))
+        assertFalse(arabic.html.contains("{{"))
+    }
+
+    @Test
+    fun `an Arabic message the guests never read falls back to French`() {
+        assertEquals(catalog.text(MessageLanguage.FRENCH, "label.reference"), catalog.text(MessageLanguage.ARABIC, "label.reference"))
+        assertEquals("سأحضر", catalog.text(MessageLanguage.ARABIC, "whatsapp.button.accept"))
     }
 
     @Test
@@ -92,7 +116,7 @@ class EmailTemplateRendererTest {
                 organizerName = "Maison Aminata",
                 primaryColor = "#7C3AED",
                 logoUrl = null,
-                ticketUrl = "https://jiku.app/invitation/abc/ticket",
+                ticketUrl = "https://hellojiku.com/invitation/abc/ticket",
                 language = MessageLanguage.FRENCH,
             )
 
@@ -100,7 +124,7 @@ class EmailTemplateRendererTest {
         val undated = renderer.renderTicketConfirmed(notice.copy(eventStart = null), null)
 
         assertEquals("Votre billet : Gala", withCalendar.subject)
-        assertTrue(withCalendar.html.contains("https://jiku.app/invitation/abc/ticket"))
+        assertTrue(withCalendar.html.contains("https://hellojiku.com/invitation/abc/ticket"))
         assertTrue(withCalendar.html.contains("Samedi 12 décembre 2026 à 18:00"))
         assertTrue(withCalendar.html.contains("VIP"))
         assertTrue(withCalendar.html.contains("Ajouter à Google Agenda"))
@@ -144,7 +168,7 @@ class EmailTemplateRendererTest {
                     organizationName = "Maison Aminata",
                     inviterEmail = "owner@example.com",
                     role = "ADMIN",
-                    actionUrl = "https://jiku.app/join?token=abc",
+                    actionUrl = "https://hellojiku.com/join?token=abc",
                     language = MessageLanguage.FRENCH,
                 ),
             )
@@ -171,7 +195,7 @@ class EmailTemplateRendererTest {
                     eventName = "Gala",
                     eventWhen = "Mardi 3 novembre 2026 à 15:00",
                     organizerName = "Maison Aminata",
-                    invitationUrl = "https://jiku.app/invitation/abc",
+                    invitationUrl = "https://hellojiku.com/invitation/abc",
                 ),
                 MessageLanguage.FRENCH,
             )
@@ -189,13 +213,13 @@ class EmailTemplateRendererTest {
                     eventName = "Gala",
                     eventWhen = "Samedi 12 décembre 2026 à 18:00",
                     organizerName = "Maison Aminata",
-                    invitationUrl = "https://jiku.app/invitation/abc/ticket",
+                    invitationUrl = "https://hellojiku.com/invitation/abc/ticket",
                 ),
                 MessageLanguage.FRENCH,
             )
 
         assertTrue(text.startsWith("Bonjour Awa, voici votre billet pour Gala le samedi 12 décembre 2026 à 18:00"))
-        assertTrue(text.contains("https://jiku.app/invitation/abc/ticket"))
+        assertTrue(text.contains("https://hellojiku.com/invitation/abc/ticket"))
         assertFalse(text.contains("{{"))
     }
 
@@ -209,7 +233,7 @@ class EmailTemplateRendererTest {
             organizerName = "Maison Aminata",
             primaryColor = "#7C3AED",
             logoUrl = null,
-            invitationUrl = "https://jiku.app/invitation/abc",
+            invitationUrl = "https://hellojiku.com/invitation/abc",
         )
 
     /** Without a tenant in context the resolver never reaches its collaborators. */

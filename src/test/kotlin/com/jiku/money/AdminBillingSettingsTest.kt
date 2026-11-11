@@ -46,7 +46,7 @@ class AdminBillingSettingsTest {
                         payee =
                             PayeeDetails(
                                 payeeName = "Jikū SARL",
-                                contactEmail = "facturation@jiku.app",
+                                contactEmail = "facturation@hellojiku.com",
                                 contactPhone = "+224620000000",
                                 mobileMoneyNumber = "+224620000001",
                                 mobileMoneyOperator = "Orange Money",
@@ -59,7 +59,7 @@ class AdminBillingSettingsTest {
                                 SubscriptionPlanOption("Teams", 3, null, PriceList(180_000, 12_000, 2_000), PriceList(55_000, 3_500, 600)),
                             ),
                     ),
-                    updatedBy = "admin@jiku.app",
+                    updatedBy = "admin@hellojiku.com",
                 )
 
             assertTrue(updated.managedInDatabase)

@@ -222,6 +222,27 @@ class InvoiceService(
         return totalMinor - net
     }
 
+    /**
+     * Issues the invoice of a settled payment on its own (JIKU-277), or returns
+     * `null` while the organization's legal identity cannot address one yet.
+     * [created] tells whether this call issued it, so it is emailed only once.
+     */
+    @Transactional
+    fun issueAutomatically(paymentId: UUID): AutomaticInvoice? {
+        invoices.findByPaymentId(paymentId)?.let { return AutomaticInvoice(it, created = false) }
+        val tenantId = TenantContext.get() ?: return null
+        tenants.findTenant(UUID.fromString(tenantId))?.legalIdentity ?: return null
+        return AutomaticInvoice(issueForPayment(paymentId), created = true)
+    }
+
+    /** The current organization's settled payments that still have no invoice. */
+    fun uninvoicedPayments(): List<UUID> = payments.findSucceededWithoutInvoice()
+
+    data class AutomaticInvoice(
+        val invoice: Invoice,
+        val created: Boolean,
+    )
+
     private fun requireLegalIdentity(): TenantLegalIdentityInfo {
         val tenantId =
             TenantContext.get()

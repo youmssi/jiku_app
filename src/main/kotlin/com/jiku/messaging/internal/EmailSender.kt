@@ -2,13 +2,17 @@ package com.jiku.messaging.internal
 
 import java.util.Base64
 
-/** A rendered email ready to be delivered by a provider adapter. */
+/**
+ * A rendered email ready to be delivered by a provider adapter. Every adapter
+ * sends [textBody] alongside [htmlBody] as the plain-text alternative.
+ */
 data class EmailMessage(
     val to: String,
     val toName: String,
     val subject: String,
     val htmlBody: String,
     val attachments: List<EmailAttachment> = emptyList(),
+    val textBody: String = PlainText.fromHtml(htmlBody),
 )
 
 /** A file sent with an email, such as a calendar invite. */

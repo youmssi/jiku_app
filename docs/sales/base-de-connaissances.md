@@ -38,7 +38,7 @@ peut répondre à leurs questions (§4.2), mais la publicité ne les vise pas en
 ### 3.1 Événements
 
 - **Liste d'invités** : import depuis Excel ou CSV, ou ajout un par un ; doublons signalés.
-- **Envoi** par e-mail, par WhatsApp, ou les deux. Chaque invité reçoit un lien personnel et répond « Je viens » en un geste ; son billet QR s'affiche aussitôt.
+- **Envoi** par WhatsApp ou par e-mail, **une seule invitation par invité** : le canal choisi pour l'événement, et l'autre seulement si le premier est impossible. Chaque invité reçoit un lien personnel et répond « Je viens » en un geste ; son billet QR s'affiche aussitôt.
 - **Carte d'invitation à partager** quand il n'y a pas de liste : une carte publiée dans les groupes et statuts WhatsApp ; chacun répond, chaque « oui » reçoit son billet. Trois styles (Élégant, Moderne, Festif), photo de bandeau, nombre d'accompagnants et date limite de réponse.
 - **Catégories de billets** (VIP, presse, standard…) avec jauge et prix.
 - **Suivi en direct** : qui a répondu, qui vient, qui n'a pas reçu son invitation, liste « Sans réponse » à relancer.
@@ -129,7 +129,7 @@ Côte d'Ivoire et au Sénégal) : le montant affiché est le montant payé. Prix
 ### 4.3 Comment payer Jikū
 
 - Depuis **Facturation** dans l'espace de l'organisation ; le montant exact s'affiche avant le paiement.
-- Par transfert Orange Money, MTN MoMo ou virement bancaire, avec la référence affichée dans **Demander l'activation** ; l'équipe confirme et active, en général en quelques heures. Ce n'est pas instantané.
+- Par **virement bancaire** au compte de MRVIN100 SARLU, avec la référence affichée dans **Demander l'activation** ; l'équipe confirme et active, en général en quelques heures. Ce n'est pas instantané. Il n'y a pas de numéro Mobile Money pour payer Jikū : une personne qui veut payer par Mobile Money attend le paiement en ligne.
 - Le paiement en ligne n'est pas encore ouvert : ne jamais le promettre ni donner de date. Un moyen de paiement précis (un opérateur donné) n'est jamais promis : si la personne ne le trouve pas, l'assistant passe la main.
 - **L'assistant ne demande jamais** de numéro de carte, de code ou de mot de passe.
 

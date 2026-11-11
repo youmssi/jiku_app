@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController
  * an unverifiable payload is rejected with 401 and nothing is unlocked.
  *
  * Each provider calls back on its own URL, `/billing/payments/callback/{provider}`.
+ * The signature comes in `X-Signature`, or in `X-Webhook-Signature` for DEXPAY.
  * The URL without a name stays for providers already configured with it and is
  * handled by the active provider.
  */
@@ -34,8 +35,9 @@ class PaymentCallbackController(
     fun providerCallback(
         @PathVariable provider: String,
         @RequestHeader(name = "X-Signature", required = false) signature: String?,
+        @RequestHeader(name = "X-Webhook-Signature", required = false) webhookSignature: String?,
         @RequestBody rawBody: String,
-    ): ResponseEntity<Void> = respond(paymentService.handleCallback(provider, rawBody, signature))
+    ): ResponseEntity<Void> = respond(paymentService.handleCallback(provider, rawBody, signature ?: webhookSignature))
 
     private fun respond(outcome: PaymentService.CallbackOutcome): ResponseEntity<Void> =
         when (outcome) {

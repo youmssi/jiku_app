@@ -99,7 +99,10 @@ class EmbeddedSignupTest {
                     Regex("\"language\":\"(\\w+)\"").find(it.body)!!.groupValues[1]
             }
         assertEquals(
-            WhatsAppTemplateKind.entries.filterNot { it.platformOnly }.flatMap { listOf("jiku_${it.key}:fr", "jiku_${it.key}:en") },
+            WhatsAppTemplateKind.entries.filterNot { it.platformOnly }.flatMap { kind ->
+                // The guests' templates also exist in Arabic (JIKU-293).
+                listOf("fr", "en", "ar").filter { it != "ar" || kind in GUEST_KINDS }.map { "jiku_${kind.key}:$it" }
+            },
             created,
         )
         assertTrue(templates.all { "\"category\":\"UTILITY\"" in it.body })
@@ -157,6 +160,14 @@ class EmbeddedSignupTest {
     )
 
     companion object {
+        val GUEST_KINDS =
+            setOf(
+                WhatsAppTemplateKind.INVITATION,
+                WhatsAppTemplateKind.INVITATION_RSVP,
+                WhatsAppTemplateKind.TICKET,
+                WhatsAppTemplateKind.EVENT_CANCELLED,
+            )
+
         val calls = CopyOnWriteArrayList<Call>()
 
         /** Stands in for Meta's Graph API and records what Jikū asked of it. */

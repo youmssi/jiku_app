@@ -26,6 +26,12 @@ data class OpenInvitationProperties(
      * card image it draws at `/api/cards/{code}`. Blank: the message has no image.
      */
     val cardImageBaseUrl: String = "",
+    /** This API's public URL, where guests' phones fetch the host's voice message (JIKU-284). */
+    val apiPublicUrl: String = "http://localhost:8080",
+    /** The largest voice message accepted: 30 seconds of compressed speech fit well under it. */
+    val voiceMaxBytes: Int = 300_000,
+    /** The longest voice message, in seconds (decision D1). */
+    val voiceMaxSeconds: Int = 30,
 )
 
 data class OpenInvitationSettingsRequest(
@@ -35,6 +41,10 @@ data class OpenInvitationSettingsRequest(
     val closesAt: Instant? = null,
     /** Free tier only: tell the people who answered, by WhatsApp, if the event is cancelled. Null keeps the current choice. */
     val notifyOnCancel: Boolean? = null,
+    /** Show "23 people are coming" on the card (JIKU-286). Null keeps the current choice. */
+    val showComing: Boolean? = null,
+    /** Let a guest who is coming invite someone from the card (JIKU-285). Null keeps the current choice. */
+    val relay: Boolean? = null,
 )
 
 data class OpenResponseRequest(
@@ -42,6 +52,8 @@ data class OpenResponseRequest(
     @field:NotBlank @field:Size(max = 32) val phone: String,
     val answer: OpenAnswer,
     @field:Min(0) @field:Max(100) val companions: Int = 0,
+    /** The network tag of the link the card was opened from (JIKU-282); unknown tags count as other. */
+    @field:Size(max = 16) val source: String? = null,
 )
 
 /** Why an open invitation takes no answer right now; null in the views when it does. */
@@ -90,6 +102,12 @@ data class OpenInvitationView(
     val cancelNoticeIncluded: Boolean,
     /** The dedicated WhatsApp number a card opens, digits only; null when answers go through the web only. */
     val whatsappNumber: String?,
+    /** Whether the card shows how many people are coming (JIKU-286). */
+    val showComing: Boolean,
+    /** Whether a guest who is coming may invite someone from the card (JIKU-285). */
+    val relay: Boolean,
+    /** The host's voice message (JIKU-284); null without one. */
+    val voice: CardVoiceView?,
 )
 
 /** What a person opening a shared card sees, before answering. */
@@ -116,6 +134,22 @@ data class PublicOpenInvitationView(
     val accepting: Boolean,
     val closedReason: OpenClosedReason?,
     val whatsappNumber: String?,
+    /**
+     * Whether the card carries Jikū's discreet signature (JIKU-288): on a free event
+     * only. A paid event, or one covered by Pro Organisateur, shows the organizer's
+     * brand alone.
+     */
+    val jikuSignature: Boolean,
+    /**
+     * How many people are coming, when the organizer shows it and at least
+     * [OpenInvitationService.SHOW_COMING_FROM] are (JIKU-286); null otherwise. A
+     * number only: nobody is named.
+     */
+    val comingCount: Int?,
+    /** Whether the page offers "Invite someone" once a guest says yes (JIKU-285): on, and the card takes answers. */
+    val relay: Boolean,
+    /** The host's voice message (JIKU-284), played on demand; null without one. */
+    val voice: CardVoiceView?,
 )
 
 /** A recorded answer, as the person who gave it sees it. */

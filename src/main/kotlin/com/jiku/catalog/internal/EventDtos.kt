@@ -39,6 +39,10 @@ data class CreateEventRequest(
     @field:Valid
     val settings: EventSettingsDto = EventSettingsDto(),
     val invitationChannels: Set<InvitationChannel> = emptySet(),
+    /** Channel tried first (JIKU-273); must be one of [invitationChannels], null picks WhatsApp when enabled. */
+    val primaryChannel: InvitationChannel? = null,
+    /** Use the other enabled channel for a guest the first cannot reach. */
+    val channelFallback: Boolean = true,
 )
 
 data class UpdateEventRequest(
@@ -52,6 +56,10 @@ data class UpdateEventRequest(
     @field:Valid
     val settings: EventSettingsDto = EventSettingsDto(),
     val invitationChannels: Set<InvitationChannel> = emptySet(),
+    /** Channel tried first (JIKU-273); must be one of [invitationChannels], null picks WhatsApp when enabled. */
+    val primaryChannel: InvitationChannel? = null,
+    /** Use the other enabled channel for a guest the first cannot reach. */
+    val channelFallback: Boolean = true,
 )
 
 data class EventResponse(
@@ -67,6 +75,9 @@ data class EventResponse(
     @field:Valid
     val settings: EventSettingsDto,
     val invitationChannels: Set<InvitationChannel>,
+    /** The channel tried first for each guest, resolved (JIKU-273); null without any channel. */
+    val primaryChannel: InvitationChannel? = null,
+    val channelFallback: Boolean = true,
     /** Règle de quorum, si l'organisateur en a défini une (JIKU-94). */
     val quorum: QuorumResponse? = null,
 )

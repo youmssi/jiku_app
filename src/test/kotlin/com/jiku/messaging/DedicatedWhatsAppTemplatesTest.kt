@@ -16,7 +16,7 @@ import kotlin.test.assertTrue
 
 /**
  * The dedicated templates (JIKU-210) as Meta will review them: every kind in
- * French and English, numbered parameters used once each, no parameter at the
+ * French and English, the guests' kinds in Arabic too (JIKU-293), numbered parameters used once each, no parameter at the
  * start or end of the text, an example per parameter, a short footer.
  */
 class DedicatedWhatsAppTemplatesTest {
@@ -30,12 +30,13 @@ class DedicatedWhatsAppTemplatesTest {
         for (kind in WhatsAppTemplateKind.entries.filterNot { it.authentication }) {
             val definition = definitions.path(kind.key)
             val parameters = definition.path("parameters").size()
-            for (language in listOf("fr", "en")) {
+            for (language in listOf("fr", "en") + if (kind in GUEST_KINDS) listOf("ar") else emptyList()) {
                 val components = definition.path(language).toList()
                 val body = components.single { it.path("type").asString("") == "BODY" }
                 val text = body.path("text").asString("")
                 val numbers = variable.findAll(text).map { it.groupValues[1].toInt() }.toList()
-                assertEquals((1..parameters).toList(), numbers, "${kind.key} $language")
+                // Each number once; the order in the text may follow the language (the v3 invitations name the event before the organizer).
+                assertEquals((1..parameters).toList(), numbers.sorted(), "${kind.key} $language")
                 assertFalse(text.trim().startsWith("{{") || text.trim().endsWith("}}"), "${kind.key} $language")
                 assertEquals(
                     parameters,
@@ -79,14 +80,14 @@ class DedicatedWhatsAppTemplatesTest {
                 eventName = "Mariage\nd'Awa",
                 eventWhen = "Samedi 12 octobre à 18 h",
                 organizerName = "Famille Diallo",
-                invitationUrl = "https://jiku.app/r/abc",
+                invitationUrl = "https://hellojiku.com/r/abc",
             )
 
         val withLink = calls.invitation(invitation, "fr-FR", withButtons = false)
         assertEquals(WhatsAppTemplateKind.INVITATION, withLink.kind)
         assertEquals("fr", withLink.language)
         assertEquals(
-            listOf("à vous", "Famille Diallo", "Mariage d'Awa", "samedi 12 octobre à 18 h", "https://jiku.app/r/abc"),
+            listOf("à vous", "Famille Diallo", "Mariage d'Awa", "samedi 12 octobre à 18 h", "https://hellojiku.com/r/abc"),
             withLink.parameters,
         )
 
@@ -110,13 +111,23 @@ class DedicatedWhatsAppTemplatesTest {
                 eventName = "Gala gratuit sur https://bit.ly/x1 et www.promo.xyz/win",
                 eventWhen = null,
                 organizerName = "Lots.top Events",
-                invitationUrl = "https://jiku.app/r/abc",
+                invitationUrl = "https://hellojiku.com/r/abc",
             )
 
         val call = calls.invitation(invitation, "fr", withButtons = false)
 
         assertEquals("Gala gratuit sur et", call.parameters[2])
         assertEquals("Events", call.parameters[1])
-        assertEquals("https://jiku.app/r/abc", call.parameters[4])
+        assertEquals("https://hellojiku.com/r/abc", call.parameters[4])
+    }
+
+    private companion object {
+        val GUEST_KINDS =
+            setOf(
+                WhatsAppTemplateKind.INVITATION,
+                WhatsAppTemplateKind.INVITATION_RSVP,
+                WhatsAppTemplateKind.TICKET,
+                WhatsAppTemplateKind.EVENT_CANCELLED,
+            )
     }
 }

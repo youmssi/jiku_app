@@ -45,6 +45,7 @@ class BrevoEmailSender internal constructor(
                 put("to", listOf(recipient))
                 put("subject", message.subject)
                 put("htmlContent", message.htmlBody)
+                put("textContent", message.textBody)
                 if (message.attachments.isNotEmpty()) {
                     put("attachment", message.attachments.map { mapOf("name" to it.filename, "content" to it.base64()) })
                 }

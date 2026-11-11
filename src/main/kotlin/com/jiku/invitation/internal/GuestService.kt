@@ -1,6 +1,7 @@
 package com.jiku.invitation.internal
 
 import com.jiku.catalog.EventModuleApi
+import com.jiku.catalog.InvitationChannel
 import com.jiku.messaging.NotificationModuleApi
 import com.jiku.ticket.TicketInfo
 import com.jiku.ticket.TicketingModuleApi
@@ -130,6 +131,7 @@ class GuestService(
             amountDueMinor = ticket?.amountDueMinor,
             amountDueCurrency = ticket?.amountDueCurrency,
             consentAttested = consentAttestedAt != null,
+            preferredChannel = preferredChannel,
         )
 
     @Transactional
@@ -195,6 +197,7 @@ class GuestService(
                 val email = field(record, "email")?.lowercase()
                 val phone = field(record, "phone")
                 val typeLabel = field(record, "type")
+                val channelLabel = field(record, "channel") ?: field(record, "canal")
 
                 val problem = validateRow(firstName, lastName, email, phone)
                 if (problem != null) {
@@ -219,6 +222,20 @@ class GuestService(
                     warnings += RowIssue(rowNumber, "Unknown category « $typeLabel »: guest imported without a category")
                 }
 
+                val preferredChannel = channelLabel?.let { parseChannel(it) }
+                if (channelLabel != null && preferredChannel == null) {
+                    warnings += RowIssue(rowNumber, "Unknown channel « $channelLabel »: the event's channel rule applies")
+                }
+                val reachable =
+                    when (preferredChannel) {
+                        InvitationChannel.EMAIL -> email != null
+                        InvitationChannel.WHATSAPP -> phone != null
+                        null -> true
+                    }
+                if (!reachable) {
+                    warnings += RowIssue(rowNumber, "Channel « $channelLabel » has no matching contact: the event's channel rule applies")
+                }
+
                 guests.save(
                     Guest(
                         eventId = eventId,
@@ -229,6 +246,7 @@ class GuestService(
                     ).apply {
                         ticketTypeId = typeId
                         consentAttestedAt = attestedAt
+                        this.preferredChannel = preferredChannel?.takeIf { reachable }
                     },
                 )
                 imported++
@@ -297,6 +315,14 @@ class GuestService(
         val domain = email.substringAfterLast('@')
         return if (domain in properties.disposableEmailDomains) "Email uses a disposable domain" else null
     }
+
+    /** Reads the optional « Canal » column (JIKU-273), in French or English. */
+    private fun parseChannel(label: String): InvitationChannel? =
+        when (normalize(label)) {
+            "whatsapp", "wa" -> InvitationChannel.WHATSAPP
+            "email", "mail", "courriel" -> InvitationChannel.EMAIL
+            else -> null
+        }
 
     private fun normalize(header: String): String = header.lowercase().replace(NON_ALPHANUMERIC, "")
 

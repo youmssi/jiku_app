@@ -116,12 +116,13 @@ class WhatsAppInboundService(
         }
     }
 
-    private companion object {
-        val STOP_WORDS = setOf("STOP", "ARRET", "ARRETER", "DESABONNER", "UNSUBSCRIBE")
-        val START_WORDS = setOf("START", "REPRENDRE")
-        val TICKET_WORDS = setOf("BILLET", "TICKET", "MON BILLET", "MY TICKET")
+    internal companion object {
+        // Arabic words are written as normalize() leaves them: no vowel marks, hamza seats folded into the bare alef.
+        val STOP_WORDS = setOf("STOP", "ARRET", "ARRETER", "DESABONNER", "UNSUBSCRIBE", "توقف", "ايقاف", "الغاء الاشتراك")
+        val START_WORDS = setOf("START", "REPRENDRE", "ابدا", "استيناف")
+        val TICKET_WORDS = setOf("BILLET", "TICKET", "MON BILLET", "MY TICKET", "تذكرة", "تذكرتي")
         val MARKS = Regex("\\p{M}+")
-        val NOT_WORD = Regex("[^A-Z ]+")
+        val NOT_WORD = Regex("[^A-Z\\p{IsArabic} ]+")
         val SPACES = Regex("\\s+")
 
         /** "  Arrêt ! " and "arret" are the same keyword. */

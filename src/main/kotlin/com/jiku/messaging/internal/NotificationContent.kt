@@ -1,5 +1,7 @@
 package com.jiku.messaging.internal
 
+import java.time.Instant
+
 /**
  * Everything the invitation email template needs. Built inside the notification
  * module from the inbound [com.jiku.shared.GuestInvitedEvent]; not exposed across
@@ -15,6 +17,8 @@ data class InvitationEmail(
     val primaryColor: String,
     val logoUrl: String?,
     val invitationUrl: String,
+    val eventStart: Instant? = null,
+    val eventTimezone: String? = null,
 )
 
 /** Everything the WhatsApp invitation template needs. Notification-internal. */
@@ -40,6 +44,8 @@ data class CancellationEmail(
     val organizerName: String,
     val primaryColor: String,
     val logoUrl: String?,
+    val eventStart: Instant? = null,
+    val eventTimezone: String? = null,
 )
 
 /** Everything the WhatsApp cancellation template needs. Notification-internal. */

@@ -1,5 +1,6 @@
 package com.jiku.catalog.internal
 
+import com.jiku.catalog.InvitationChannel
 import com.jiku.shared.EventCancelledEvent
 import com.jiku.shared.EventDeletedEvent
 import org.springframework.context.ApplicationEventPublisher
@@ -33,6 +34,7 @@ class EventService(
         event.settings = request.settings.toEmbeddable()
         event.maxCapacity = request.maxCapacity
         event.invitationChannels = request.invitationChannels.toMutableSet()
+        event.applyChannelRule(request.primaryChannel, request.channelFallback)
         events.save(event)
         return event.toResponse()
     }
@@ -60,8 +62,20 @@ class EventService(
         event.settings = request.settings.toEmbeddable()
         event.maxCapacity = request.maxCapacity
         event.invitationChannels = request.invitationChannels.toMutableSet()
+        event.applyChannelRule(request.primaryChannel, request.channelFallback)
         events.save(event)
         return event.toResponse()
+    }
+
+    private fun Event.applyChannelRule(
+        primary: InvitationChannel?,
+        fallback: Boolean,
+    ) {
+        if (primary != null && primary !in invitationChannels) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "The primary channel must be one of the event's invitation channels")
+        }
+        primaryChannel = primary
+        channelFallback = fallback
     }
 
     /**

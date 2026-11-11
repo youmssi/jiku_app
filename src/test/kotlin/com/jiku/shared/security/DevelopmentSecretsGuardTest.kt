@@ -19,7 +19,7 @@ class DevelopmentSecretsGuardTest {
 
     @Test
     fun `a deployed API refuses a development secret and names it`() {
-        val guard = DevelopmentSecretsGuard(environment("https://api.jiku.app", "local-development-signing-secret"))
+        val guard = DevelopmentSecretsGuard(environment("https://api.hellojiku.com", "local-development-signing-secret"))
         assertThatThrownBy { guard.afterPropertiesSet() }
             .isInstanceOf(IllegalStateException::class.java)
             .hasMessageContaining("jwt.secret")
@@ -27,7 +27,7 @@ class DevelopmentSecretsGuardTest {
 
     @Test
     fun `a deployed API with its own secrets starts`() {
-        val guard = DevelopmentSecretsGuard(environment("https://api.jiku.app", "a-strong-random-signing-secret-0123456789"))
+        val guard = DevelopmentSecretsGuard(environment("https://api.hellojiku.com", "a-strong-random-signing-secret-0123456789"))
         assertThatCode { guard.afterPropertiesSet() }.doesNotThrowAnyException()
     }
 

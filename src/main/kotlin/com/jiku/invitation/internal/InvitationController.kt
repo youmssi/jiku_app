@@ -19,17 +19,21 @@ class InvitationController(
     private val sendingService: InvitationSendingService,
     private val dispatcher: InvitationDispatcher,
     private val senders: SenderGate,
+    private val organizerWhatsApp: OrganizerWhatsAppService,
 ) {
     /** Sending is the first thing done on the organization's behalf: it needs a proven address (JIKU-253). */
     @PostMapping("/send")
     fun send(
         authentication: Authentication,
         @PathVariable eventId: UUID,
-        @RequestParam(name = "channels", defaultValue = "EMAIL") channels: Set<InvitationChannel>,
+        // Absent, the event's channels apply, one per guest (JIKU-273); one channel only, like a reminder, forces it.
+        @RequestParam(name = "channels", required = false) channels: Set<InvitationChannel>?,
         @RequestParam(name = "onlyUnsent", defaultValue = "true") onlyUnsent: Boolean,
+        // A reminder reaches only the guests who have not answered yet (JIKU-273).
+        @RequestParam(name = "onlyUnanswered", defaultValue = "false") onlyUnanswered: Boolean,
     ): SendInvitationsResult {
         senders.requireVerifiedSender(authentication.name)
-        val result = sendingService.queue(eventId, channels, onlyUnsent)
+        val result = sendingService.queue(eventId, channels, onlyUnsent, onlyUnanswered)
         dispatcher.dispatchPending(eventId)
         return result
     }
@@ -38,4 +42,30 @@ class InvitationController(
     fun statuses(
         @PathVariable eventId: UUID,
     ): List<InvitationStatusResponse> = sendingService.statuses(eventId)
+
+    /** Prepares each guest's personal link for the organizer to send from their own WhatsApp (JIKU-281). */
+    @PostMapping("/own-whatsapp")
+    fun prepareOwnWhatsApp(
+        @PathVariable eventId: UUID,
+    ): List<OrganizerWhatsAppGuest> = organizerWhatsApp.prepare(eventId)
+
+    /** The invited guests who have not answered, to remind from the organizer's own WhatsApp (JIKU-290). */
+    @PostMapping("/own-whatsapp/reminders")
+    fun ownWhatsAppReminders(
+        @PathVariable eventId: UUID,
+    ): List<OrganizerWhatsAppReminder> = organizerWhatsApp.reminders(eventId)
+
+    /** The organizer opened the guest's chat with a reminder. */
+    @PostMapping("/own-whatsapp/{guestId}/reminded")
+    fun markRemindedFromOwnWhatsApp(
+        @PathVariable eventId: UUID,
+        @PathVariable guestId: UUID,
+    ): OrganizerWhatsAppReminder = organizerWhatsApp.markReminded(eventId, guestId)
+
+    /** The organizer opened the guest's chat with the link: the invitation counts as sent. */
+    @PostMapping("/own-whatsapp/{guestId}/sent")
+    fun markSentFromOwnWhatsApp(
+        @PathVariable eventId: UUID,
+        @PathVariable guestId: UUID,
+    ): OrganizerWhatsAppGuest = organizerWhatsApp.markSent(eventId, guestId)
 }

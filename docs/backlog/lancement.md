@@ -35,6 +35,33 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-269 | Vérification des messages WhatsApp pendant la rédaction et guide d'écriture | app, web | JIKU-268 |
 | JIKU-270 | Tarifs alignés, invités gratuits déduits, marge le jour J, usage raisonnable appliqué, devise par pays | app, web | JIKU-269 |
 | JIKU-271 | Numéro WhatsApp propre gratuit dans toutes les offres et guide de branchement | app, web | JIKU-270 |
+| JIKU-272 | Paiement en ligne : DEXPAY (GNF, XOF, XAF), prestataire choisi selon la monnaie | app, web | contrat DEXPAY (le code se teste en bac à sable) |
+| JIKU-273 | Un seul canal par invité : canal prioritaire, l'autre en secours | app, web | — |
+| JIKU-274 | Domaine hellojiku.com et pages publiques alignées (ADR 110) | app, web | — |
+| JIKU-275 | Chaîne d'envoi d'e-mails : useSend, Resend, Brevo | app | JIKU-274 |
+| JIKU-276 | Paiement à Jikū : virement bancaire et paiement en ligne, sans numéro marchand | app, web | JIKU-272 |
+| JIKU-277 | Facture émise et envoyée par e-mail dès la confirmation du paiement | app | JIKU-276 |
+| JIKU-278 | E-mails à l'image de la marque, lisibles en mode clair et sombre | app, web | JIKU-274 |
+| JIKU-279 | Version texte de chaque e-mail, pour la délivrabilité | app | JIKU-278 |
+| JIKU-280 | Partager une carte par le menu de partage du téléphone (image et message) | web | — |
+| JIKU-281 | Envoyer les invitations depuis mon WhatsApp, avec un lien personnel par invité | app, web | — |
+| JIKU-282 | Mesurer partages, visites et réponses d'une carte par réseau | app, web | JIKU-280 |
+| JIKU-283 | Aperçus justes partout et image de la carte au format statut | web | — |
+| JIKU-284 | Message vocal de l'hôte sur la carte | app, web | décision D1 |
+| JIKU-285 | Inviter un proche depuis la carte | app, web | JIKU-282, décision D2 |
+| JIKU-286 | « Ils viennent » : nombre de présents sur la carte | app, web | décision D3 |
+| JIKU-287 | Une page de carte légère sur réseau lent, avec budget de poids | web | — |
+| JIKU-288 | Signature « Créé avec Jikū » sur les cartes gratuites | web | décision D4 |
+| JIKU-289 | Agenda, itinéraire et compte à rebours sur la carte | web | — |
+| JIKU-290 | Relancer depuis mon WhatsApp les invités sans réponse | app, web | JIKU-281 |
+| JIKU-291 | Texte toujours lisible sur la couleur de l'organisateur (contraste WCAG) | web | — |
+| JIKU-292 | Écrans invités en arabe, de droite à gauche (voir `arabe-invites.md`) | web | — |
+| JIKU-293 | Langue des invités choisie par événement, messages et images en arabe | app, web | JIKU-292 |
+| JIKU-294 | Heure relative des réponses sans erreur de console (horloge partagée) | web | — |
+| JIKU-295 | Modèles WhatsApp v2 en catégorie utilitaire (invitation, invitation à boutons, « c'est votre tour ») | app | JIKU-293 |
+| JIKU-297 | Invitations WhatsApp v3 approuvées en utilitaire (liste des participants, confirmation attendue) | app | JIKU-295 |
+| JIKU-298 | Paiement en ligne accordé une seule fois, alerte « payé mais non accordé », runbook des remboursements et du test DEXPAY | app | JIKU-272 |
+| JIKU-299 | Lancement sur un Cloud VPS 8 Contabo sous Ubuntu 26.04, Chatwoot et n8n reportés (ADR 111) | app | JIKU-203 |
 
 ---
 
@@ -492,4 +519,157 @@ partagé ; le faire payer contredisait le discours (ADR 109, décision 11).
 - [x] Les pages publiques, les CGU et la base de connaissances le disent
 - [x] Un guide FR/EN « Brancher votre numéro WhatsApp » détaille le compte Meta Business, la vérification, le moyen de paiement, le nom affiché, les limites et les erreurs courantes
 - [x] Le guide « Écrire un message WhatsApp qui passe » cite la liste de mots de JIKU-270
+
+## JIKU-272 — Paiement en ligne selon la monnaie
+
+**Pourquoi.** Le paiement manuel demande une vérification humaine par paiement
+et ne couvre ni la carte ni le FCFA (ADR 110, décision 2).
+
+**Critères d'acceptation.**
+
+- [x] Un adaptateur par prestataire derrière `PaymentProvider`, choisi par monnaie dans la configuration : DEXPAY pour le GNF, le XOF et le XAF au lancement ; l'USD par virement (`none`)
+- [x] La confirmation du prestataire (signature vérifiée) active l'offre sans intervention
+- [ ] Le paiement manuel reste proposé en secours
+- [ ] Les pages publiques, les CGU et la base de connaissances citent le prestataire seulement une fois le contrat signé
+
+## JIKU-273 — Un seul canal par invité
+
+**Pourquoi.** Recevoir la même invitation par e-mail et par WhatsApp au même
+moment ressemble à du spam et paie deux messages pour un (ADR 110, décision 4).
+
+**Critères d'acceptation.**
+
+- [x] Un événement a un canal prioritaire (WhatsApp ou e-mail) et une option « l'autre canal si le premier est impossible », active par défaut
+- [x] Un envoi crée au plus une invitation par invité : le canal prioritaire s'il a la coordonnée, sinon l'autre
+- [x] Un échec définitif de livraison déclenche une seule tentative sur l'autre canal, visible dans la liste des invités
+- [x] L'import accepte une colonne facultative « Canal » qui fixe le canal d'un invité
+- [x] La relance des invités sans réponse choisit son canal ; le billet et les rappels suivent le canal de l'invitation
+
+## JIKU-274 — Domaine hellojiku.com et pages publiques alignées
+
+**Pourquoi.** `jiku.app` n'est pas à nous ; le domaine de la marque est
+`hellojiku.com` (ADR 110, décision 1).
+
+**Critères d'acceptation.**
+
+- [x] Les valeurs par défaut, exemples, modèles WhatsApp et textes affichés utilisent `hellojiku.com`
+- [x] Les pages légales donnent `contact@hellojiku.com` et `privacy@hellojiku.com`, et la liste des prestataires cite les fournisseurs d'e-mails utilisés
+- [x] Les pages publiques et la base de connaissances donnent les moyens de paiement réels (JIKU-276 : virement bancaire, puis paiement en ligne)
+- [x] La préproduction `jiku-web.vercel.app` est exclue des moteurs de recherche
+- [x] La redirection de `jiku.mrvin100.de` est décrite dans `docs/deploy-vps.md`, à activer après la vérification Meta
+
+## JIKU-275 — Chaîne d'envoi d'e-mails
+
+**Pourquoi.** Trois offres gratuites enchaînées couvrent le lancement sans
+minimum mensuel, et l'offre payante de useSend prend le relais (ADR 110,
+décision 3).
+
+**Critères d'acceptation.**
+
+- [x] Une chaîne ordonnée et configurable de fournisseurs (useSend, Resend, Brevo), chacun avec son plafond journalier
+- [x] Un fournisseur sans plafond (offre payante) prend tout ce qui dépasse ; sans lui, l'envoi attend le lendemain comme aujourd'hui
+- [x] Les rebonds et plaintes de Brevo alimentent la réputation, comme ceux de Resend et useSend
+
+## JIKU-276 — Paiement à Jikū : virement bancaire et paiement en ligne
+
+**Pourquoi.** Le prestataire en ligne encaisse déjà Orange Money et MTN avec
+une confirmation automatique ; un numéro marchand demanderait une vérification
+à la main de chaque paiement (ADR 110, décision 2).
+
+**Critères d'acceptation.**
+
+- [x] Les CGU, la liste des prestataires, la page des tarifs, la FAQ des organisateurs et le guide « Paiements » ne proposent plus Orange Money pour payer Jikū : virement bancaire, puis paiement en ligne
+- [x] La base de connaissances commerciale et le référentiel métier disent la même chose
+- [ ] En production, les champs Mobile Money des instructions de paiement restent vides : seuls le bénéficiaire et les coordonnées bancaires s'affichent
+
+## JIKU-277 — Facture émise dès la confirmation du paiement
+
+**Pourquoi.** L'organisation attend sa facture au moment où elle paie, comme
+sur les grandes plateformes, sans avoir à la demander.
+
+**Critères d'acceptation.**
+
+- [x] Un paiement confirmé (en ligne ou par l'équipe) émet sa facture numérotée dans la même minute, une seule fois même si la confirmation est rejouée
+- [x] La facture part par e-mail en PDF à l'adresse de contact de l'organisation
+- [x] Sans identité légale renseignée, la facture est émise dès que l'identité l'est, et l'écran de facturation le dit
+- [x] Un échec d'émission ou d'envoi ne bloque jamais l'activation de l'offre
+
+---
+
+## JIKU-278 — E-mails à l'image de la marque
+
+**Pourquoi.** Chaque e-mail (invitation, billet, facture, compte) est souvent le
+premier contact d'un invité ou d'une organisation avec Jikū. Il doit être
+reconnaissable, soigné et lisible partout, comme ceux des grandes plateformes de
+billetterie, sans trahir la charte.
+
+**Critères d'acceptation.**
+
+- [x] Un seul gabarit pour les 11 e-mails, en français et en anglais : en-tête à la couleur de l'organisation (ou bleu nuit pour les e-mails de la plateforme), Leppi en filigrane à 7 %, Bande en signature au bas de l'en-tête, jamais de Médaillon
+- [x] Les motifs sont redessinés en vectoriel depuis la charte, puis servis en PNG par le site (`/email`), car Gmail bloque le SVG
+- [x] Le texte posé sur la couleur de l'organisation garde un contraste d'au moins 4,5:1 : sur une couleur claire, le texte et les motifs passent en encre
+- [x] En mode sombre (Apple Mail, iOS, Outlook.com), fonds, textes, bordures, logos et boutons basculent sans perdre de contraste
+- [x] L'invitation et l'annulation montrent la date en vignette (mois, jour, jour de la semaine) dans le fuseau de l'événement
+- [x] Le billet montre l'invité, la catégorie, la date, le lieu, le QR code sur fond blanc et le code lisible `XXXX-XXXX`
+- [x] La facture montre le numéro, le total payé, la pièce jointe et un lien vers la facturation
+- [x] Boutons d'au moins 48 px de haut, lien de secours sous chaque bouton, mise en page lisible à 320 px
+- [x] Les gabarits personnalisables par l'organisation reçoivent les mêmes variables de mise en page
+
+---
+
+## JIKU-279 — Version texte de chaque e-mail
+
+**Pourquoi.** Un e-mail uniquement en HTML est mieux noté par les filtres
+anti-spam s'il porte aussi sa version texte, et certaines messageries,
+montres et lecteurs d'écran n'affichent que celle-ci.
+
+**Critères d'acceptation.**
+
+- [x] Chaque e-mail part en deux versions, HTML et texte, chez chaque fournisseur (useSend, Resend, Brevo, SMTP)
+- [x] La version texte est tirée du HTML rendu, y compris pour les modèles personnalisés par l'organisation : rien à maintenir en double
+- [x] Elle garde l'ordre de lecture, l'adresse de chaque lien entre parenthèses et des paragraphes séparés ; un libellé reste au-dessus de sa valeur
+- [x] Ni balise, ni style, ni texte d'aperçu caché, ni image n'y apparaissent
+
+---
+
+## JIKU-280 — Partager une carte par le menu de partage du téléphone
+
+**Pourquoi.** En Guinée, beaucoup ouvrent Facebook chaque jour et WhatsApp
+quelques jours par semaine. Une carte qui ne part que vers WhatsApp manque une
+partie des invités ; le menu de partage du téléphone laisse l'organisateur
+choisir le réseau où sont ses proches.
+
+**Critères d'acceptation.**
+
+- [x] Sur téléphone, « Partager… » ouvre le menu de partage avec l'image de la carte et le message prêt (WhatsApp, Facebook, Messenger, Telegram, SMS…)
+- [x] L'image est préparée à l'avance, pour que le menu s'ouvre dans le geste ; un navigateur qui ne partage pas d'image envoie le message seul, et un échec ouvre WhatsApp
+- [x] Sur ordinateur, des liens directs WhatsApp, Facebook et Telegram, le lien à copier et l'image à télécharger
+- [x] Chaque partage est compté par réseau dans les statistiques (sans cookie)
+
+---
+
+## JIKU-281 — Envoyer les invitations depuis mon WhatsApp
+
+**Pourquoi.** Pour un mariage ou un anniversaire de 50 à 150 invités, un
+message venu d'un proche est ouvert bien plus qu'un message d'un numéro
+inconnu, et il ne coûte rien chez Meta. Jikū prépare le lien personnel de
+chaque invité ; l'organisateur l'envoie de son propre WhatsApp, une
+discussion à la fois.
+
+**Critères d'acceptation.**
+
+- [x] « Envoyer depuis mon WhatsApp » prépare le lien personnel de chaque invité qui a un numéro WhatsApp ; les invités sont comptés dans les invités de l'événement comme pour un envoi, tout ou rien
+- [x] Chaque invité a un bouton qui ouvre sa discussion WhatsApp avec le message personnel déjà écrit ; l'ouvrir marque l'invitation envoyée, une seule fois
+- [x] Un invité que Jikū invite déjà apparaît sans lien : rien n'est envoyé deux fois
+- [x] Jikū n'envoie rien de lui-même à ces invités : le billet s'affiche sur leur lien personnel et part par e-mail s'ils en ont un ; l'avis d'annulation part toujours
+- [x] En mode billet direct, le billet est émis au moment où l'organisateur ouvre la discussion
+- [x] L'événement doit être publié, comme pour un envoi
+
+---
+
+## JIKU-282 à JIKU-290 — Cartes premium
+
+Les récits, leurs critères d'acceptation UX et les décisions à prendre (D1 à
+D4) sont dans [`cartes-premium-ux.md`](cartes-premium-ux.md), rédigé en mode
+Design de la compétence ux-expert.
 

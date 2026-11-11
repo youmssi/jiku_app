@@ -41,6 +41,12 @@ class OpenInvitation(
     /** On the free tier, whether the people who answered are told by WhatsApp when the event is cancelled. */
     @Column(name = "notify_on_cancel", nullable = false)
     var notifyOnCancel: Boolean = false,
+    /** Whether the card shows how many people are coming (JIKU-286); off until the organizer turns it on. */
+    @Column(name = "show_coming", nullable = false)
+    var showComing: Boolean = false,
+    /** Whether a guest who is coming may invite someone from the card (JIKU-285). */
+    @Column(name = "relay", nullable = false)
+    var relay: Boolean = true,
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now(),
 ) : BaseTenantEntity() {
@@ -118,6 +124,10 @@ class OpenResponse(
 
     @Column(name = "removed_at")
     var removedAt: Instant? = null
+
+    /** The network of the link this person first answered from (JIKU-282); null when unknown. */
+    @Column(name = "source", length = 16)
+    var source: String? = null
 
     /** People this answer brings: the person and their companions for a yes, none otherwise. */
     val heads: Int

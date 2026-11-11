@@ -16,8 +16,8 @@ class EventCalendarTest {
             start = Instant.parse("2026-12-12T18:00:00Z"),
             end = null,
             location = "Palais du Peuple, Conakry",
-            description = "Maison Aminata · https://jiku.app/invitation/abc/ticket",
-            url = "https://jiku.app/invitation/abc/ticket",
+            description = "Maison Aminata · https://hellojiku.com/invitation/abc/ticket",
+            url = "https://hellojiku.com/invitation/abc/ticket",
         )
 
     @Test

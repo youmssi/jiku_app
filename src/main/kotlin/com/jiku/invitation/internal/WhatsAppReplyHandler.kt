@@ -47,7 +47,7 @@ class WhatsAppReplyHandler(
             }
             try {
                 if (reply.accepted) {
-                    rsvpService.confirm(guestId, event.id)
+                    rsvpService.confirm(guestId, event.id, sendTicket = false)
                     sendTicket(guest, event, reply.tenantId, phone)
                 } else {
                     rsvpService.decline(guestId, event.id)
