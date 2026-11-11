@@ -61,5 +61,12 @@ echo "==> Running the end-to-end suite"
 cd "$APP_DIR/e2e"
 # ci honours the committed lockfile exactly, so a run here installs what CI does.
 npm ci --no-fund --no-audit
-npx playwright install chromium --with-deps
+# --with-deps installs system packages through apt. When the Ubuntu mirrors are
+# unreachable, the runner still has every library Chromium needs (only optional
+# fonts are missing), so fall back to the browser alone rather than fail before
+# any journey runs. A library really missing still fails the journeys loudly.
+if ! npx playwright install chromium --with-deps; then
+    echo "==> System packages unavailable; installing the browser alone" >&2
+    npx playwright install chromium
+fi
 exec npx playwright test "$@"

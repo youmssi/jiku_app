@@ -110,6 +110,16 @@ documentation de Dokploy pour Ubuntu 26.04 avant d'aller plus loin.
 - Settings → Registry : ajouter `ghcr.io` avec un jeton GitHub en lecture des
   paquets, si les images sont privées.
 
+- Couper l'IPv6 du serveur. Le pare-feu (`jiku-firewall`) ne filtre que
+  l'IPv4, Cloudflare et Tailscale passent par l'IPv4, et l'IPv6 de Contabo coupe
+  parfois les téléchargements d'images (`connection reset by peer`) :
+  ```
+  printf 'net.ipv6.conf.all.disable_ipv6=1\nnet.ipv6.conf.default.disable_ipv6=1\nnet.ipv6.conf.lo.disable_ipv6=1\n' \
+    | sudo tee /etc/sysctl.d/99-jiku-no-ipv6.conf
+  sudo sysctl --system
+  ip -6 addr   # ne doit rien afficher
+  ```
+
 ## 3. Préparer les sauvegardes (Cloudflare R2)
 
 1. R2 → créer le bucket `jiku-backups` (distinct du bucket des documents).
@@ -160,8 +170,15 @@ documentation de Dokploy pour Ubuntu 26.04 avant d'aller plus loin.
    d'origine (15 ans) pour `<domaine>` et `*.<domaine>`, puis l'ajouter dans
    Dokploy (Settings → Certificates) et l'associer aux domaines. Cloudflare en
    mode **Full (strict)**.
-5. **Deploy**. Suivre les journaux : PostgreSQL démarre, Flyway applique les
-   migrations au premier démarrage de l'API.
+5. **Deploy**. Suivre les journaux : PostgreSQL crée sa base (jusqu'à deux
+   minutes au premier démarrage), Flyway applique les migrations, puis l'API
+   affiche `Started JikuApplication`. Les services n'apparaissent dans l'onglet
+   **Domains** qu'après ce premier déploiement : ajouter les domaines ensuite, puis
+   redéployer. Vérifier que WAL-G envoie bien le journal vers R2 :
+   ```
+   sudo docker logs --tail 40 <projet>-postgres-1 2>&1 | grep -i -E "wal-g|archive"
+   ```
+   Aucune ligne `ERROR` ni `archive command failed` ne doit apparaître.
 6. Copier l'URL du **deploy webhook** de l'application (onglet Deployments).
 
 ## 5. Construire l'image web
@@ -191,12 +208,20 @@ l'image à la construction : les changer impose une nouvelle image.
    ```
    pg_dump "postgresql://<user>:<pass>@<hôte-neon>/jiku?sslmode=require" \
      --format=custom --no-owner --no-privileges -f jiku.dump
+   ```
+   Arrêter l'API, puis **recréer** la base avant l'import. Le premier déploiement
+   l'a déjà migrée jusqu'à la dernière version : `pg_restore --clean` laisserait
+   les tables plus récentes que l'export, et Flyway échouerait au redémarrage.
+   ```
+   docker compose -f docker-compose.vps.yml stop api
+   docker compose -f docker-compose.vps.yml exec postgres psql -U jiku -d postgres \
+     -c "DROP DATABASE jiku WITH (FORCE);" -c "CREATE DATABASE jiku OWNER jiku;"
    docker compose -f docker-compose.vps.yml cp jiku.dump postgres:/tmp/jiku.dump
    docker compose -f docker-compose.vps.yml exec postgres \
-     pg_restore -U jiku -d jiku --clean --if-exists --no-owner /tmp/jiku.dump
+     pg_restore -U jiku -d jiku --no-owner --no-privileges /tmp/jiku.dump
+   docker compose -f docker-compose.vps.yml start api
    ```
-   Si l'API avait déjà démarré sur la base vide, l'arrêter avant l'import et la
-   relancer ensuite.
+   Au redémarrage, Flyway applique les migrations qui manquent à l'export.
 3. Vérifier :
    ```
    docker compose -f docker-compose.vps.yml exec postgres psql -U jiku -d jiku \

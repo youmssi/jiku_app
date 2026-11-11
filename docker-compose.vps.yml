@@ -51,6 +51,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      # The first start on a fresh volume (initdb, the Umami database) or after
+      # a restore takes longer than the retries allow.
+      start_period: 120s
 
   # Nightly full base backup and retention; WAL itself is pushed by PostgreSQL.
   postgres-backup:

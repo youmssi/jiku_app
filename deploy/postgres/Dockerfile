@@ -3,6 +3,12 @@
 # minute. The base image stays the official one; only the WAL-G binary is added.
 FROM postgres:18
 
+# The official image has no root certificates; WAL-G needs them to reach R2
+# over TLS ("x509: certificate signed by unknown authority" otherwise).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 ARG WALG_VERSION=v3.0.9
 ADD https://github.com/wal-g/wal-g/releases/download/${WALG_VERSION}/wal-g-pg-22.04-amd64.tar.gz /tmp/wal-g.tar.gz
 RUN tar -xzf /tmp/wal-g.tar.gz -C /tmp \
