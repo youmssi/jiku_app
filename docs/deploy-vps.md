@@ -140,6 +140,8 @@ documentation de Dokploy pour Ubuntu 26.04 avant d'aller plus loin.
    | `USESEND_WEBHOOK_SECRET`, `RESEND_WEBHOOK_SECRET`, `BREVO_WEBHOOK_TOKEN` | retours (rebonds, plaintes) de chaque fournisseur |
    | `EMAIL_USESEND_OVERFLOW` | `false` au lancement ; `true` une fois l'offre payante de useSend activée |
    | `UMAMI_APP_SECRET` | secret fort (statistiques de visite) |
+   | `RATE_LIMIT_FORWARDED_CLIENT_IP_SECRET` | secret fort ; transmis aussi au conteneur `web` comme `API_CLIENT_IP_SECRET`, pour que les limites s'appliquent par visiteur |
+   | `ONLINE_PAYMENT_ENABLED` | `false` jusqu'aux tests du runbook paiements, puis `true` (affiche le paiement en ligne sur le site) |
    | `WHATSAPP_META_BUSINESS_ACCOUNT_ID` | compte WhatsApp Business du numéro de la plateforme |
    | `DEXPAY_API_KEY`, `DEXPAY_API_SECRET` | clés `pk_live_…` et `sk_live_…` d'une même paire DEXPAY (JIKU-272) ; la clé secrète vérifie la signature des webhooks |
    | `DEXPAY_BASE_URL` | `https://api.dexpay.africa/api/v1` (le bac à sable est `https://api-sandbox.dexpay.africa/api/v1`) |
