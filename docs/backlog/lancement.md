@@ -62,6 +62,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-297 | Invitations WhatsApp v3 approuvées en utilitaire (liste des participants, confirmation attendue) | app | JIKU-295 |
 | JIKU-298 | Paiement en ligne accordé une seule fois, alerte « payé mais non accordé », runbook des remboursements et du test DEXPAY | app | JIKU-272 |
 | JIKU-299 | Lancement sur un Cloud VPS 8 Contabo sous Ubuntu 26.04, Chatwoot et n8n reportés (ADR 111) | app | JIKU-203 |
+| JIKU-300 | Premier affichage plus léger sur téléphone et nettoyage SEO du site public | web | JIKU-299 |
 
 ---
 
@@ -672,4 +673,33 @@ discussion à la fois.
 Les récits, leurs critères d'acceptation UX et les décisions à prendre (D1 à
 D4) sont dans [`cartes-premium-ux.md`](cartes-premium-ux.md), rédigé en mode
 Design de la compétence ux-expert.
+
+---
+
+## JIKU-300 — Premier affichage plus léger sur téléphone et nettoyage SEO du site public
+
+**Pourquoi.** Mesuré le 11 novembre 2026 sur hellojiku.com, juste après la
+mise en ligne : Lighthouse mobile donne 58 en performance (99 sur ordinateur).
+L'essentiel du retard ne vient pas du serveur (premier octet en 50 à 120 ms)
+mais de ce que le téléphone télécharge avant d'afficher : la police de la
+carte « Moderne » arrive avec toutes ses graisses et toutes ses largeurs
+(90 Kio) en priorité la plus haute, et le moteur d'animation est dans le
+JavaScript initial. L'audit OpenSEO (50 pages) ne relève aucune erreur
+critique mais des titres et descriptions qui débordent ou se répètent.
+
+**Critères d'acceptation.**
+
+- [x] La carte « Moderne » utilise la seule instance dessinée (Archivo, graisse 800, largeur 62,5), auto-hébergée sous licence OFL, servie avec un cache d'un an ; le rendu des titres est identique à l'ancien
+- [x] Le moteur d'animation se charge après l'affichage ; les effets gardent leur état final rendu par le serveur et respectent la préférence « réduire les animations »
+- [x] La photo d'exemple des cartes est en WebP à la taille affichée
+- [x] Lighthouse mobile sur la page d'accueil (build de production, mesure locale répétée trois fois) passe de 61-78 à au moins 80, sans changer le design
+- [x] Les guides français et anglais ont des titres distincts ; les étapes des guides sont un niveau sous le titre
+- [x] Titres de 60 caractères au plus et descriptions de 70 à 160 caractères sur les pages relevées par l'audit
+- [x] La page d'inscription est exclue des résultats de recherche (elle n'est déjà pas dans le plan du site)
+
+**Hors périmètre, à reprendre si le score réel (Search Console, données
+terrain) reste sous 80 :** le poids du JavaScript commun (environ 380 Kio),
+la page d'accueil servie en `no-store` (pas de cache Cloudflare ni de
+retour arrière instantané) et la redirection `/` vers `/en` pour les
+navigateurs anglophones.
 
