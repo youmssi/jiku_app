@@ -63,6 +63,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-298 | Paiement en ligne accordé une seule fois, alerte « payé mais non accordé », runbook des remboursements et du test DEXPAY | app | JIKU-272 |
 | JIKU-299 | Lancement sur un Cloud VPS 8 Contabo sous Ubuntu 26.04, Chatwoot et n8n reportés (ADR 111) | app | JIKU-203 |
 | JIKU-300 | Premier affichage plus léger sur téléphone et nettoyage SEO du site public | web | JIKU-299 |
+| JIKU-301 | Fichiers publics servis tels quels : images des guides, logo, widget, modèle CSV | web | JIKU-300 |
 
 ---
 
@@ -702,4 +703,20 @@ terrain) reste sous 80 :** le poids du JavaScript commun (environ 380 Kio),
 la page d'accueil servie en `no-store` (pas de cache Cloudflare ni de
 retour arrière instantané) et la redirection `/` vers `/en` pour les
 navigateurs anglophones.
+
+## JIKU-301 — Fichiers publics servis tels quels : images des guides, logo, widget, modèle CSV
+
+**Pourquoi.** Relevé le 13 novembre 2026 sur hellojiku.com : plusieurs
+fichiers du dossier `public/` répondent 404. Le proxy de langue les
+intercepte parce qu'ils manquent à la liste d'exclusion de son `matcher`.
+Les guides `/docs` s'affichent sans leurs captures, le bouton « modèle CSV »
+de l'import d'invités télécharge une erreur, le script du widget à intégrer
+(`/jiku-widget.js`) ne se charge pas sur le site d'un client, et le logo SVG
+ne peut pas être importé par lien dans les outils de création.
+
+**Critères d'acceptation.**
+
+- [x] `/guides/fr/*.webp`, `/guides/en/*.webp`, `/templates/guest-import-template.csv`, `/jiku-widget.js` et `/jiku-logo.svg` répondent 200 avec leur type de contenu
+- [x] Les pages (accueil, `/en`, `/organizers`, `/en/docs`) passent toujours par le proxy de langue
+- [x] Un test échoue dès qu'un fichier ou dossier de `public/` n'est pas exclu du `matcher`, pour que le prochain ajout ne retombe pas dans le même piège
 
