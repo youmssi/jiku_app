@@ -179,7 +179,9 @@ documentation de Dokploy pour Ubuntu 26.04 avant d'aller plus loin.
    sudo docker logs --tail 40 <projet>-postgres-1 2>&1 | grep -i -E "wal-g|archive"
    ```
    Aucune ligne `ERROR` ni `archive command failed` ne doit apparaître.
-6. Copier l'URL du **deploy webhook** de l'application (onglet Deployments).
+6. Activer **Autodeploy** (onglet General) et copier l'URL du **deploy webhook**
+   (onglet Deployments), de la forme `http://<adresse>:3000/api/deploy/compose/<jeton>`.
+   Le jeton vaut un mot de passe : il ne va que dans un secret GitHub.
 
 ## 5. Construire l'image web
 
@@ -268,14 +270,57 @@ messages concernés attendent dans la file.
 
 ## 9. Déploiements suivants
 
-Réglages GitHub du dépôt `jiku_app` (et pareil pour `jiku_web`) :
+Une fusion sur `main` construit l'image, la publie sur GHCR, appelle le webhook
+de Dokploy, puis vérifie que l'API est prête (ou que le site répond, côté web).
+Les deux dépôts appellent le **même** webhook : il redéploie toute la pile et
+tire les deux images. Ordre inchangé : l'API d'abord, le web ensuite.
 
-- variable `DEPLOY_TARGET` = `vps` ;
-- variable `PRODUCTION_API_URL` = `https://api.<domaine>` ;
-- secret `DOKPLOY_DEPLOY_HOOK` = l'URL notée à l'étape 4.
+Le port 3000 de Dokploy reste fermé ; les machines de GitHub passent par
+Traefik, sur un sous-domaine qui n'expose que le chemin du webhook.
 
-Une fusion sur `main` construit l'image, la publie sur GHCR, déclenche Dokploy,
-puis vérifie que l'API est prête. Ordre inchangé : l'API d'abord, le web ensuite.
+1. Cloudflare → DNS : `A deploy` → adresse publique du serveur, **proxied**.
+2. Sur le serveur, `/etc/dokploy/traefik/dynamic/jiku-deploy-hook.yml` :
+   ```yaml
+   http:
+     routers:
+       jiku-deploy-hook:
+         rule: Host(`deploy.<domaine>`) && PathPrefix(`/api/deploy/compose/`)
+         entryPoints: [websecure]
+         service: jiku-deploy-hook
+         tls: {}
+     services:
+       jiku-deploy-hook:
+         loadBalancer:
+           servers:
+             - url: http://dokploy:3000
+   ```
+   Traefik relit ce dossier tout seul. Vérifier que le reste de Dokploy n'est
+   pas exposé : `curl -s -o /dev/null -w '%{http_code}' https://deploy.<domaine>/`
+   doit répondre `404`.
+3. Dans Dokploy, l'application doit avoir **Autodeploy** activé, sinon le
+   webhook répond `400`.
+4. Réglages GitHub de `jiku_app` **et** de `jiku_web` (Settings → Secrets and
+   variables → Actions) :
+   - secret `DOKPLOY_DEPLOY_HOOK` = l'URL notée à l'étape 4, avec
+     `https://deploy.<domaine>` à la place de `http://<adresse>:3000` ;
+   - variable `DEPLOY_TARGET` = `vps` ;
+   - variable `PRODUCTION_API_URL` = `https://api.<domaine>` (`jiku_app`) ;
+   - variable `NEXT_PUBLIC_SITE_URL` = `https://<domaine>` (`jiku_web`, déjà
+     posée à l'étape 5).
+5. Tester sans attendre une release : relancer le dernier run « Container
+   image » de `main` (Actions → Re-run all jobs). Le job « Roll out on the
+   server » doit afficher `Compose deployed successfully`, puis un nouveau
+   déploiement apparaît dans l'onglet Deployments de Dokploy.
+
+Le workflow envoie un `push` au format GitHub pour la branche `main` : Dokploy
+ignore un appel vide pour une application liée à GitHub (`301 Branch Not
+Match`). Toute autre réponse que `200` fait échouer le job.
+
+Si Autodeploy est activé et que l'application suit le dépôt `jiku_app` par
+l'application GitHub de Dokploy, une fusion sur `main` lance aussi un premier
+déploiement immédiat, avec l'image précédente ; celui du workflow, une fois
+l'image construite, la remplace. Un `403` de Cloudflare sur le webhook vient du
+mode anti-robots : ajouter une règle WAF « Skip » pour l'hôte `deploy.<domaine>`.
 
 ## 9 bis. Surveillance et statistiques
 
