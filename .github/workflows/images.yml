@@ -62,7 +62,16 @@ jobs:
             echo "::error::DEPLOY_TARGET=vps but the DOKPLOY_DEPLOY_HOOK secret is missing." >&2
             exit 1
           fi
-          curl -sf -X POST "$HOOK"
+          # Dokploy only rolls out a GitHub-sourced compose for a push to its own
+          # branch: an empty POST answers 301 "Branch Not Match" and deploys nothing.
+          code=$(curl -s -o hook-response.json -w '%{http_code}' --max-time 30 -X POST "$HOOK" \
+            -H 'Content-Type: application/json' -H 'X-GitHub-Event: push' \
+            --data "{\"ref\":\"${GITHUB_REF}\",\"head_commit\":{\"message\":\"${GITHUB_REPOSITORY} ${GITHUB_SHA::7}\"}}" || true)
+          cat hook-response.json 2>/dev/null; echo
+          if [ "$code" != "200" ]; then
+            echo "::error::Dokploy answered HTTP $code: the rollout did not start." >&2
+            exit 1
+          fi
 
       # Same probe as post-deploy.yml: the database must be reachable, not just the process.
       - name: Wait for readiness
