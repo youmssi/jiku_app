@@ -96,6 +96,13 @@ vérifié ce que l'API DEXPAY propose une fois le contrat signé.
 Avec les clés de test, `DEXPAY_BASE_URL=https://api-sandbox.dexpay.africa/api/v1`, et
 l'API joignable publiquement à `DEXPAY_WEBHOOK_URL`.
 
+Avec les clés de test, le bouton **Payer en ligne** mène à la page de simulation de
+DEXPAY : **Valider** simule un paiement réussi, **Annuler** un paiement abandonné. Avec
+les clés réelles, il mène à la vraie page de paiement. Pendant les tests, n'affichez
+`ONLINE_PAYMENT_ENABLED=true` que le temps nécessaire : un paiement simulé débloque
+l'achat sans argent réel. Vérifiez ensuite au bureau des paiements qu'aucun autre
+organisateur n'a payé en mode test pendant cette fenêtre.
+
 Les clés se saisissent uniquement dans la configuration du serveur. Elles ne vont
 jamais dans un ticket, un message ni le dépôt.
 
