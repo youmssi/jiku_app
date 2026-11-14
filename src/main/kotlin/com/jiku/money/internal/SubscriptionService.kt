@@ -93,9 +93,12 @@ class SubscriptionService(
         if (!plan.free) return
         if (!plan.covers(activePeople)) {
             if (row.expiresAt == null) row.expiresAt = now.plus(properties.initialValidity)
-        } else if (row.status == SubscriptionStatus.ACTIVE) {
+        } else {
+            // A team the free plan holds owes nothing, whatever an older grid left (JIKU-303).
+            row.status = SubscriptionStatus.ACTIVE
             row.expiresAt = null
             row.expiryNoticeSent = false
+            row.graceNoticeSent = false
         }
     }
 

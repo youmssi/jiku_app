@@ -64,6 +64,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-299 | Lancement sur un Cloud VPS 8 Contabo sous Ubuntu 26.04, Chatwoot et n8n reportés (ADR 111) | app | JIKU-203 |
 | JIKU-300 | Premier affichage plus léger sur téléphone et nettoyage SEO du site public | web | JIKU-299 |
 | JIKU-301 | Fichiers publics servis tels quels : images des guides, logo, widget, modèle CSV | web | JIKU-300 |
+| JIKU-303 | Un plan gratuit qui couvre l'équipe ne s'arrête jamais : fin des services mis en pause à tort | app | JIKU-268 |
 
 ---
 
@@ -719,4 +720,22 @@ ne peut pas être importé par lien dans les outils de création.
 - [x] `/guides/fr/*.webp`, `/guides/en/*.webp`, `/templates/guest-import-template.csv`, `/jiku-widget.js` et `/jiku-logo.svg` répondent 200 avec leur type de contenu
 - [x] Les pages (accueil, `/en`, `/organizers`, `/en/docs`) passent toujours par le proxy de langue
 - [x] Un test échoue dès qu'un fichier ou dossier de `public/` n'est pas exclu du `matcher`, pour que le prochain ajout ne retombe pas dans le même piège
+
+## JIKU-303 — Un plan gratuit qui couvre l'équipe ne s'arrête jamais
+
+**Pourquoi.** Relevé le 14 novembre 2026 en production : une organisation
+d'une seule personne, sur le plan Solo, voit « Your services are paused » et
+son service refuse les réservations et les tickets de file. Solo est gratuit
+depuis la tarification par invité (JIKU-268, ADR 109), mais la migration V98 a
+laissé aux abonnements Solo ouverts avant elle leur date de fin : ils sont
+passés en grâce, puis en pause. Et une équipe revenue dans les limites du plan
+gratuit n'était remise en route que si son abonnement était encore actif.
+
+**Critères d'acceptation.**
+
+- [x] Un plan gratuit qui couvre l'équipe ne déclenche ni rappel, ni bandeau, ni pause des services, quels que soient son statut et sa date de fin enregistrés
+- [x] Le passage en grâce et la pause par la tâche d'échéance remettent un tel abonnement en route sans date de fin au lieu de l'arrêter
+- [x] Une équipe qui revient dans les limites du plan gratuit repart, même depuis la grâce ou la pause
+- [x] Une migration remet en route, sans date de fin, les abonnements Solo d'au plus une personne laissés en grâce, en pause ou datés
+- [x] Un test couvre un Solo laissé « expiré » et daté : réservations ouvertes, aucun bandeau, aucune grâce après le passage de la tâche
 
