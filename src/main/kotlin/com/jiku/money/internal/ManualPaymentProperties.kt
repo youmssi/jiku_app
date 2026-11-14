@@ -1,6 +1,7 @@
 package com.jiku.money.internal
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import java.time.Duration
 
 /**
  * Payee details for the manual (concierge) payment flow (JIKU-41): where a client
@@ -18,4 +19,9 @@ data class ManualPaymentProperties(
     val mobileMoneyOperator: String = "",
     /** Bank transfer details as displayable free text; blank hides the option. */
     val bankDetails: String = "",
+    /**
+     * How long a manual request waits for its transfer before it expires (JIKU-307).
+     * The desk can still confirm a transfer that arrives later.
+     */
+    val expireAfter: Duration = Duration.ofDays(7),
 )

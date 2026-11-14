@@ -34,18 +34,22 @@ class BillingHistoryController(
     @GetMapping
     fun history(): List<PaymentHistoryItem> =
         payments.findByOrderByCreatedAtDesc().map { payment ->
+            val eventTitle = payment.eventId?.let { events.findEvent(it)?.name }
             PaymentHistoryItem(
                 paymentId = requireNotNull(payment.id),
                 eventId = payment.eventId,
-                eventName =
-                    label(payment),
+                eventName = paymentLabel(payment, eventTitle),
+                eventTitle = eventTitle,
                 tier = payment.tier,
                 kind = payment.kind,
                 guests = payment.guests,
+                months = payment.subscriptionMonths,
                 amountMinor = payment.amountMinor,
                 currency = payment.currency,
                 status = payment.status.name,
                 createdAt = payment.createdAt,
+                provider = payment.provider,
+                rejectionReason = payment.rejectionReason,
             )
         }
 
@@ -96,14 +100,24 @@ data class PaymentHistoryItem(
     val paymentId: UUID,
     /** Nul pour un renouvellement d'abonnement (JIKU-90). */
     val eventId: UUID?,
+    /** What the payment bought, in English words; [eventTitle] and the other fields let a client say it in its own language. */
     val eventName: String,
+    /** The event's own name, when the payment is for an event that still exists (JIKU-307). */
+    val eventTitle: String? = null,
     val tier: String,
     /** GUESTS, SUBSCRIPTION, PACK, PACK_EXTRA or COMMISSION. */
     val kind: String,
     /** Guests the payment bought or settled; null when it bought none. */
     val guests: Long?,
+    /** Months a subscription or Pro Organisateur payment covers; null otherwise (JIKU-307). */
+    val months: Int? = null,
     val amountMinor: Long,
     val currency: String,
+    /** PENDING, SUCCEEDED, FAILED, CANCELLED or EXPIRED (JIKU-307). */
     val status: String,
     val createdAt: Instant,
+    /** `manual` for a transfer request; otherwise the online provider (JIKU-307). */
+    val provider: String = "",
+    /** The desk's reason when it rejected a transfer request. */
+    val rejectionReason: String? = null,
 )

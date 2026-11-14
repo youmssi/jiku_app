@@ -60,6 +60,14 @@ class Payment(
     @Column(name = "status", nullable = false)
     var status: PaymentStatus = PaymentStatus.PENDING
 
+    /** Why the payments desk rejected this manual request, shown to the organizer (JIKU-307). */
+    @Column(name = "rejection_reason", length = 500)
+    var rejectionReason: String? = null
+
+    /** When the organizer said they sent the transfer for this manual request (JIKU-307). */
+    @Column(name = "transfer_declared_at")
+    var transferDeclaredAt: Instant? = null
+
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now()
 

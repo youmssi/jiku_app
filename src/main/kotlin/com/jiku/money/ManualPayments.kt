@@ -18,6 +18,19 @@ data class ManualPaymentInstructions(
     val currency: String,
     val status: String,
     val payee: PayeeDetails,
+    /** GUESTS, SUBSCRIPTION, PACK, PACK_EXTRA or COMMISSION (JIKU-307). */
+    val kind: String = "GUESTS",
+    /** The event a guests or commission payment is for; null for a workspace purchase. */
+    val eventId: UUID? = null,
+    /** That event's name, when it still exists. */
+    val eventName: String? = null,
+    /** Months a subscription or Pro Organisateur request pays for. */
+    val months: Int? = null,
+    val createdAt: Instant? = null,
+    /** When the request expires without a confirmed transfer (JIKU-307). */
+    val expiresAt: Instant? = null,
+    /** When the organizer said the transfer was sent; null until then. */
+    val transferDeclaredAt: Instant? = null,
 )
 
 data class PayeeDetails(
@@ -44,6 +57,10 @@ data class AdminPaymentView(
     val reference: String,
     val status: String,
     val createdAt: Instant,
+    /** When the organizer said the transfer was sent (JIKU-307). */
+    val transferDeclaredAt: Instant? = null,
+    /** The desk's reason when it rejected the request. */
+    val rejectionReason: String? = null,
 )
 
 /** Réglages de facturation lus par le bureau admin (bénéficiaire, prix par invité, formules). */

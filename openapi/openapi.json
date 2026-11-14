@@ -97,6 +97,12 @@
           "reference" : {
             "type" : "string"
           },
+          "rejectionReason" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
           "status" : {
             "type" : "string"
           },
@@ -105,6 +111,13 @@
           },
           "tier" : {
             "type" : "string"
+          },
+          "transferDeclaredAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         },
         "type" : "object"
@@ -2923,11 +2936,48 @@
             "format" : "int64",
             "type" : "integer"
           },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
           "currency" : {
             "type" : "string"
           },
+          "eventId" : {
+            "format" : "uuid",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "eventName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "expiresAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
           "guests" : {
             "format" : "int64",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "months" : {
+            "format" : "int32",
             "type" : [
               "integer",
               "null"
@@ -2948,6 +2998,13 @@
           },
           "tier" : {
             "type" : "string"
+          },
+          "transferDeclaredAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         },
         "type" : "object"
@@ -4102,6 +4159,12 @@
           "eventName" : {
             "type" : "string"
           },
+          "eventTitle" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
           "guests" : {
             "format" : "int64",
             "type" : [
@@ -4112,9 +4175,25 @@
           "kind" : {
             "type" : "string"
           },
+          "months" : {
+            "format" : "int32",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
           "paymentId" : {
             "format" : "uuid",
             "type" : "string"
+          },
+          "provider" : {
+            "type" : "string"
+          },
+          "rejectionReason" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           },
           "status" : {
             "type" : "string"
@@ -6158,6 +6237,9 @@
               "null"
             ]
           },
+          "freePlan" : {
+            "type" : "boolean"
+          },
           "overLimit" : {
             "type" : "boolean"
           },
@@ -6165,6 +6247,17 @@
             "format" : "date-time",
             "type" : [
               "string",
+              "null"
+            ]
+          },
+          "people" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "peopleCovered" : {
+            "format" : "int64",
+            "type" : [
+              "integer",
               "null"
             ]
           },
@@ -10017,6 +10110,91 @@
         },
         "tags" : [
           "organizer-pack-controller"
+        ]
+      }
+    },
+    "/api/v1/billing/payment-requests" : {
+      "get" : {
+        "operationId" : "paymentRequestOpen",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ManualPaymentInstructions"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "payment-request-controller"
+        ]
+      }
+    },
+    "/api/v1/billing/payment-requests/{paymentId}/cancel" : {
+      "post" : {
+        "operationId" : "paymentRequestCancel",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "paymentId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ManualPaymentInstructions"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "payment-request-controller"
+        ]
+      }
+    },
+    "/api/v1/billing/payment-requests/{paymentId}/transfer-sent" : {
+      "post" : {
+        "operationId" : "paymentRequestTransferSent",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "paymentId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ManualPaymentInstructions"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "payment-request-controller"
         ]
       }
     },
