@@ -37,9 +37,11 @@ class BillingStatusService(
         now: Instant,
     ): SubscriptionStatusSummary {
         val overLimit = platformSettings.planByName(row.plan)?.covers(row.resourcesActive) == false
+        val free = platformSettings.keepsTeamFree(row.plan, row.resourcesActive)
         val graceEnd = row.expiresAt?.plus(properties.grace)
         val attention =
             when {
+                free -> BillingAttention.NONE
                 row.status == SubscriptionStatus.EXPIRED -> BillingAttention.SERVICES_PAUSED
                 row.status == SubscriptionStatus.GRACE -> BillingAttention.GRACE
                 overLimit -> BillingAttention.OVER_LIMIT
@@ -51,9 +53,9 @@ class BillingStatusService(
             plan = row.plan,
             status = row.status.name,
             expiresAt = row.expiresAt,
-            pausesAt = graceEnd.takeUnless { row.status == SubscriptionStatus.EXPIRED },
+            pausesAt = graceEnd.takeUnless { free || row.status == SubscriptionStatus.EXPIRED },
             overLimit = overLimit,
-            servicesPaused = row.status == SubscriptionStatus.EXPIRED,
+            servicesPaused = !free && row.status == SubscriptionStatus.EXPIRED,
             attention = attention,
         )
     }
