@@ -80,8 +80,13 @@ class DexPayPaymentProvider(
                     "metadata" to mapOf(METADATA_REFERENCE to request.reference),
                 ),
             )
+        val data = response.path("data")
+        // With test keys, DEXPAY simulates the payment on a page of its own, where
+        // the tester validates or cancels it; the regular page is for live payments.
+        val sandboxUrl = data.text("sandbox_payment_url").takeIf { data.path("isSandbox").asBoolean(false) }
         val paymentUrl =
-            response.path("data").text("payment_url")
+            sandboxUrl
+                ?: data.text("payment_url")
                 ?: throw PaymentProviderException("DEXPAY gave no payment page for payment $sessionReference")
         return PaymentInitiation(
             providerReference = sessionReference,
