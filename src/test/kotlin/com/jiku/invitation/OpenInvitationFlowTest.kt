@@ -78,6 +78,17 @@ class OpenInvitationFlowTest {
             .andExpect(jsonPath("$.length()").value(3))
             .andExpect(jsonPath("$[?(@.name=='Awa Diallo')].phone").value("+224620112233"))
             .andExpect(jsonPath("$[?(@.name=='Awa Diallo')].channel").value("WEB"))
+        // The three people of Awa's "yes" are used from this event's allowance,
+        // not taken off its ceiling as if another event had used them (JIKU-304).
+        api
+            .get(open.token, "/api/v1/events/${open.eventId}/dashboard")
+            .andExpect(jsonPath("$.usage.invited").value(3))
+            .andExpect(jsonPath("$.usage.allowance").value(100))
+            .andExpect(jsonPath("$.usage.remaining").value(97))
+        api
+            .get(open.token, "/api/v1/events/${open.eventId}/guests")
+            .andExpect(jsonPath("$[?(@.firstName=='Awa')].origin").value("OPEN"))
+            .andExpect(jsonPath("$[?(@.firstName=='Awa')].excludedFromInvitations").value(true))
     }
 
     @Test

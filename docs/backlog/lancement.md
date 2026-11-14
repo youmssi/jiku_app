@@ -64,6 +64,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-299 | Lancement sur un Cloud VPS 8 Contabo sous Ubuntu 26.04, Chatwoot et n8n reportés (ADR 111) | app | JIKU-203 |
 | JIKU-300 | Premier affichage plus léger sur téléphone et nettoyage SEO du site public | web | JIKU-299 |
 | JIKU-301 | Fichiers publics servis tels quels : images des guides, logo, widget, modèle CSV | web | JIKU-300 |
+| JIKU-304 | Les réponses à la carte comptées dans les invités de l'événement, et l'origine de chaque invité affichée | app, web | JIKU-184 |
 
 ---
 
@@ -719,4 +720,21 @@ ne peut pas être importé par lien dans les outils de création.
 - [x] `/guides/fr/*.webp`, `/guides/en/*.webp`, `/templates/guest-import-template.csv`, `/jiku-widget.js` et `/jiku-logo.svg` répondent 200 avec leur type de contenu
 - [x] Les pages (accueil, `/en`, `/organizers`, `/en/docs`) passent toujours par le proxy de langue
 - [x] Un test échoue dès qu'un fichier ou dossier de `public/` n'est pas exclu du `matcher`, pour que le prochain ajout ne retombe pas dans le même piège
+
+## JIKU-304 — Les réponses à la carte comptées dans les invités de l'événement
+
+**Pourquoi.** Relevé le 14 novembre 2026 en production, sur un événement avec
+une invitation directe et un « oui » à trois personnes par la carte : le
+tableau de bord affiche « 1 of 97 invitations used, 96 left ». Le reste est
+juste (100 − 4), mais les trois personnes de la carte sont retirées du
+plafond comme si un autre événement les avait prises, au lieu d'apparaître
+comme utilisées ici. Dans la liste des invités, la personne venue par la carte
+porte « Excluded » et « Not sent yet », alors qu'elle a déjà son billet et
+qu'aucune invitation ne lui est due.
+
+**Critères d'acceptation.**
+
+- [x] Le nombre d'invités d'un événement, pour le tableau de bord comme pour la facturation, compte les personnes de la carte, comme le font déjà les contrôles d'envoi et de réponse : l'exemple affiche « 4 of 100 used, 96 left »
+- [x] La réponse de l'API pour un invité indique son origine : invité, carte ou achat (champ ajouté, rien de retiré)
+- [x] Dans la liste des invités, une personne venue par la carte ou par un achat affiche cette origine à la place de « Not sent yet » et de « Excluded »
 

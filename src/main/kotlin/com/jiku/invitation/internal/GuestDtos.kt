@@ -46,6 +46,11 @@ data class GuestResponse(
     val consentAttested: Boolean = true,
     /** Channel set for this guest at import (JIKU-273); null follows the event's rule. */
     val preferredChannel: InvitationChannel? = null,
+    /**
+     * How the guest joined (JIKU-304): invited by the organizer, answered the
+     * open card, or bought a ticket. The last two need no invitation.
+     */
+    val origin: GuestOrigin = GuestOrigin.INVITED,
 )
 
 data class SetGuestExclusionRequest(
