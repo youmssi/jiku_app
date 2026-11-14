@@ -8,8 +8,6 @@ import org.springframework.data.repository.query.Param
 import java.util.UUID
 
 interface InvoiceRepository : JpaRepository<Invoice, UUID> {
-    fun findAllByOrderByIssuedAtDesc(): List<Invoice>
-
     /**
      * La liste des factures avec leurs lignes en une passe (anti-N+1). Les lignes
      * restent EAGER sur l'entité car le détail et le PDF les lisent hors

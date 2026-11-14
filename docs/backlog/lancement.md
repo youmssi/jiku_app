@@ -66,6 +66,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-301 | Fichiers publics servis tels quels : images des guides, logo, widget, modèle CSV | web | JIKU-300 |
 | JIKU-302 | E-mails envoyés hors transaction : la réservation du quota a sa propre transaction | app | JIKU-275 |
 | JIKU-303 | Un plan gratuit qui couvre l'équipe ne s'arrête jamais : fin des services mis en pause à tort | app | JIKU-268 |
+| JIKU-305 | Cohérence : code mort retiré, variables d'environnement documentées sous leur vrai nom | app, web | — |
 
 ---
 
@@ -762,4 +763,25 @@ gratuit n'était remise en route que si son abonnement était encore actif.
 - [x] Une équipe qui revient dans les limites du plan gratuit repart, même depuis la grâce ou la pause
 - [x] Une migration remet en route, sans date de fin, les abonnements Solo d'au plus une personne laissés en grâce, en pause ou datés
 - [x] Un test couvre un Solo laissé « expiré » et daté : réservations ouvertes, aucun bandeau, aucune grâce après le passage de la tâche
+
+## JIKU-305 — Cohérence : code mort retiré, variables documentées sous leur vrai nom
+
+**Pourquoi.** Relecture des deux dépôts le 14 novembre 2026, après la mise en
+production : quelques requêtes et fonctions que plus rien n'appelle, et un
+`.env.example` qui ne dit plus la vérité. Deux variables y figurent sous un nom
+que l'application ne lit pas (`INVITATION_MAX_ATTEMPTS` au lieu de
+`NOTIFICATION_MAX_ATTEMPTS`, `LOGGING_FORMAT` au lieu de
+`LOGGING_STRUCTURED_FORMAT_CONSOLE`), et onze variables lues par l'application
+n'y sont pas, contre la règle « chaque variable est documentée ».
+
+**Critères d'acceptation.**
+
+- [x] API : les requêtes sans appelant (`countByStatus`, `existsByFunding`, `findAllByOrderByIssuedAtDesc`) sont retirées
+- [x] API : `.env.example` ne cite plus `INVITATION_MAX_ATTEMPTS`, nomme `LOGGING_STRUCTURED_FORMAT_CONSOLE`, et documente les limites prospect, connexion admin, profils et images publics, ainsi que les adresses Resend, Brevo et des clés Google
+- [x] Web : les modules et fonctions sans appelant sont retirés (client Search Console, redirection localisée côté serveur, trois actions de services, un export du suivi d'erreurs)
+- [x] Aucun comportement ne change : lint, types et tests passent
+
+**Gardé volontairement :** le guide `docs/deploy.md`, `Caddyfile` et
+`docker-compose.prod.yml` de l'ancien hébergement, retour arrière prévu deux
+semaines après la bascule (étape 10 du guide VPS), à retirer ensuite.
 
