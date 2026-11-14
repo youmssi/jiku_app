@@ -17,11 +17,27 @@ class SubscriptionExpiryWorker(
     private val subscriptions: SubscriptionRepository,
     private val properties: SubscriptionProperties,
     private val notifier: SubscriptionNotifier,
+    private val platformSettings: PlatformBillingSettingsService,
 ) {
+    /**
+     * A free plan that holds the team is set back to running with no end date
+     * instead of moving towards a pause (JIKU-303). True when it was.
+     */
+    private fun keptFree(row: Subscription): Boolean {
+        if (!platformSettings.keepsTeamFree(row.plan, row.resourcesActive)) return false
+        row.status = SubscriptionStatus.ACTIVE
+        row.expiresAt = null
+        row.expiryNoticeSent = false
+        row.graceNoticeSent = false
+        row.updatedAt = Instant.now()
+        return true
+    }
+
     /** Préavis J-7 : une fois, avant l'échéance. */
     @Transactional
     fun sendExpiryNotice(subscriptionId: UUID) {
         val row = subscriptions.findById(subscriptionId).orElse(null) ?: return
+        if (keptFree(row)) return
         if (row.status != SubscriptionStatus.ACTIVE || row.expiryNoticeSent) {
             return
         }
@@ -39,6 +55,7 @@ class SubscriptionExpiryWorker(
     @Transactional
     fun enterGrace(subscriptionId: UUID) {
         val row = subscriptions.findById(subscriptionId).orElse(null) ?: return
+        if (keptFree(row)) return
         if (row.status != SubscriptionStatus.ACTIVE) {
             return
         }
@@ -64,6 +81,7 @@ class SubscriptionExpiryWorker(
     @Transactional
     fun pauseServices(subscriptionId: UUID) {
         val row = subscriptions.findById(subscriptionId).orElse(null) ?: return
+        if (keptFree(row)) return
         if (row.status != SubscriptionStatus.GRACE) {
             return
         }

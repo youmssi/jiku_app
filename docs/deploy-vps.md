@@ -152,7 +152,8 @@ documentation de Dokploy pour Ubuntu 26.04 avant d'aller plus loin.
    | `UMAMI_APP_SECRET` | secret fort (statistiques de visite) |
    | `RATE_LIMIT_FORWARDED_CLIENT_IP_SECRET` | secret fort ; transmis aussi au conteneur `web` comme `API_CLIENT_IP_SECRET`, pour que les limites s'appliquent par visiteur |
    | `ONLINE_PAYMENT_ENABLED` | `false` jusqu'aux tests du runbook paiements, puis `true` (affiche le paiement en ligne sur le site) |
-   | `WHATSAPP_META_BUSINESS_ACCOUNT_ID` | compte WhatsApp Business du numéro de la plateforme |
+   | `WHATSAPP_*` | numéro d'envoi de la plateforme : voir l'étape 8 bis |
+   | `ERROR_TRACKING_DSN`, `ERROR_TRACKING_ENVIRONMENT` | DSN du projet Sentry de l'API et `production` : voir l'étape 9 bis |
    | `DEXPAY_API_KEY`, `DEXPAY_API_SECRET` | clés `pk_live_…` et `sk_live_…` d'une même paire DEXPAY (JIKU-272) ; la clé secrète vérifie la signature des webhooks |
    | `DEXPAY_BASE_URL` | `https://api.dexpay.africa/api/v1` (le bac à sable est `https://api-sandbox.dexpay.africa/api/v1`) |
    | `DEXPAY_WEBHOOK_URL`, `DEXPAY_RETURN_URL` | `https://api.<domaine>/api/v1/billing/payments/callback/dexpay` et `https://<domaine>/billing/return` |
@@ -185,10 +186,25 @@ documentation de Dokploy pour Ubuntu 26.04 avant d'aller plus loin.
 
 ## 5. Construire l'image web
 
-Dans le dépôt `jiku_web`, réglages GitHub → Variables : `NEXT_PUBLIC_SITE_URL`,
-`NEXT_PUBLIC_API_URL` (`https://api.<domaine>/api/v1`), et les autres
-`NEXT_PUBLIC_*` utilisés (voir son `.env.example`). Elles sont gravées dans
-l'image à la construction : les changer impose une nouvelle image.
+Dans le dépôt `jiku_web`, Settings → Secrets and variables → Actions → onglet
+**Variables** (pas Secrets : le workflow lit `vars.*`) :
+
+| Variable | Valeur |
+|---|---|
+| `NEXT_PUBLIC_SITE_URL` | `https://<domaine>` |
+| `NEXT_PUBLIC_API_URL` | `https://api.<domaine>/api/v1` |
+| `NEXT_PUBLIC_SUPPORT_EMAIL`, `NEXT_PUBLIC_SALES_EMAIL` | boîtes surveillées |
+| `NEXT_PUBLIC_SUPPORT_WHATSAPP` | numéro où une personne répond depuis l'appli, jamais le numéro d'envoi de l'étape 8 bis |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | client OAuth de la connexion Google |
+| `NEXT_PUBLIC_UMAMI_SRC`, `NEXT_PUBLIC_UMAMI_WEBSITE_ID` | étape 9 bis |
+| `NEXT_PUBLIC_ERROR_TRACKING_DSN`, `NEXT_PUBLIC_ERROR_TRACKING_ENVIRONMENT` | DSN du projet Sentry du web et `production` (étape 9 bis) |
+| `NEXT_PUBLIC_BRAND_PROFILES`, `NEXT_PUBLIC_PUBLISHER_NAME`, `NEXT_PUBLIC_PUBLISHER_URL` | profils officiels et société éditrice, pour les données structurées |
+
+Elles sont gravées dans l'image à la construction : les changer impose une
+nouvelle image (relancer le dernier run « Container image » de `main`). Pour
+vérifier qu'une valeur est bien partie, chercher dans le JavaScript servi par
+le site, par exemple `ingest.de.sentry.io` pour le DSN. Google Search Console et
+Bing se vérifient par le DNS et par import : aucune balise à poser.
 
 ## 6. Cloudflare
 
@@ -253,20 +269,79 @@ l'image à la construction : les changer impose une nouvelle image.
 | Google (connexion) | Origines JavaScript autorisées : `https://<domaine>` |
 | Moniteur de disponibilité | `https://api.<domaine>/api/v1/health` |
 
-## 8 bis. Modèles WhatsApp (JIKU-210)
+## 8 bis. WhatsApp : numéro d'envoi, app Meta et modèles (JIKU-209, JIKU-210)
 
-Une fois l'API en ligne, avec `WHATSAPP_META_BUSINESS_ACCOUNT_ID` et
-`WHATSAPP_META_ACCESS_TOKEN` renseignés, créer les modèles en tant
-qu'administrateur de la plateforme :
+Trois numéros, trois rôles ; ne jamais les mélanger :
 
-```
-curl -X POST https://api.<domaine>/api/v1/admin/whatsapp/templates -H "Authorization: Bearer <jeton admin>"
-```
+| Rôle | Variable | Où vit le numéro |
+|---|---|---|
+| Envoi de la plateforme (invitations, rappels, billets) | `WHATSAPP_META_PHONE_NUMBER_ID` | API Cloud : il quitte l'appli WhatsApp |
+| Cartes (« répondre sur WhatsApp »), facultatif | `WHATSAPP_META_CARDS_PHONE_NUMBER_ID`, `OPEN_INVITATION_WHATSAPP_NUMBER` | API Cloud |
+| Support, une personne répond | `NEXT_PUBLIC_SUPPORT_WHATSAPP` (dépôt web) | appli WhatsApp Business, jamais l'API |
 
-La réponse liste chaque modèle (`created` ou l'erreur de Meta). Meta les relit
-en quelques minutes à 48 h ; `GET` sur la même adresse montre leur statut une
-fois le webhook abonné (JIKU-209). Tant qu'un modèle n'est pas approuvé, les
-messages concernés attendent dans la file.
+Les numéros et comptes de l'entreprise qui servent à autre chose que Jikū
+restent hors de Jikū.
+
+1. **Ajouter le numéro d'envoi** dans WhatsApp Manager (portefeuille de
+   l'entreprise, nouveau compte WhatsApp, nom affiché « Jikū », catégorie
+   Événements), puis code par SMS, vérification et enregistrement. Le numéro ne
+   doit plus être actif dans l'appli WhatsApp. Le serveur MCP WhatsApp Business
+   de Meta fait ces étapes (`docs/runbooks/whatsapp-mcp.md`).
+2. **Profil du numéro** (WhatsApp Manager → Numéros de téléphone → Profil) :
+   site `https://<domaine>`, description, catégorie, logo. Le site aide la revue
+   du nom affiché quand la marque n'est pas le nom légal de l'entreprise.
+3. **Moyen de paiement** sur ce compte WhatsApp, pas sur un autre compte de
+   l'entreprise : sans lui, Meta accepte les messages mais ils n'arrivent pas.
+4. **Jeton permanent** : Paramètres de l'entreprise → Utilisateurs système →
+   attribuer l'app et le compte WhatsApp en contrôle total → générer un jeton
+   sans expiration avec `whatsapp_business_messaging`,
+   `whatsapp_business_management` et `business_management`.
+5. **Clé secrète de l'app** : developers.facebook.com → app → Paramètres →
+   Général → Clé secrète.
+6. **Dokploy → Environment**, puis Save et Deploy :
+
+   | Variable | Valeur |
+   |---|---|
+   | `WHATSAPP_TRANSPORT` | `meta` |
+   | `WHATSAPP_META_PHONE_NUMBER_ID` | identifiant du numéro d'envoi (WhatsApp Manager ou `whatsapp_biz_phone_numbers`) |
+   | `WHATSAPP_META_BUSINESS_ACCOUNT_ID` | identifiant du compte WhatsApp de ce numéro |
+   | `WHATSAPP_META_APP_ID` | identifiant de l'app Meta |
+   | `WHATSAPP_META_ACCESS_TOKEN` | jeton de l'étape 4 (secret) |
+   | `WHATSAPP_META_APP_SECRET` | clé de l'étape 5 (secret) |
+   | `WHATSAPP_META_VERIFY_TOKEN` | `openssl rand -hex 24` (secret) |
+   | `WHATSAPP_META_DEDICATED_TEMPLATES` | `true` |
+
+7. **Vérifier que l'API répond à Meta**, depuis le serveur, avec la vraie
+   valeur du jeton de vérification ; la réponse doit être `4242` :
+   ```bash
+   curl -s "https://api.<domaine>/api/v1/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=<jeton>&hub.challenge=4242"; echo
+   ```
+8. **Webhook de l'app** (WhatsApp → Configuration) : URL de rappel
+   `https://api.<domaine>/api/v1/whatsapp/webhook`, le même jeton de
+   vérification, puis abonnement aux champs de l'étape 8 (dont
+   `template_category_update`). Abonner aussi le compte WhatsApp à l'app.
+9. **App en mode Live**, avec `https://<domaine>/privacy` et
+   `https://<domaine>/terms` dans les paramètres de l'app.
+10. **Créer les modèles** en tant qu'administrateur de la plateforme. La
+    connexion admin est `/admin/auth/login` ; un jeton de `/auth/login`
+    (organisateur) est refusé en 403 sans message. Depuis le serveur, sans
+    afficher ni le mot de passe ni le jeton :
+    ```bash
+    read -s -p "Mot de passe admin : " P; echo
+    TOKEN=$(curl -s -X POST https://api.<domaine>/api/v1/admin/auth/login \
+      -H 'Content-Type: application/json' \
+      -d "{\"email\":\"<ADMIN_BOOTSTRAP_EMAIL>\",\"password\":\"$P\"}" \
+      | python3 -c 'import sys,json; print(json.load(sys.stdin).get("accessToken",""))' 2>/dev/null); unset P
+    [ -n "$TOKEN" ] && echo "Connexion admin OK" || echo "Connexion admin refusée"
+    curl -s -w '\nHTTP %{http_code}\n' -X POST https://api.<domaine>/api/v1/admin/whatsapp/templates \
+      -H "Authorization: Bearer $TOKEN"
+    unset TOKEN
+    ```
+    La réponse liste chaque modèle (`created` ou l'erreur de Meta) ; `409`
+    signifie que les variables de l'étape 6 ne sont pas lues. Meta relit les
+    modèles en quelques minutes à 48 h ; `GET` sur la même adresse montre leur
+    statut. Tant qu'un modèle n'est pas approuvé, les messages concernés
+    attendent dans la file.
 
 ## 9. Déploiements suivants
 
@@ -300,15 +375,19 @@ Traefik, sur un sous-domaine qui n'expose que le chemin du webhook.
 3. Dans Dokploy, l'application doit avoir **Autodeploy** activé, sinon le
    webhook répond `400`.
 4. Réglages GitHub de `jiku_app` **et** de `jiku_web` (Settings → Secrets and
-   variables → Actions) :
+   variables → **Actions**) :
    - secret `DOKPLOY_DEPLOY_HOOK` = l'URL notée à l'étape 4, avec
-     `https://deploy.<domaine>` à la place de `http://<adresse>:3000` ;
+     `https://deploy.<domaine>` à la place de `http://<adresse>:3000`. Il va
+     dans l'onglet **Secrets**, section **Repository secrets** : rangé dans
+     Variables, dans un Environment, ou sous Codespaces ou Dependabot, le job
+     le reçoit vide et échoue sur « the DOKPLOY_DEPLOY_HOOK secret is missing » ;
    - variable `DEPLOY_TARGET` = `vps` ;
    - variable `PRODUCTION_API_URL` = `https://api.<domaine>` (`jiku_app`) ;
    - variable `NEXT_PUBLIC_SITE_URL` = `https://<domaine>` (`jiku_web`, déjà
      posée à l'étape 5).
 5. Tester sans attendre une release : relancer le dernier run « Container
-   image » de `main` (Actions → Re-run all jobs). Le job « Roll out on the
+   image » de `main` (Actions → Re-run all jobs, ou Re-run failed jobs si
+   seul le déploiement a échoué). Le job « Roll out on the
    server » doit afficher `Compose deployed successfully`, puis un nouveau
    déploiement apparaît dans l'onglet Deployments de Dokploy.
 
@@ -335,7 +414,16 @@ mode anti-robots : ajouter une règle WAF « Skip » pour l'hôte `deploy.<domai
    `20`) et `MESSAGING_DAILY_SMS_COUNT_ALERT` (par exemple `500`). L'alerte part
    chaque matin vers `NOTIFICATION_SALES_EMAIL`. Poser aussi une alerte de budget
    AWS et un plafond de dépense chez Meta.
-3. **Umami** : ouvrir `https://stats.<domaine>`, changer le mot de passe
+3. **Sentry** (formule gratuite, région UE) : un projet par application,
+   `jiku-frontend` (Next.js) et `jiku-server` (Spring Boot). Le DSN du web va
+   dans les variables du dépôt web (étape 5), celui de l'API dans Dokploy
+   (`ERROR_TRACKING_DSN`, `ERROR_TRACKING_ENVIRONMENT=production`). Les deux
+   applications retirent les données personnelles avant l'envoi. L'API n'écrit
+   rien au démarrage quand le DSN est valide ; pour vérifier qu'il est lu :
+   `sudo docker exec $(sudo docker ps -qf name=api | head -1) sh -c 'echo "${ERROR_TRACKING_DSN%%@*}"'`.
+   Côté web, une erreur levée dans la console d'un navigateur sur le site doit
+   apparaître dans `jiku-frontend` en moins d'une minute.
+4. **Umami** : ouvrir `https://stats.<domaine>`, changer le mot de passe
    `admin` / `umami` par défaut, ajouter le site, puis dans les variables du dépôt
    web : `NEXT_PUBLIC_UMAMI_SRC=https://stats.<domaine>/script.js` et
    `NEXT_PUBLIC_UMAMI_WEBSITE_ID`. La base `umami` est créée avec le volume ; sur

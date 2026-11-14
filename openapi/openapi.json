@@ -2397,6 +2397,14 @@
           "lastName" : {
             "type" : "string"
           },
+          "origin" : {
+            "enum" : [
+              "INVITED",
+              "PURCHASED",
+              "OPEN"
+            ],
+            "type" : "string"
+          },
           "paymentStatus" : {
             "enum" : [
               "NOT_REQUIRED",

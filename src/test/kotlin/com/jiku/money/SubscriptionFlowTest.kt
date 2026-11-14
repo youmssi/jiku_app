@@ -168,6 +168,31 @@ class SubscriptionFlowTest {
             .andExpect(jsonPath("$.bookingPaused").value(false))
     }
 
+    @Test
+    fun `a free Solo plan an older price grid left with an end date never pauses services`() {
+        val token = register("Legacy Solo Org", uniqueEmail())
+        val tenantId = currentTenantId(token)
+        val serviceId = createService(token)
+        val link = bookingCode(token, serviceId)
+
+        setSubscription(tenantId, SubscriptionStatus.EXPIRED, Instant.now().minusSeconds(30L * 86400))
+        billingStatus(token)
+            .andExpect(jsonPath("$.attention").value("NONE"))
+            .andExpect(jsonPath("$.subscription.servicesPaused").value(false))
+        mockMvc
+            .perform(get("/api/v1/appointments/$link"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.bookingPaused").value(false))
+
+        setSubscription(tenantId, SubscriptionStatus.ACTIVE, Instant.now().minusSeconds(60))
+        expiryJob.sweep()
+        TenantContext.set(tenantId)
+        val kept = subscriptions.findCurrent().single()
+        assertEquals(SubscriptionStatus.ACTIVE, kept.status, "a free plan that holds the team never enters grace")
+        assertEquals(null, kept.expiresAt)
+        TenantContext.clear()
+    }
+
     private fun billingStatus(token: String) =
         mockMvc
             .perform(get("/api/v1/billing/status").header("Authorization", "Bearer $token"))
@@ -201,6 +226,22 @@ class SubscriptionFlowTest {
                 .response.contentAsString,
             "$.token",
         )
+
+    private fun setSubscription(
+        tenantId: String,
+        status: SubscriptionStatus,
+        expiresAt: Instant,
+    ) {
+        TenantContext.set(tenantId)
+        subscriptions.save(
+            subscriptions.findCurrent().single().apply {
+                this.status = status
+                this.expiresAt = expiresAt
+                updatedAt = Instant.now()
+            },
+        )
+        TenantContext.clear()
+    }
 
     private fun forceExpiry(
         tenantId: String,

@@ -71,9 +71,10 @@ data class GuestInfo(
 )
 
 /**
- * Aggregate guest figures for an event. [invited] is the number of distinct guests
- * who have received at least one successfully sent invitation; [pending] is guests
- * who have not yet responded.
+ * Aggregate guest figures for an event. [invited] is everyone the event's
+ * allowance counts: the distinct guests invited, plus the people counted by its
+ * open card (JIKU-184, JIKU-304), as the sending and card checks count them.
+ * [pending] is guests who have not yet responded.
  */
 data class GuestStats(
     val total: Long,
