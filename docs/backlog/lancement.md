@@ -68,6 +68,8 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-303 | Un plan gratuit qui couvre l'équipe ne s'arrête jamais : fin des services mis en pause à tort | app | JIKU-268 |
 | JIKU-304 | Les réponses à la carte comptées dans les invités de l'événement, et l'origine de chaque invité affichée | app, web | JIKU-184 |
 | JIKU-305 | Cohérence : code mort retiré, variables d'environnement documentées sous leur vrai nom | app, web | — |
+| JIKU-306 | Horaires d'une personne : l'éditeur tient dans sa fenêtre, une plage ajoutée est valide | web | JIKU-252 |
+| JIKU-307 | Demandes de paiement claires : une liste, annuler, remplacer, expirer, des statuts lisibles | app, web | JIKU-41, JIKU-254 |
 
 ---
 
@@ -802,3 +804,52 @@ n'y sont pas, contre la règle « chaque variable est documentée ».
 **Gardé volontairement :** le guide `docs/deploy.md`, `Caddyfile` et
 `docker-compose.prod.yml` de l'ancien hébergement, retour arrière prévu deux
 semaines après la bascule (étape 10 du guide VPS), à retirer ensuite.
+
+## JIKU-306 — Horaires d'une personne : l'éditeur tient dans sa fenêtre
+
+**Pourquoi.** Relevé le 14 novembre 2026 en production : dans la fenêtre des
+horaires d'une personne, ajouter une deuxième plage pousse le bouton ✕ et
+« Save hours » hors de la fenêtre, et la plage ajoutée s'ouvre en 18:00–18:00,
+déjà en erreur.
+
+**Critères d'acceptation.**
+
+- [x] Chaque ligne tient dans la fenêtre à toutes les largeurs : les champs d'heure se partagent la place, le bouton de retrait reste visible
+- [x] La fenêtre défile quand la semaine est plus haute que l'écran
+- [x] Une plage ajoutée commence une heure après la dernière et dure une heure ; si la journée va déjà jusqu'à minuit, elle reprend 09:00–18:00
+
+## JIKU-307 — Demandes de paiement claires : une liste, annuler, remplacer, expirer
+
+**Pourquoi.** Relevé le 14 novembre 2026 en production. Une demande de
+virement n'expire jamais et l'organisateur ne peut pas l'annuler. Demander un
+autre plan ou une autre durée renvoie l'ancienne demande sans le dire. Les
+demandes de types différents s'accumulent sans vue d'ensemble, et les
+instructions disparaissent après rechargement. « Failed » couvre à la fois un
+refus du bureau et un paiement en ligne non abouti. Enfin, une équipe de deux
+personnes sur Solo voit « Expired » et « Free forever » ensemble, et un
+bandeau qui parle de fin d'abonnement au lieu de dire que l'équipe a dépassé
+ce que couvre Solo.
+
+**Décisions (14 novembre 2026).** Une demande expire après 7 jours. Le
+virement reste proposé, en second, quand le paiement en ligne est actif.
+Dépasser Solo garde la période d'essai puis la pause, avec un texte clair.
+Cette story est livrée avec l'activation de DEXPAY.
+
+**Critères d'acceptation, côté API.**
+
+- [x] Deux nouveaux statuts : `CANCELLED` (annulée par l'organisateur, ou remplacée) et `EXPIRED` (aucun virement confirmé dans le délai)
+- [x] `GET /billing/payment-requests` : toutes les demandes en attente de l'organisation, avec montant, référence, bénéficiaire, objet, date d'expiration et virement déclaré
+- [x] `POST /billing/payment-requests/{id}/cancel` annule une demande en attente ; `POST /billing/payment-requests/{id}/transfer-sent` la marque et prévient l'équipe par l'alerte opérations, une seule fois
+- [x] Demander un autre plan, une autre durée ou un autre nombre d'invités remplace la demande en attente du même achat, avec une nouvelle référence
+- [x] Une demande sans virement confirmé expire après `BILLING_MANUAL_EXPIRE_AFTER` (7 jours) et l'organisateur reçoit un e-mail
+- [x] Le bureau peut toujours confirmer un virement arrivé pour une demande annulée ou expirée ; un refus garde son motif, montré à l'organisateur
+- [x] Un paiement en ligne réussi ferme la demande de virement du même achat
+- [x] L'historique indique le moyen (`provider`) et le motif d'un refus ; l'état de facturation indique si le plan est gratuit, le nombre de personnes et combien il en couvre
+
+**Critères d'acceptation, côté web.**
+
+- [ ] Une seule carte « Paiements en attente » en haut de la facturation, toujours visible après rechargement, avec les boutons Copier, « J'ai envoyé le virement » et « Annuler la demande »
+- [ ] Changer de plan ou de durée avec une demande ouverte demande d'abord « Remplacer la demande en cours ? »
+- [ ] Statuts lisibles : En attente, Payé, Annulé, Expiré, Refusé (avec le motif), Non abouti ; l'historique montre par défaut les paiements payés et en attente, le reste derrière « Afficher tout »
+- [ ] Une équipe qui dépasse Solo lit « Votre équipe compte 2 personnes, Solo en couvre 1 », avec « Passer à Services Pro » et « Garder une seule personne » ; la carte Solo n'affiche plus « Expired » et « Free forever » ensemble
+- [ ] Le guide de la facturation décrit ce parcours

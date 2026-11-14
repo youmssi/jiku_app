@@ -40,6 +40,12 @@ interface PaymentRepository : JpaRepository<Payment, UUID> {
         status: PaymentStatus,
     ): Payment?
 
+    /** The current tenant's payments of [provider] in [status], newest first: its open transfer requests (JIKU-307). */
+    fun findByProviderAndStatusOrderByCreatedAtDesc(
+        provider: String,
+        status: PaymentStatus,
+    ): List<Payment>
+
     /** Open manual prepaid-subscription request (JIKU-90), for idempotent re-requests. */
     fun findFirstByKindAndProviderAndStatusOrderByCreatedAtDesc(
         kind: String,
@@ -92,6 +98,25 @@ interface PaymentRepository : JpaRepository<Payment, UUID> {
         @Param("providers") providers: Collection<String>,
         @Param("before") before: Instant,
         @Param("after") after: Instant,
+        @Param("limit") limit: Int,
+    ): List<Array<Any?>>
+
+    /**
+     * Manual requests still waiting that were made before [before], across
+     * tenants (JIKU-307), oldest first: they expire. Native SQL for the same
+     * reason as [adminList]; each row is then closed under its own tenant.
+     */
+    @Query(
+        value = """
+            SELECT id, tenant_id FROM payment
+            WHERE provider = 'manual' AND status = 'PENDING' AND created_at < :before
+            ORDER BY created_at
+            LIMIT :limit
+        """,
+        nativeQuery = true,
+    )
+    fun findManualPendingCreatedBefore(
+        @Param("before") before: Instant,
         @Param("limit") limit: Int,
     ): List<Array<Any?>>
 

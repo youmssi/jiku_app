@@ -46,6 +46,8 @@ class BillingHistoryController(
                 currency = payment.currency,
                 status = payment.status.name,
                 createdAt = payment.createdAt,
+                provider = payment.provider,
+                rejectionReason = payment.rejectionReason,
             )
         }
 
@@ -104,6 +106,11 @@ data class PaymentHistoryItem(
     val guests: Long?,
     val amountMinor: Long,
     val currency: String,
+    /** PENDING, SUCCEEDED, FAILED, CANCELLED or EXPIRED (JIKU-307). */
     val status: String,
     val createdAt: Instant,
+    /** `manual` for a transfer request; otherwise the online provider (JIKU-307). */
+    val provider: String = "",
+    /** The desk's reason when it rejected a transfer request. */
+    val rejectionReason: String? = null,
 )
