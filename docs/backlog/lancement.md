@@ -64,6 +64,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-299 | Lancement sur un Cloud VPS 8 Contabo sous Ubuntu 26.04, Chatwoot et n8n reportés (ADR 111) | app | JIKU-203 |
 | JIKU-300 | Premier affichage plus léger sur téléphone et nettoyage SEO du site public | web | JIKU-299 |
 | JIKU-301 | Fichiers publics servis tels quels : images des guides, logo, widget, modèle CSV | web | JIKU-300 |
+| JIKU-305 | Cohérence : code mort retiré, variables d'environnement documentées sous leur vrai nom | app, web | — |
 
 ---
 
@@ -719,4 +720,25 @@ ne peut pas être importé par lien dans les outils de création.
 - [x] `/guides/fr/*.webp`, `/guides/en/*.webp`, `/templates/guest-import-template.csv`, `/jiku-widget.js` et `/jiku-logo.svg` répondent 200 avec leur type de contenu
 - [x] Les pages (accueil, `/en`, `/organizers`, `/en/docs`) passent toujours par le proxy de langue
 - [x] Un test échoue dès qu'un fichier ou dossier de `public/` n'est pas exclu du `matcher`, pour que le prochain ajout ne retombe pas dans le même piège
+
+## JIKU-305 — Cohérence : code mort retiré, variables documentées sous leur vrai nom
+
+**Pourquoi.** Relecture des deux dépôts le 14 novembre 2026, après la mise en
+production : quelques requêtes et fonctions que plus rien n'appelle, et un
+`.env.example` qui ne dit plus la vérité. Deux variables y figurent sous un nom
+que l'application ne lit pas (`INVITATION_MAX_ATTEMPTS` au lieu de
+`NOTIFICATION_MAX_ATTEMPTS`, `LOGGING_FORMAT` au lieu de
+`LOGGING_STRUCTURED_FORMAT_CONSOLE`), et onze variables lues par l'application
+n'y sont pas, contre la règle « chaque variable est documentée ».
+
+**Critères d'acceptation.**
+
+- [x] API : les requêtes sans appelant (`countByStatus`, `existsByFunding`, `findAllByOrderByIssuedAtDesc`) sont retirées
+- [x] API : `.env.example` ne cite plus `INVITATION_MAX_ATTEMPTS`, nomme `LOGGING_STRUCTURED_FORMAT_CONSOLE`, et documente les limites prospect, connexion admin, profils et images publics, ainsi que les adresses Resend, Brevo et des clés Google
+- [x] Web : les modules et fonctions sans appelant sont retirés (client Search Console, redirection localisée côté serveur, trois actions de services, un export du suivi d'erreurs)
+- [x] Aucun comportement ne change : lint, types et tests passent
+
+**Gardé volontairement :** le guide `docs/deploy.md`, `Caddyfile` et
+`docker-compose.prod.yml` de l'ancien hébergement, retour arrière prévu deux
+semaines après la bascule (étape 10 du guide VPS), à retirer ensuite.
 

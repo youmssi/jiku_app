@@ -156,8 +156,6 @@ interface CommissionBatchRepository : JpaRepository<CommissionBatch, UUID> {
 
     fun existsByFundingIn(funding: Collection<CommissionFunding>): Boolean
 
-    fun existsByFunding(funding: CommissionFunding): Boolean
-
     /** Batches whose commission is still owed: credit batches not yet settled, and overage. */
     @Query(
         "SELECT b FROM CommissionBatch b WHERE b.funding IN (com.jiku.money.internal.CommissionFunding.CREDIT, " +
