@@ -4175,6 +4175,13 @@
           "kind" : {
             "type" : "string"
           },
+          "months" : {
+            "format" : "int32",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
           "paymentId" : {
             "format" : "uuid",
             "type" : "string"

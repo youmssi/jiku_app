@@ -43,6 +43,7 @@ class BillingHistoryController(
                 tier = payment.tier,
                 kind = payment.kind,
                 guests = payment.guests,
+                months = payment.subscriptionMonths,
                 amountMinor = payment.amountMinor,
                 currency = payment.currency,
                 status = payment.status.name,
@@ -108,6 +109,8 @@ data class PaymentHistoryItem(
     val kind: String,
     /** Guests the payment bought or settled; null when it bought none. */
     val guests: Long?,
+    /** Months a subscription or Pro Organisateur payment covers; null otherwise (JIKU-307). */
+    val months: Int? = null,
     val amountMinor: Long,
     val currency: String,
     /** PENDING, SUCCEEDED, FAILED, CANCELLED or EXPIRED (JIKU-307). */
