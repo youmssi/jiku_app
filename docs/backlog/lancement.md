@@ -66,6 +66,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-301 | Fichiers publics servis tels quels : images des guides, logo, widget, modèle CSV | web | JIKU-300 |
 | JIKU-302 | E-mails envoyés hors transaction : la réservation du quota a sa propre transaction | app | JIKU-275 |
 | JIKU-303 | Un plan gratuit qui couvre l'équipe ne s'arrête jamais : fin des services mis en pause à tort | app | JIKU-268 |
+| JIKU-304 | Les réponses à la carte comptées dans les invités de l'événement, et l'origine de chaque invité affichée | app, web | JIKU-184 |
 | JIKU-305 | Cohérence : code mort retiré, variables d'environnement documentées sous leur vrai nom | app, web | — |
 
 ---
@@ -764,6 +765,23 @@ gratuit n'était remise en route que si son abonnement était encore actif.
 - [x] Une migration remet en route, sans date de fin, les abonnements Solo d'au plus une personne laissés en grâce, en pause ou datés
 - [x] Un test couvre un Solo laissé « expiré » et daté : réservations ouvertes, aucun bandeau, aucune grâce après le passage de la tâche
 
+## JIKU-304 — Les réponses à la carte comptées dans les invités de l'événement
+
+**Pourquoi.** Relevé le 14 novembre 2026 en production, sur un événement avec
+une invitation directe et un « oui » à trois personnes par la carte : le
+tableau de bord affiche « 1 of 97 invitations used, 96 left ». Le reste est
+juste (100 − 4), mais les trois personnes de la carte sont retirées du
+plafond comme si un autre événement les avait prises, au lieu d'apparaître
+comme utilisées ici. Dans la liste des invités, la personne venue par la carte
+porte « Excluded » et « Not sent yet », alors qu'elle a déjà son billet et
+qu'aucune invitation ne lui est due.
+
+**Critères d'acceptation.**
+
+- [x] Le nombre d'invités d'un événement, pour le tableau de bord comme pour la facturation, compte les personnes de la carte, comme le font déjà les contrôles d'envoi et de réponse : l'exemple affiche « 4 of 100 used, 96 left »
+- [x] La réponse de l'API pour un invité indique son origine : invité, carte ou achat (champ ajouté, rien de retiré)
+- [x] Dans la liste des invités, une personne venue par la carte ou par un achat affiche cette origine à la place de « Not sent yet » et de « Excluded »
+
 ## JIKU-305 — Cohérence : code mort retiré, variables documentées sous leur vrai nom
 
 **Pourquoi.** Relecture des deux dépôts le 14 novembre 2026, après la mise en
@@ -784,4 +802,3 @@ n'y sont pas, contre la règle « chaque variable est documentée ».
 **Gardé volontairement :** le guide `docs/deploy.md`, `Caddyfile` et
 `docker-compose.prod.yml` de l'ancien hébergement, retour arrière prévu deux
 semaines après la bascule (étape 10 du guide VPS), à retirer ensuite.
-

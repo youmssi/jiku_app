@@ -132,6 +132,7 @@ class GuestService(
             amountDueCurrency = ticket?.amountDueCurrency,
             consentAttested = consentAttestedAt != null,
             preferredChannel = preferredChannel,
+            origin = origin,
         )
 
     @Transactional

@@ -17,6 +17,7 @@ import java.util.UUID
 class InvitationModuleApiService(
     private val guests: GuestRepository,
     private val invitations: InvitationRepository,
+    private val openResponses: OpenResponseRepository,
 ) : InvitationModuleApi {
     @Transactional(readOnly = true)
     override fun findGuest(guestId: UUID): GuestInfo? = guests.findById(guestId).map { it.toInfo() }.orElse(null)
@@ -31,7 +32,7 @@ class InvitationModuleApiService(
     override fun guestStats(eventId: UUID): GuestStats =
         GuestStats(
             total = guests.countByEventIdAndRsvpStatusNot(eventId, RsvpStatus.TRANSFERRED),
-            invited = invitations.countInvitedGuests(eventId),
+            invited = invitations.countInvitedGuests(eventId) + openResponses.committedHeads(eventId),
             confirmed = guests.countByEventIdAndRsvpStatus(eventId, RsvpStatus.CONFIRMED),
             declined = guests.countByEventIdAndRsvpStatus(eventId, RsvpStatus.DECLINED),
             pending = guests.countByEventIdAndRsvpStatus(eventId, RsvpStatus.PENDING),
