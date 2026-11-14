@@ -42,8 +42,6 @@ interface NotificationLogRepository : JpaRepository<NotificationLog, UUID> {
 
     fun findByReferenceId(referenceId: UUID): List<NotificationLog>
 
-    fun countByStatus(status: String): Long
-
     /** Tenant-scoped: successful sends for the current tenant since [since]. */
     fun countByStatusAndCreatedAtAfter(
         status: String,
