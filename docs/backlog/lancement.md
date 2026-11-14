@@ -744,6 +744,7 @@ dans une transaction.
 **Hors périmètre :** transmettre à Sentry les échecs d'envoi rattrapés (il
 faut d'abord exposer le suivi d'erreurs du module `shared` aux autres
 modules).
+
 ## JIKU-303 — Un plan gratuit qui couvre l'équipe ne s'arrête jamais
 
 **Pourquoi.** Relevé le 14 novembre 2026 en production : une organisation
