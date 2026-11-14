@@ -4159,6 +4159,12 @@
           "eventName" : {
             "type" : "string"
           },
+          "eventTitle" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
           "guests" : {
             "format" : "int64",
             "type" : [

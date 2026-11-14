@@ -34,11 +34,12 @@ class BillingHistoryController(
     @GetMapping
     fun history(): List<PaymentHistoryItem> =
         payments.findByOrderByCreatedAtDesc().map { payment ->
+            val eventTitle = payment.eventId?.let { events.findEvent(it)?.name }
             PaymentHistoryItem(
                 paymentId = requireNotNull(payment.id),
                 eventId = payment.eventId,
-                eventName =
-                    label(payment),
+                eventName = paymentLabel(payment, eventTitle),
+                eventTitle = eventTitle,
                 tier = payment.tier,
                 kind = payment.kind,
                 guests = payment.guests,
@@ -98,7 +99,10 @@ data class PaymentHistoryItem(
     val paymentId: UUID,
     /** Nul pour un renouvellement d'abonnement (JIKU-90). */
     val eventId: UUID?,
+    /** What the payment bought, in English words; [eventTitle] and the other fields let a client say it in its own language. */
     val eventName: String,
+    /** The event's own name, when the payment is for an event that still exists (JIKU-307). */
+    val eventTitle: String? = null,
     val tier: String,
     /** GUESTS, SUBSCRIPTION, PACK, PACK_EXTRA or COMMISSION. */
     val kind: String,
