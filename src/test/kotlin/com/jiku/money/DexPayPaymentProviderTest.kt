@@ -78,6 +78,25 @@ class DexPayPaymentProviderTest {
     }
 
     @Test
+    fun `with test keys the payer is sent to DEXPAY's simulation page`() {
+        server
+            .expect(requestTo("https://dexpay.test/api/v1/checkout-sessions"))
+            .andRespond(
+                withStatus(HttpStatus.CREATED)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(
+                        """{"status":201,"data":{"reference":"$paymentId","payment_url":"https://pay.dexpay.test/$paymentId",""" +
+                            """"isSandbox":true,"sandbox_payment_url":"https://dexpay.test/api/v1/checkout-sessions/sandbox/$paymentId"}}""",
+                    ),
+            )
+
+        val initiation = provider.initiate(request())
+
+        assertEquals("https://dexpay.test/api/v1/checkout-sessions/sandbox/$paymentId", initiation.instruction.value)
+        server.verify()
+    }
+
+    @Test
     fun `a refused session surfaces DEXPAY's reason`() {
         server
             .expect(requestTo("https://dexpay.test/api/v1/checkout-sessions"))
