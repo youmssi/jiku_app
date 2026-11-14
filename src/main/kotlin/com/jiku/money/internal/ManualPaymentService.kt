@@ -1,8 +1,12 @@
 package com.jiku.money.internal
 
+import com.jiku.catalog.EventModuleApi
 import com.jiku.money.AdminPaymentView
 import com.jiku.money.ManualPaymentInstructions
 import com.jiku.shared.ManualPaymentNotice
+import com.jiku.shared.MoneyFormat
+import com.jiku.shared.OpsAlert
+import com.jiku.shared.PaymentRequestNotice
 import com.jiku.shared.SubscriptionNotice
 import com.jiku.shared.TenantContext
 import com.jiku.tenant.TenantModuleApi
@@ -36,6 +40,8 @@ class ManualPaymentService(
     private val platformSettings: PlatformBillingSettingsService,
     private val tenantModuleApi: TenantModuleApi,
     private val eventPublisher: ApplicationEventPublisher,
+    private val events: EventModuleApi,
+    private val properties: ManualPaymentProperties,
     transactionManager: PlatformTransactionManager,
 ) {
     private val transactions = TransactionTemplate(transactionManager)
@@ -65,6 +71,7 @@ class ManualPaymentService(
         if (existing != null && existing.guests == guests && existing.amountMinor == quote.amountMinor) {
             return instructionsFor(existing)
         }
+        existing?.let { replace(it) }
 
         val payment =
             payments.save(
@@ -136,9 +143,14 @@ class ManualPaymentService(
                 PROVIDER_MANUAL,
                 PaymentStatus.PENDING,
             )
-        if (existing != null) {
+        if (existing != null &&
+            existing.tier == plan.name &&
+            existing.subscriptionMonths == months &&
+            existing.amountMinor == quote.amountMinor
+        ) {
             return instructionsFor(existing)
         }
+        existing?.let { replace(it) }
 
         val payment =
             payments.save(
@@ -198,6 +210,7 @@ class ManualPaymentService(
         if (existing != null && existing.amountMinor == quote.amountMinor && existing.subscriptionMonths == months) {
             return instructionsFor(existing)
         }
+        existing?.let { replace(it) }
         val payment =
             payments.save(
                 Payment(
@@ -215,6 +228,84 @@ class ManualPaymentService(
         payment.updatedAt = Instant.now()
         payments.save(payment)
         return instructionsFor(payment)
+    }
+
+    /**
+     * Every manual request of the organization still waiting for its transfer
+     * (JIKU-307), newest first, so the billing page shows them all in one place.
+     */
+    @Transactional(readOnly = true)
+    fun openRequests(): List<ManualPaymentInstructions> =
+        payments
+            .findByProviderAndStatusOrderByCreatedAtDesc(PROVIDER_MANUAL, PaymentStatus.PENDING)
+            .map { instructionsFor(it) }
+
+    /**
+     * The organizer withdraws a request they no longer need (JIKU-307). Only a
+     * request still waiting can be cancelled; the desk can still confirm a
+     * transfer that arrives for it later.
+     */
+    @Transactional
+    fun cancel(paymentId: UUID): ManualPaymentInstructions {
+        val payment = openRequest(paymentId)
+        replace(payment)
+        return instructionsFor(payment)
+    }
+
+    /**
+     * The organizer says the transfer is sent (JIKU-307): the payments desk is
+     * told, so it looks for it without waiting. Saying it again changes nothing.
+     */
+    @Transactional
+    fun declareTransfer(paymentId: UUID): ManualPaymentInstructions {
+        val payment = openRequest(paymentId)
+        if (payment.transferDeclaredAt == null) {
+            payment.transferDeclaredAt = Instant.now()
+            payment.updatedAt = Instant.now()
+            payments.save(payment)
+            val amount = MoneyFormat.format(payment.amountMinor, payment.currency)
+            eventPublisher.publishEvent(
+                OpsAlert(
+                    subject = "Jikū transfer sent: ${payment.providerReference} ($amount)",
+                    message =
+                        "Organization ${payment.tenantId} says it sent the transfer for request " +
+                            "${payment.providerReference}: ${paymentLabel(payment, null)}, $amount. " +
+                            "Confirm it from the payments desk once it arrives.",
+                ),
+            )
+        }
+        return instructionsFor(payment)
+    }
+
+    /**
+     * Expires the requests, across organizations, that waited longer than
+     * [ManualPaymentProperties.expireAfter] (JIKU-307), each under its own
+     * tenant, and tells the organizer by email. Returns how many expired.
+     */
+    fun expireStale(now: Instant = Instant.now()): Int {
+        val before = now.minus(properties.expireAfter)
+        var expired = 0
+        payments.findManualPendingCreatedBefore(before, EXPIRY_BATCH).forEach { row ->
+            val paymentId = row[0] as? UUID ?: UUID.fromString(row[0].toString())
+            val tenantId = row[1].toString()
+            val done =
+                TenantContext.withTenant(tenantId) {
+                    transactions.execute {
+                        val payment = payments.findForUpdate(paymentId)
+                        if (payment == null || payment.status != PaymentStatus.PENDING) {
+                            false
+                        } else {
+                            payment.status = PaymentStatus.EXPIRED
+                            payment.updatedAt = now
+                            payments.save(payment)
+                            publishRequestNotice(payment, tenantId, PaymentRequestNotice.KIND_EXPIRED)
+                            true
+                        }
+                    }
+                }
+            if (done == true) expired++
+        }
+        return expired
     }
 
     /** The organizer's open (or latest) manual payment for an event, if any. */
@@ -290,10 +381,14 @@ class ManualPaymentService(
                     if (payment.provider != PROVIDER_MANUAL) {
                         throw ResponseStatusException(HttpStatus.CONFLICT, "Only manual payments can be resolved by an admin")
                     }
-                    if (payment.status != PaymentStatus.PENDING) {
+                    // A transfer can arrive after its request was cancelled or expired:
+                    // the money is there, so the desk can still confirm it (JIKU-307).
+                    val resolvable = if (succeeded) payment.status.confirmable else payment.status == PaymentStatus.PENDING
+                    if (!resolvable) {
                         throw ResponseStatusException(HttpStatus.CONFLICT, "This payment is already ${payment.status.name.lowercase()}")
                     }
                     payment.status = if (succeeded) PaymentStatus.SUCCEEDED else PaymentStatus.FAILED
+                    if (!succeeded) payment.rejectionReason = note?.trim()?.take(REASON_MAX)?.takeIf { it.isNotEmpty() }
                     payment.updatedAt = Instant.now()
                     payments.save(payment)
                     // Only an event's guests have an event to notify about; a
@@ -322,7 +417,56 @@ class ManualPaymentService(
             currency = payment.currency,
             status = payment.status.name,
             payee = platformSettings.payeeDetails(),
+            kind = payment.kind,
+            eventId = payment.eventId,
+            eventName = payment.eventId?.let { events.findEvent(it)?.name },
+            months = payment.subscriptionMonths,
+            createdAt = payment.createdAt,
+            expiresAt = payment.createdAt.plus(properties.expireAfter),
+            transferDeclaredAt = payment.transferDeclaredAt,
         )
+
+    /** The current tenant's manual request [paymentId], still waiting for its transfer. */
+    private fun openRequest(paymentId: UUID): Payment {
+        val payment =
+            payments.findForUpdate(paymentId)
+                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found")
+        if (payment.provider != PROVIDER_MANUAL) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "Only a transfer request can be changed here")
+        }
+        if (payment.status != PaymentStatus.PENDING) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "This request is already ${payment.status.name.lowercase()}")
+        }
+        return payment
+    }
+
+    /** Closes a waiting request that is no longer wanted: cancelled, or replaced by a newer one. */
+    private fun replace(payment: Payment) {
+        payment.status = PaymentStatus.CANCELLED
+        payment.updatedAt = Instant.now()
+        payments.save(payment)
+    }
+
+    private fun publishRequestNotice(
+        payment: Payment,
+        tenantId: String,
+        kind: String,
+    ) {
+        val tenant = runCatching { tenantModuleApi.findTenant(UUID.fromString(tenantId)) }.getOrNull()
+        val email = tenant?.contactEmail?.takeIf { it.isNotBlank() } ?: return
+        eventPublisher.publishEvent(
+            PaymentRequestNotice(
+                kind = kind,
+                tenantId = tenantId,
+                reference = payment.providerReference ?: "",
+                purchase = paymentLabel(payment, payment.eventId?.let { events.findEvent(it)?.name }),
+                amountMinor = payment.amountMinor,
+                currency = payment.currency,
+                organizerName = tenant.displayName ?: tenant.name,
+                organizerEmail = email,
+            ),
+        )
+    }
 
     private fun publishNotice(
         payment: Payment,
@@ -380,11 +524,15 @@ class ManualPaymentService(
             reference = providerReference ?: "",
             status = status.name,
             createdAt = createdAt,
+            transferDeclaredAt = transferDeclaredAt,
+            rejectionReason = rejectionReason,
         )
 
     companion object {
         const val PROVIDER_MANUAL = "manual"
         private const val ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
         private const val MAX_PAGE_SIZE = 100
+        private const val EXPIRY_BATCH = 200
+        private const val REASON_MAX = 500
     }
 }

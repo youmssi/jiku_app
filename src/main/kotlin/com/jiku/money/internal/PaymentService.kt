@@ -280,6 +280,7 @@ class PaymentService(
         payments.save(payment)
         if (!succeeded) return CallbackOutcome.FAILED
         fulfillment.fulfill(payment)
+        closeTransferRequestsFor(payment)
         return CallbackOutcome.SUCCEEDED
     }
 
@@ -313,6 +314,23 @@ class PaymentService(
         // The provider's record must name this very payment, under this tenant.
         if (callback.reference != "${TenantContext.get()}:$paymentId") return CallbackOutcome.UNKNOWN
         return transactions.execute { confirm(paymentId, provider.name, callback) } ?: CallbackOutcome.UNKNOWN
+    }
+
+    /**
+     * Closes the transfer requests an online payment just paid for (JIKU-307):
+     * the same kind of purchase, for the same event when it has one, so the
+     * organizer is never left with a request for something already paid.
+     */
+    private fun closeTransferRequestsFor(paid: Payment) {
+        val now = Instant.now()
+        payments
+            .findByProviderAndStatusOrderByCreatedAtDesc(ManualPaymentService.PROVIDER_MANUAL, PaymentStatus.PENDING)
+            .filter { it.kind == paid.kind && it.eventId == paid.eventId }
+            .forEach {
+                it.status = PaymentStatus.CANCELLED
+                it.updatedAt = now
+                payments.save(it)
+            }
     }
 
     private fun abandon(paymentId: UUID): CallbackOutcome {

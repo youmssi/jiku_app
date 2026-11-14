@@ -70,7 +70,22 @@ class SubscriptionFlowTest {
         assertTrue(JsonPath.read<String?>(outgrown, "$.expiresAt") != null, "outgrowing Solo starts the window to choose")
         assertEquals(120_000, JsonPath.read<List<Int>>(outgrown, "$.plans[?(@.name == 'Services Pro')].teamMonthlyMinor").single())
 
+        billingStatus(token)
+            .andExpect(jsonPath("$.subscription.freePlan").value(true))
+            .andExpect(jsonPath("$.subscription.people").value(2))
+            .andExpect(jsonPath("$.subscription.peopleCovered").value(1))
+
+        // A year asked first, then a month: the year's request is replaced, not left open (JIKU-307).
+        val year = requestSubscription(token, plan = "Services Pro", months = 12)
         requestAndConfirm(token, plan = "Services Pro", months = 1)
+        val history =
+            mockMvc
+                .perform(get("/api/v1/billing/payments").header("Authorization", "Bearer $token"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .response.contentAsString
+        val yearId = JsonPath.read<String>(year, "$.paymentId")
+        assertEquals("CANCELLED", JsonPath.read<List<String>>(history, "$[?(@.paymentId == '$yearId')].status").single())
         createResource(token)
         val pro = subscriptionJson(token)
         assertEquals("Services Pro", JsonPath.read<String>(pro, "$.plan"))

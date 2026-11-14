@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath
 import com.jiku.TestcontainersConfiguration
 import com.jiku.backoffice.internal.PlatformAdmin
 import com.jiku.backoffice.internal.PlatformAdminRepository
+import com.jiku.money.internal.ManualPaymentService
 import com.jiku.support.TestDates.EVENT_YEAR
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -18,6 +19,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.time.Duration
+import java.time.Instant
 import java.util.UUID
 
 /**
@@ -46,6 +49,9 @@ class ManualPaymentFlowTest {
 
     @Autowired
     lateinit var passwordEncoder: PasswordEncoder
+
+    @Autowired
+    lateinit var manualPayments: ManualPaymentService
 
     @Test
     fun `request instructions confirm unlocks and audit records the action`() {
@@ -170,6 +176,10 @@ class ManualPaymentFlowTest {
             .andExpect(jsonPath("$.status").value("FAILED"))
 
         assert(JsonPath.read<Int>(usage(token, eventId), "$.allowance") == 100)
+        assert(
+            JsonPath.read<List<String>>(history(token), "$[?(@.paymentId == '$paymentId')].rejectionReason").single() ==
+                "no matching transfer received",
+        )
 
         // After rejection the organizer can request again — a fresh payment.
         mockMvc
@@ -181,6 +191,118 @@ class ManualPaymentFlowTest {
             ).andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("PENDING"))
     }
+
+    @Test
+    fun `waiting requests are listed, replaced, cancelled and still confirmable when the money arrives`() {
+        val token = register()
+        val eventId = createPublishedEvent(token)
+        val adminToken = adminLogin()
+
+        val first = requestGuests(token, eventId, 300)
+        val second = requestGuests(token, eventId, 400)
+        assert(first != second) { "a request for other guests replaces the waiting one" }
+
+        // One list of what waits for a transfer: only the newer request.
+        mockMvc
+            .perform(get("/api/v1/billing/payment-requests").header("Authorization", "Bearer $token"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].paymentId").value(second))
+            .andExpect(jsonPath("$[0].kind").value("GUESTS"))
+            .andExpect(jsonPath("$[0].eventName").value("Concierge Event"))
+            .andExpect(jsonPath("$[0].expiresAt").exists())
+        assert(JsonPath.read<List<String>>(history(token), "$[?(@.paymentId == '$first')].status").single() == "CANCELLED")
+
+        // Saying the transfer is sent marks the request, once, for the desk.
+        mockMvc
+            .perform(post("/api/v1/billing/payment-requests/$second/transfer-sent").header("Authorization", "Bearer $token"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.transferDeclaredAt").exists())
+        mockMvc
+            .perform(
+                get("/api/v1/admin/payments")
+                    .param("provider", "manual")
+                    .header("Authorization", "Bearer $adminToken"),
+            ).andExpect(status().isOk())
+            .andExpect(jsonPath("$[?(@.id == '$second')].transferDeclaredAt").exists())
+
+        // The organizer cancels it; cancelling again is refused.
+        mockMvc
+            .perform(post("/api/v1/billing/payment-requests/$second/cancel").header("Authorization", "Bearer $token"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("CANCELLED"))
+        mockMvc
+            .perform(post("/api/v1/billing/payment-requests/$second/cancel").header("Authorization", "Bearer $token"))
+            .andExpect(status().isConflict())
+        mockMvc
+            .perform(get("/api/v1/billing/payment-requests").header("Authorization", "Bearer $token"))
+            .andExpect(jsonPath("$.length()").value(0))
+
+        // Another organization cannot touch it.
+        mockMvc
+            .perform(post("/api/v1/billing/payment-requests/$first/cancel").header("Authorization", "Bearer ${register()}"))
+            .andExpect(status().isNotFound())
+
+        // The transfer arrives after all: the desk can still confirm it.
+        confirm(adminToken, second).andExpect(status().isOk()).andExpect(jsonPath("$.status").value("SUCCEEDED"))
+        assert(JsonPath.read<Int>(usage(token, eventId), "$.allowance") == 400)
+    }
+
+    @Test
+    fun `a request with no transfer expires, and the desk can still confirm it`() {
+        val token = register()
+        val eventId = createPublishedEvent(token)
+        val adminToken = adminLogin()
+        val paymentId = requestGuests(token, eventId, 250)
+
+        assert(manualPayments.expireStale(Instant.now().plus(Duration.ofDays(8))) >= 1)
+
+        mockMvc
+            .perform(get("/api/v1/billing/payment-requests").header("Authorization", "Bearer $token"))
+            .andExpect(jsonPath("$.length()").value(0))
+        assert(JsonPath.read<List<String>>(history(token), "$[?(@.paymentId == '$paymentId')].status").single() == "EXPIRED")
+        mockMvc
+            .perform(post("/api/v1/billing/payment-requests/$paymentId/transfer-sent").header("Authorization", "Bearer $token"))
+            .andExpect(status().isConflict())
+
+        confirm(adminToken, paymentId).andExpect(status().isOk()).andExpect(jsonPath("$.status").value("SUCCEEDED"))
+        assert(JsonPath.read<Int>(usage(token, eventId), "$.allowance") == 250)
+    }
+
+    private fun requestGuests(
+        token: String,
+        eventId: String,
+        guests: Int,
+    ): String {
+        val body =
+            mockMvc
+                .perform(
+                    post("/api/v1/events/$eventId/payments/manual")
+                        .header("Authorization", "Bearer $token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""{"guests":$guests}"""),
+                ).andExpect(status().isOk())
+                .andReturn()
+                .response.contentAsString
+        return JsonPath.read(body, "$.paymentId")
+    }
+
+    private fun confirm(
+        adminToken: String,
+        paymentId: String,
+    ) = mockMvc.perform(
+        post("/api/v1/admin/payments/$paymentId/confirm")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("""{"transactionReference":"OM-TX-${UUID.randomUUID()}"}""")
+            .header("Authorization", "Bearer $adminToken"),
+    )
+
+    private fun history(token: String): String =
+        mockMvc
+            .perform(get("/api/v1/billing/payments").header("Authorization", "Bearer $token"))
+            .andExpect(status().isOk())
+            .andReturn()
+            .response.contentAsString
 
     private fun adminLogin(): String {
         val email = "payments-admin@jiku.test"

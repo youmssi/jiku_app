@@ -36,7 +36,8 @@ class BillingStatusService(
         row: Subscription,
         now: Instant,
     ): SubscriptionStatusSummary {
-        val overLimit = platformSettings.planByName(row.plan)?.covers(row.resourcesActive) == false
+        val plan = platformSettings.planByName(row.plan)
+        val overLimit = plan?.covers(row.resourcesActive) == false
         val free = platformSettings.keepsTeamFree(row.plan, row.resourcesActive)
         val graceEnd = row.expiresAt?.plus(properties.grace)
         val attention =
@@ -57,6 +58,9 @@ class BillingStatusService(
             overLimit = overLimit,
             servicesPaused = !free && row.status == SubscriptionStatus.EXPIRED,
             attention = attention,
+            freePlan = plan?.free == true,
+            people = row.resourcesActive,
+            peopleCovered = plan?.maxPeople,
         )
     }
 }
@@ -99,4 +103,13 @@ data class SubscriptionStatusSummary(
     val overLimit: Boolean,
     val servicesPaused: Boolean,
     val attention: BillingAttention,
+    /**
+     * The plan costs nothing (JIKU-307): when it is over its limit, the team has
+     * outgrown it rather than let a paid period end, and the reminder says so.
+     */
+    val freePlan: Boolean = false,
+    /** People serving clients now. */
+    val people: Long = 0,
+    /** People the plan holds; null when it has no ceiling. */
+    val peopleCovered: Long? = null,
 )

@@ -53,6 +53,25 @@ la raison.
 Ne modifiez jamais le statut d'un paiement directement en base. Un paiement accordé à
 la main sans passer par le bureau ne laisse aucune trace d'audit.
 
+## Demandes de virement (JIKU-307)
+
+Le virement reste proposé à côté du paiement en ligne. Une demande vit ainsi :
+
+- `PENDING` tant que le virement n'est pas confirmé. Si l'organisateur clique
+  « J'ai envoyé le virement », une alerte opérations « Jikū transfer sent: JK-… »
+  arrive, et le bureau des paiements montre la date à côté de la demande.
+- `CANCELLED` si l'organisateur l'annule, s'il demande autre chose pour le même achat
+  (une nouvelle référence remplace l'ancienne), ou si un paiement en ligne règle ce
+  même achat.
+- `EXPIRED` sans virement confirmé après `BILLING_MANUAL_EXPIRE_AFTER` (7 jours) ;
+  l'organisateur reçoit un e-mail.
+
+Un virement peut arriver après l'annulation ou l'expiration : le bureau peut toujours
+confirmer une demande `CANCELLED` ou `EXPIRED`, l'achat est alors accordé normalement.
+Vérifiez seulement que l'achat n'a pas déjà été payé en ligne (historique de
+l'organisation) ; sinon, remboursez le virement. Un refus ne vaut que pour une demande
+`PENDING`, et son motif est montré à l'organisateur.
+
 ## Remboursements
 
 Au lancement, les remboursements sont **manuels** : aucune API de remboursement n'est
