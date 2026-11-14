@@ -64,6 +64,8 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-299 | Lancement sur un Cloud VPS 8 Contabo sous Ubuntu 26.04, Chatwoot et n8n reportés (ADR 111) | app | JIKU-203 |
 | JIKU-300 | Premier affichage plus léger sur téléphone et nettoyage SEO du site public | web | JIKU-299 |
 | JIKU-301 | Fichiers publics servis tels quels : images des guides, logo, widget, modèle CSV | web | JIKU-300 |
+| JIKU-302 | E-mails envoyés hors transaction : la réservation du quota a sa propre transaction | app | JIKU-275 |
+| JIKU-303 | Un plan gratuit qui couvre l'équipe ne s'arrête jamais : fin des services mis en pause à tort | app | JIKU-268 |
 | JIKU-305 | Cohérence : code mort retiré, variables d'environnement documentées sous leur vrai nom | app, web | — |
 
 ---
@@ -720,6 +722,47 @@ ne peut pas être importé par lien dans les outils de création.
 - [x] `/guides/fr/*.webp`, `/guides/en/*.webp`, `/templates/guest-import-template.csv`, `/jiku-widget.js` et `/jiku-logo.svg` répondent 200 avec leur type de contenu
 - [x] Les pages (accueil, `/en`, `/organizers`, `/en/docs`) passent toujours par le proxy de langue
 - [x] Un test échoue dès qu'un fichier ou dossier de `public/` n'est pas exclu du `matcher`, pour que le prochain ajout ne retombe pas dans le même piège
+
+## JIKU-302 — E-mails envoyés hors transaction : la réservation du quota a sa propre transaction
+
+**Pourquoi.** Relevé le 14 novembre 2026 dans les journaux de production :
+l'alerte d'exploitation sur un modèle WhatsApp reclassé en marketing n'est
+jamais partie (`No active transaction for update or delete query` dans
+`EmailQuotaCounterRepository.tryReserve`). Avant chaque e-mail, la chaîne de
+fournisseurs (JIKU-275) réserve une place dans le quota du jour par une
+requête de modification, qui exige une transaction. Or les envois partent en
+arrière-plan, sans transaction (JIKU-215, JIKU-216) : invitations par e-mail,
+e-mails de compte, alertes et avis de facturation échouaient tous avant
+d'atteindre le fournisseur. Les tests ne le voyaient pas, car ils tournaient
+dans une transaction.
+
+**Critères d'acceptation.**
+
+- [x] La réservation du quota s'exécute dans sa propre transaction : un envoi depuis un fil sans transaction, ou depuis une transaction en lecture seule, réserve sa place puis part
+- [x] Les tests de la chaîne d'e-mails tournent sans transaction de test, comme en production, et remettent les compteurs à zéro avant et après chaque test
+- [x] Un test envoie depuis un fil sans transaction et un autre depuis une transaction en lecture seule
+
+**Hors périmètre :** transmettre à Sentry les échecs d'envoi rattrapés (il
+faut d'abord exposer le suivi d'erreurs du module `shared` aux autres
+modules).
+
+## JIKU-303 — Un plan gratuit qui couvre l'équipe ne s'arrête jamais
+
+**Pourquoi.** Relevé le 14 novembre 2026 en production : une organisation
+d'une seule personne, sur le plan Solo, voit « Your services are paused » et
+son service refuse les réservations et les tickets de file. Solo est gratuit
+depuis la tarification par invité (JIKU-268, ADR 109), mais la migration V98 a
+laissé aux abonnements Solo ouverts avant elle leur date de fin : ils sont
+passés en grâce, puis en pause. Et une équipe revenue dans les limites du plan
+gratuit n'était remise en route que si son abonnement était encore actif.
+
+**Critères d'acceptation.**
+
+- [x] Un plan gratuit qui couvre l'équipe ne déclenche ni rappel, ni bandeau, ni pause des services, quels que soient son statut et sa date de fin enregistrés
+- [x] Le passage en grâce et la pause par la tâche d'échéance remettent un tel abonnement en route sans date de fin au lieu de l'arrêter
+- [x] Une équipe qui revient dans les limites du plan gratuit repart, même depuis la grâce ou la pause
+- [x] Une migration remet en route, sans date de fin, les abonnements Solo d'au plus une personne laissés en grâce, en pause ou datés
+- [x] Un test couvre un Solo laissé « expiré » et daté : réservations ouvertes, aucun bandeau, aucune grâce après le passage de la tâche
 
 ## JIKU-305 — Cohérence : code mort retiré, variables documentées sous leur vrai nom
 

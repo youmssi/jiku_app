@@ -2,16 +2,20 @@ package com.jiku.messaging
 
 import com.jiku.TestcontainersConfiguration
 import com.jiku.messaging.internal.EmailMessage
+import com.jiku.messaging.internal.EmailQuotaCounter
 import com.jiku.messaging.internal.EmailQuotaCounterRepository
 import com.jiku.messaging.internal.EmailQuotaExceededException
 import com.jiku.messaging.internal.EmailRoutingProperties
 import com.jiku.messaging.internal.EmailSender
 import com.jiku.messaging.internal.RoutingEmailSender
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
-import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.support.TransactionTemplate
 import java.time.LocalDate
 import java.util.UUID
 import kotlin.test.assertEquals
@@ -25,20 +29,25 @@ import kotlin.test.assertTrue
  * test's assumption of the default `log` transport) with fake provider adapters
  * so no real Resend/Brevo call is ever made, and small caps so the tests stay fast.
  *
- * Class-level `@Transactional`: [EmailQuotaCounterRepository.tryReserve] is a
- * `@Modifying` query, which JPA requires an active transaction for — in
- * production that's always supplied by the caller (`onGuestInvited`'s own
- * `@Transactional`), but a bare test method has none on its own. This also
- * rolls each test back automatically, so tests 2-4 (which all reserve against
- * the real RESEND/BREVO/GLOBAL provider constants for today's date) never leak
- * state into one another.
+ * No test transaction (JIKU-302): production sends run on async threads without
+ * one, and a class-level `@Transactional` here once hid that the reservation
+ * failed there. The counters are cleared around each test instead, since every
+ * test reserves against today's real provider names.
  */
 @SpringBootTest
 @Import(TestcontainersConfiguration::class)
-@Transactional
 class EmailRoutingTest {
     @Autowired
     lateinit var quota: EmailQuotaCounterRepository
+
+    @Autowired
+    lateinit var transactionManager: PlatformTransactionManager
+
+    @BeforeEach
+    @AfterEach
+    fun clearCounters() {
+        quota.deleteAllInBatch()
+    }
 
     private val message = EmailMessage(to = "guest@example.com", toName = "Ada", subject = "Hi", htmlBody = "<p>Hi</p>")
 
@@ -148,6 +157,48 @@ class EmailRoutingTest {
 
         assertEquals(1, usesend.sent)
         assertEquals(2, paid.sent)
+    }
+
+    @Test
+    fun `a send from a thread without a transaction reserves and goes out`() {
+        val resend = RecordingSender()
+        val sender =
+            routing(
+                EmailRoutingProperties(resendDailyCap = 5, brevoDailyCap = 5, globalDailyCap = 5),
+                mapOf(
+                    "resend" to resend,
+                    "brevo" to RecordingSender(),
+                ),
+            )
+
+        val worker = Thread { sender.send("no-reply@hellojiku.com", message) }
+        var failure: Throwable? = null
+        worker.setUncaughtExceptionHandler { _, ex -> failure = ex }
+        worker.start()
+        worker.join()
+
+        assertEquals(null, failure)
+        assertEquals(1, resend.sent)
+        assertEquals(1, requireNotNull(quota.findByProviderAndDay(EmailQuotaCounter.PROVIDER_RESEND, LocalDate.now())).sentCount)
+    }
+
+    @Test
+    fun `a send from inside a read-only transaction still reserves`() {
+        val resend = RecordingSender()
+        val sender =
+            routing(
+                EmailRoutingProperties(resendDailyCap = 5, brevoDailyCap = 5, globalDailyCap = 5),
+                mapOf(
+                    "resend" to resend,
+                    "brevo" to RecordingSender(),
+                ),
+            )
+
+        TransactionTemplate(transactionManager).apply { isReadOnly = true }.executeWithoutResult {
+            sender.send("no-reply@hellojiku.com", message)
+        }
+
+        assertEquals(1, resend.sent)
     }
 
     @Test

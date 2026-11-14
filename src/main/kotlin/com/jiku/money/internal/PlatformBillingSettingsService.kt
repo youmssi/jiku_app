@@ -46,6 +46,17 @@ class PlatformBillingSettingsService(
     fun planByName(name: String): Plan? = plans().firstOrNull { it.name.equals(name, ignoreCase = true) }
 
     /**
+     * Whether a team of [people] on [planName] owes nothing: a free plan that
+     * still holds the team never ends, never enters grace and never pauses
+     * services (JIKU-303), whatever end date an older price grid left behind.
+     */
+    @Transactional(readOnly = true)
+    fun keepsTeamFree(
+        planName: String,
+        people: Long,
+    ): Boolean = planByName(planName)?.let { it.free && it.covers(people) } == true
+
+    /**
      * The plan a team of [people] opens on: the free plan when it holds the
      * team, otherwise the cheapest plan (in GNF, the reference grid) that does.
      */
