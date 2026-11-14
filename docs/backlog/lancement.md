@@ -65,6 +65,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-300 | Premier affichage plus léger sur téléphone et nettoyage SEO du site public | web | JIKU-299 |
 | JIKU-301 | Fichiers publics servis tels quels : images des guides, logo, widget, modèle CSV | web | JIKU-300 |
 | JIKU-302 | E-mails envoyés hors transaction : la réservation du quota a sa propre transaction | app | JIKU-275 |
+| JIKU-303 | Un plan gratuit qui couvre l'équipe ne s'arrête jamais : fin des services mis en pause à tort | app | JIKU-268 |
 
 ---
 
@@ -743,4 +744,22 @@ dans une transaction.
 **Hors périmètre :** transmettre à Sentry les échecs d'envoi rattrapés (il
 faut d'abord exposer le suivi d'erreurs du module `shared` aux autres
 modules).
+
+## JIKU-303 — Un plan gratuit qui couvre l'équipe ne s'arrête jamais
+
+**Pourquoi.** Relevé le 14 novembre 2026 en production : une organisation
+d'une seule personne, sur le plan Solo, voit « Your services are paused » et
+son service refuse les réservations et les tickets de file. Solo est gratuit
+depuis la tarification par invité (JIKU-268, ADR 109), mais la migration V98 a
+laissé aux abonnements Solo ouverts avant elle leur date de fin : ils sont
+passés en grâce, puis en pause. Et une équipe revenue dans les limites du plan
+gratuit n'était remise en route que si son abonnement était encore actif.
+
+**Critères d'acceptation.**
+
+- [x] Un plan gratuit qui couvre l'équipe ne déclenche ni rappel, ni bandeau, ni pause des services, quels que soient son statut et sa date de fin enregistrés
+- [x] Le passage en grâce et la pause par la tâche d'échéance remettent un tel abonnement en route sans date de fin au lieu de l'arrêter
+- [x] Une équipe qui revient dans les limites du plan gratuit repart, même depuis la grâce ou la pause
+- [x] Une migration remet en route, sans date de fin, les abonnements Solo d'au plus une personne laissés en grâce, en pause ou datés
+- [x] Un test couvre un Solo laissé « expiré » et daté : réservations ouvertes, aucun bandeau, aucune grâce après le passage de la tâche
 
