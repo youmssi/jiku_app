@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import { newOrganizer, createOrganization, register, submitRegistration, verifyEmail } from '../fixtures/organizer';
+import { inEnglish } from '../fixtures/locale';
 
 /**
  * Journey 1: a stranger becomes an organizer who can run an event.
@@ -28,7 +29,7 @@ test.describe('Organizer onboarding', () => {
         await expect(page.getByText(/verified|vérifié/i).first()).toBeVisible();
 
         if (namedOrganization) {
-            await page.goto('/dashboard');
+            await page.goto(inEnglish('/dashboard'));
             await expect(page.getByText(/confirm your email|confirmez votre adresse/i)).toHaveCount(0);
         } else {
             await createOrganization(page, organizer);
