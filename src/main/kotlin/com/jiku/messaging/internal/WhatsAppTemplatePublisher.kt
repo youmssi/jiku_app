@@ -46,11 +46,14 @@ class WhatsAppTemplatePublisher(
             }
         }
         return kinds.flatMap { kind ->
-            val definition = requireNotNull(definitions[kind.key]) { "No definition for WhatsApp template ${kind.key}" }
             // Arabic covers the guest templates only (JIKU-293); the others exist in French and English.
-            LANGUAGES.filter { it in definition || it in REQUIRED_LANGUAGES }.map { language ->
-                val name = properties.meta.templatePrefix + kind.key
-                val components = definition[language] ?: error("No $language text for WhatsApp template ${kind.key}")
+            // A language may have its own, newer template name (JIKU-312).
+            LANGUAGES.mapNotNull { language ->
+                val key = kind.keyFor(language)
+                val definition = requireNotNull(definitions[key]) { "No definition for WhatsApp template $key" }
+                if (language !in definition && language !in REQUIRED_LANGUAGES) return@mapNotNull null
+                val components = definition[language] ?: error("No $language text for WhatsApp template $key")
+                val name = properties.meta.templatePrefix + key
                 publish(name, language, kind.category, components, if (definition["image"] == true) imageHandle else null, wabaId, token)
             }
         }
