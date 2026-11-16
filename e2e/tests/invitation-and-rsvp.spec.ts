@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 import { createEvent, importGuests, listGuests, login, publishEvent, sendInvitations } from '../fixtures/api';
 import { extractLink, waitForMessage } from '../fixtures/mailpit';
 import { onboardedOrganizer } from '../fixtures/organizer';
+import { inEnglish } from '../fixtures/locale';
 
 /**
  * Journeys 2 and 3: guests are imported and invited, and a guest turns their
@@ -38,7 +39,7 @@ test.describe('Invitation and RSVP', () => {
         const link = extractLink(invitation, '/v/');
         expect(new URL(link).pathname).toMatch(/^\/(en\/)?v\/[A-Z0-9]{10}$/);
 
-        await page.goto(link);
+        await page.goto(inEnglish(link));
         await page.getByRole('button', { name: "I'm coming" }).click();
 
         // A yes must actually issue a ticket, shown right away on the same link.
@@ -49,7 +50,7 @@ test.describe('Invitation and RSVP', () => {
         await expect(page.locator('canvas, svg').first()).toBeVisible();
 
         // Opening the same link again goes straight to the ticket.
-        await page.goto(link);
+        await page.goto(inEnglish(link));
         await expect(page.getByText('Valid', { exact: true })).toBeVisible();
     });
 
@@ -65,7 +66,7 @@ test.describe('Invitation and RSVP', () => {
         await sendInvitations(token, eventId);
 
         const invitation = await waitForMessage(guestEmail, { timeoutMs: 60_000 });
-        await page.goto(extractLink(invitation, '/v/'));
+        await page.goto(inEnglish(extractLink(invitation, '/v/')));
 
         await page.getByRole('button', { name: "I can't come" }).click();
         await expect(page.getByText(/You've declined/i).first()).toBeVisible();
