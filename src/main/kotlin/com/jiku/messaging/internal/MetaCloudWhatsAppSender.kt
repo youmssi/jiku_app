@@ -87,7 +87,7 @@ class MetaCloudWhatsAppSender internal constructor(
 
     /** The approved template [payload] uses for [message], or null for a session message. */
     private fun templateFor(message: WhatsAppMessage): Chosen? {
-        dedicated(message)?.let { return Chosen(templatePrefix + it.kind.key, it.language) }
+        dedicated(message)?.let { return Chosen(templatePrefix + it.kind.keyFor(it.language), it.language) }
         if (message.session) return null
         val name =
             when {
@@ -122,7 +122,7 @@ class MetaCloudWhatsAppSender internal constructor(
             message.to,
             "template",
             mapOf(
-                "name" to templatePrefix + call.kind.key,
+                "name" to templatePrefix + call.kind.keyFor(call.language),
                 "language" to mapOf("code" to call.language),
                 "components" to listOfNotNull(header, body) + buttons,
             ),

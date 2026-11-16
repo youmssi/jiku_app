@@ -32,6 +32,8 @@ enum class WhatsAppTemplateKind(
     val key: String,
     val category: String = UTILITY,
     val platformOnly: Boolean = false,
+    /** A newer name in some languages only, for a wording Meta filed in the wrong category there. */
+    private val keyByLanguage: Map<String, String> = emptyMap(),
 ) {
     /**
      * v3 (JIKU-297): Meta filed the v1 and v2 invitations as MARKETING. Written as
@@ -39,7 +41,12 @@ enum class WhatsAppTemplateKind(
      * are UTILITY; a category cannot be changed back once approved.
      */
     INVITATION("invitation_v3"),
-    INVITATION_RSVP("invitation_rsvp_v3"),
+
+    /**
+     * v4 in Arabic only (JIKU-312): Meta filed the Arabic v3 as MARKETING, twice,
+     * while French and English v3 are UTILITY and stay as they are.
+     */
+    INVITATION_RSVP("invitation_rsvp_v3", keyByLanguage = mapOf("ar" to "invitation_rsvp_v4")),
     TICKET("ticket_v1"),
     EVENT_CANCELLED("event_cancelled_v1"),
     APPOINTMENT_REMINDER("appointment_reminder_v1"),
@@ -50,6 +57,9 @@ enum class WhatsAppTemplateKind(
     ;
 
     val authentication: Boolean get() = category == AUTHENTICATION
+
+    /** The template's name after the prefix in [language]: [key], unless that language has its own. */
+    fun keyFor(language: String): String = keyByLanguage[language] ?: key
 }
 
 /** Meta's template categories Jikū uses. */

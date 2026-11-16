@@ -101,7 +101,7 @@ class EmbeddedSignupTest {
         assertEquals(
             WhatsAppTemplateKind.entries.filterNot { it.platformOnly }.flatMap { kind ->
                 // The guests' templates also exist in Arabic (JIKU-293).
-                listOf("fr", "en", "ar").filter { it != "ar" || kind in GUEST_KINDS }.map { "jiku_${kind.key}:$it" }
+                listOf("fr", "en", "ar").filter { it != "ar" || kind in GUEST_KINDS }.map { "jiku_${kind.keyFor(it)}:$it" }
             },
             created,
         )
