@@ -11,6 +11,7 @@ import {
 } from '../fixtures/api';
 import { extractLink, waitForMessage } from '../fixtures/mailpit';
 import { onboardedOrganizer } from '../fixtures/organizer';
+import { inEnglish } from '../fixtures/locale';
 
 /**
  * Journey 4: door staff admit a guest, and the second attempt is refused with
@@ -35,14 +36,14 @@ test.describe('Validator check-in', () => {
 
         // Only a confirmed guest holds a ticket, so the guest confirms first.
         const invitation = await waitForMessage(guestEmail, { timeoutMs: 60_000 });
-        await page.goto(extractLink(invitation, '/v/'));
+        await page.goto(inEnglish(extractLink(invitation, '/v/')));
         await page.getByRole('button', { name: "I'm coming" }).click();
         await expect(page.getByText('Valid', { exact: true })).toBeVisible();
 
         const validatorLabel = 'Main gate';
         const checkInLink = await createValidator(token, eventId, validatorLabel);
 
-        await page.goto(checkInLink);
+        await page.goto(inEnglish(checkInLink));
         await page.getByRole('button', { name: 'Search', exact: true }).click();
         await page.getByPlaceholder('Search by name, email or phone').fill('Ibrahima');
         await page.getByRole('button', { name: /Ibrahima Sow/ }).click();
@@ -78,7 +79,7 @@ test.describe('Validator check-in', () => {
         ]);
         expect(await listGuests(token, eventId)).toHaveLength(1);
 
-        await page.goto(await createValidator(token, eventId, 'Side gate'));
+        await page.goto(inEnglish(await createValidator(token, eventId, 'Side gate')));
         await page.getByRole('button', { name: 'Search', exact: true }).click();
         await page.getByPlaceholder('Search by name, email or phone').fill('Nobody Here');
 

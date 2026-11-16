@@ -28,9 +28,9 @@ class DedicatedWhatsAppTemplatesTest {
     @Test
     fun `every template is defined in both languages the way Meta accepts it`() {
         for (kind in WhatsAppTemplateKind.entries.filterNot { it.authentication }) {
-            val definition = definitions.path(kind.key)
-            val parameters = definition.path("parameters").size()
             for (language in listOf("fr", "en") + if (kind in GUEST_KINDS) listOf("ar") else emptyList()) {
+                val definition = definitions.path(kind.keyFor(language))
+                val parameters = definition.path("parameters").size()
                 val components = definition.path(language).toList()
                 val body = components.single { it.path("type").asString("") == "BODY" }
                 val text = body.path("text").asString("")
@@ -54,6 +54,24 @@ class DedicatedWhatsAppTemplatesTest {
                 assertEquals(kind == WhatsAppTemplateKind.TICKET, components.any { it.path("format").asString("") == "IMAGE" })
             }
         }
+    }
+
+    @Test
+    fun `the Arabic answer template has its own v4 name and text, the others keep v3`() {
+        val rsvp = WhatsAppTemplateKind.INVITATION_RSVP
+        assertEquals("invitation_rsvp_v4", rsvp.keyFor("ar"))
+        assertEquals("invitation_rsvp_v3", rsvp.keyFor("fr"))
+        assertEquals("invitation_rsvp_v3", rsvp.keyFor("en"))
+        assertFalse(definitions.path("invitation_rsvp_v3").has("ar"), "the Arabic v3 Meta filed as marketing is not republished")
+        assertEquals(
+            listOf("ar"),
+            definitions
+                .path("invitation_rsvp_v4")
+                .propertyNames()
+                .asSequence()
+                .filter { it != "parameters" }
+                .toList(),
+        )
     }
 
     @Test

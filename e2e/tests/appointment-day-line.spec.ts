@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 
 import { login } from '../fixtures/api';
 import { onboardedOrganizer } from '../fixtures/organizer';
+import { inEnglish } from '../fixtures/locale';
 
 /**
  * Day-line console (JIKU-88): a professional serves, on the same day and from the
@@ -104,7 +105,7 @@ test('serves a booked appointment and a walk-in client on the same day', async (
 
     // The organizer opens the day-line console of the service. With no locale
     // cookie, the console follows the browser's English.
-    await page.goto(`/services/${service.serviceId}/line`);
+    await page.goto(inEnglish(`/services/${service.serviceId}/line`));
     await expect(page.getByRole('heading', { name: "Today's line" })).toBeVisible();
     await expect(page.getByText('Coupe').first()).toBeVisible();
 
@@ -154,7 +155,7 @@ test('a walk-in client takes a ticket from the entrance QR and is told when it i
 
     // The entrance QR leads the client, with no account, to take a ticket. The
     // client has no locale cookie, so the page follows the browser's English.
-    await page.goto(`/r/${link.shortCode}/line`);
+    await page.goto(inEnglish(`/r/${link.shortCode}/line`));
     await expect(page.getByText('Take a ticket')).toBeVisible();
     await page.locator('#line-name').fill('Mariama Diallo');
     await page.locator('#line-phone').fill('+224620112233');

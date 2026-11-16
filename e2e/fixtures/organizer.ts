@@ -1,6 +1,7 @@
 import { expect, type Page } from '@playwright/test';
 
 import { extractLink, waitForMessage } from './mailpit';
+import { inEnglish } from './locale';
 
 /**
  * Registers an organizer with an organization, driving the real UI.
@@ -48,7 +49,7 @@ export async function register(page: Page, organizer: Organizer): Promise<boolea
  * named the organization too (JIKU-253), so callers skip onboarding.
  */
 export async function submitRegistration(page: Page, organizer: Organizer): Promise<boolean> {
-    await page.goto('/register');
+    await page.goto(inEnglish('/register'));
     await page.locator('#fullName').fill(organizer.fullName);
     const organizationField = page.locator('#organizationName');
     const namedOrganization = (await organizationField.count()) > 0;
@@ -68,7 +69,7 @@ export async function verifyEmail(page: Page, organizer: Organizer): Promise<voi
     // Emails follow the organizer's language, so match the subject in either one.
     const message = await waitForMessage(organizer.email, { subject: /confirm/i });
     const link = extractLink(message, '/verify-email');
-    await page.goto(link);
+    await page.goto(inEnglish(link));
     // Waiting for the confirmation is load-bearing, not cosmetic: the page
     // redeems the token after it renders, and sending is refused until that
     // lands.
@@ -84,7 +85,7 @@ export async function verifyEmail(page: Page, organizer: Organizer): Promise<voi
  * intermittent failure in the first API call after onboarding.
  */
 export async function createOrganization(page: Page, organizer: Organizer): Promise<void> {
-    await page.goto('/onboarding');
+    await page.goto(inEnglish('/onboarding'));
     await page.locator('#name').fill(organizer.organization);
     await page.getByRole('button', { name: /create|continue/i }).click();
     await page.waitForURL(/\/dashboard/, { timeout: 30_000 });
