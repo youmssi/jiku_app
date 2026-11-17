@@ -78,6 +78,9 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-313 | Tests de bout en bout menés sur les pages anglaises | app | JIKU-310 |
 | JIKU-314 | Notifications dans l'application : une cloche et une liste dans l'espace organisateur | app, web | — |
 | JIKU-315 | Cadeaux : le bureau offre des invités, des mois de services ou de forfait, l'organisateur les active | app, web | JIKU-42, JIKU-314 |
+| JIKU-316 | Supprimer son compte : confirmation, transfert ou suppression de l'organisation, 30 jours pour changer d'avis | app, web | JIKU-314 |
+| JIKU-317 | Double authentification : application d'authentification, codes de secours, appareils de confiance, obligatoire au bureau | app, web | — |
+| JIKU-318 | Passkeys : se connecter par empreinte ou visage | app, web | JIKU-317 |
 
 ---
 
@@ -984,3 +987,70 @@ suite ». Un cadeau non activé expire après 30 jours.
 d'activer), COMM-14 et COMM-17 (statut du cadeau visible dans la facturation),
 NOTIF-02 et NOTIF-18 (annonce sur le bon canal, qui dit quoi faire), NOTIF-15
 (activer depuis une notification passe par la confirmation).
+
+## JIKU-316 — Supprimer son compte
+
+**Pourquoi.** Relevé le 17 novembre 2026 : un organisateur qui veut partir n'a
+aucun moyen de le faire lui-même. Il doit écrire au support, et ses données
+restent tant que personne n'agit.
+
+**Décisions (17 novembre 2026).** 30 jours pour changer d'avis, réglables sans
+toucher au code (`ACCOUNT_DELETION_GRACE`). Les factures sont gardées,
+anonymisées, pendant la durée légale comptable.
+
+**Critères d'acceptation, côté API.**
+
+- [ ] `POST /auth/me/deletion` : demande de suppression, avec le mot de passe (ou une connexion Google récente) ; le compte est désactivé tout de suite et toutes ses sessions sont fermées
+- [ ] Seul propriétaire d'une organisation : la demande est refusée tant qu'il n'a pas transféré la propriété à un membre ou demandé aussi la suppression de l'organisation
+- [ ] Se reconnecter pendant `ACCOUNT_DELETION_GRACE` (`P30D`) annule la suppression ; un e-mail le confirme
+- [ ] À l'échéance, une tâche efface les données personnelles du compte et, si demandé, l'organisation avec ses événements, invités, billets et rendez-vous ; les factures restent, anonymisées, pendant `INVOICE_RETENTION` (`P10Y`)
+- [ ] Les demandes de virement en attente sont annulées ; un abonnement prépayé n'est pas remboursé automatiquement
+- [ ] Chaque étape (demande, annulation, effacement) envoie un e-mail et laisse une trace dans le journal d'audit, sans donnée personnelle
+- [ ] Tests : isolation entre organisations, membre non propriétaire, propriétaire seul, annulation par reconnexion, effacement à l'échéance
+
+**Critères d'acceptation, côté web.**
+
+- [ ] Paramètres → Compte : « Supprimer mon compte », avec ce qui sera effacé, ce qui est gardé et la date d'effacement
+- [ ] Confirmation forte : mot de passe, puis saisie du nom de l'organisation quand elle est supprimée aussi
+- [ ] Propriétaire seul : choix entre « Transférer la propriété » et « Supprimer aussi l'organisation »
+- [ ] Les CGU et la politique de confidentialité décrivent le délai et ce qui est gardé ; le guide décrit le parcours
+
+**Critères UX (ux-expert, conception).** TRUST (suppression aussi simple que
+l'inscription, sans parcours dissuasif), FLOW (confirmation proportionnée à
+l'action irréversible), CONT (ce qui est effacé et ce qui est gardé dit en
+clair).
+
+## JIKU-317 — Double authentification
+
+**Pourquoi.** Un mot de passe volé suffit aujourd'hui pour entrer dans un
+espace organisateur, ou dans le bureau, qui voit toutes les organisations.
+
+**Décisions (17 novembre 2026).** Code par application d'authentification
+(TOTP), pas par SMS. Obligatoire pour le bureau dès la livraison
+(`ADMIN_MFA_REQUIRED=true`), facultative pour les organisateurs. Les passkeys
+viennent dans JIKU-318. Les durées se règlent sans toucher au code.
+
+**Critères d'acceptation, côté API.**
+
+- [ ] Activation : un secret TOTP (RFC 6238) chiffré au repos, un QR code, puis la saisie d'un premier code pour confirmer ; 10 codes de secours à usage unique, montrés une fois et stockés hachés
+- [ ] Connexion : après le mot de passe ou Google, un jeton intermédiaire de courte durée (`MFA_CHALLENGE_TTL`, `PT5M`) qui n'ouvre que l'étape du code ; les jetons de session ne sont émis qu'après le code
+- [ ] Appareil de confiance : « Ne plus demander sur cet appareil » pendant `MFA_TRUSTED_DEVICE_TTL` (`P30D`), par un cookie httpOnly signé
+- [ ] Tentatives limitées par le limiteur existant ; un code déjà utilisé est refusé
+- [ ] Bureau : tant que `ADMIN_MFA_REQUIRED` est vrai, un administrateur sans 2FA doit l'activer avant d'accéder au bureau
+- [ ] Désactiver la 2FA ou régénérer les codes de secours demande un code valide ; chaque changement envoie un e-mail
+- [ ] Paramètres → Sécurité : sessions actives et « Déconnecter partout » ; un e-mail à chaque connexion depuis un nouvel appareil
+- [ ] Tests : parcours complet, code faux, code rejoué, code de secours, appareil de confiance expiré, bureau obligatoire
+
+**Critères d'acceptation, côté web.**
+
+- [ ] Paramètres → Sécurité : activer avec QR code et clé à copier, saisir le premier code, télécharger ou copier les codes de secours
+- [ ] Écran de code à la connexion, champ à 6 chiffres (`autocomplete="one-time-code"`), lien « Utiliser un code de secours »
+- [ ] Textes en français et en anglais ; le guide explique l'activation et la perte du téléphone
+
+## JIKU-318 — Passkeys
+
+**Critères d'acceptation.**
+
+- [ ] Ajouter une passkey depuis Paramètres → Sécurité (WebAuthn, `spring-security-webauthn`, identifiants stockés en base)
+- [ ] Se connecter avec une passkey, sans mot de passe ; elle compte comme deux facteurs
+- [ ] Lister, renommer et supprimer ses passkeys ; un e-mail à chaque ajout
