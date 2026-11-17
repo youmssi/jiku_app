@@ -19,6 +19,9 @@ object LiveTopics {
 
     /** A service's day line, its pending requests and its clients' places. */
     fun service(serviceId: UUID): String = "service:$serviceId"
+
+    /** An organization's notification bell (JIKU-314). */
+    fun notices(tenantId: String): String = "notices:$tenantId"
 }
 
 /**
