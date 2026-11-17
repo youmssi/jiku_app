@@ -43,6 +43,9 @@ class SecurityConfig(
                         "$auth/google",
                         // The code step of a sign-in (JIKU-317): the step token proves the password.
                         "$auth/mfa/verify",
+                        // Passkey sign-in (JIKU-318): the passkey is the credential.
+                        "$auth/passkey",
+                        "$auth/passkey/options",
                         // Account recovery (JIKU-49): reachable by definition when
                         // the caller cannot log in. The resend endpoint is NOT here —
                         // it stays authenticated.

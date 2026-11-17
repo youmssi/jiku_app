@@ -57,6 +57,7 @@ dependencies {
     // Verifies Google ID tokens against Google's JWKS (JIKU-51). Library only —
     // no resource-server starter, so nothing is auto-configured.
     implementation("org.springframework.security:spring-security-oauth2-jose")
+    implementation("org.springframework.security:spring-security-webauthn")
     implementation("org.apache.commons:commons-csv:1.14.1")
     // Per-organization answers each send checks, kept a short while (JIKU-216).
     implementation("com.github.ben-manes.caffeine:caffeine")
@@ -75,6 +76,7 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
     runtimeOnly("org.postgresql:postgresql")
+    testImplementation("com.webauthn4j:webauthn4j-test:0.31.9.RELEASE")
     testImplementation("org.springframework.boot:spring-boot-starter-actuator-test")
     testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
     testImplementation("org.springframework.boot:spring-boot-starter-flyway-test")
