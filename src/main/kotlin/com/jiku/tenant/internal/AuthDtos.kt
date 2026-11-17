@@ -32,6 +32,12 @@ data class MarketingConsentRequest(
 data class LoginRequest(
     @field:Email @field:NotBlank val email: String,
     @field:NotBlank val password: String,
+    /** The browser's own random id (JIKU-317), to tell a new device from a known one. */
+    @field:Size(max = 64) val deviceId: String? = null,
+    /** What the browser says it is, shown in the list of sessions. */
+    @field:Size(max = 500) val device: String? = null,
+    /** Skips the code step on a device remembered after an earlier one. */
+    @field:Size(max = 2048) val trustedDeviceToken: String? = null,
 )
 
 data class RefreshRequest(
@@ -40,6 +46,20 @@ data class RefreshRequest(
 
 data class GoogleLoginRequest(
     @field:NotBlank val idToken: String,
+    @field:Size(max = 64) val deviceId: String? = null,
+    @field:Size(max = 500) val device: String? = null,
+    @field:Size(max = 2048) val trustedDeviceToken: String? = null,
+)
+
+/** The code step of a sign-in (JIKU-317): the app's code or one backup code. */
+data class MfaVerifyRequest(
+    @field:NotBlank @field:Size(max = 2048) val challengeToken: String,
+    @field:Size(max = 12) val code: String? = null,
+    @field:Size(max = 32) val backupCode: String? = null,
+    /** "Don't ask again on this device". */
+    val trustDevice: Boolean = false,
+    @field:Size(max = 64) val deviceId: String? = null,
+    @field:Size(max = 500) val device: String? = null,
 )
 
 data class CreateOrgRequest(
@@ -69,6 +89,8 @@ data class AuthResponse(
     val accessToken: String,
     val refreshToken: String,
     val tokenType: String = "Bearer",
+    /** Set after a code step that asked to remember the device (JIKU-317). */
+    val trustedDeviceToken: String? = null,
 )
 
 data class MembershipView(

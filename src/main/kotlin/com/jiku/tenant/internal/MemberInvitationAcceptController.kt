@@ -34,6 +34,6 @@ class MemberInvitationAcceptController(
         @Valid @RequestBody request: AcceptInvitationRequest,
     ): AuthResponse {
         val tenantId = memberService.accept(authentication.name, request.token)
-        return authService.switchOrg(authentication.name, SwitchOrgRequest(tenantId))
+        return authService.switchOrg(authentication.name, authentication.sessionId(), SwitchOrgRequest(tenantId))
     }
 }

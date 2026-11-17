@@ -41,6 +41,8 @@ class SecurityConfig(
                         "$auth/login",
                         "$auth/refresh",
                         "$auth/google",
+                        // The code step of a sign-in (JIKU-317): the step token proves the password.
+                        "$auth/mfa/verify",
                         // Account recovery (JIKU-49): reachable by definition when
                         // the caller cannot log in. The resend endpoint is NOT here —
                         // it stays authenticated.
@@ -59,6 +61,8 @@ class SecurityConfig(
                     .requestMatchers(
                         "${apiProperties.basePath}/admin/auth/login",
                         "${apiProperties.basePath}/admin/auth/refresh",
+                        // The desk's code step and first setup (JIKU-317), opened by a step token.
+                        "${apiProperties.basePath}/admin/auth/mfa/**",
                     ).permitAll()
                 it.requestMatchers("${apiProperties.basePath}/admin/**").hasRole("PLATFORM_ADMIN")
                 it.requestMatchers("${apiProperties.basePath}/rsvp/**").permitAll()

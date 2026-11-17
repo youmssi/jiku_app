@@ -40,6 +40,15 @@ open class CodedRefusal(
         /** The account owns organizations alone and did not agree to delete them (JIKU-316). */
         const val SOLE_OWNER = "account.sole-owner"
 
+        /** The password was right; the second factor's code is asked next (JIKU-317). */
+        const val MFA_REQUIRED = "auth.mfa-required"
+
+        /** The desk requires a second factor this account has not set up yet (JIKU-317). */
+        const val MFA_SETUP_REQUIRED = "auth.mfa-setup-required"
+
+        /** The authentication code or backup code is wrong, already used or expired. */
+        const val MFA_INVALID = "auth.mfa-invalid"
+
         /** A client in the day line has not paid yet. */
         const val CLIENT_UNPAID = "client.unpaid"
     }

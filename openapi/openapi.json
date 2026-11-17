@@ -102,6 +102,23 @@
           },
           "refreshToken" : {
             "type" : "string"
+          },
+          "trustedDeviceToken" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type" : "object"
+      },
+      "AdminBackupCodesView" : {
+        "properties" : {
+          "backupCodes" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
           }
         },
         "type" : "object"
@@ -240,8 +257,110 @@
           },
           "password" : {
             "type" : "string"
+          },
+          "trustedDeviceToken" : {
+            "maxLength" : 2048,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         },
+        "type" : "object"
+      },
+      "AdminMfaCodeRequest" : {
+        "properties" : {
+          "code" : {
+            "maxLength" : 12,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "code"
+        ],
+        "type" : "object"
+      },
+      "AdminMfaConfirmRequest" : {
+        "properties" : {
+          "challengeToken" : {
+            "maxLength" : 2048,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "code" : {
+            "maxLength" : 12,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "challengeToken",
+          "code"
+        ],
+        "type" : "object"
+      },
+      "AdminMfaSetupRequest" : {
+        "properties" : {
+          "challengeToken" : {
+            "maxLength" : 2048,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "challengeToken"
+        ],
+        "type" : "object"
+      },
+      "AdminMfaSetupResponse" : {
+        "properties" : {
+          "accessToken" : {
+            "type" : "string"
+          },
+          "backupCodes" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "refreshToken" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "AdminMfaVerifyRequest" : {
+        "properties" : {
+          "backupCode" : {
+            "maxLength" : 32,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "challengeToken" : {
+            "maxLength" : 2048,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "code" : {
+            "maxLength" : 12,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "trustDevice" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [
+          "challengeToken"
+        ],
         "type" : "object"
       },
       "AdminPaymentView" : {
@@ -778,6 +897,12 @@
           },
           "tokenType" : {
             "type" : "string"
+          },
+          "trustedDeviceToken" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         },
         "type" : "object"
@@ -795,6 +920,17 @@
           },
           "start" : {
             "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "BackupCodesView" : {
+        "properties" : {
+          "backupCodes" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
           }
         },
         "type" : "object"
@@ -2454,9 +2590,33 @@
       },
       "GoogleLoginRequest" : {
         "properties" : {
+          "device" : {
+            "maxLength" : 500,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "deviceId" : {
+            "maxLength" : 64,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
           "idToken" : {
             "minLength" : 1,
             "type" : "string"
+          },
+          "trustedDeviceToken" : {
+            "maxLength" : 2048,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         },
         "required" : [
@@ -3122,6 +3282,22 @@
       },
       "LoginRequest" : {
         "properties" : {
+          "device" : {
+            "maxLength" : 500,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "deviceId" : {
+            "maxLength" : 64,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
           "email" : {
             "format" : "email",
             "minLength" : 1,
@@ -3130,6 +3306,14 @@
           "password" : {
             "minLength" : 1,
             "type" : "string"
+          },
+          "trustedDeviceToken" : {
+            "maxLength" : 2048,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         },
         "required" : [
@@ -3329,6 +3513,118 @@
             "type" : "boolean"
           }
         },
+        "type" : "object"
+      },
+      "MfaCodeRequest" : {
+        "properties" : {
+          "code" : {
+            "maxLength" : 12,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "code"
+        ],
+        "type" : "object"
+      },
+      "MfaDisableRequest" : {
+        "properties" : {
+          "backupCode" : {
+            "maxLength" : 32,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "code" : {
+            "maxLength" : 12,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type" : "object"
+      },
+      "MfaEnrollmentStart" : {
+        "properties" : {
+          "otpauthUri" : {
+            "type" : "string"
+          },
+          "secret" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "MfaStatus" : {
+        "properties" : {
+          "backupCodesLeft" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "enabled" : {
+            "type" : "boolean"
+          },
+          "enabledAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type" : "object"
+      },
+      "MfaVerifyRequest" : {
+        "properties" : {
+          "backupCode" : {
+            "maxLength" : 32,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "challengeToken" : {
+            "maxLength" : 2048,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "code" : {
+            "maxLength" : 12,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "device" : {
+            "maxLength" : 500,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "deviceId" : {
+            "maxLength" : 64,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "trustDevice" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [
+          "challengeToken"
+        ],
         "type" : "object"
       },
       "MonthOption" : {
@@ -6468,6 +6764,31 @@
         },
         "type" : "object"
       },
+      "SessionView" : {
+        "properties" : {
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "current" : {
+            "type" : "boolean"
+          },
+          "device" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "lastUsedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "SetContentOverrideRequest" : {
         "properties" : {
           "active" : {
@@ -8458,6 +8779,96 @@
         ]
       }
     },
+    "/api/v1/admin/auth/mfa/setup" : {
+      "post" : {
+        "operationId" : "adminAuthStartSetup",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdminMfaSetupRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MfaEnrollmentStart"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "admin-auth-controller"
+        ]
+      }
+    },
+    "/api/v1/admin/auth/mfa/setup/confirm" : {
+      "post" : {
+        "operationId" : "adminAuthConfirmSetup",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdminMfaConfirmRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminMfaSetupResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "admin-auth-controller"
+        ]
+      }
+    },
+    "/api/v1/admin/auth/mfa/verify" : {
+      "post" : {
+        "operationId" : "adminAuthVerifyMfa",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdminMfaVerifyRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminAuthResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "admin-auth-controller"
+        ]
+      }
+    },
     "/api/v1/admin/auth/refresh" : {
       "post" : {
         "operationId" : "adminAuthRefresh",
@@ -8866,6 +9277,56 @@
         },
         "tags" : [
           "admin-gift-controller"
+        ]
+      }
+    },
+    "/api/v1/admin/me/mfa" : {
+      "get" : {
+        "operationId" : "adminMfaStatus",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MfaStatus"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "admin-mfa-controller"
+        ]
+      }
+    },
+    "/api/v1/admin/me/mfa/backup-codes" : {
+      "post" : {
+        "operationId" : "adminMfaRenewBackupCodes",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdminMfaCodeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminBackupCodesView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "admin-mfa-controller"
         ]
       }
     },
@@ -10172,6 +10633,219 @@
         "responses" : {
           "204" : {
             "description" : "No Content"
+          }
+        },
+        "tags" : [
+          "auth-controller"
+        ]
+      }
+    },
+    "/api/v1/auth/me/mfa" : {
+      "get" : {
+        "operationId" : "accountSecurityMfa",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MfaStatus"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "account-security-controller"
+        ]
+      }
+    },
+    "/api/v1/auth/me/mfa/backup-codes" : {
+      "post" : {
+        "operationId" : "accountSecurityRenewBackupCodes",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MfaCodeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BackupCodesView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "account-security-controller"
+        ]
+      }
+    },
+    "/api/v1/auth/me/mfa/confirm" : {
+      "post" : {
+        "operationId" : "accountSecurityConfirm",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MfaCodeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BackupCodesView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "account-security-controller"
+        ]
+      }
+    },
+    "/api/v1/auth/me/mfa/disable" : {
+      "post" : {
+        "operationId" : "accountSecurityDisable",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MfaDisableRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [
+          "account-security-controller"
+        ]
+      }
+    },
+    "/api/v1/auth/me/mfa/setup" : {
+      "post" : {
+        "operationId" : "accountSecuritySetup",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MfaEnrollmentStart"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "account-security-controller"
+        ]
+      }
+    },
+    "/api/v1/auth/me/sessions" : {
+      "get" : {
+        "operationId" : "accountSecuritySessions",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/SessionView"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "account-security-controller"
+        ]
+      }
+    },
+    "/api/v1/auth/me/sessions/close-others" : {
+      "post" : {
+        "operationId" : "accountSecurityCloseOthers",
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [
+          "account-security-controller"
+        ]
+      }
+    },
+    "/api/v1/auth/me/sessions/{id}" : {
+      "delete" : {
+        "operationId" : "accountSecurityClose",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "id",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [
+          "account-security-controller"
+        ]
+      }
+    },
+    "/api/v1/auth/mfa/verify" : {
+      "post" : {
+        "operationId" : "authVerifyMfa",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MfaVerifyRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuthResponse"
+                }
+              }
+            },
+            "description" : "OK"
           }
         },
         "tags" : [

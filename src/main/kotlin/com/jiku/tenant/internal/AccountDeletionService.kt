@@ -1,5 +1,7 @@
 package com.jiku.tenant.internal
 
+import com.jiku.mfa.MfaModuleApi
+import com.jiku.mfa.MfaSubject
 import com.jiku.shared.AccountDeletionNotice
 import com.jiku.shared.CodedRefusal
 import com.jiku.shared.MessageLanguage
@@ -53,6 +55,8 @@ class AccountDeletionService(
     private val accountProperties: AccountProperties,
     private val properties: AccountDeletionProperties,
     private val events: ApplicationEventPublisher,
+    private val sessions: OrganizerSessionService,
+    private val mfa: MfaModuleApi,
     transactionManager: PlatformTransactionManager,
 ) {
     private val log = LoggerFactory.getLogger(AccountDeletionService::class.java)
@@ -98,6 +102,7 @@ class AccountDeletionService(
                     owned.forEach { setStatus(it.id, TenantStatus.CLOSING) }
                     // Every session ends now: refresh tokens issued before this instant are refused.
                     user.passwordChangedAt = now
+                    sessions.closeAll(userId)
                     users.save(user)
                     deletions.save(
                         AccountDeletion(
@@ -165,6 +170,8 @@ class AccountDeletionService(
                 user.emailVerified = false
                 user.marketingConsent.granted = false
                 user.passwordChangedAt = Instant.now()
+                sessions.closeAll(requireNotNull(user.id))
+                mfa.forget(MfaSubject(MfaSubject.ORGANIZER, requireNotNull(user.id)))
                 users.save(user)
             }
             row.status = AccountDeletionStatus.DONE

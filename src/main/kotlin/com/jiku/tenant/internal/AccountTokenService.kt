@@ -25,6 +25,7 @@ class AccountTokenService(
     private val passwordEncoder: PasswordEncoder,
     private val properties: AccountProperties,
     private val events: ApplicationEventPublisher,
+    private val sessions: OrganizerSessionService,
 ) {
     /**
      * Always succeeds from the caller's point of view — whether the address has
@@ -56,6 +57,7 @@ class AccountTokenService(
         // reset cuts off whoever had the old credentials.
         user.passwordChangedAt = Instant.now()
         users.save(user)
+        sessions.closeAll(requireNotNull(user.id))
     }
 
     /** No-op for already-verified accounts; issuing replaces any pending token. */
