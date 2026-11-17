@@ -240,6 +240,20 @@ auth:
   account-deletion:
     grace: ${ACCOUNT_DELETION_GRACE:P30D}
     check: ${ACCOUNT_DELETION_CHECK:PT1H}
+  # Second sign-in factor by authentication app (JIKU-317). The encryption key
+  # protects the stored secrets: every real environment MUST set it to a long
+  # random value, and changing it turns everyone's factor off.
+  mfa:
+    encryption-key: ${MFA_ENCRYPTION_KEY:local-development-mfa-encryption-key-0123456789}
+    issuer: ${MFA_ISSUER:Jikū}
+    challenge-ttl: ${MFA_CHALLENGE_TTL:PT5M}
+    trusted-device-ttl: ${MFA_TRUSTED_DEVICE_TTL:P30D}
+    max-attempts: ${MFA_MAX_ATTEMPTS:5}
+    attempt-window: ${MFA_ATTEMPT_WINDOW:PT5M}
+    admin-required: ${ADMIN_MFA_REQUIRED:true}
+  # Signed-in sessions (JIKU-317): how long one unused is still listed.
+  sessions:
+    idle-listing: ${AUTH_SESSION_IDLE_LISTING:${AUTH_JWT_REFRESH_EXPIRATION:P7D}}
   google:
     # OAuth client id of the Google Identity Services button (JIKU-51) — the
     # required audience of incoming ID tokens. Blank disables Google sign-in.
@@ -297,7 +311,7 @@ api:
       login:
         # Blunt credential brute-force: a human retries a handful of times per
         # minute, scripts do not.
-        paths: [/auth/login]
+        paths: [/auth/login, /auth/mfa/verify]
         max-requests: ${AUTH_LOGIN_MAX_ATTEMPTS:5}
         window: ${AUTH_LOGIN_RATE_WINDOW:PT1M}
       auth-public:
@@ -412,7 +426,7 @@ api:
       admin-login:
         # The platform desk's sign-in and session renewal, per address: the
         # account behind it can read every organization, so guessing is cut short.
-        paths: [/admin/auth/login, /admin/auth/refresh]
+        paths: [/admin/auth/login, /admin/auth/refresh, /admin/auth/mfa/**]
         max-requests: ${RATE_LIMIT_ADMIN_LOGIN_MAX_REQUESTS:5}
         window: ${RATE_LIMIT_ADMIN_LOGIN_WINDOW:PT1M}
       public-profile:

@@ -36,6 +36,7 @@ class DevelopmentSecretsGuard(
             listOf(
                 "jwt.secret",
                 "jiku.provider-credentials.encryption-key",
+                "auth.mfa.encryption-key",
                 "billing.payment.webhook-secret",
                 "notification.reputation.webhook-secret",
             )

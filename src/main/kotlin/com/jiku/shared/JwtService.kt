@@ -22,17 +22,20 @@ class JwtService(
     private val accessExpiration = properties.accessTokenExpiration
     private val refreshExpiration = properties.refreshTokenExpiration
 
+    /** [sessionId] names the signed-in session the token belongs to (JIKU-317), when there is one. */
     fun generateAccessToken(
         userId: String,
         tenantId: String,
         role: String,
-    ): String = build(userId, tenantId, role, TOKEN_TYPE_ACCESS, accessExpiration)
+        sessionId: String? = null,
+    ): String = build(userId, tenantId, role, TOKEN_TYPE_ACCESS, accessExpiration, sessionId)
 
     fun generateRefreshToken(
         userId: String,
         tenantId: String,
         role: String,
-    ): String = build(userId, tenantId, role, TOKEN_TYPE_REFRESH, refreshExpiration)
+        sessionId: String? = null,
+    ): String = build(userId, tenantId, role, TOKEN_TYPE_REFRESH, refreshExpiration, sessionId)
 
     fun parse(token: String): Claims =
         Jwts
@@ -69,14 +72,18 @@ class JwtService(
         role: String,
         type: String,
         ttl: java.time.Duration,
+        sessionId: String?,
     ): String {
         val now = Instant.now()
-        return Jwts
-            .builder()
-            .subject(userId)
-            .claim(CLAIM_TENANT_ID, tenantId)
-            .claim(CLAIM_ROLE, role)
-            .claim(CLAIM_TOKEN_TYPE, type)
+        val builder =
+            Jwts
+                .builder()
+                .subject(userId)
+                .claim(CLAIM_TENANT_ID, tenantId)
+                .claim(CLAIM_ROLE, role)
+                .claim(CLAIM_TOKEN_TYPE, type)
+        if (sessionId != null) builder.claim(CLAIM_SESSION_ID, sessionId)
+        return builder
             .issuedAt(Date.from(now))
             .expiration(Date.from(now.plus(ttl)))
             .signWith(key)
@@ -87,6 +94,7 @@ class JwtService(
         const val CLAIM_TENANT_ID = "tenantId"
         const val CLAIM_ROLE = "role"
         const val CLAIM_TOKEN_TYPE = "tokenType"
+        const val CLAIM_SESSION_ID = "sid"
         const val TOKEN_TYPE_ACCESS = "access"
         const val TOKEN_TYPE_REFRESH = "refresh"
     }

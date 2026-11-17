@@ -2,6 +2,7 @@ package com.jiku.shared.security
 
 import com.jiku.shared.JwtService
 import com.jiku.shared.MembershipAccessGate
+import com.jiku.shared.SessionAccessGate
 import com.jiku.shared.TenantAccessGate
 import com.jiku.shared.TenantContext
 import io.jsonwebtoken.JwtException
@@ -30,6 +31,7 @@ class JwtAuthenticationFilter(
     private val jwtService: JwtService,
     private val tenantAccessGate: TenantAccessGate,
     private val membershipAccessGate: MembershipAccessGate,
+    private val sessionAccessGate: SessionAccessGate,
 ) : OncePerRequestFilter() {
     override fun doFilterInternal(
         request: HttpServletRequest,
@@ -43,17 +45,23 @@ class JwtAuthenticationFilter(
                 if (claims[JwtService.CLAIM_TOKEN_TYPE] == JwtService.TOKEN_TYPE_ACCESS) {
                     val tenantId = claims[JwtService.CLAIM_TENANT_ID] as String
                     val role = claims[JwtService.CLAIM_ROLE] as String
+                    val sessionId = claims[JwtService.CLAIM_SESSION_ID] as? String
                     // A tenant-bound token also proves the membership still exists
                     // (JIKU-50): a removed member is cut off on their next request.
-                    if (tenantId.isBlank() ||
-                        (!tenantAccessGate.isSuspended(tenantId) && membershipAccessGate.isMember(claims.subject, tenantId))
+                    // A session signed out elsewhere (JIKU-317) stops on its next request.
+                    val sessionOpen = sessionId == null || sessionAccessGate.isOpen(sessionId)
+                    if (sessionOpen &&
+                        (
+                            tenantId.isBlank() ||
+                                (!tenantAccessGate.isSuspended(tenantId) && membershipAccessGate.isMember(claims.subject, tenantId))
+                        )
                     ) {
                         if (tenantId.isNotBlank()) {
                             TenantContext.set(tenantId)
                         }
                         val authorities = TokenRoles.expand(role).map { SimpleGrantedAuthority("ROLE_$it") }
                         SecurityContextHolder.getContext().authentication =
-                            UsernamePasswordAuthenticationToken(claims.subject, null, authorities)
+                            UsernamePasswordAuthenticationToken(claims.subject, null, authorities).apply { details = sessionId }
                     }
                 }
             } catch (ex: JwtException) {
