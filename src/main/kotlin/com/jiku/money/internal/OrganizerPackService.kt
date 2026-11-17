@@ -158,6 +158,27 @@ class OrganizerPackService(
         row.updatedAt = now
     }
 
+    /**
+     * A gift of [months] of the pack was activated (JIKU-315): it starts or
+     * extends the pack like a payment would, owing nothing.
+     */
+    @Transactional
+    fun grantGiftMonths(months: Int) {
+        val now = Instant.now()
+        val row = packs.findFirstByOrderByStartedAtAsc()
+        if (row == null) {
+            packs.save(OrganizerPack(startedAt = now, expiresAt = plusMonths(now, months.toLong())))
+            return
+        }
+        if (row.expiresAt.isAfter(now)) {
+            row.expiresAt = plusMonths(row.expiresAt, months.toLong())
+        } else {
+            row.startedAt = now
+            row.expiresAt = plusMonths(now, months.toLong())
+        }
+        row.updatedAt = now
+    }
+
     /** Extra guests were paid for: they add to the current month's allowance. */
     @Transactional
     fun confirmExtra(guests: Long) {

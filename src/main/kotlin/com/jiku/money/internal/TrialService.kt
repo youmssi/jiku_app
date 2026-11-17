@@ -80,6 +80,22 @@ class TrialService(
         }
     }
 
+    /**
+     * Lends [eventId] its gift of [guests] until [expiresAt] (JIKU-315), inside
+     * the caller's tenant and transaction. The gift is announced by its own
+     * notice, so no trial notice goes out.
+     */
+    fun lendForGift(
+        eventId: UUID,
+        guests: Long,
+        expiresAt: Instant,
+    ): UUID {
+        if (trials.findFirstByEventIdAndStatusOrderByCreatedAtDesc(eventId, TrialStatus.ACTIVE) != null) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "This event already has active trial guests")
+        }
+        return requireNotNull(trials.save(TrialGrant(eventId = eventId, grantedAllowance = guests, expiresAt = expiresAt)).id)
+    }
+
     fun endEarly(
         trialId: UUID,
         reason: String,

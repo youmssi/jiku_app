@@ -120,17 +120,8 @@ class SubscriptionService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported prepaid period: $months months")
         }
         val tenantId = requireNotNull(TenantContext.get()) { "Subscription payment requires an authenticated tenant" }
-        val now = Instant.now()
         val row = current() ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "No subscription for this tenant")
-        val from = row.expiresAt?.takeIf { it.isAfter(now) } ?: now
-
-        row.plan = plan.name
-        row.resourceLimit = plan.maxPeople
-        row.status = SubscriptionStatus.ACTIVE
-        row.expiresAt = from.atZone(ZoneOffset.UTC).plusMonths(months.toLong()).toInstant()
-        row.expiryNoticeSent = false
-        row.graceNoticeSent = false
-        row.updatedAt = now
+        extend(row, plan, months, Instant.now())
 
         notifier.send(
             kind = SubscriptionNotice.KIND_REACTIVATED,
@@ -139,6 +130,44 @@ class SubscriptionService(
             months = months,
             expiresAt = row.expiresAt,
         )
+    }
+
+    /**
+     * A gift of [months] of [planName] was activated (JIKU-315): the same
+     * extension as a payment, without one. An organization that never had a
+     * team member yet gets its subscription opened by the gift.
+     */
+    @Transactional
+    fun grantGiftMonths(
+        planName: String,
+        months: Int,
+    ) {
+        val plan =
+            platformSettings.planByName(planName)
+                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown subscription plan: $planName")
+        val now = Instant.now()
+        val row =
+            current()
+                ?: subscriptions.save(
+                    Subscription(plan = plan.name, resourceLimit = plan.maxPeople, resourcesActive = 0, startedAt = now, expiresAt = now),
+                )
+        extend(row, plan, months, now)
+    }
+
+    private fun extend(
+        row: Subscription,
+        plan: Plan,
+        months: Int,
+        now: Instant,
+    ) {
+        val from = row.expiresAt?.takeIf { it.isAfter(now) } ?: now
+        row.plan = plan.name
+        row.resourceLimit = plan.maxPeople
+        row.status = SubscriptionStatus.ACTIVE
+        row.expiresAt = from.atZone(ZoneOffset.UTC).plusMonths(months.toLong()).toInstant()
+        row.expiryNoticeSent = false
+        row.graceNoticeSent = false
+        row.updatedAt = now
     }
 
     /** Price of [months] of [plan] for the current team, in the tenant's billing currency. */
