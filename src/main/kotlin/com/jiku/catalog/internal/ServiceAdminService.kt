@@ -89,6 +89,7 @@ class ServiceAdminService(
     ): ServiceResponse {
         val service = services.findById(serviceId).orElseThrow { notFound(serviceId) }
         request.name?.takeIf { it.isNotBlank() }?.let { service.name = it.trim() }
+        request.place?.let { service.place = it.trim().takeIf(String::isNotEmpty) }
         if (request.paymentRule != null || request.priceMinor != null) {
             val rule = request.paymentRule ?: service.paymentRule
             // Switching between paid rules keeps the current amount unless a new one is given.
@@ -183,6 +184,7 @@ private fun Service.toResponse(): ServiceResponse =
         paymentRule = paymentRule,
         priceMinor = price?.amountMinor,
         currency = price?.currency,
+        place = place,
     )
 
 private fun ServiceRequirement.toResponse(): ServiceRequirementResponse =

@@ -14,6 +14,11 @@ class TenantBrandAdapter(
     override fun of(tenantId: String): TenantBrandInfo? =
         tenants
             .findById(runCatching { UUID.fromString(tenantId) }.getOrNull() ?: return null)
-            .map { TenantBrandInfo(name = it.effectiveDisplayName(), logoUrl = it.branding?.logoUrl) }
-            .orElse(null)
+            .map {
+                TenantBrandInfo(
+                    name = it.effectiveDisplayName(),
+                    logoUrl = it.branding?.logoUrl,
+                    primaryColor = it.branding?.primaryColor,
+                )
+            }.orElse(null)
 }
