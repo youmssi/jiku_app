@@ -45,7 +45,7 @@ class OrganizerNoticeFlowTest {
     private val api by lazy { OrganizerApi(mockMvc) }
 
     @Test
-    fun `a granted trial reaches the bell and reading it clears the count`() {
+    fun `an offered gift reaches the bell and reading it clears the count`() {
         val token = api.register()
         val eventId = api.createEvent(token)
         api.publish(token, eventId)
@@ -63,9 +63,9 @@ class OrganizerNoticeFlowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.unread").value(1))
                 .andExpect(jsonPath("$.hasMore").value(false))
-                .andExpect(jsonPath("$.items[0].kind").value("trial.GRANTED"))
+                .andExpect(jsonPath("$.items[0].kind").value("gift.OFFERED"))
                 .andExpect(jsonPath("$.items[0].params.guests").value("300"))
-                .andExpect(jsonPath("$.items[0].link").value("/events/$eventId/billing"))
+                .andExpect(jsonPath("$.items[0].link").value("/billing"))
                 .andExpect(jsonPath("$.items[0].readAt").doesNotExist())
                 .andReturn()
                 .response.contentAsString
@@ -146,12 +146,11 @@ class OrganizerNoticeFlowTest {
         eventId: String,
         guests: Int,
     ) {
-        val expiresAt = Instant.now().plus(2, ChronoUnit.DAYS)
         mockMvc
             .perform(
-                post("/api/v1/admin/trials")
+                post("/api/v1/admin/gifts")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content("""{"tenantId":"$tenantId","eventId":"$eventId","guests":$guests,"expiresAt":"$expiresAt"}""")
+                    .content("""{"tenantId":"$tenantId","kind":"EVENT_GUESTS","guests":$guests,"days":7,"eventId":"$eventId"}""")
                     .header("Authorization", "Bearer ${adminLogin()}"),
             ).andExpect(status().isOk())
     }

@@ -15,7 +15,6 @@ import com.jiku.shared.TenantMilestones
 import com.jiku.shared.tenantMilestones
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.Instant
 import java.util.UUID
 
 /**
@@ -65,13 +64,6 @@ class BillingModuleApiService(
     ): AdminTrialPage = trialService.adminList(status, tenantId, page, size)
 
     override fun adminTrialStats(): AdminTrialStats = trialService.adminStats()
-
-    override fun adminGrantTrial(
-        tenantId: UUID,
-        eventId: UUID,
-        guests: Long,
-        expiresAt: Instant,
-    ): AdminTrialView = trialService.grant(tenantId, eventId, guests, expiresAt)
 
     override fun adminOfferGift(command: OfferGiftCommand): AdminGiftView = giftService.offer(command)
 
