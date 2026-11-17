@@ -22,6 +22,7 @@ class AuthService(
     private val accountTokens: AccountTokenService,
     private val googleVerifier: GoogleIdentityVerifier,
     private val markets: MarketProperties,
+    private val accountDeletion: AccountDeletionService,
 ) {
     /**
      * Creates a user account (JIKU-48). With an organization [RegisterRequest.name]
@@ -88,6 +89,7 @@ class AuthService(
         if (!passwordEncoder.matches(request.password, hash)) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password")
         }
+        accountDeletion.cancelOnSignIn(user)
         return tokensFor(user, bindableMembership(user))
     }
 
@@ -125,6 +127,7 @@ class AuthService(
         if (changed) {
             users.save(user)
         }
+        accountDeletion.cancelOnSignIn(user)
         return tokensFor(user, bindableMembership(user))
     }
 
@@ -263,7 +266,11 @@ class AuthService(
     }
 
     private fun isSuspended(tenantId: String): Boolean =
-        tenants.findById(UUID.fromString(tenantId)).orElse(null)?.status == TenantStatus.SUSPENDED
+        tenants
+            .findById(UUID.fromString(tenantId))
+            .orElse(null)
+            ?.status
+            .let { it != null && it != TenantStatus.ACTIVE }
 
     private fun requireUser(userId: String): OrganizerUser =
         users.findById(UUID.fromString(userId)).orElseThrow {

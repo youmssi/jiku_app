@@ -32,7 +32,7 @@ class PublicOrgController(
         val tenant =
             tenants.findByUsername(username)
                 ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "This organization was not found")
-        if (tenant.status == "SUSPENDED") {
+        if (tenant.status != "ACTIVE") {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "This organization was not found")
         }
         return PublicOrgProfileView(
