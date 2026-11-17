@@ -31,7 +31,6 @@ import java.util.UUID
 class TrialService(
     private val trials: TrialGrantRepository,
     private val payments: PaymentRepository,
-    private val billingProperties: BillingProperties,
     private val trialProperties: TrialProperties,
     private val tenantModuleApi: TenantModuleApi,
     private val eventModuleApi: EventModuleApi,
@@ -47,38 +46,6 @@ class TrialService(
             .findFirstByEventIdAndStatusOrderByCreatedAtDesc(eventId, TrialStatus.ACTIVE)
             ?.takeIf { it.isLive(Instant.now()) }
             ?.grantedAllowance
-
-    fun grant(
-        tenantId: UUID,
-        eventId: UUID,
-        guests: Long,
-        expiresAt: Instant,
-    ): AdminTrialView {
-        if (guests < 1 || guests > billingProperties.maxGuestsPerEvent) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Lend between 1 and ${billingProperties.maxGuestsPerEvent} guests")
-        }
-        if (!expiresAt.isAfter(Instant.now())) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "The expiry must be in the future")
-        }
-        return TenantContext.withTenant(tenantId.toString()) {
-            val view =
-                transactions.execute {
-                    if (trials.findFirstByEventIdAndStatusOrderByCreatedAtDesc(eventId, TrialStatus.ACTIVE) != null) {
-                        throw ResponseStatusException(HttpStatus.CONFLICT, "This event already has an active trial")
-                    }
-                    trials
-                        .save(
-                            TrialGrant(
-                                eventId = eventId,
-                                grantedAllowance = guests,
-                                expiresAt = expiresAt,
-                            ),
-                        ).toView(tenantId.toString())
-                }
-            publishNotice(requireNotNull(view), TrialNotice.KIND_GRANTED, note = null)
-            view
-        }
-    }
 
     /**
      * Lends [eventId] its gift of [guests] until [expiresAt] (JIKU-315), inside

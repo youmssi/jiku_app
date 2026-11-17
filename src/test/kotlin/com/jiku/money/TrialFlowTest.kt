@@ -25,7 +25,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 /**
@@ -62,18 +61,7 @@ class TrialFlowTest {
 
         assert(allowance(token, eventId) == 100)
 
-        val trial =
-            mockMvc
-                .perform(
-                    post("/api/v1/admin/trials")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(grantBody(tenantId, eventId, 300, Instant.now().plus(1, ChronoUnit.HOURS)))
-                        .header("Authorization", "Bearer $adminToken"),
-                ).andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("ACTIVE"))
-                .andReturn()
-                .response.contentAsString
-        val trialId = JsonPath.read<String>(trial, "$.id")
+        val trialId = grantTrial(adminToken, tenantId, eventId, 300)
 
         assert(allowance(token, eventId) == 300)
 
@@ -100,12 +88,12 @@ class TrialFlowTest {
             ).andExpect(status().isOk())
             .andExpect(jsonPath("$[0].name").value("Trial Event"))
 
-        // A second active trial for the same event is refused.
+        // A second gift of guests applied to the same event while the first runs is refused.
         mockMvc
             .perform(
-                post("/api/v1/admin/trials")
+                post("/api/v1/admin/gifts")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(grantBody(tenantId, eventId, 600, Instant.now().plus(1, ChronoUnit.HOURS)))
+                    .content(giftBody(tenantId, eventId, 600))
                     .header("Authorization", "Bearer $adminToken"),
             ).andExpect(status().isConflict())
 
@@ -177,23 +165,34 @@ class TrialFlowTest {
         }
     }
 
+    /**
+     * Trials come from gifts of guests since JIKU-319: the desk offers one and
+     * applies it at once, and the trial it starts is found on the trials desk.
+     */
     private fun grantTrial(
         adminToken: String,
         tenantId: String,
         eventId: String,
         guests: Int,
     ): String {
-        val body =
+        mockMvc
+            .perform(
+                post("/api/v1/admin/gifts")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(giftBody(tenantId, eventId, guests))
+                    .header("Authorization", "Bearer $adminToken"),
+            ).andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("ACTIVATED"))
+        val page =
             mockMvc
                 .perform(
-                    post("/api/v1/admin/trials")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(grantBody(tenantId, eventId, guests, Instant.now().plus(1, ChronoUnit.HOURS)))
+                    get("/api/v1/admin/trials")
+                        .param("tenantId", tenantId)
                         .header("Authorization", "Bearer $adminToken"),
                 ).andExpect(status().isOk())
                 .andReturn()
                 .response.contentAsString
-        return JsonPath.read(body, "$.id")
+        return JsonPath.read<List<String>>(page, "$.entries[?(@.eventId=='$eventId' && @.status=='ACTIVE')].id").single()
     }
 
     private fun forceExpiry(
@@ -220,12 +219,11 @@ class TrialFlowTest {
         }
     }
 
-    private fun grantBody(
+    private fun giftBody(
         tenantId: String,
         eventId: String,
         guests: Int,
-        expiresAt: Instant,
-    ): String = """{"tenantId":"$tenantId","eventId":"$eventId","guests":$guests,"expiresAt":"$expiresAt"}"""
+    ): String = """{"tenantId":"$tenantId","kind":"EVENT_GUESTS","guests":$guests,"days":1,"eventId":"$eventId","applyNow":true}"""
 
     private fun allowance(
         token: String,
