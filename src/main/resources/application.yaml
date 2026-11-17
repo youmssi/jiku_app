@@ -721,6 +721,11 @@ catalog:
     closes-at: ${CATALOG_SERVICE_CLOSES_AT:18:00}
 
 notification:
+  # The organizer's notification bell (JIKU-314): how long a notice is kept
+  # and how often older ones are removed (ISO-8601 durations).
+  notices:
+    retention: ${NOTICE_RETENTION:P180D}
+    purge-check: ${NOTICE_PURGE_CHECK:PT6H}
   # Daily ceilings on the platform's message costs (ADR 107); 0 turns one off.
   # Yesterday's figures are checked each morning and an ops alert goes to the
   # sales/ops mailbox when a ceiling is exceeded.

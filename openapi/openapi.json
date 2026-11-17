@@ -3809,6 +3809,59 @@
         },
         "type" : "object"
       },
+      "OrganizerNoticePage" : {
+        "properties" : {
+          "hasMore" : {
+            "type" : "boolean"
+          },
+          "items" : {
+            "items" : {
+              "$ref" : "#/components/schemas/OrganizerNoticeView"
+            },
+            "type" : "array"
+          },
+          "unread" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "OrganizerNoticeView" : {
+        "properties" : {
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "link" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "params" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "type" : "object"
+          },
+          "readAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type" : "object"
+      },
       "OrganizerOpenResponseView" : {
         "properties" : {
           "answer" : {
@@ -7004,6 +7057,15 @@
           "startsAt" : {
             "format" : "date-time",
             "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "UnreadNotices" : {
+        "properties" : {
+          "unread" : {
+            "format" : "int64",
+            "type" : "integer"
           }
         },
         "type" : "object"
@@ -14396,6 +14458,139 @@
         },
         "tags" : [
           "whats-app-message-check-controller"
+        ]
+      }
+    },
+    "/api/v1/notices" : {
+      "get" : {
+        "operationId" : "organizerNoticeList",
+        "parameters" : [
+          {
+            "in" : "query",
+            "name" : "page",
+            "required" : false,
+            "schema" : {
+              "default" : 0,
+              "format" : "int32",
+              "type" : "integer"
+            }
+          },
+          {
+            "in" : "query",
+            "name" : "size",
+            "required" : false,
+            "schema" : {
+              "default" : 20,
+              "format" : "int32",
+              "type" : "integer"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrganizerNoticePage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "organizer-notice-controller"
+        ]
+      }
+    },
+    "/api/v1/notices/live-ticket" : {
+      "get" : {
+        "operationId" : "organizerNoticeLiveTicket",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LiveTicket"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "organizer-notice-controller"
+        ]
+      }
+    },
+    "/api/v1/notices/read-all" : {
+      "post" : {
+        "operationId" : "organizerNoticeReadAll",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UnreadNotices"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "organizer-notice-controller"
+        ]
+      }
+    },
+    "/api/v1/notices/unread-count" : {
+      "get" : {
+        "operationId" : "organizerNoticeUnread",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UnreadNotices"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "organizer-notice-controller"
+        ]
+      }
+    },
+    "/api/v1/notices/{noticeId}/read" : {
+      "post" : {
+        "operationId" : "organizerNoticeRead",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "noticeId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrganizerNoticeView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "organizer-notice-controller"
         ]
       }
     },

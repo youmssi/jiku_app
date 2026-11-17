@@ -70,6 +70,17 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-305 | Cohérence : code mort retiré, variables d'environnement documentées sous leur vrai nom | app, web | — |
 | JIKU-306 | Horaires d'une personne : l'éditeur tient dans sa fenêtre, une plage ajoutée est valide | web | JIKU-252 |
 | JIKU-307 | Demandes de paiement claires : une liste, annuler, remplacer, expirer, des statuts lisibles | app, web | JIKU-41, JIKU-254 |
+| JIKU-308 | Rafraîchissements en arrière-plan silencieux après un déploiement | web | JIKU-214 |
+| JIKU-309 | Pages légales : hébergeur actuel et prestataire de paiement en ligne nommés | web | JIKU-272 |
+| JIKU-310 | Une adresse par page et par langue, sans préfixe de langue doublé | web | JIKU-300 |
+| JIKU-311 | Analyse produit de l'espace organisateur (PostHog UE, sans cookie, tout masqué) | web | — |
+| JIKU-312 | Modèle WhatsApp arabe de réponse classé utilitaire par Meta | app | JIKU-293 |
+| JIKU-313 | Tests de bout en bout menés sur les pages anglaises | app | JIKU-310 |
+| JIKU-314 | Notifications dans l'application : une cloche et une liste dans l'espace organisateur | app, web | — |
+| JIKU-315 | Cadeaux : le bureau offre des invités, des mois de services ou de forfait, l'organisateur les active | app, web | JIKU-42, JIKU-314 |
+| JIKU-316 | Supprimer son compte : confirmation, transfert ou suppression de l'organisation, 30 jours pour changer d'avis | app, web | JIKU-314 |
+| JIKU-317 | Double authentification : application d'authentification, codes de secours, appareils de confiance, obligatoire au bureau | app, web | — |
+| JIKU-318 | Passkeys : se connecter par empreinte ou visage | app, web | JIKU-317 |
 
 ---
 
@@ -848,8 +859,198 @@ Cette story est livrée avec l'activation de DEXPAY.
 
 **Critères d'acceptation, côté web.**
 
-- [ ] Une seule carte « Paiements en attente » en haut de la facturation, toujours visible après rechargement, avec les boutons Copier, « J'ai envoyé le virement » et « Annuler la demande »
-- [ ] Changer de plan ou de durée avec une demande ouverte demande d'abord « Remplacer la demande en cours ? »
-- [ ] Statuts lisibles : En attente, Payé, Annulé, Expiré, Refusé (avec le motif), Non abouti ; l'historique montre par défaut les paiements payés et en attente, le reste derrière « Afficher tout »
-- [ ] Une équipe qui dépasse Solo lit « Votre équipe compte 2 personnes, Solo en couvre 1 », avec « Passer à Services Pro » et « Garder une seule personne » ; la carte Solo n'affiche plus « Expired » et « Free forever » ensemble
-- [ ] Le guide de la facturation décrit ce parcours
+- [x] Une seule carte « Paiements en attente » en haut de la facturation, toujours visible après rechargement, avec les boutons Copier, « J'ai envoyé le virement » et « Annuler la demande »
+- [x] Changer de plan ou de durée avec une demande ouverte demande d'abord « Remplacer la demande en cours ? »
+- [x] Statuts lisibles : En attente, Payé, Annulé, Expiré, Refusé (avec le motif), Non abouti ; l'historique montre par défaut les paiements payés et en attente, le reste derrière « Afficher tout »
+- [x] Une équipe qui dépasse Solo lit « Votre équipe compte 2 personnes, Solo en couvre 1 », avec « Passer à Services Pro » et « Garder une seule personne » ; la carte Solo n'affiche plus « Expired » et « Free forever » ensemble
+- [x] Le guide de la facturation décrit ce parcours
+
+---
+
+## JIKU-308 — Rafraîchissements en arrière-plan silencieux après un déploiement
+
+**Pourquoi.** Après chaque mise en production, les onglets restés ouverts
+appelaient une action serveur qui n'existait plus. Sentry recevait une erreur
+par rafraîchissement automatique, et la page ne se mettait plus à jour.
+
+**Critères d'acceptation.**
+
+- [x] Un rafraîchissement automatique qui rencontre une action inconnue recharge la page une seule fois, sans erreur affichée ni remontée
+- [x] Tableau de bord, file du jour, billet de file et suivi d'un paiement passent par ce même garde-fou
+
+## JIKU-309 — Pages légales : hébergeur et prestataire de paiement nommés
+
+**Critères d'acceptation.**
+
+- [x] Les mentions légales et la politique de confidentialité nomment l'hébergeur actuel et DEXPAY parmi les destinataires
+- [x] La date de mise à jour des pages légales suit le changement
+
+## JIKU-310 — Une adresse par page et par langue
+
+**Pourquoi.** Google indexait des doublons : la langue du navigateur changeait
+la page servie sur une même adresse, et `/en/en/...` apparaissait dans les
+statistiques.
+
+**Critères d'acceptation.**
+
+- [x] Les adresses sans préfixe servent toujours le français, quelle que soit la langue du navigateur
+- [x] `/fr/...` redirige en 308 vers l'adresse sans préfixe
+- [x] Le retour après connexion ne double jamais le préfixe de langue
+
+## JIKU-311 — Analyse produit de l'espace organisateur
+
+**Critères d'acceptation.**
+
+- [x] PostHog (région UE) chargé seulement dans l'espace organisateur, sans cookie ni stockage persistant
+- [x] Tous les textes et toutes les saisies masqués, enregistrements de session compris
+- [x] Les événements produit existants sont transmis ; la politique de confidentialité nomme PostHog
+
+## JIKU-312 — Modèle WhatsApp arabe de réponse classé utilitaire
+
+**Critères d'acceptation.**
+
+- [x] L'invitation arabe utilise `invitation_rsvp_v4`, approuvé par Meta en catégorie utilitaire ; le français et l'anglais gardent `invitation_rsvp_v3`
+- [x] L'ancienne version arabe classée marketing est supprimée chez Meta
+
+## JIKU-313 — Tests de bout en bout sur les pages anglaises
+
+**Critères d'acceptation.**
+
+- [x] Les parcours passent par le préfixe `/en` ; un lien qui le porte déjà reste tel quel
+
+---
+
+## JIKU-314 — Notifications dans l'application : une cloche dans l'espace organisateur
+
+**Pourquoi.** Relevé le 17 novembre 2026. Quand le bureau accorde un essai, seul
+un e-mail prévient l'organisateur. S'il ne le lit pas, il ne sait rien : Jikū
+n'a ni cloche ni liste de notifications. Les autres annonces (paiement
+confirmé ou refusé, demande expirée, facture, abonnement, membre invité) ont
+le même défaut.
+
+**Critères d'acceptation, côté API.**
+
+- [ ] Une table `organizer_notice` par organisation (filtre locataire), remplie par un écouteur du module `messaging` à partir des annonces déjà publiées : essai, cadeau (JIKU-315), paiement manuel, demande de paiement, facture, abonnement, invitation de membre
+- [ ] Chaque notification garde son type, ses paramètres (pour un texte traduit côté web), un lien vers l'écran concerné, sa date et sa date de lecture ; aucune donnée d'invité n'y est copiée
+- [ ] `GET /notices` (paginé, plus récentes d'abord), `GET /notices/unread-count`, `POST /notices/{id}/read`, `POST /notices/read-all`
+- [ ] Une nouvelle notification déclenche le signal « quelque chose a changé » du flux en direct (JIKU-214)
+- [ ] Les notifications de plus de 180 jours sont supprimées par une tâche planifiée (`NOTICE_RETENTION`)
+
+**Critères d'acceptation, côté web.**
+
+- [ ] Une cloche dans l'en-tête de l'espace organisateur, avec le nombre de non-lues (« 9+ » au-delà) et un nom accessible qui le dit
+- [ ] Le panneau liste les notifications : ce qui s'est passé, quand, et un lien vers l'écran concerné ; ouvrir une notification la marque comme lue ; « Tout marquer comme lu »
+- [ ] Mise à jour par le flux en direct, avec le rafraîchissement périodique en secours
+- [ ] État vide (« Aucune notification pour l'instant »), état de chargement et erreur réessayable
+- [ ] Textes en français, anglais et arabe ; le guide de l'espace organisateur présente la cloche
+
+**Critères UX (ux-expert, conception).** NOTIF-01 (inventaire des types, déclencheur,
+canal), NOTIF-02 (e-mail en plus de la cloche pour argent et accès), NOTIF-08
+(un paiement confirmé = une notification, pas trois), NOTIF-10 (le lien ouvre
+l'objet), NOTIF-14 (rien d'important seulement en toast), NOTIF-18 (le texte dit
+ce qui s'est passé et quoi faire).
+
+## JIKU-315 — Cadeaux : le bureau offre, l'organisateur active quand il veut
+
+**Pourquoi.** Un essai accordé par le bureau s'applique tout de suite à un
+événement, sans que l'organisateur l'ait vu ni choisi son moment. Le bureau ne
+peut offrir que des invités sur un événement, pas des mois de services ni de
+forfait.
+
+**Décisions (17 novembre 2026).** Trois types au lancement : invités pour un
+événement, mois d'un plan de services, mois du forfait organisateur.
+L'organisateur active lui-même, sauf si le bureau coche « appliquer tout de
+suite ». Un cadeau non activé expire après 30 jours.
+
+**Critères d'acceptation, côté API.**
+
+- [ ] Une table `gift` (filtre locataire) : type (`EVENT_GUESTS`, `SERVICES_PLAN`, `ORGANIZER_PACK`), contenu (invités et durée en jours, ou plan et mois, ou mois), événement visé facultatif, message du bureau, date limite d'activation, statut, dates et auteur
+- [ ] Statuts : `OFFERED`, `ACTIVATED`, `EXPIRED` (jamais activé), `REVOKED` (retiré avant activation) ; pour les invités, l'allocation activée garde son cycle actuel (active, convertie par un paiement, terminée, expirée)
+- [ ] Bureau : `POST /admin/gifts` crée un cadeau, avec l'option « appliquer tout de suite » ; `POST /admin/gifts/{id}/revoke` retire un cadeau non activé ; la liste et les statistiques des essais deviennent celles des cadeaux
+- [ ] Organisateur : `GET /gifts` liste ses cadeaux ; `POST /gifts/{id}/activate` les active, avec l'événement choisi quand le cadeau n'en vise pas
+- [ ] Activer applique le cadeau par le chemin d'un paiement confirmé, sans paiement ni facture : allocation d'invités (JIKU-42), `confirmSubscriptionPayment(plan, mois)`, `confirmPack(mois)`. Le compte à rebours démarre à l'activation
+- [ ] Un cadeau ne s'active qu'une fois, même avec deux clics simultanés (test de concurrence)
+- [ ] Un cadeau non activé expire après `GIFT_CLAIM_WINDOW` (`P30D`) ; l'organisateur est prévenu 3 jours avant
+- [ ] Chaque étape (offert, bientôt expiré, activé, expiré, retiré) publie une annonce : e-mail, notification dans la cloche (JIKU-314) et, si l'organisation l'a activé, WhatsApp
+- [ ] Les essais déjà en cours sont repris par migration comme cadeaux `EVENT_GUESTS` déjà activés, sans changer leur échéance
+- [ ] Test d'isolation : une organisation ne voit ni n'active le cadeau d'une autre
+
+**Critères d'acceptation, côté web.**
+
+- [ ] Bureau : un formulaire « Offrir » avec le type, son contenu, l'événement facultatif, le message, la date limite et « appliquer tout de suite » ; un aperçu dit exactement ce que l'organisateur recevra
+- [ ] Organisateur : à la première visite après l'offre, une fenêtre « Vous avez reçu un cadeau » avec le message du bureau, ce que le cadeau apporte, la date limite, et les boutons « Activer maintenant » et « Plus tard »
+- [ ] Une section « Cadeaux » dans la facturation liste les cadeaux disponibles, activés et expirés ; « Activer » demande l'événement si besoin et montre l'effet avant de confirmer (nouvelle échéance, invités ajoutés)
+- [ ] Après activation : confirmation à l'écran, la facturation et l'événement reflètent le cadeau sans rechargement
+- [ ] Textes en français, anglais et arabe ; les guides de la facturation et du bureau décrivent le parcours
+
+**Critères UX (ux-expert, conception).** COMM-13 (l'effet est montré avant
+d'activer), COMM-14 et COMM-17 (statut du cadeau visible dans la facturation),
+NOTIF-02 et NOTIF-18 (annonce sur le bon canal, qui dit quoi faire), NOTIF-15
+(activer depuis une notification passe par la confirmation).
+
+## JIKU-316 — Supprimer son compte
+
+**Pourquoi.** Relevé le 17 novembre 2026 : un organisateur qui veut partir n'a
+aucun moyen de le faire lui-même. Il doit écrire au support, et ses données
+restent tant que personne n'agit.
+
+**Décisions (17 novembre 2026).** 30 jours pour changer d'avis, réglables sans
+toucher au code (`ACCOUNT_DELETION_GRACE`). Les factures sont gardées,
+anonymisées, pendant la durée légale comptable.
+
+**Critères d'acceptation, côté API.**
+
+- [ ] `POST /auth/me/deletion` : demande de suppression, avec le mot de passe (ou une connexion Google récente) ; le compte est désactivé tout de suite et toutes ses sessions sont fermées
+- [ ] Seul propriétaire d'une organisation : la demande est refusée tant qu'il n'a pas transféré la propriété à un membre ou demandé aussi la suppression de l'organisation
+- [ ] Se reconnecter pendant `ACCOUNT_DELETION_GRACE` (`P30D`) annule la suppression ; un e-mail le confirme
+- [ ] À l'échéance, une tâche efface les données personnelles du compte et, si demandé, l'organisation avec ses événements, invités, billets et rendez-vous ; les factures restent, anonymisées, pendant `INVOICE_RETENTION` (`P10Y`)
+- [ ] Les demandes de virement en attente sont annulées ; un abonnement prépayé n'est pas remboursé automatiquement
+- [ ] Chaque étape (demande, annulation, effacement) envoie un e-mail et laisse une trace dans le journal d'audit, sans donnée personnelle
+- [ ] Tests : isolation entre organisations, membre non propriétaire, propriétaire seul, annulation par reconnexion, effacement à l'échéance
+
+**Critères d'acceptation, côté web.**
+
+- [ ] Paramètres → Compte : « Supprimer mon compte », avec ce qui sera effacé, ce qui est gardé et la date d'effacement
+- [ ] Confirmation forte : mot de passe, puis saisie du nom de l'organisation quand elle est supprimée aussi
+- [ ] Propriétaire seul : choix entre « Transférer la propriété » et « Supprimer aussi l'organisation »
+- [ ] Les CGU et la politique de confidentialité décrivent le délai et ce qui est gardé ; le guide décrit le parcours
+
+**Critères UX (ux-expert, conception).** TRUST (suppression aussi simple que
+l'inscription, sans parcours dissuasif), FLOW (confirmation proportionnée à
+l'action irréversible), CONT (ce qui est effacé et ce qui est gardé dit en
+clair).
+
+## JIKU-317 — Double authentification
+
+**Pourquoi.** Un mot de passe volé suffit aujourd'hui pour entrer dans un
+espace organisateur, ou dans le bureau, qui voit toutes les organisations.
+
+**Décisions (17 novembre 2026).** Code par application d'authentification
+(TOTP), pas par SMS. Obligatoire pour le bureau dès la livraison
+(`ADMIN_MFA_REQUIRED=true`), facultative pour les organisateurs. Les passkeys
+viennent dans JIKU-318. Les durées se règlent sans toucher au code.
+
+**Critères d'acceptation, côté API.**
+
+- [ ] Activation : un secret TOTP (RFC 6238) chiffré au repos, un QR code, puis la saisie d'un premier code pour confirmer ; 10 codes de secours à usage unique, montrés une fois et stockés hachés
+- [ ] Connexion : après le mot de passe ou Google, un jeton intermédiaire de courte durée (`MFA_CHALLENGE_TTL`, `PT5M`) qui n'ouvre que l'étape du code ; les jetons de session ne sont émis qu'après le code
+- [ ] Appareil de confiance : « Ne plus demander sur cet appareil » pendant `MFA_TRUSTED_DEVICE_TTL` (`P30D`), par un cookie httpOnly signé
+- [ ] Tentatives limitées par le limiteur existant ; un code déjà utilisé est refusé
+- [ ] Bureau : tant que `ADMIN_MFA_REQUIRED` est vrai, un administrateur sans 2FA doit l'activer avant d'accéder au bureau
+- [ ] Désactiver la 2FA ou régénérer les codes de secours demande un code valide ; chaque changement envoie un e-mail
+- [ ] Paramètres → Sécurité : sessions actives et « Déconnecter partout » ; un e-mail à chaque connexion depuis un nouvel appareil
+- [ ] Tests : parcours complet, code faux, code rejoué, code de secours, appareil de confiance expiré, bureau obligatoire
+
+**Critères d'acceptation, côté web.**
+
+- [ ] Paramètres → Sécurité : activer avec QR code et clé à copier, saisir le premier code, télécharger ou copier les codes de secours
+- [ ] Écran de code à la connexion, champ à 6 chiffres (`autocomplete="one-time-code"`), lien « Utiliser un code de secours »
+- [ ] Textes en français et en anglais ; le guide explique l'activation et la perte du téléphone
+
+## JIKU-318 — Passkeys
+
+**Critères d'acceptation.**
+
+- [ ] Ajouter une passkey depuis Paramètres → Sécurité (WebAuthn, `spring-security-webauthn`, identifiants stockés en base)
+- [ ] Se connecter avec une passkey, sans mot de passe ; elle compte comme deux facteurs
+- [ ] Lister, renommer et supprimer ses passkeys ; un e-mail à chaque ajout
