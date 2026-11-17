@@ -13,6 +13,18 @@
         ],
         "type" : "object"
       },
+      "ActivateGiftRequest" : {
+        "properties" : {
+          "eventId" : {
+            "format" : "uuid",
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type" : "object"
+      },
       "ActivationFunnel" : {
         "properties" : {
           "firstEventOrService" : {
@@ -45,6 +57,133 @@
           },
           "refreshToken" : {
             "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "AdminGiftPage" : {
+        "properties" : {
+          "entries" : {
+            "items" : {
+              "$ref" : "#/components/schemas/AdminGiftView"
+            },
+            "type" : "array"
+          },
+          "page" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "size" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "total" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "AdminGiftView" : {
+        "properties" : {
+          "activatedAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "activatedEventId" : {
+            "format" : "uuid",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "claimBy" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "createdBy" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "days" : {
+            "format" : "int32",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
+          "eventId" : {
+            "format" : "uuid",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "eventName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "guests" : {
+            "format" : "int64",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "months" : {
+            "format" : "int32",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
+          "plan" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "revokedReason" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "tenantId" : {
+            "type" : "string"
+          },
+          "tenantName" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         },
         "type" : "object"
@@ -2195,6 +2334,79 @@
         },
         "type" : "object"
       },
+      "GiftView" : {
+        "properties" : {
+          "activatedAt" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "activatedEventId" : {
+            "format" : "uuid",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "claimBy" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "days" : {
+            "format" : "int32",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
+          "eventId" : {
+            "format" : "uuid",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "guests" : {
+            "format" : "int64",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "months" : {
+            "format" : "int32",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
+          "plan" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "status" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "GoogleLoginRequest" : {
         "properties" : {
           "idToken" : {
@@ -3146,6 +3358,78 @@
             ]
           }
         },
+        "type" : "object"
+      },
+      "OfferGiftRequest" : {
+        "properties" : {
+          "applyNow" : {
+            "type" : "boolean"
+          },
+          "claimBy" : {
+            "format" : "date-time",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "days" : {
+            "format" : "int32",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
+          "eventId" : {
+            "format" : "uuid",
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "guests" : {
+            "format" : "int64",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
+          "kind" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "message" : {
+            "maxLength" : 500,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "months" : {
+            "format" : "int32",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
+          "plan" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "tenantId" : {
+            "format" : "uuid",
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required" : [
+          "kind",
+          "tenantId"
+        ],
         "type" : "object"
       },
       "OpenBatchRequest" : {
@@ -5498,6 +5782,19 @@
             "type" : "string"
           }
         },
+        "type" : "object"
+      },
+      "RevokeGiftRequest" : {
+        "properties" : {
+          "reason" : {
+            "maxLength" : 500,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "reason"
+        ],
         "type" : "object"
       },
       "RosterEntry" : {
@@ -8428,6 +8725,134 @@
         ]
       }
     },
+    "/api/v1/admin/gifts" : {
+      "get" : {
+        "operationId" : "adminGiftList",
+        "parameters" : [
+          {
+            "in" : "query",
+            "name" : "status",
+            "required" : false,
+            "schema" : {
+              "type" : "string"
+            }
+          },
+          {
+            "in" : "query",
+            "name" : "tenantId",
+            "required" : false,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          },
+          {
+            "in" : "query",
+            "name" : "page",
+            "required" : false,
+            "schema" : {
+              "default" : 0,
+              "format" : "int32",
+              "type" : "integer"
+            }
+          },
+          {
+            "in" : "query",
+            "name" : "size",
+            "required" : false,
+            "schema" : {
+              "default" : 20,
+              "format" : "int32",
+              "type" : "integer"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminGiftPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "admin-gift-controller"
+        ]
+      },
+      "post" : {
+        "operationId" : "adminGiftOffer",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OfferGiftRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminGiftView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "admin-gift-controller"
+        ]
+      }
+    },
+    "/api/v1/admin/gifts/{id}/revoke" : {
+      "post" : {
+        "operationId" : "adminGiftRevoke",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "id",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RevokeGiftRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminGiftView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "admin-gift-controller"
+        ]
+      }
+    },
     "/api/v1/admin/payments" : {
       "get" : {
         "operationId" : "adminPaymentList",
@@ -9884,6 +10309,69 @@
         },
         "tags" : [
           "event-pricing-controller"
+        ]
+      }
+    },
+    "/api/v1/billing/gifts" : {
+      "get" : {
+        "operationId" : "giftList",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/GiftView"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "gift-controller"
+        ]
+      }
+    },
+    "/api/v1/billing/gifts/{giftId}/activate" : {
+      "post" : {
+        "operationId" : "giftActivate",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "giftId",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ActivateGiftRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GiftView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "gift-controller"
         ]
       }
     },

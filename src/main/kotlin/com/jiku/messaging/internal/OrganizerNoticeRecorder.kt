@@ -1,5 +1,6 @@
 package com.jiku.messaging.internal
 
+import com.jiku.shared.GiftNotice
 import com.jiku.shared.InvoiceIssuedNotice
 import com.jiku.shared.ManualPaymentNotice
 import com.jiku.shared.PaymentRequestNotice
@@ -76,6 +77,19 @@ class OrganizerNoticeRecorder(
                 "number" to notice.invoiceNumber,
                 "amountMinor" to notice.totalMinor.toString(),
                 "currency" to notice.currency,
+            )
+        }
+
+    @TransactionalEventListener(fallbackExecution = true)
+    fun onGift(notice: GiftNotice) =
+        record(notice.tenantId, "gift.${notice.kind}", BILLING) {
+            mapOf(
+                "giftKind" to notice.giftKind,
+                "guests" to notice.guests?.toString(),
+                "days" to notice.days?.toString(),
+                "plan" to notice.plan,
+                "months" to notice.months?.toString(),
+                "claimBy" to notice.claimBy.toString(),
             )
         }
 

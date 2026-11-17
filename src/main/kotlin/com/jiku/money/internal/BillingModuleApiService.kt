@@ -1,11 +1,14 @@
 package com.jiku.money.internal
 
+import com.jiku.money.AdminGiftPage
+import com.jiku.money.AdminGiftView
 import com.jiku.money.AdminPaymentView
 import com.jiku.money.AdminTrialPage
 import com.jiku.money.AdminTrialStats
 import com.jiku.money.AdminTrialView
 import com.jiku.money.BillingAllowance
 import com.jiku.money.BillingModuleApi
+import com.jiku.money.OfferGiftCommand
 import com.jiku.money.PlatformBillingSettingsUpdate
 import com.jiku.money.PlatformBillingSettingsView
 import com.jiku.shared.TenantMilestones
@@ -25,6 +28,7 @@ class BillingModuleApiService(
     private val usageService: UsageService,
     private val manualPaymentService: ManualPaymentService,
     private val trialService: TrialService,
+    private val giftService: GiftService,
     private val platformSettings: PlatformBillingSettingsService,
     private val payments: PaymentRepository,
     private val trialGrants: TrialGrantRepository,
@@ -68,6 +72,20 @@ class BillingModuleApiService(
         guests: Long,
         expiresAt: Instant,
     ): AdminTrialView = trialService.grant(tenantId, eventId, guests, expiresAt)
+
+    override fun adminOfferGift(command: OfferGiftCommand): AdminGiftView = giftService.offer(command)
+
+    override fun adminRevokeGift(
+        giftId: UUID,
+        reason: String,
+    ): AdminGiftView = giftService.revoke(giftId, reason)
+
+    override fun adminListGifts(
+        status: String?,
+        tenantId: UUID?,
+        page: Int,
+        size: Int,
+    ): AdminGiftPage = giftService.adminList(status, tenantId, page, size)
 
     override fun adminEndTrial(
         trialId: UUID,

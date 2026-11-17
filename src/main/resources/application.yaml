@@ -623,6 +623,15 @@ billing:
     # expiry the organizer's heads-up email goes out.
     cron: ${BILLING_TRIAL_CRON:0 15 * * * *}
     notice-lead: ${BILLING_TRIAL_NOTICE_LEAD:P3D}
+  # Gifts the back office offers (JIKU-315): how long an offer waits to be
+  # activated, how long before the end the organizer is reminded, how often
+  # unclaimed gifts are looked for, and the largest gift (ISO-8601 durations).
+  gifts:
+    claim-window: ${GIFT_CLAIM_WINDOW:P30D}
+    claim-notice-lead: ${GIFT_CLAIM_NOTICE_LEAD:P3D}
+    check: ${GIFT_CHECK:PT1H}
+    max-days: ${GIFT_MAX_DAYS:90}
+    max-months: ${GIFT_MAX_MONTHS:24}
   manual:
     # Payee details shown with manual (concierge) payment instructions (JIKU-41):
     # where a client sends their prepayment. Blank fields are hidden from the
