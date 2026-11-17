@@ -235,6 +235,11 @@ auth:
     # How long an emailed member invitation stays acceptable (JIKU-50).
     member-invitation-ttl: ${AUTH_MEMBER_INVITATION_TTL:P7D}
     app-base-url: ${SERVER_BASE_URL:http://localhost:3000}
+  # Deleting one's account (JIKU-316): how long the holder has to change their
+  # mind by signing in again, and how often due deletions are carried out.
+  account-deletion:
+    grace: ${ACCOUNT_DELETION_GRACE:P30D}
+    check: ${ACCOUNT_DELETION_CHECK:PT1H}
   google:
     # OAuth client id of the Google Identity Services button (JIKU-51) — the
     # required audience of incoming ID tokens. Blank disables Google sign-in.

@@ -37,6 +37,9 @@ open class CodedRefusal(
         /** The organization is suspended by the platform. */
         const val TENANT_SUSPENDED = "account.suspended"
 
+        /** The account owns organizations alone and did not agree to delete them (JIKU-316). */
+        const val SOLE_OWNER = "account.sole-owner"
+
         /** A client in the day line has not paid yet. */
         const val CLIENT_UNPAID = "client.unpaid"
     }

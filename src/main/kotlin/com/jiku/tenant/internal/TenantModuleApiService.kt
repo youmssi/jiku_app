@@ -67,6 +67,10 @@ class TenantModuleApiService(
         suspended: Boolean,
     ): TenantInfo? {
         val tenant = tenants.findById(tenantId).orElse(null) ?: return null
+        // An organization deleted with its owner's account is not the desk's to reopen (JIKU-316).
+        if (tenant.status == TenantStatus.CLOSING || tenant.status == TenantStatus.CLOSED) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "This organization is being deleted with its owner's account")
+        }
         tenant.status = if (suspended) TenantStatus.SUSPENDED else TenantStatus.ACTIVE
         val saved = tenants.save(tenant)
         // The gate caches status lookups; a status change must be visible on the

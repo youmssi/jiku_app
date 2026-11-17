@@ -44,4 +44,7 @@ enum class ErasureReason {
 
     /** The retention policy anonymized data for a past event (JIKU-37). */
     RETENTION_POLICY,
+
+    /** The organization was deleted with its owner's account (JIKU-316). */
+    ACCOUNT_DELETION,
 }

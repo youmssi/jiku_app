@@ -56,6 +56,9 @@ interface OrganizerNoticeRepository : JpaRepository<OrganizerNotice, UUID> {
 
     fun findAllByReadAtIsNull(): List<OrganizerNotice>
 
+    /** The current organization's notices, removed when it is deleted (JIKU-316). */
+    fun deleteAllByTenantId(tenantId: String): Long
+
     /** Platform-wide retention sweep; native on purpose, it spans every organization. */
     @Modifying
     @Query(value = "DELETE FROM organizer_notice WHERE created_at < :cutoff", nativeQuery = true)

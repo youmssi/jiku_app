@@ -80,6 +80,9 @@ interface GuestRepository : JpaRepository<Guest, UUID> {
     /** Guests of an event whose personal data has not yet been anonymized (JIKU-37). */
     fun findByEventIdAndPersonalDataErasedFalse(eventId: UUID): List<Guest>
 
+    /** The current organization's guests still holding personal data (JIKU-316). */
+    fun findByPersonalDataErasedFalse(): List<Guest>
+
     fun countByEventId(eventId: UUID): Long
 
     /** Dates de création des invités d'un événement (projection pour l'analytique). */

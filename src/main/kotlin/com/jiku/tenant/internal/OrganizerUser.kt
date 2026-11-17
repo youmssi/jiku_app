@@ -21,7 +21,7 @@ import java.util.UUID
 @Table(name = "organizer_user")
 class OrganizerUser(
     @Column(name = "email", nullable = false, unique = true)
-    val email: String,
+    var email: String,
     /** Null for accounts created through Google sign-in (JIKU-51). */
     @Column(name = "password_hash")
     var passwordHash: String?,
