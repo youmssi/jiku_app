@@ -75,6 +75,23 @@ interface BillingModuleApi {
         expiresAt: Instant,
     ): AdminTrialView
 
+    /** Offers an organization a gift (JIKU-315), applied at once when the command says so. */
+    fun adminOfferGift(command: OfferGiftCommand): AdminGiftView
+
+    /** Takes back a gift not yet activated. */
+    fun adminRevokeGift(
+        giftId: UUID,
+        reason: String,
+    ): AdminGiftView
+
+    /** Gifts across organizations, newest first. */
+    fun adminListGifts(
+        status: String?,
+        tenantId: UUID?,
+        page: Int,
+        size: Int,
+    ): AdminGiftPage
+
     /** Ends an active trial before its expiry, with a reason. */
     fun adminEndTrial(
         trialId: UUID,
