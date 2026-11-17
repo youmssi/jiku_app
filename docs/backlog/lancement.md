@@ -81,6 +81,8 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-316 | Supprimer son compte : confirmation, transfert ou suppression de l'organisation, 30 jours pour changer d'avis | app, web | JIKU-314 |
 | JIKU-317 | Double authentification : application d'authentification, codes de secours, appareils de confiance, obligatoire au bureau | app, web | — |
 | JIKU-318 | Passkeys : se connecter par empreinte ou visage | app, web | JIKU-317 |
+| JIKU-319 | L'essai direct remplacé par les cadeaux : le bureau n'accorde plus d'essai sans passer par un cadeau | app, web | JIKU-315 |
+| JIKU-320 | Dépendances du site à jour : Next.js 16.4.6, paquets transitifs corrigés | web | — |
 
 ---
 
@@ -1054,3 +1056,24 @@ viennent dans JIKU-318. Les durées se règlent sans toucher au code.
 - [ ] Ajouter une passkey depuis Paramètres → Sécurité (WebAuthn, `spring-security-webauthn`, identifiants stockés en base)
 - [ ] Se connecter avec une passkey, sans mot de passe ; elle compte comme deux facteurs
 - [ ] Lister, renommer et supprimer ses passkeys ; un e-mail à chaque ajout
+
+## JIKU-319 — L'essai direct remplacé par les cadeaux
+
+**Pourquoi.** Depuis JIKU-315, un cadeau d'invités démarre lui-même un essai à
+l'activation. Le bouton « Accorder un essai » du bureau créait encore un essai
+appliqué tout de suite, sans que l'organisateur le voie venir : deux chemins
+pour la même chose, dont un sans le choix de l'organisateur.
+
+**Critères d'acceptation.**
+
+- [x] `POST /admin/trials` et l'e-mail « Votre essai est actif » sont retirés ; un essai ne naît plus que d'un cadeau d'invités activé
+- [x] Le moteur des essais reste : invités gardés s'ils sont achetés, retirés sinon, e-mails « bientôt fini » et « terminé »
+- [x] La page « Essais » du bureau devient « Invités offerts en cours » : compte à rebours, arrêt anticipé et conversion, avec un lien vers « Offrir un cadeau »
+
+## JIKU-320 — Dépendances du site à jour
+
+**Critères d'acceptation.**
+
+- [x] Next.js 16.4.6, `@vercel/og` inutilisé retiré, `glob`, `minimatch`, `hono`, `@hono/node-server` et `systeminformation` forcés sur une version corrigée
+- [x] `pnpm audit --prod` ne signale plus rien
+

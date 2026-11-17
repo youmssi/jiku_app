@@ -2419,46 +2419,6 @@
         ],
         "type" : "object"
       },
-      "GrantTrialRequest" : {
-        "properties" : {
-          "eventId" : {
-            "format" : "uuid",
-            "type" : [
-              "string",
-              "null"
-            ]
-          },
-          "expiresAt" : {
-            "format" : "date-time",
-            "type" : [
-              "string",
-              "null"
-            ]
-          },
-          "guests" : {
-            "format" : "int64",
-            "minimum" : 1,
-            "type" : [
-              "integer",
-              "null"
-            ]
-          },
-          "tenantId" : {
-            "format" : "uuid",
-            "type" : [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "required" : [
-          "eventId",
-          "expiresAt",
-          "guests",
-          "tenantId"
-        ],
-        "type" : "object"
-      },
       "GuestImportResult" : {
         "properties" : {
           "consentAttested" : {
@@ -9291,34 +9251,6 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/AdminTrialPage"
-                }
-              }
-            },
-            "description" : "OK"
-          }
-        },
-        "tags" : [
-          "admin-trial-controller"
-        ]
-      },
-      "post" : {
-        "operationId" : "adminTrialGrant",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/GrantTrialRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/AdminTrialView"
                 }
               }
             },

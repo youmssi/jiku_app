@@ -22,7 +22,6 @@ data class TrialNotice(
     val note: String? = null,
 ) {
     companion object {
-        const val KIND_GRANTED = "GRANTED"
         const val KIND_EXPIRING = "EXPIRING"
         const val KIND_EXPIRED = "EXPIRED"
         const val KIND_ENDED = "ENDED"

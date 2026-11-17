@@ -1,7 +1,6 @@
 package com.jiku.money
 
 import com.jiku.shared.TenantMilestones
-import java.time.Instant
 import java.util.UUID
 
 /**
@@ -66,14 +65,6 @@ interface BillingModuleApi {
 
     /** Platform-wide trial funnel snapshot (JIKU-99) for the back-office overview strip. */
     fun adminTrialStats(): AdminTrialStats
-
-    /** Lends one event [guests] guests until [expiresAt]. */
-    fun adminGrantTrial(
-        tenantId: UUID,
-        eventId: UUID,
-        guests: Long,
-        expiresAt: Instant,
-    ): AdminTrialView
 
     /** Offers an organization a gift (JIKU-315), applied at once when the command says so. */
     fun adminOfferGift(command: OfferGiftCommand): AdminGiftView
