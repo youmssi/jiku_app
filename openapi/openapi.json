@@ -698,6 +698,14 @@
             "minLength" : 1,
             "type" : "string"
           },
+          "source" : {
+            "maxLength" : 8,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
           "startsAt" : {
             "format" : "date-time",
             "type" : "string"
@@ -740,6 +748,19 @@
           "confirmationMode" : {
             "type" : "string"
           },
+          "currency" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "durationMinutes" : {
+            "format" : "int32",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
           "logoUrl" : {
             "type" : [
               "string",
@@ -756,6 +777,25 @@
             ]
           },
           "organizerVerification" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "place" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "priceMinor" : {
+            "format" : "int64",
+            "type" : [
+              "integer",
+              "null"
+            ]
+          },
+          "primaryColor" : {
             "type" : [
               "string",
               "null"
@@ -6605,6 +6645,40 @@
         },
         "type" : "object"
       },
+      "ServiceCardCounts" : {
+        "properties" : {
+          "card" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "link" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "ServiceCardOpenRequest" : {
+        "properties" : {
+          "agent" : {
+            "maxLength" : 500,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "source" : {
+            "maxLength" : 8,
+            "minLength" : 0,
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type" : "object"
+      },
       "ServiceConfigUpdate" : {
         "properties" : {
           "bufferMinutes" : {
@@ -6840,6 +6914,12 @@
             ],
             "type" : "string"
           },
+          "place" : {
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
           "priceMinor" : {
             "format" : "int64",
             "type" : [
@@ -6849,6 +6929,27 @@
           },
           "timezone" : {
             "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ServiceShareView" : {
+        "properties" : {
+          "bookings" : {
+            "$ref" : "#/components/schemas/ServiceCardCounts"
+          },
+          "canShare" : {
+            "type" : "boolean"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "opens" : {
+            "$ref" : "#/components/schemas/ServiceCardCounts"
+          },
+          "windowDays" : {
+            "format" : "int64",
+            "type" : "integer"
           }
         },
         "type" : "object"
@@ -6943,6 +7044,14 @@
               "BEFORE",
               "AFTER_SERVICE"
             ],
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
+          "place" : {
+            "maxLength" : 160,
+            "minLength" : 0,
             "type" : [
               "string",
               "null"
@@ -18267,6 +18376,39 @@
         ]
       }
     },
+    "/api/v1/r/{code}/open" : {
+      "post" : {
+        "operationId" : "shortLinkPublicOpen",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "code",
+            "required" : true,
+            "schema" : {
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ServiceCardOpenRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [
+          "short-link-public-controller"
+        ]
+      }
+    },
     "/api/v1/resources" : {
       "get" : {
         "operationId" : "resourceList",
@@ -19228,6 +19370,37 @@
         "responses" : {
           "204" : {
             "description" : "No Content"
+          }
+        },
+        "tags" : [
+          "service-controller"
+        ]
+      }
+    },
+    "/api/v1/services/{id}/share" : {
+      "get" : {
+        "operationId" : "serviceShare",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "id",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ServiceShareView"
+                }
+              }
+            },
+            "description" : "OK"
           }
         },
         "tags" : [

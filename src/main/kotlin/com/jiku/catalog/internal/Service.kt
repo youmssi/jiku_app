@@ -44,6 +44,10 @@ class Service(
     @Embedded
     var price: Price? = null
 
+    /** Where the service takes place, shown on its card (JIKU-189); free text, optional. */
+    @Column(name = "place", length = 160)
+    var place: String? = null
+
     /** What a client of this service owes the organization, or null when it is free. */
     fun clientCharge(): ClientCharge? =
         price?.let { ClientCharge(it.amountMinor, it.currency, dueAfterService = paymentRule == PaymentRule.AFTER_SERVICE) }

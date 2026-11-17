@@ -716,6 +716,11 @@ invitation:
   stale-pending-minutes: ${INVITATION_STALE_PENDING_MINUTES:30}
 
 catalog:
+  # Service cards (JIKU-189): how far back the Share tab counts opens and
+  # bookings, and when the day's visitor hashes are deleted (UTC).
+  service-card:
+    window: ${SERVICE_CARD_WINDOW:P30D}
+    purge-cron: ${SERVICE_CARD_PURGE_CRON:0 5 0 * * *}
   operator-link:
     # Frontend base URL used to build shareable operator links (JIKU-116).
     app-base-url: ${SERVER_BASE_URL:http://localhost:3000}
