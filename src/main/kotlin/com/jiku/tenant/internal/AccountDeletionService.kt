@@ -57,6 +57,7 @@ class AccountDeletionService(
     private val events: ApplicationEventPublisher,
     private val sessions: OrganizerSessionService,
     private val mfa: MfaModuleApi,
+    private val passkeys: PasskeyService,
     transactionManager: PlatformTransactionManager,
 ) {
     private val log = LoggerFactory.getLogger(AccountDeletionService::class.java)
@@ -172,6 +173,7 @@ class AccountDeletionService(
                 user.passwordChangedAt = Instant.now()
                 sessions.closeAll(requireNotNull(user.id))
                 mfa.forget(MfaSubject(MfaSubject.ORGANIZER, requireNotNull(user.id)))
+                passkeys.forget(requireNotNull(user.id))
                 users.save(user)
             }
             row.status = AccountDeletionStatus.DONE

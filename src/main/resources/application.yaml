@@ -251,6 +251,15 @@ auth:
     max-attempts: ${MFA_MAX_ATTEMPTS:5}
     attempt-window: ${MFA_ATTEMPT_WINDOW:PT5M}
     admin-required: ${ADMIN_MFA_REQUIRED:true}
+  # Passkeys (JIKU-318). The relying party is the site people sign in on: the
+  # origins the browser may present (comma-separated; the web app's address by
+  # default) and its domain (rp-id; the first origin's host when blank).
+  passkeys:
+    rp-id: ${PASSKEY_RP_ID:}
+    rp-name: ${PASSKEY_RP_NAME:Jikū}
+    origins: ${PASSKEY_ORIGINS:${SERVER_BASE_URL:http://localhost:3000}}
+    ceremony-ttl: ${PASSKEY_CEREMONY_TTL:PT5M}
+    max-per-account: ${PASSKEY_MAX_PER_ACCOUNT:10}
   # Signed-in sessions (JIKU-317): how long one unused is still listed.
   sessions:
     idle-listing: ${AUTH_SESSION_IDLE_LISTING:${AUTH_JWT_REFRESH_EXPIRATION:P7D}}
@@ -311,7 +320,7 @@ api:
       login:
         # Blunt credential brute-force: a human retries a handful of times per
         # minute, scripts do not.
-        paths: [/auth/login, /auth/mfa/verify]
+        paths: [/auth/login, /auth/mfa/verify, /auth/passkey, /auth/passkey/options]
         max-requests: ${AUTH_LOGIN_MAX_ATTEMPTS:5}
         window: ${AUTH_LOGIN_RATE_WINDOW:PT1M}
       auth-public:
