@@ -28,6 +28,7 @@ class AuthService(
     private val accountDeletion: AccountDeletionService,
     private val sessions: OrganizerSessionService,
     private val mfa: MfaModuleApi,
+    private val passkeys: PasskeyService,
 ) {
     /**
      * Creates a user account (JIKU-48). With an organization [RegisterRequest.name]
@@ -149,6 +150,16 @@ class AuthService(
             users.save(user)
         }
         return signIn(user, DeviceInfo(request.deviceId, request.device), request.trustedDeviceToken)
+    }
+
+    /**
+     * Passkey sign-in (JIKU-318): the device proved both possession and its
+     * holder (fingerprint, face or PIN), so no authentication-app code follows.
+     */
+    @Transactional
+    fun passkeySignIn(request: PasskeySignInRequest): AuthResponse {
+        val user = passkeys.finishSignIn(request.ceremonyId, request.credential)
+        return completeSignIn(user, DeviceInfo(request.deviceId, request.device))
     }
 
     @Transactional

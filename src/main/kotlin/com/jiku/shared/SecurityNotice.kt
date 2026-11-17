@@ -23,5 +23,6 @@ data class SecurityNotice(
         const val KIND_MFA_DISABLED = "MFA_DISABLED"
         const val KIND_BACKUP_CODES_RENEWED = "BACKUP_CODES_RENEWED"
         const val KIND_NEW_DEVICE = "NEW_DEVICE"
+        const val KIND_PASSKEY_ADDED = "PASSKEY_ADDED"
     }
 }
