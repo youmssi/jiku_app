@@ -40,7 +40,8 @@ class TenantAccessGateAdapter(
     private fun lookup(tenantId: String): Boolean {
         val id = runCatching { UUID.fromString(tenantId) }.getOrNull() ?: return false
         val tenant = tenants.findById(id).orElse(null) ?: return false
-        return tenant.status == TenantStatus.SUSPENDED
+        // Closing and closed organizations are locked out like suspended ones (JIKU-316).
+        return tenant.status != TenantStatus.ACTIVE
     }
 
     private companion object {

@@ -22,7 +22,7 @@ class Tenant(
     @Column(name = "name", nullable = false)
     val name: String,
     @Column(name = "contact_email", nullable = false)
-    val contactEmail: String,
+    var contactEmail: String,
     /** ISO 3166-1 alpha-2; fixed at creation (JIKU-107). */
     @Column(name = "country", nullable = false, updatable = false)
     val country: String,
