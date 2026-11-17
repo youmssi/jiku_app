@@ -1,7 +1,10 @@
 package com.jiku.catalog.internal
 
 import com.jiku.live.LiveTicket
+import com.jiku.shared.ClientAddress
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
+import jakarta.validation.constraints.Size
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -22,7 +25,25 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/r")
 class ShortLinkPublicController(
     private val appointments: AppointmentPublicService,
+    private val cards: ServiceCardService,
+    private val clientAddress: ClientAddress,
 ) {
+    /**
+     * Counts an open of the link (JIKU-189), sent by the page once it has loaded
+     * in a browser, so link previews and crawlers are not counted. `source` is
+     * `card` (the card's QR code) or `link` (the shared link); [agent] is the
+     * visitor's browser, which the web server relays.
+     */
+    @PostMapping("/{code}/open")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun open(
+        @PathVariable code: String,
+        @Valid @RequestBody request: ServiceCardOpenRequest,
+        servletRequest: HttpServletRequest,
+    ) {
+        cards.recordOpen(code, request.source, clientAddress.of(servletRequest), request.agent)
+    }
+
     @GetMapping("/{code}")
     fun view(
         @PathVariable code: String,
@@ -71,3 +92,8 @@ class ShortLinkPublicController(
         appointments.cancelByCode(code, bookingToken)
     }
 }
+
+data class ServiceCardOpenRequest(
+    @field:Size(max = 8) val source: String? = null,
+    @field:Size(max = 500) val agent: String? = null,
+)

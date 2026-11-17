@@ -14,4 +14,6 @@ fun interface TenantBrand {
 data class TenantBrandInfo(
     val name: String,
     val logoUrl: String?,
+    /** The organization's color, for the cards it shares (JIKU-189); null when it chose none. */
+    val primaryColor: String? = null,
 )

@@ -30,7 +30,14 @@ class ServiceController(
     private val linkTokens: ServiceLinkTokenService,
     private val serviceLinkCodes: ServiceLinkCodeService,
     private val config: ServiceConfigService,
+    private val cards: ServiceCardService,
 ) {
+    /** The Share tab (JIKU-189): the card's link, whether it may be shared, and how it did over the window. */
+    @GetMapping("/{id}/share")
+    fun share(
+        @PathVariable id: UUID,
+    ): ServiceShareView = cards.share(id)
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun create(

@@ -34,6 +34,8 @@ data class ServiceUpdateRequest(
     @field:Size(max = 120) val name: String? = null,
     val paymentRule: PaymentRule? = null,
     val priceMinor: Long? = null,
+    /** Where the service takes place, shown on its card (JIKU-189); blank clears it. */
+    @field:Size(max = 160) val place: String? = null,
 )
 
 data class ServiceResponse(
@@ -44,6 +46,8 @@ data class ServiceResponse(
     /** Null for a free service. */
     val priceMinor: Long?,
     val currency: String?,
+    /** Where the service takes place (JIKU-189), or null. */
+    val place: String? = null,
 )
 
 data class ServiceRequirementRequest(

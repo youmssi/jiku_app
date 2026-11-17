@@ -1,6 +1,7 @@
 package com.jiku.shared.ratelimit
 
 import com.jiku.shared.ApiProperties
+import com.jiku.shared.ClientAddress
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -10,7 +11,6 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.filter.OncePerRequestFilter
-import java.security.MessageDigest
 
 /**
  * Enforces the configured [RateLimitProperties] policies on every request whose
@@ -32,6 +32,7 @@ class RateLimitFilter(
     private val properties: RateLimitProperties,
     private val apiProperties: ApiProperties,
     private val limiter: RateLimiter,
+    private val clientAddress: ClientAddress,
 ) : OncePerRequestFilter() {
     private val pathMatcher = AntPathMatcher()
 
@@ -88,20 +89,10 @@ class RateLimitFilter(
         return listOfNotNull(policyName, clientIp(request), token).joinToString(":")
     }
 
-    private fun clientIp(request: HttpServletRequest): String {
-        val secret = properties.forwardedClientIpSecret
-        if (secret.isBlank()) return request.remoteAddr
-        val presented = request.getHeader(CLIENT_IP_SECRET_HEADER) ?: return request.remoteAddr
-        if (!MessageDigest.isEqual(presented.toByteArray(), secret.toByteArray())) return request.remoteAddr
-        val forwarded = request.getHeader(CLIENT_IP_HEADER)?.trim()
-        return forwarded?.takeIf { IP_LITERAL.matches(it) } ?: request.remoteAddr
-    }
+    private fun clientIp(request: HttpServletRequest): String = clientAddress.of(request)
 
     companion object {
-        const val CLIENT_IP_HEADER = "X-Jiku-Client-Ip"
-        const val CLIENT_IP_SECRET_HEADER = "X-Jiku-Client-Ip-Secret"
-
-        /** An IPv4 or IPv6 literal: digits, hex letters, dots and colons, nothing else. */
-        private val IP_LITERAL = Regex("^[0-9A-Fa-f:.]{2,45}$")
+        const val CLIENT_IP_HEADER = ClientAddress.HEADER
+        const val CLIENT_IP_SECRET_HEADER = ClientAddress.SECRET_HEADER
     }
 }

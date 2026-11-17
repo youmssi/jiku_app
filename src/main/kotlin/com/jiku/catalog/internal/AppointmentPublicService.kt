@@ -39,6 +39,15 @@ data class AppointmentServiceView(
      * (JIKU-254); the page still opens, says so, and offers no times.
      */
     val bookingPaused: Boolean = false,
+    /** What the card shows (JIKU-189): the indicative price, in the organization's currency; null when free. */
+    val priceMinor: Long? = null,
+    val currency: String? = null,
+    /** How long one appointment lasts, in minutes. */
+    val durationMinutes: Int? = null,
+    /** Where the service takes place, when given. */
+    val place: String? = null,
+    /** The organization's color, for the card (JIKU-189). */
+    val primaryColor: String? = null,
 )
 
 data class AppointmentSlotView(
@@ -52,6 +61,8 @@ data class AppointmentBookingRequest(
     @field:NotBlank @field:Size(max = 120) val clientName: String,
     @field:NotBlank val clientPhone: String,
     val startsAt: Instant,
+    /** How the client reached the link (JIKU-189): `card` or `link`; anything else is not counted. */
+    @field:Size(max = 8) val source: String? = null,
 )
 
 data class AppointmentBookingView(
@@ -107,6 +118,7 @@ class AppointmentPublicService(
     private val verification: VerificationGate,
     private val brand: TenantBrand,
     private val servicesAccess: ServicesAccessGate,
+    private val cards: ServiceCardService,
 ) {
     /** A client takes a ticket for today's line, from the QR shown at the entrance (JIKU-113). */
     fun takeTicketByCode(
@@ -212,6 +224,11 @@ class AppointmentPublicService(
             organizerName = organizer?.name,
             logoUrl = organizer?.logoUrl,
             bookingPaused = paused,
+            priceMinor = service.priceMinor,
+            currency = service.currency,
+            durationMinutes = effective.durationMinutes,
+            place = service.place,
+            primaryColor = organizer?.primaryColor,
         )
     }
 
@@ -221,6 +238,7 @@ class AppointmentPublicService(
     ): AppointmentBookingView =
         try {
             val outcome = engine.bookClient(serviceId, request.startsAt, request.clientName, request.clientPhone)
+            TenantContext.get()?.let { cards.recordBooking(it, serviceId, request.source) }
             AppointmentBookingView(
                 bookingToken = outcome.bookingToken,
                 status = outcome.status.name,

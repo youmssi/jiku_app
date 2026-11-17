@@ -94,11 +94,9 @@ class RateLimitTest {
             )
 
         private fun filter(secret: String = "") =
-            RateLimitFilter(
-                properties.copy(forwardedClientIpSecret = secret),
-                ApiProperties(basePath = "/api/v1"),
-                InMemoryRateLimiter(),
-            )
+            properties.copy(forwardedClientIpSecret = secret).let {
+                RateLimitFilter(it, ApiProperties(basePath = "/api/v1"), InMemoryRateLimiter(), ClientAddress(it))
+            }
 
         private fun fromWebServer(
             visitorIp: String,

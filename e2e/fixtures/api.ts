@@ -117,3 +117,20 @@ export async function createValidator(token: string, eventId: string, label: str
     }
     return url;
 }
+
+/** A service with one person and default hours, as the quick setup creates it. */
+export async function createQuickService(token: string, name: string, durationMinutes: number): Promise<string> {
+    const service = await call<{ id: string }>('/services', {
+        method: 'POST',
+        token,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, timezone: 'Africa/Conakry', quickSetup: { durationMinutes, hostName: 'Kadiatou' } }),
+    });
+    return service.id;
+}
+
+/** The service's short link code, issued on first read of its Share tab (JIKU-189). */
+export async function serviceCardCode(token: string, serviceId: string): Promise<string> {
+    const share = await call<{ code: string }>(`/services/${serviceId}/share`, { token });
+    return share.code;
+}
