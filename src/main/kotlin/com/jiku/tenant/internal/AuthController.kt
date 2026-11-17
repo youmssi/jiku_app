@@ -37,6 +37,12 @@ class AuthController(
         @Valid @RequestBody request: RefreshRequest,
     ): AuthResponse = authService.refresh(request)
 
+    /** The code step of a sign-in with a second factor (JIKU-317). */
+    @PostMapping("/mfa/verify")
+    fun verifyMfa(
+        @Valid @RequestBody request: MfaVerifyRequest,
+    ): AuthResponse = authService.verifyMfa(request)
+
     @PostMapping("/google")
     fun google(
         @Valid @RequestBody request: GoogleLoginRequest,
@@ -49,7 +55,7 @@ class AuthController(
     fun switchOrg(
         authentication: Authentication,
         @Valid @RequestBody request: SwitchOrgRequest,
-    ): AuthResponse = authService.switchOrg(authentication.name, request)
+    ): AuthResponse = authService.switchOrg(authentication.name, authentication.sessionId(), request)
 
     @GetMapping("/me")
     @PreAuthorize("hasRole('USER')")
@@ -83,3 +89,6 @@ class AuthController(
     @PreAuthorize("hasRole('USER')")
     fun resendVerification(authentication: Authentication) = accountTokenService.resendEmailVerification(authentication.name)
 }
+
+/** The signed-in session the request's token names (JIKU-317), when it names one. */
+fun Authentication.sessionId(): String? = details as? String

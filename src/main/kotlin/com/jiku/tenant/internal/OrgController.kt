@@ -45,7 +45,7 @@ class OrgController(
     fun create(
         authentication: Authentication,
         @Valid @RequestBody request: CreateOrgRequest,
-    ): AuthResponse = authService.createOrganization(authentication.name, request)
+    ): AuthResponse = authService.createOrganization(authentication.name, authentication.sessionId(), request)
 
     @GetMapping("/profile")
     @PreAuthorize("hasRole('ORGANIZER')")

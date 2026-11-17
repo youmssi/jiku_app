@@ -1,5 +1,8 @@
 package com.jiku.tenant.internal
 
+import com.jiku.mfa.MfaModuleApi
+import com.jiku.mfa.MfaPurpose
+import com.jiku.mfa.MfaSubject
 import com.jiku.shared.CodedRefusal
 import com.jiku.shared.JwtService
 import com.jiku.shared.MarketingConsent
@@ -23,6 +26,8 @@ class AuthService(
     private val googleVerifier: GoogleIdentityVerifier,
     private val markets: MarketProperties,
     private val accountDeletion: AccountDeletionService,
+    private val sessions: OrganizerSessionService,
+    private val mfa: MfaModuleApi,
 ) {
     /**
      * Creates a user account (JIKU-48). With an organization [RegisterRequest.name]
@@ -55,7 +60,7 @@ class AuthService(
                 )
             val membership = orgName?.let { createOrganizationFor(user, it, request.country) }
             accountTokens.sendEmailVerification(user)
-            return tokensFor(user, membership)
+            return tokensFor(user, membership, sessions.open(user, null))
         } catch (ex: DataIntegrityViolationException) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "An account with this email already exists", ex)
         }
@@ -69,13 +74,19 @@ class AuthService(
     @Transactional
     fun createOrganization(
         userId: String,
+        sessionId: String?,
         request: CreateOrgRequest,
     ): AuthResponse {
         val user = requireUser(userId)
-        return tokensFor(user, createOrganizationFor(user, request.name.trim(), request.country))
+        return tokensFor(user, createOrganizationFor(user, request.name.trim(), request.country), sessionFor(user, sessionId))
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * Password sign-in. With a second factor on (JIKU-317) and no remembered
+     * device, it stops at a 401 `auth.mfa-required` carrying a `challengeToken`
+     * for [verifyMfa]; no session is opened before the code.
+     */
+    @Transactional
     fun login(request: LoginRequest): AuthResponse {
         val user =
             users.findByEmail(request.email)
@@ -89,8 +100,18 @@ class AuthService(
         if (!passwordEncoder.matches(request.password, hash)) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password")
         }
-        accountDeletion.cancelOnSignIn(user)
-        return tokensFor(user, bindableMembership(user))
+        return signIn(user, DeviceInfo(request.deviceId, request.device), request.trustedDeviceToken)
+    }
+
+    /** The code step of a sign-in (JIKU-317), with the token the first step returned. */
+    @Transactional
+    fun verifyMfa(request: MfaVerifyRequest): AuthResponse {
+        val userId = mfa.readChallenge(request.challengeToken, MfaSubject.ORGANIZER, MfaPurpose.VERIFY)
+        val user = users.findById(userId).orElseThrow { invalidChallenge() }
+        val subject = subjectOf(user)
+        mfa.verify(subject, request.code, request.backupCode)
+        val response = completeSignIn(user, DeviceInfo(request.deviceId, request.device))
+        return if (request.trustDevice) response.copy(trustedDeviceToken = mfa.trustDevice(subject)) else response
     }
 
     /**
@@ -127,11 +148,10 @@ class AuthService(
         if (changed) {
             users.save(user)
         }
-        accountDeletion.cancelOnSignIn(user)
-        return tokensFor(user, bindableMembership(user))
+        return signIn(user, DeviceInfo(request.deviceId, request.device), request.trustedDeviceToken)
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     fun refresh(request: RefreshRequest): AuthResponse {
         val claims =
             try {
@@ -153,6 +173,16 @@ class AuthService(
         if (changedAt != null && claims.issuedAt.toInstant().isBefore(changedAt)) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token")
         }
+        // A session closed from Settings -> Security (JIKU-317) renews no more.
+        // Tokens from before sessions existed open one on their first renewal.
+        val sessionId =
+            (claims[JwtService.CLAIM_SESSION_ID] as? String)?.let { raw ->
+                val id = runCatching { UUID.fromString(raw) }.getOrNull()
+                if (id == null || !sessions.renew(id, requireNotNull(user.id))) {
+                    throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token")
+                }
+                id
+            } ?: sessions.open(user, null)
         // Re-derive the binding rather than trusting the old claims: the membership
         // (or its role) may have changed since the refresh token was issued. A
         // vanished or suspended active organization falls back to the next one.
@@ -161,15 +191,16 @@ class AuthService(
             tokenTenantId
                 ?.takeIf { it.isNotBlank() && !isSuspended(it) }
                 ?.let { memberships.findByUserIdAndTenantId(requireNotNull(user.id), it) }
-        return tokensFor(user, current ?: bindableMembership(user))
+        return tokensFor(user, current ?: bindableMembership(user), sessionId)
     }
 
     /**
      * Rebinds the session to another organization the user is a member of (JIKU-48).
      */
-    @Transactional(readOnly = true)
+    @Transactional
     fun switchOrg(
         userId: String,
+        sessionId: String?,
         request: SwitchOrgRequest,
     ): AuthResponse {
         val user = requireUser(userId)
@@ -177,7 +208,7 @@ class AuthService(
             memberships.findByUserIdAndTenantId(requireNotNull(user.id), request.tenantId)
                 ?: throw ResponseStatusException(HttpStatus.FORBIDDEN, "Not a member of this organization")
         rejectSuspended(request.tenantId)
-        return tokensFor(user, membership)
+        return tokensFor(user, membership, sessionFor(user, sessionId))
     }
 
     /** Gives or withdraws consent to Jikū's news and tips (JIKU-201). */
@@ -224,6 +255,44 @@ class AuthService(
                 },
         )
     }
+
+    private fun signIn(
+        user: OrganizerUser,
+        device: DeviceInfo,
+        trustedDeviceToken: String?,
+    ): AuthResponse {
+        val subject = subjectOf(user)
+        if (mfa.status(subject).enabled && !mfa.isTrustedDevice(subject, trustedDeviceToken)) {
+            throw CodedRefusal(
+                HttpStatus.UNAUTHORIZED,
+                CodedRefusal.MFA_REQUIRED,
+                "Enter the code from your authentication app",
+                mapOf("challengeToken" to mfa.challenge(subject, MfaPurpose.VERIFY)),
+            )
+        }
+        return completeSignIn(user, device)
+    }
+
+    /** Signing in again cancels a pending account deletion (JIKU-316) and opens a session. */
+    private fun completeSignIn(
+        user: OrganizerUser,
+        device: DeviceInfo,
+    ): AuthResponse {
+        accountDeletion.cancelOnSignIn(user)
+        val membership = bindableMembership(user)
+        return tokensFor(user, membership, sessions.open(user, device))
+    }
+
+    /** The caller's session, kept across an organization switch; one is opened for older tokens. */
+    private fun sessionFor(
+        user: OrganizerUser,
+        sessionId: String?,
+    ): UUID = sessionId?.let { runCatching { UUID.fromString(it) }.getOrNull() } ?: sessions.open(user, null)
+
+    private fun subjectOf(user: OrganizerUser) = MfaSubject(MfaSubject.ORGANIZER, requireNotNull(user.id))
+
+    private fun invalidChallenge() =
+        CodedRefusal(HttpStatus.UNAUTHORIZED, CodedRefusal.MFA_INVALID, "This sign-in has expired. Start again.")
 
     private fun createOrganizationFor(
         user: OrganizerUser,
@@ -280,13 +349,14 @@ class AuthService(
     private fun tokensFor(
         user: OrganizerUser,
         membership: OrganizerMembership?,
+        sessionId: UUID,
     ): AuthResponse {
         val userId = requireNotNull(user.id).toString()
         val tenantId = membership?.tenantId.orEmpty()
         val role = membership?.role?.tokenRole ?: TokenRoles.USER
         return AuthResponse(
-            accessToken = jwtService.generateAccessToken(userId, tenantId, role),
-            refreshToken = jwtService.generateRefreshToken(userId, tenantId, role),
+            accessToken = jwtService.generateAccessToken(userId, tenantId, role, sessionId.toString()),
+            refreshToken = jwtService.generateRefreshToken(userId, tenantId, role, sessionId.toString()),
         )
     }
 }
