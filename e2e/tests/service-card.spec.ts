@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { createQuickService, login, serviceCardCode } from '../fixtures/api';
+import { createClosedService, createQuickService, login, serviceCardCode, setCardMode } from '../fixtures/api';
 import { onboardedOrganizer } from '../fixtures/organizer';
 import { inEnglish } from '../fixtures/locale';
 
@@ -40,4 +40,31 @@ test('counts a booking page opened from the service card @smoke', async ({ page,
     await page.reload();
     const opens = page.getByText('Opens from the card').locator('..');
     await expect(opens).toContainText('1');
+});
+
+/**
+ * Slot mode (JIKU-190): a card that leads straight to the times opens on the first
+ * free day; with no free time this week the page shows the presentation instead.
+ */
+test('a card in slot mode opens on the times, or says none this week', async ({ page, browser }) => {
+    const organizer = await onboardedOrganizer(page, 'slotcard');
+    const token = await login(organizer);
+    const open = await createQuickService(token, 'Coupe enfant', 30);
+    const closed = await createClosedService(token, 'Fermé');
+    await setCardMode(token, open, 'SLOT');
+    await setCardMode(token, closed, 'SLOT');
+    const openCode = await serviceCardCode(token, open);
+    const closedCode = await serviceCardCode(token, closed);
+
+    const client = await browser.newContext();
+    const booking = await client.newPage();
+    await booking.goto(inEnglish(`/r/${openCode}?src=card&step=slot`));
+    await expect(booking.getByRole('heading', { name: 'Coupe enfant' })).toBeVisible();
+    // The day strip lands on a day with free times, and the times are offered.
+    await expect(booking.getByText('No times open on this day.')).toHaveCount(0);
+    await expect(booking.getByText('No times this week')).toHaveCount(0);
+
+    await booking.goto(inEnglish(`/r/${closedCode}?src=card&step=slot`));
+    await expect(booking.getByText('No times this week')).toBeVisible();
+    await client.close();
 });

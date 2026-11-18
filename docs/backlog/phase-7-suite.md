@@ -14,7 +14,7 @@ story : on présente les options, on ne devine pas.
 |---|---|---|---|---|
 | JIKU-188 | Allègement visuel : règles de densité et formats courts | app, web | — | Validée le 2026-09-27 |
 | JIKU-189 | Carte de service, mode redirection | app, web | — | Prête |
-| JIKU-190 | Carte de service, mode rendez-vous direct | app, web | JIKU-189 | Prête |
+| JIKU-190 | Carte de service, mode rendez-vous direct | app, web | JIKU-189 | Faite |
 | JIKU-191 | Conversation guidée : les questions de l'organisation | app, web | JIKU-189 | À valider |
 | JIKU-192 | Conversation guidée sur le numéro de l'organisation | app, web | JIKU-191 | À valider |
 | JIKU-193 | Mesure des cartes et quota de conversations | app, web | JIKU-192 | À valider |

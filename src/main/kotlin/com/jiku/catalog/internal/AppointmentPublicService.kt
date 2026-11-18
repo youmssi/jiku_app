@@ -48,6 +48,13 @@ data class AppointmentServiceView(
     val place: String? = null,
     /** The organization's color, for the card (JIKU-189). */
     val primaryColor: String? = null,
+    /** Where the service's card and link lead (JIKU-190). */
+    val cardMode: String = ServiceCardMode.PRESENTATION.name,
+    /**
+     * The next free times from today, a few days ahead (JIKU-190), only when asked
+     * for: a card in slot mode lists them and its link opens on the first one's day.
+     */
+    val upcoming: List<AppointmentSlotView>? = null,
 )
 
 data class AppointmentSlotView(
@@ -119,6 +126,7 @@ class AppointmentPublicService(
     private val brand: TenantBrand,
     private val servicesAccess: ServicesAccessGate,
     private val cards: ServiceCardService,
+    private val cardProperties: ServiceCardProperties,
 ) {
     /** A client takes a ticket for today's line, from the QR shown at the entrance (JIKU-113). */
     fun takeTicketByCode(
@@ -160,7 +168,8 @@ class AppointmentPublicService(
     fun viewByCode(
         code: String,
         date: String?,
-    ): AppointmentServiceView = withService(resolveCode(code), date) { serviceId -> view(serviceId, date) }
+        upcoming: Boolean = false,
+    ): AppointmentServiceView = withService(resolveCode(code), date) { serviceId -> view(serviceId, date, upcoming) }
 
     fun bookByToken(
         token: String,
@@ -199,6 +208,7 @@ class AppointmentPublicService(
     private fun view(
         serviceId: UUID,
         date: String?,
+        upcoming: Boolean = false,
     ): AppointmentServiceView {
         val service = services.get(serviceId)
         val zone = ZoneId.of(service.timezone)
@@ -229,7 +239,24 @@ class AppointmentPublicService(
             durationMinutes = effective.durationMinutes,
             place = service.place,
             primaryColor = organizer?.primaryColor,
+            cardMode = service.cardMode.name,
+            upcoming = if (upcoming) upcomingSlots(serviceId, LocalDate.now(zone), paused) else null,
         )
+    }
+
+    /** The first free times from [today] over the next few days, at most a handful (JIKU-190). */
+    private fun upcomingSlots(
+        serviceId: UUID,
+        today: LocalDate,
+        paused: Boolean,
+    ): List<AppointmentSlotView> {
+        if (paused) return emptyList()
+        return generateSequence(today) { it.plusDays(1) }
+            .take(cardProperties.upcomingDays)
+            .flatMap { day -> engine.openSlots(serviceId, day).asSequence() }
+            .take(cardProperties.upcomingSlots)
+            .map { AppointmentSlotView(it.startsAt, it.endsAt, it.placesLeft) }
+            .toList()
     }
 
     private fun book(
