@@ -2,6 +2,7 @@ package com.jiku.catalog.internal
 
 import com.jiku.catalog.DeliveryMode
 import com.jiku.catalog.InvitationChannel
+import com.jiku.shared.HTTPS_IMAGE_URL
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
@@ -22,7 +23,7 @@ data class EventSettingsDto(
     @field:Size(max = 255)
     val brandName: String? = null,
     @field:Size(max = 2048)
-    @field:Pattern(regexp = "^(https://\\S+)?$", message = "The logo must be an https:// address")
+    @field:Pattern(regexp = HTTPS_IMAGE_URL, message = "The logo must be an https:// address")
     val brandLogoUrl: String? = null,
     @field:Pattern(regexp = "^(#[0-9a-fA-F]{6})?$", message = "The colour must be a 6-digit hex colour, e.g. #1E293B")
     val brandColor: String? = null,

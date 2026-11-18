@@ -54,15 +54,12 @@ class SalesSettingsController(
     private val settings: SalesSettingsService,
 ) {
     @GetMapping
-    fun get(): SalesSettingsView = settings.view(currentTenantId())
+    fun get(): SalesSettingsView = settings.view(TenantContext.requireId())
 
     @PutMapping
     fun update(
         @Valid @RequestBody request: UpdateSalesSettingsRequest,
-    ): SalesSettingsView = settings.update(currentTenantId(), request.orderHoldMinutes)
-
-    private fun currentTenantId(): UUID =
-        UUID.fromString(TenantContext.get() ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "No tenant context"))
+    ): SalesSettingsView = settings.update(TenantContext.requireId(), request.orderHoldMinutes)
 }
 
 @Service

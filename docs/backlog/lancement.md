@@ -83,6 +83,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-318 | Passkeys : se connecter par empreinte ou visage | app, web | JIKU-317 |
 | JIKU-319 | L'essai direct remplacé par les cadeaux : le bureau n'accorde plus d'essai sans passer par un cadeau | app, web | JIKU-315 |
 | JIKU-320 | Dépendances du site à jour : Next.js 16.4.6, paquets transitifs corrigés | web | — |
+| JIKU-321 | Avant l'ouverture au public : images d'organisation récupérées sans risque, logique en double regroupée, fichiers inutiles retirés | app, web | — |
 
 ---
 
@@ -1076,4 +1077,22 @@ pour la même chose, dont un sans le choix de l'organisateur.
 
 - [x] Next.js 16.4.6, `@vercel/og` inutilisé retiré, `glob`, `minimatch`, `hono`, `@hono/node-server` et `systeminformation` forcés sur une version corrigée
 - [x] `pnpm audit --prod` ne signale plus rien
+
+## JIKU-321 — Avant l'ouverture au public
+
+**Pourquoi.** L'audit d'avant ouverture (sécurité, duplication, fichiers morts) a
+relevé une faille et du code en double. L'organisateur peut saisir l'adresse de
+son logo ou de sa bannière, et le site va chercher cette image pour dessiner les
+cartes : une adresse interne ferait appeler au serveur un service qui n'est pas
+public (SSRF).
+
+**Critères d'acceptation.**
+
+- [ ] L'API n'accepte comme logo ou bannière qu'une adresse `https://`, sans identifiants, de 2 048 caractères au plus
+- [ ] Le site ne va chercher une image que sur `https://`, jamais vers une adresse privée, de bouclage ou locale, avec un délai et une taille maximum ; sinon la carte est dessinée sans l'image
+- [ ] Un seul calcul d'empreinte SHA-256 en hexadécimal, une seule lecture de l'organisation courante dans les contrôleurs, une seule normalisation des mots-clés WhatsApp côté API
+- [ ] Côté site, une seule version de `safeUrl`, du nom public de l'organisation, de la langue de page, de l'abonnement vide et de la tuile de chiffre
+- [ ] Les composants d'interface et paquets inutilisés (carrousel, menus contextuels, barre de menus, pagination, panneaux redimensionnables, `useOnScreen`) sont retirés
+- [ ] `/.well-known/security.txt` indique comment signaler une faille
+- [ ] Les tests, le lint et la vérification des modules passent
 
