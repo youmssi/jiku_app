@@ -238,7 +238,7 @@ class OperatorService(
         return code
     }
 
-    private fun currentTenant(): String = TenantContext.get() ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "No tenant")
+    private fun currentTenant(): String = TenantContext.require()
 
     private fun Operator.toView(names: ScopeNames): OperatorView =
         OperatorView(

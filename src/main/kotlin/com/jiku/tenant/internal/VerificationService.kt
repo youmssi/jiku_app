@@ -3,6 +3,7 @@ package com.jiku.tenant.internal
 import com.jiku.shared.PhoneCodeRequested
 import com.jiku.shared.TenantContext
 import com.jiku.shared.VerificationGate
+import com.jiku.shared.sha256Hex
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.http.HttpStatus
@@ -278,11 +279,7 @@ class VerificationService(
         tenantId: String,
         phone: String,
         code: String,
-    ): String =
-        MessageDigest
-            .getInstance("SHA-256")
-            .digest("$tenantId:$phone:$code".toByteArray())
-            .joinToString("") { "%02x".format(it) }
+    ): String = sha256Hex("$tenantId:$phone:$code")
 
     private companion object {
         const val CODE_LENGTH = 6

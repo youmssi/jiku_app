@@ -40,15 +40,12 @@ class PaymentMethodsController(
     private val paymentMethods: PaymentMethodsService,
 ) {
     @GetMapping
-    fun get(): TenantPaymentMethodsInfo = paymentMethods.get(currentTenantId())
+    fun get(): TenantPaymentMethodsInfo = paymentMethods.get(TenantContext.requireId())
 
     @PutMapping
     fun update(
         @Valid @RequestBody request: UpdatePaymentMethodsRequest,
-    ): TenantPaymentMethodsInfo = paymentMethods.update(currentTenantId(), request)
-
-    private fun currentTenantId(): UUID =
-        UUID.fromString(TenantContext.get() ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "No tenant context"))
+    ): TenantPaymentMethodsInfo = paymentMethods.update(TenantContext.requireId(), request)
 }
 
 @Service

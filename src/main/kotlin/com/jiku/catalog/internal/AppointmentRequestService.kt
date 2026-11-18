@@ -89,7 +89,7 @@ class AppointmentRequestService(
         val rows = reservations.findByBookingTokenHash(hash)
         val confirmed = rows.first()
         val professionalName = resources.professionalAmong(rows.map { it.resourceId })
-        val tenantId = TenantContext.get() ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "No tenant")
+        val tenantId = TenantContext.require()
         events.publishEvent(
             AppointmentBooked(
                 serviceId = confirmed.serviceId,

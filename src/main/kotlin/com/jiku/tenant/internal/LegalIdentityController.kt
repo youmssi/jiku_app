@@ -32,19 +32,12 @@ class LegalIdentityController(
     private val service: LegalIdentityService,
 ) {
     @GetMapping
-    fun get(): LegalIdentityResponse = service.get(currentTenantId())
+    fun get(): LegalIdentityResponse = service.get(TenantContext.requireId())
 
     @PutMapping
     fun update(
         @Valid @RequestBody request: UpdateLegalIdentityRequest,
-    ): LegalIdentityResponse = service.update(currentTenantId(), request)
-
-    private fun currentTenantId(): UUID {
-        val tenantId =
-            TenantContext.get()
-                ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "No tenant context")
-        return UUID.fromString(tenantId)
-    }
+    ): LegalIdentityResponse = service.update(TenantContext.requireId(), request)
 }
 
 @Service

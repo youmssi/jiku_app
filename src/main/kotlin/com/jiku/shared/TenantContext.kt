@@ -2,6 +2,9 @@ package com.jiku.shared
 
 import com.jiku.shared.observability.MdcKeys
 import org.slf4j.MDC
+import org.springframework.http.HttpStatus
+import org.springframework.web.server.ResponseStatusException
+import java.util.UUID
 
 /**
  * Holds the tenant identifier bound to the current thread for the duration of a
@@ -23,6 +26,12 @@ object TenantContext {
     }
 
     fun get(): String? = currentTenant.get()
+
+    /** The organization the request acts for; a request without one is refused as unauthenticated. */
+    fun require(): String = get() ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "No tenant context")
+
+    /** [require] as a UUID, for repositories keyed by the organization's id. */
+    fun requireId(): UUID = UUID.fromString(require())
 
     fun clear() {
         currentTenant.remove()
