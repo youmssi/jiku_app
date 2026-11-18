@@ -55,7 +55,17 @@ class AutomaticInvoiceFlowTest {
         }
         Thread.sleep(1_000)
         assertEquals(1, invoiceNumbers(api, token).size)
-        assertEquals(1, output.out.split("subject=\"Votre facture $number\"").size - 1)
+        // Invoice numbers restart for every organization, and the captured output is the
+        // whole test process's: count only the mails sent to this organization.
+        val email =
+            JsonPath.read<String>(
+                api
+                    .get(token, "/api/v1/auth/me")
+                    .andReturn()
+                    .response.contentAsString,
+                "$.email",
+            )
+        assertEquals(1, output.out.split("to=$email subject=\"Votre facture $number\"").size - 1)
     }
 
     @Test
