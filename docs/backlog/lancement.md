@@ -1088,11 +1088,11 @@ public (SSRF).
 
 **Critères d'acceptation.**
 
-- [ ] L'API n'accepte comme logo ou bannière qu'une adresse `https://`, sans identifiants, de 2 048 caractères au plus
-- [ ] Le site ne va chercher une image que sur `https://`, jamais vers une adresse privée, de bouclage ou locale, avec un délai et une taille maximum ; sinon la carte est dessinée sans l'image
-- [ ] Un seul calcul d'empreinte SHA-256 en hexadécimal, une seule lecture de l'organisation courante dans les contrôleurs, une seule normalisation des mots-clés WhatsApp côté API
-- [ ] Côté site, une seule version de `safeUrl`, du nom public de l'organisation, de la langue de page, de l'abonnement vide et de la tuile de chiffre
-- [ ] Les composants d'interface et paquets inutilisés (carrousel, menus contextuels, barre de menus, pagination, panneaux redimensionnables, `useOnScreen`) sont retirés
-- [ ] `/.well-known/security.txt` indique comment signaler une faille
-- [ ] Les tests, le lint et la vérification des modules passent
+- [x] L'API n'accepte comme logo ou bannière qu'une adresse `https://`, sans identifiants, de 2 048 caractères au plus
+- [x] Le site ne va chercher une image que sur `https://`, jamais vers une adresse privée, de bouclage ou locale, avec un délai et une taille maximum ; sinon la carte est dessinée sans l'image
+- [x] Un seul calcul d'empreinte SHA-256 en hexadécimal, une seule lecture de l'organisation courante dans les contrôleurs, une seule normalisation des mots-clés WhatsApp côté API
+- [x] Côté site, une seule version de `safeUrl`, du nom public de l'organisation, de la langue de page et de l'abonnement vide
+- [x] Les composants d'interface et paquets inutilisés (carrousel, menus contextuels, barre de menus, pagination, panneaux redimensionnables, `useOnScreen`) sont retirés
+- [x] `/.well-known/security.txt` indique comment signaler une faille
+- [x] Les tests, le lint et la vérification des modules passent
 
