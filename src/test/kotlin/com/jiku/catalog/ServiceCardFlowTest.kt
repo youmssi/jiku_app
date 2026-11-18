@@ -111,6 +111,65 @@ class ServiceCardFlowTest {
         assertThat(cards.forgetPastVisitors()).isGreaterThanOrEqualTo(0)
     }
 
+    @Test
+    fun `a card in slot mode lists the next free times, none when the week is full or closed`() {
+        val token = api.register()
+        val serviceId = service(token, "Coupe enfant", 30)
+        api
+            .patch(token, "/api/v1/services/$serviceId", """{"cardMode":"SLOT"}""")
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.cardMode").value("SLOT"))
+        val code =
+            JsonPath.read<String>(
+                api
+                    .get(token, "/api/v1/services/$serviceId/share")
+                    .andExpect(jsonPath("$.cardMode").value("SLOT"))
+                    .andReturn()
+                    .response.contentAsString,
+                "$.code",
+            )
+
+        // Without asking, the page's view carries no upcoming times; asked, at most three, in order.
+        mockMvc
+            .perform(get("/api/v1/r/$code"))
+            .andExpect(jsonPath("$.cardMode").value("SLOT"))
+            .andExpect(jsonPath("$.upcoming").doesNotExist())
+        val upcoming =
+            JsonPath.read<List<String>>(
+                mockMvc
+                    .perform(get("/api/v1/r/$code").param("upcoming", "true"))
+                    .andExpect(status().isOk())
+                    .andReturn()
+                    .response.contentAsString,
+                "$.upcoming[*].startsAt",
+            )
+        assertThat(upcoming).hasSize(3)
+        assertThat(upcoming).isSorted()
+
+        // A service nobody can serve has no upcoming time: the page falls back to its presentation.
+        val closed =
+            JsonPath.read<String>(
+                api
+                    .post(token, "/api/v1/services", """{"name":"Fermé","timezone":"Africa/Conakry"}""")
+                    .andExpect(status().isCreated())
+                    .andReturn()
+                    .response.contentAsString,
+                "$.id",
+            )
+        api.patch(token, "/api/v1/services/$closed", """{"cardMode":"SLOT"}""")
+        val closedCode =
+            JsonPath.read<String>(
+                api
+                    .get(token, "/api/v1/services/$closed/share")
+                    .andReturn()
+                    .response.contentAsString,
+                "$.code",
+            )
+        mockMvc
+            .perform(get("/api/v1/r/$closedCode").param("upcoming", "true"))
+            .andExpect(jsonPath("$.upcoming").isEmpty())
+    }
+
     private fun service(
         token: String,
         name: String,

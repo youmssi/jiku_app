@@ -721,6 +721,9 @@ catalog:
   service-card:
     window: ${SERVICE_CARD_WINDOW:P30D}
     purge-cron: ${SERVICE_CARD_PURGE_CRON:0 5 0 * * *}
+    # Slot mode (JIKU-190): how many free times a card lists, looking how many days ahead.
+    upcoming-days: ${SERVICE_CARD_UPCOMING_DAYS:7}
+    upcoming-slots: ${SERVICE_CARD_UPCOMING_SLOTS:3}
   operator-link:
     # Frontend base URL used to build shareable operator links (JIKU-116).
     app-base-url: ${SERVER_BASE_URL:http://localhost:3000}

@@ -741,6 +741,9 @@
           "bookingPaused" : {
             "type" : "boolean"
           },
+          "cardMode" : {
+            "type" : "string"
+          },
           "clientsPerSlot" : {
             "format" : "int32",
             "type" : "integer"
@@ -819,6 +822,15 @@
           },
           "timezone" : {
             "type" : "string"
+          },
+          "upcoming" : {
+            "items" : {
+              "$ref" : "#/components/schemas/AppointmentSlotView"
+            },
+            "type" : [
+              "array",
+              "null"
+            ]
           }
         },
         "type" : "object"
@@ -6893,6 +6905,13 @@
       },
       "ServiceResponse" : {
         "properties" : {
+          "cardMode" : {
+            "enum" : [
+              "PRESENTATION",
+              "SLOT"
+            ],
+            "type" : "string"
+          },
           "currency" : {
             "type" : [
               "string",
@@ -6940,6 +6959,13 @@
           },
           "canShare" : {
             "type" : "boolean"
+          },
+          "cardMode" : {
+            "enum" : [
+              "PRESENTATION",
+              "SLOT"
+            ],
+            "type" : "string"
           },
           "code" : {
             "type" : "string"
@@ -7030,6 +7056,16 @@
       },
       "ServiceUpdateRequest" : {
         "properties" : {
+          "cardMode" : {
+            "enum" : [
+              "PRESENTATION",
+              "SLOT"
+            ],
+            "type" : [
+              "string",
+              "null"
+            ]
+          },
           "name" : {
             "maxLength" : 120,
             "minLength" : 0,
@@ -18133,6 +18169,15 @@
             "required" : false,
             "schema" : {
               "type" : "string"
+            }
+          },
+          {
+            "in" : "query",
+            "name" : "upcoming",
+            "required" : false,
+            "schema" : {
+              "default" : false,
+              "type" : "boolean"
             }
           }
         ],

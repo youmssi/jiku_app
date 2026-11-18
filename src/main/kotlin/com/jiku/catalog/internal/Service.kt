@@ -48,6 +48,11 @@ class Service(
     @Column(name = "place", length = 160)
     var place: String? = null
 
+    /** Where the service's card and link lead (JIKU-190): its presentation, or straight to the times. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "card_mode", nullable = false, length = 16)
+    var cardMode: ServiceCardMode = ServiceCardMode.PRESENTATION
+
     /** What a client of this service owes the organization, or null when it is free. */
     fun clientCharge(): ClientCharge? =
         price?.let { ClientCharge(it.amountMinor, it.currency, dueAfterService = paymentRule == PaymentRule.AFTER_SERVICE) }

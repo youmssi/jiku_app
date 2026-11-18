@@ -34,10 +34,24 @@ enum class ServiceCardSource(
     }
 }
 
-/** How long a service card's figures look back (JIKU-189). */
+/** Where a service's card and link lead (JIKU-190). */
+enum class ServiceCardMode {
+    /** The service's page: what it is, then the times (JIKU-189). */
+    PRESENTATION,
+
+    /** Straight to the first day with a free time, for a service clients already know. */
+    SLOT,
+}
+
+/**
+ * How long a service card's figures look back (JIKU-189), and how far ahead and
+ * how many free times a card in slot mode lists (JIKU-190).
+ */
 @ConfigurationProperties(prefix = "catalog.service-card")
 data class ServiceCardProperties(
     val window: Duration = Duration.ofDays(30),
+    val upcomingDays: Int = 7,
+    val upcomingSlots: Int = 3,
 )
 
 /** Opens and bookings through one way in, over the window. */
@@ -52,6 +66,8 @@ data class ServiceShareView(
     /** Only a verified organization may share a card (ADR 106); others see it as a preview. */
     val canShare: Boolean,
     val windowDays: Long,
+    /** Where the card and link lead (JIKU-190). */
+    val cardMode: ServiceCardMode,
     val opens: ServiceCardCounts,
     val bookings: ServiceCardCounts,
 )
@@ -114,7 +130,7 @@ class ServiceCardService(
     @Transactional
     fun share(serviceId: UUID): ServiceShareView {
         val tenantId = requireNotNull(TenantContext.get()) { "No organization in context" }
-        services.findById(serviceId).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Service not found") }
+        val service = services.findById(serviceId).orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Service not found") }
         val since = today().minusDays(properties.window.toDays() - 1)
         val totals = mutableMapOf<String, Pair<Long, Long>>()
         // The tenant id is part of the filter: these rows are counters outside the
@@ -135,6 +151,7 @@ class ServiceCardService(
             code = links.forService(serviceId, tenantId).code,
             canShare = verification.verifiedKind() != null,
             windowDays = properties.window.toDays(),
+            cardMode = service.cardMode,
             opens = ServiceCardCounts(opens(ServiceCardSource.CARD), opens(ServiceCardSource.LINK)),
             bookings = ServiceCardCounts(bookings(ServiceCardSource.CARD), bookings(ServiceCardSource.LINK)),
         )
