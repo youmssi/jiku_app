@@ -1,6 +1,7 @@
 package com.jiku.tenant.internal
 
 import com.jiku.shared.ApiProperties
+import com.jiku.shared.HTTPS_IMAGE_URL
 import com.jiku.shared.ImageRules
 import com.jiku.shared.acceptUploadedImage
 import org.springframework.http.HttpStatus
@@ -28,11 +29,25 @@ class BrandingService(
         val tenant = loadTenant(tenantId)
         val branding = tenant.ensureBranding()
         branding.displayName = request.displayName?.takeIf { it.isNotBlank() }
-        branding.logoUrl = request.logoUrl?.takeIf { it.isNotBlank() }
-        branding.bannerUrl = request.bannerUrl?.takeIf { it.isNotBlank() }
+        branding.logoUrl = imageLink(request.logoUrl, branding.logoUrl)
+        branding.bannerUrl = imageLink(request.bannerUrl, branding.bannerUrl)
         branding.primaryColor = request.primaryColor?.takeIf { it.isNotBlank() }
         tenants.save(tenant)
         return tenant.toBrandingResponse()
+    }
+
+    /**
+     * The link to keep for an image (JIKU-321): blank clears it, the link already
+     * stored is kept as sent back, and a new one must be `https://`, since the site
+     * fetches it to draw cards and must never be led to an internal address.
+     */
+    private fun imageLink(
+        requested: String?,
+        current: String?,
+    ): String? {
+        val link = requested?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        if (link == current || HTTPS_IMAGE.matches(link)) return link
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, "The image must be an https:// address")
     }
 
     /**
@@ -106,6 +121,8 @@ class BrandingService(
             ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found")
         }
 }
+
+private val HTTPS_IMAGE = Regex(HTTPS_IMAGE_URL)
 
 /** The photo's segment in its public link. */
 val TenantImageKind.path: String get() = name.lowercase()

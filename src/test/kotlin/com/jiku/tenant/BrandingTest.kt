@@ -52,6 +52,26 @@ class BrandingTest {
             .andExpect(jsonPath("$.bannerUrl").value("https://cdn.acme.test/banner.png"))
             .andExpect(jsonPath("$.primaryColor").value("#FF5722"))
 
+        // A new image link must be https:// and carry no credentials (JIKU-321): the site fetches it to draw cards.
+        for (link in listOf("http://10.0.0.5/logo.png", "file:///etc/passwd", "https://user:pass@cdn.acme.test/logo.png")) {
+            mockMvc
+                .perform(
+                    put("/api/v1/branding")
+                        .header("Authorization", "Bearer $token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""{"displayName":"Acme Live","logoUrl":"$link"}"""),
+                ).andExpect(status().isBadRequest())
+        }
+        // The link already stored is kept when sent back unchanged.
+        mockMvc
+            .perform(
+                put("/api/v1/branding")
+                    .header("Authorization", "Bearer $token")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"displayName":"Acme Live","logoUrl":"https://cdn.acme.test/logo.png","primaryColor":"#FF5722"}"""),
+            ).andExpect(status().isOk())
+            .andExpect(jsonPath("$.logoUrl").value("https://cdn.acme.test/logo.png"))
+
         // An invalid color is rejected.
         mockMvc
             .perform(

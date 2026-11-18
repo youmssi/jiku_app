@@ -2244,7 +2244,7 @@
           "brandLogoUrl" : {
             "maxLength" : 2048,
             "minLength" : 0,
-            "pattern" : "^(https://\\S+)?$",
+            "pattern" : "^(https://[^\\s/@]+(/\\S*)?)?$",
             "type" : [
               "string",
               "null"

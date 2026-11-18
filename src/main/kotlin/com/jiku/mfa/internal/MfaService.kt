@@ -9,6 +9,7 @@ import com.jiku.shared.AesGcmCipher
 import com.jiku.shared.AttemptLimiter
 import com.jiku.shared.CodedRefusal
 import com.jiku.shared.JwtService
+import com.jiku.shared.sha256Hex
 import io.jsonwebtoken.JwtException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -17,7 +18,6 @@ import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionTemplate
 import org.springframework.web.server.ResponseStatusException
-import java.security.MessageDigest
 import java.security.SecureRandom
 import java.time.Instant
 import java.util.UUID
@@ -241,11 +241,7 @@ class MfaService(
     private fun invalid(): CodedRefusal =
         CodedRefusal(HttpStatus.UNAUTHORIZED, CodedRefusal.MFA_INVALID, "This code is not valid. Check it and try again.")
 
-    private fun hash(value: String): String =
-        MessageDigest
-            .getInstance("SHA-256")
-            .digest(value.toByteArray())
-            .joinToString("") { "%02x".format(it) }
+    private fun hash(value: String): String = sha256Hex(value)
 
     private companion object {
         const val TOKEN_TYPE_CHALLENGE = "mfa-challenge"

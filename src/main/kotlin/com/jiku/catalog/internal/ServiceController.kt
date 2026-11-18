@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
 /**
@@ -58,7 +57,7 @@ class ServiceController(
         @PathVariable id: UUID,
     ): BookingLinkResponse {
         services.get(id)
-        val tenantId = TenantContext.get() ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "No tenant")
+        val tenantId = TenantContext.require()
         val link = serviceLinkCodes.forService(id, tenantId)
         return BookingLinkResponse(token = linkTokens.issue(id, tenantId), shortCode = link.code)
     }
