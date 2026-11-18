@@ -168,7 +168,7 @@ class DayLineConsoleService(
         if (!config.effective(serviceId).walkInsAllowed) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "This service does not accept walk-ins")
         }
-        val tenantId = TenantContext.get() ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "No tenant")
+        val tenantId = TenantContext.require()
         val zone = ZoneId.of(service.timezone)
         val now = Instant.now()
         val day = LocalDate.now(zone)

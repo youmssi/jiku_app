@@ -34,16 +34,16 @@ class OpenCardInboundService(
 
     @Transactional
     fun handle(message: InboundWhatsApp) {
-        val word = message.text?.let { normalize(it) }
+        val word = message.text?.let { WhatsAppInboundService.normalize(it) }
         when {
-            word in START_WORDS -> {
+            word in WhatsAppInboundService.START_WORDS -> {
                 optOuts.deleteById(message.from)
                 send(message.from, catalog.text(MessageLanguage.FRENCH, "whatsapp.reply.optedIn"))
             }
 
             optOuts.existsById(message.from) -> Unit
 
-            word in STOP_WORDS -> {
+            word in WhatsAppInboundService.STOP_WORDS -> {
                 optOuts.save(WhatsAppOptOut(message.from))
                 send(message.from, catalog.text(MessageLanguage.FRENCH, "whatsapp.reply.optedOut"))
             }
@@ -83,22 +83,5 @@ class OpenCardInboundService(
         } catch (ex: RuntimeException) {
             log.warn("WhatsApp card answer to {} could not be sent", phone, ex)
         }
-    }
-
-    private companion object {
-        // Arabic words are written as normalize() leaves them: no vowel marks, hamza seats folded into the bare alef.
-        val STOP_WORDS = setOf("STOP", "ARRET", "ARRETER", "DESABONNER", "UNSUBSCRIBE", "توقف", "ايقاف", "الغاء الاشتراك")
-        val START_WORDS = setOf("START", "REPRENDRE", "ابدا", "استيناف")
-        val MARKS = Regex("\\p{M}+")
-        val NOT_WORD = Regex("[^A-Z\\p{IsArabic} ]+")
-        val SPACES = Regex("\\s+")
-
-        fun normalize(text: String): String =
-            java.text.Normalizer
-                .normalize(text.uppercase(), java.text.Normalizer.Form.NFD)
-                .replace(MARKS, "")
-                .replace(NOT_WORD, " ")
-                .replace(SPACES, " ")
-                .trim()
     }
 }

@@ -134,3 +134,24 @@ export async function serviceCardCode(token: string, serviceId: string): Promise
     const share = await call<{ code: string }>(`/services/${serviceId}/share`, { token });
     return share.code;
 }
+
+/** A service with no one to serve it: it has no free time at all. */
+export async function createClosedService(token: string, name: string): Promise<string> {
+    const service = await call<{ id: string }>('/services', {
+        method: 'POST',
+        token,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, timezone: 'Africa/Conakry' }),
+    });
+    return service.id;
+}
+
+/** Where the service's card leads (JIKU-190): its presentation, or straight to the times. */
+export async function setCardMode(token: string, serviceId: string, cardMode: 'PRESENTATION' | 'SLOT'): Promise<void> {
+    await call(`/services/${serviceId}`, {
+        method: 'PATCH',
+        token,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cardMode }),
+    });
+}

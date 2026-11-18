@@ -1,6 +1,6 @@
 package com.jiku.catalog.internal
 
-import java.security.MessageDigest
+import com.jiku.shared.sha256Hex
 import java.security.SecureRandom
 
 /**
@@ -17,9 +17,5 @@ object BookingToken {
         return bytes.joinToString("") { "%02x".format(it) }
     }
 
-    fun hash(raw: String): String =
-        MessageDigest
-            .getInstance("SHA-256")
-            .digest(raw.toByteArray(Charsets.UTF_8))
-            .joinToString("") { "%02x".format(it) }
+    fun hash(raw: String): String = sha256Hex(raw)
 }

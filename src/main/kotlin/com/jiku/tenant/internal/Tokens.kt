@@ -1,6 +1,6 @@
 package com.jiku.tenant.internal
 
-import java.security.MessageDigest
+import com.jiku.shared.sha256Hex
 import java.security.SecureRandom
 import java.util.Base64
 
@@ -16,9 +16,5 @@ internal object Tokens {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
     }
 
-    fun hash(raw: String): String =
-        MessageDigest
-            .getInstance("SHA-256")
-            .digest(raw.toByteArray())
-            .joinToString("") { "%02x".format(it) }
+    fun hash(raw: String): String = sha256Hex(raw)
 }

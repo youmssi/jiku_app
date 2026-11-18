@@ -36,6 +36,8 @@ data class ServiceUpdateRequest(
     val priceMinor: Long? = null,
     /** Where the service takes place, shown on its card (JIKU-189); blank clears it. */
     @field:Size(max = 160) val place: String? = null,
+    /** Where the card and link lead (JIKU-190). */
+    val cardMode: ServiceCardMode? = null,
 )
 
 data class ServiceResponse(
@@ -48,6 +50,8 @@ data class ServiceResponse(
     val currency: String?,
     /** Where the service takes place (JIKU-189), or null. */
     val place: String? = null,
+    /** Where the card and link lead (JIKU-190). */
+    val cardMode: ServiceCardMode = ServiceCardMode.PRESENTATION,
 )
 
 data class ServiceRequirementRequest(

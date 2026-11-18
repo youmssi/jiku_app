@@ -49,15 +49,10 @@ class OrgController(
 
     @GetMapping("/profile")
     @PreAuthorize("hasRole('ORGANIZER')")
-    fun profile(): TenantInfo {
-        val tenantId =
-            TenantContext.get()
-                ?: throw org.springframework.web.server
-                    .ResponseStatusException(HttpStatus.UNAUTHORIZED, "No tenant")
-        return tenantModuleApi.findTenant(UUID.fromString(tenantId))
+    fun profile(): TenantInfo =
+        tenantModuleApi.findTenant(TenantContext.requireId())
             ?: throw org.springframework.web.server
                 .ResponseStatusException(HttpStatus.NOT_FOUND, "Organization not found")
-    }
 
     @PutMapping("/username")
     @PreAuthorize("hasRole('ORGANIZER_MANAGER')")

@@ -48,7 +48,8 @@ class ShortLinkPublicController(
     fun view(
         @PathVariable code: String,
         @RequestParam(required = false) date: String?,
-    ): AppointmentServiceView = appointments.viewByCode(code, date)
+        @RequestParam(required = false, defaultValue = "false") upcoming: Boolean,
+    ): AppointmentServiceView = appointments.viewByCode(code, date, upcoming)
 
     @PostMapping("/{code}/book")
     @ResponseStatus(HttpStatus.CREATED)
