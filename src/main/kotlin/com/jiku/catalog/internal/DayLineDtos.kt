@@ -18,6 +18,8 @@ data class DayLineView(
     val timezone: String,
     val date: LocalDate,
     val entries: List<LineTicket>,
+    /** What each appointment's client answered (JIKU-191), by line ticket id; walk-ins have none. */
+    val answers: Map<UUID, List<BookingAnswerView>> = emptyMap(),
 )
 
 /** Sans-rendez-vous inscrit au comptoir (JIKU-88). */
@@ -45,6 +47,8 @@ data class PendingAppointmentRequest(
     val clientPhone: String?,
     val requestedAt: Instant,
     val heldUntil: Instant?,
+    /** What the client answered before the times (JIKU-191). */
+    val answers: List<BookingAnswerView> = emptyList(),
 )
 
 /** Création d'un lien du personnel pour un service (JIKU-88). */

@@ -55,6 +55,8 @@ data class AppointmentServiceView(
      * for: a card in slot mode lists them and its link opens on the first one's day.
      */
     val upcoming: List<AppointmentSlotView>? = null,
+    /** The choice questions asked before the times (JIKU-191), in order; empty when none. */
+    val questions: List<PublicQuestion> = emptyList(),
 )
 
 data class AppointmentSlotView(
@@ -70,6 +72,8 @@ data class AppointmentBookingRequest(
     val startsAt: Instant,
     /** How the client reached the link (JIKU-189): `card` or `link`; anything else is not counted. */
     @field:Size(max = 8) val source: String? = null,
+    /** One answer per question of the service (JIKU-191). */
+    @field:Size(max = MAX_QUESTIONS) val answers: List<BookingAnswerInput> = emptyList(),
 )
 
 data class AppointmentBookingView(
@@ -127,6 +131,7 @@ class AppointmentPublicService(
     private val servicesAccess: ServicesAccessGate,
     private val cards: ServiceCardService,
     private val cardProperties: ServiceCardProperties,
+    private val guidedQuestions: ServiceQuestionService,
 ) {
     /** A client takes a ticket for today's line, from the QR shown at the entrance (JIKU-113). */
     fun takeTicketByCode(
@@ -241,6 +246,7 @@ class AppointmentPublicService(
             primaryColor = organizer?.primaryColor,
             cardMode = service.cardMode.name,
             upcoming = if (upcoming) upcomingSlots(serviceId, LocalDate.now(zone), paused) else null,
+            questions = TenantContext.get()?.let { guidedQuestions.forClient(serviceId, it) }.orEmpty(),
         )
     }
 
@@ -264,7 +270,9 @@ class AppointmentPublicService(
         request: AppointmentBookingRequest,
     ): AppointmentBookingView =
         try {
+            val answers = guidedQuestions.checkAnswers(serviceId, request.answers)
             val outcome = engine.bookClient(serviceId, request.startsAt, request.clientName, request.clientPhone)
+            guidedQuestions.record(serviceId, BookingToken.hash(outcome.bookingToken), outcome.startsAt, answers)
             TenantContext.get()?.let { cards.recordBooking(it, serviceId, request.source) }
             AppointmentBookingView(
                 bookingToken = outcome.bookingToken,

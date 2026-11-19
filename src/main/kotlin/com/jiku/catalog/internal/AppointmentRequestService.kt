@@ -28,6 +28,7 @@ class AppointmentRequestService(
     private val resources: ResourceRepository,
     private val services: ServiceAdminService,
     private val events: ApplicationEventPublisher,
+    private val guidedQuestions: ServiceQuestionService,
 ) {
     /** Demandes en attente d'un service pour [date] (aujourd'hui dans le fuseau du service si absente). */
     @Transactional(readOnly = true)
@@ -58,7 +59,8 @@ class AppointmentRequestService(
                 ),
             )
         }
-        return requests.values.toList()
+        val answers = guidedQuestions.answersOf(requests.keys)
+        return requests.map { (hash, request) -> request.copy(answers = answers[hash].orEmpty()) }
     }
 
     /**
@@ -116,6 +118,7 @@ class AppointmentRequestService(
         }
         val hash = requireNotNull(row.bookingTokenHash)
         reservations.deleteByTokenHash(hash)
+        guidedQuestions.forget(hash)
         events.publishEvent(LiveChanged(row.liveTopics()))
     }
 

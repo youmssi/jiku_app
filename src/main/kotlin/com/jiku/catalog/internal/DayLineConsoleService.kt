@@ -42,6 +42,8 @@ class DayLineConsoleService(
     private val events: ApplicationEventPublisher,
     private val live: LiveModuleApi,
     private val servicesAccess: ServicesAccessGate,
+    private val reservations: ServiceReservationRepository,
+    private val guidedQuestions: ServiceQuestionService,
 ) {
     /** Un ticket pour suivre la ligne en direct (JIKU-214) : l'écran se recharge quand elle bouge. */
     @Transactional(readOnly = true)
@@ -60,12 +62,14 @@ class DayLineConsoleService(
         val zone = ZoneId.of(service.timezone)
         val day = date ?: LocalDate.now(zone)
         val (start, end) = window(zone, day)
+        val entries = ticketing.serviceLine(serviceId, start, end)
         return DayLineView(
             serviceId = service.id,
             serviceName = service.name,
             timezone = service.timezone,
             date = day,
-            entries = ticketing.serviceLine(serviceId, start, end),
+            entries = entries,
+            answers = answersOf(serviceId, start, end, entries),
         )
     }
 
@@ -238,6 +242,31 @@ class DayLineConsoleService(
         zone: ZoneId,
         day: LocalDate,
     ): Pair<Instant, Instant> = day.atStartOfDay(zone).toInstant() to day.plusDays(1).atStartOfDay(zone).toInstant()
+
+    /**
+     * The answers of the day's appointments (JIKU-191), by line ticket. A ticket is
+     * issued from a booking with the same start and client number, which is how
+     * the two are matched: the ticketing module does not know the booking.
+     */
+    private fun answersOf(
+        serviceId: UUID,
+        start: Instant,
+        end: Instant,
+        entries: List<LineTicket>,
+    ): Map<UUID, List<BookingAnswerView>> {
+        val bookings =
+            reservations
+                .findBookingsBetween(serviceId, start, end)
+                .associate { (it.startsAt to it.clientPhone?.trim()) to requireNotNull(it.bookingTokenHash) }
+        if (bookings.isEmpty()) return emptyMap()
+        val answers = guidedQuestions.answersOf(bookings.values.toSet())
+        if (answers.isEmpty()) return emptyMap()
+        return entries
+            .mapNotNull { ticket ->
+                val hash = bookings[ticket.startsAt to ticket.clientPhone?.trim()] ?: return@mapNotNull null
+                answers[hash]?.let { ticket.id to it }
+            }.toMap()
+    }
 }
 
 private const val MAX_COUNTER_LENGTH = 40
