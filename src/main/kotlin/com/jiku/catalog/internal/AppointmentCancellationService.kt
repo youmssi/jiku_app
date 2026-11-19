@@ -21,6 +21,7 @@ class AppointmentCancellationService(
     private val reservations: ServiceReservationRepository,
     private val config: ServiceConfigService,
     private val events: ApplicationEventPublisher,
+    private val guidedQuestions: ServiceQuestionService,
 ) {
     @Transactional
     fun cancel(rawBookingToken: String) {
@@ -41,6 +42,7 @@ class AppointmentCancellationService(
                 tenantId = requireNotNull(TenantContext.get()),
             ),
         )
+        rows.firstNotNullOfOrNull { it.bookingTokenHash }?.let(guidedQuestions::forget)
         reservations.deleteAll(rows)
     }
 }

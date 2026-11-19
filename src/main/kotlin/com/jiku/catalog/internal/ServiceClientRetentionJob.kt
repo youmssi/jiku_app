@@ -31,10 +31,13 @@ class ServiceClientRetentionJob(
         if (count > 0) log.info("Retention policy removed the client details of {} past reservation(s)", count)
     }
 
-    fun anonymizeBefore(cutoff: Instant): Int =
-        jdbc.update(
+    fun anonymizeBefore(cutoff: Instant): Int {
+        // What clients answered (JIKU-191) goes with their name and number.
+        jdbc.update("DELETE FROM service_booking_answer WHERE starts_at < ?", Timestamp.from(cutoff))
+        return jdbc.update(
             "UPDATE service_reservation SET client_name = NULL, client_phone = NULL " +
                 "WHERE starts_at < ? AND (client_name IS NOT NULL OR client_phone IS NOT NULL)",
             Timestamp.from(cutoff),
         )
+    }
 }

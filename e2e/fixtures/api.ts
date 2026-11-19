@@ -155,3 +155,17 @@ export async function setCardMode(token: string, serviceId: string, cardMode: 'P
         body: JSON.stringify({ cardMode }),
     });
 }
+
+/** Replaces a service's guided questions (JIKU-191). */
+export async function setServiceQuestions(
+    token: string,
+    serviceId: string,
+    questions: { prompt: string; choices: { label: string; routeServiceId?: string }[] }[],
+): Promise<void> {
+    await call(`/services/${serviceId}/questions`, {
+        method: 'PUT',
+        token,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questions }),
+    });
+}

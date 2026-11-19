@@ -13,10 +13,10 @@ story : on présente les options, on ne devine pas.
 | Story | Titre | Dépôt | Dépend de | État |
 |---|---|---|---|---|
 | JIKU-188 | Allègement visuel : règles de densité et formats courts | app, web | — | Validée le 2026-09-27 |
-| JIKU-189 | Carte de service, mode redirection | app, web | — | Prête |
+| JIKU-189 | Carte de service, mode redirection | app, web | — | Faite |
 | JIKU-190 | Carte de service, mode rendez-vous direct | app, web | JIKU-189 | Faite |
-| JIKU-191 | Conversation guidée : les questions de l'organisation | app, web | JIKU-189 | À valider |
-| JIKU-192 | Conversation guidée sur le numéro de l'organisation | app, web | JIKU-191 | À valider |
+| JIKU-191 | Conversation guidée : les questions de l'organisation | app, web | JIKU-189 | Faite |
+| JIKU-192 | Conversation guidée sur le numéro de l'organisation | app, web | JIKU-191 | Prête |
 | JIKU-193 | Mesure des cartes et quota de conversations | app, web | JIKU-192 | À valider |
 | JIKU-194 | Version premium : trois styles au choix et photo de bandeau | app, web | JIKU-188 | Validée le 2026-09-27 |
 
@@ -254,7 +254,9 @@ proposer un créneau (« quel est votre problème ? »), sans formulaire long.
 - Réponses visibles dans le détail du rendez-vous et dans l'export.
 - Suppression des réponses avec le rendez-vous (JIKU-36, JIKU-37).
 
-### [INTERACTIVE STEP] À valider
+### [INTERACTIVE STEP] Validé le 2026-11-19
+
+Décisions : 3 questions au plus ; pas de texte libre au lancement.
 
 - **Nombre de questions : 3 au plus, ou 5 ?**
   - Recommandation : 3, chaque question en plus fait baisser le taux de réponse.
@@ -292,7 +294,9 @@ l'entreprise**, pas avec Jikū : la relation et la note qualité sont les sienne
   services d'une autre.
 - Tests de bout en bout sur le webhook, comme `OpenCardConversationTest`.
 
-### [INTERACTIVE STEP] À valider
+### [INTERACTIVE STEP] Validé le 2026-11-19
+
+Décision : option A.
 
 - **Une organisation vérifiée sans numéro propre peut-elle utiliser le numéro de cartes de Jikū pour la conversation guidée ?**
   - Option A : non, conforme à l'ADR 106 ; la carte propose alors le mode rendez-vous. Le numéro partagé ne prend jamais le risque d'un signalement.
@@ -336,7 +340,7 @@ bas.
 |---|---|---|---|
 | Heure en français | JIKU-188 | `19 h` / `19:00` | **Décidé :** `19 h` sur les visuels, `19:00` dans les tableaux |
 | Portée de l'allègement | JIKU-188 | Tout d'un coup / 6 écrans d'abord | **Décidé :** 6 écrans d'abord |
-| Nombre de questions guidées | JIKU-191 | 3 / 5 | 3 |
-| Texte libre en fin de conversation | JIKU-191 | Oui / Non | Non au lancement |
-| Numéro partagé pour la conversation guidée | JIKU-192 | A : non / B : oui avec quota | A |
+| Nombre de questions guidées | JIKU-191 | 3 / 5 | **Décidé le 2026-11-19 :** 3 |
+| Texte libre en fin de conversation | JIKU-191 | Oui / Non | **Décidé le 2026-11-19 :** non au lancement |
+| Numéro partagé pour la conversation guidée | JIKU-192 | A : non / B : oui avec quota | **Décidé le 2026-11-19 :** A |
 | Quotas et prix | JIKU-193 | Grille à fixer | Après 4 semaines de pilote |

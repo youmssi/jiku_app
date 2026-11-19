@@ -63,6 +63,19 @@ interface ServiceReservationRepository : JpaRepository<ServiceReservation, UUID>
         @Param("to") to: Instant,
     ): List<ServiceReservation>
 
+    /** A service's client bookings starting in [from, to), whatever their status (JIKU-191: answers and export). */
+    @Query(
+        "SELECT r FROM ServiceReservation r WHERE r.serviceId = :serviceId " +
+            "AND r.bookingTokenHash IS NOT NULL " +
+            "AND r.startsAt >= :from AND r.startsAt < :to " +
+            "ORDER BY r.startsAt ASC, r.createdAt ASC",
+    )
+    fun findBookingsBetween(
+        @Param("serviceId") serviceId: UUID,
+        @Param("from") from: Instant,
+        @Param("to") to: Instant,
+    ): List<ServiceReservation>
+
     /**
      * Confirme une demande en attente (JIKU-87) : toutes les lignes de ressource
      * partageant le jeton client passent PENDING → CONFIRMED et libèrent leur
