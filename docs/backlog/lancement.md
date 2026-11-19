@@ -84,6 +84,7 @@ attendre de décision produit. Une story est une PR par dépôt concerné.
 | JIKU-319 | L'essai direct remplacé par les cadeaux : le bureau n'accorde plus d'essai sans passer par un cadeau | app, web | JIKU-315 |
 | JIKU-320 | Dépendances du site à jour : Next.js 16.4.6, paquets transitifs corrigés | web | — |
 | JIKU-321 | Avant l'ouverture au public : images d'organisation récupérées sans risque, logique en double regroupée, fichiers inutiles retirés | app, web | — |
+| JIKU-322 | Lancement en Mobile Money par DEXPAY, et choix du prestataire de carte au 30 novembre | app, web, exploitation | JIKU-272 |
 
 ---
 
@@ -1095,4 +1096,24 @@ public (SSRF).
 - [x] Les composants d'interface et paquets inutilisés (carrousel, menus contextuels, barre de menus, pagination, panneaux redimensionnables, `useOnScreen`) sont retirés
 - [x] `/.well-known/security.txt` indique comment signaler une faille
 - [x] Les tests, le lint et la vérification des modules passent
+
+## JIKU-322 — Lancement en Mobile Money, choix de la carte au 30 novembre
+
+**Pourquoi.** Le lancement et les campagnes sur les réseaux sociaux se font
+avec le Mobile Money de DEXPAY (GNF, XOF, XAF), déjà intégré. DEXPAY n'offre
+pas encore la carte ni l'USD (réponse du 18/11/2026). Un prestataire de carte
+doit être retenu avant le 30/11/2026, sur des réponses écrites, avant tout frais
+d'accès. Options étudiées le 19/11/2026 : DEXPAY (carte sur activation), Lengo
+Pay (compte validé, accès payant de 500 000 GNF), passerelle e-commerce UBA
+Guinée (banque acquéreuse, fonds versés sur un compte UBA) et Paddle (vendeur
+pour notre compte, en USD). Dodo Payments est écarté : la nationalité du
+représentant légal n'est pas acceptée.
+
+**Critères d'acceptation.**
+
+- [ ] Avant les campagnes : un paiement réel de faible montant réussit en production en GNF, en XOF et en XAF, puis active l'offre et émet la facture
+- [ ] `PAYMENT_PROVIDER_USD=none` en production : une organisation hors zone franc voit le virement, sans erreur de paiement en ligne
+- [ ] Réponses écrites reçues de DEXPAY, de Lengo Pay, d'UBA Guinée et de Paddle sur : cartes étrangères, devises débitées et versées, frais, délai de versement, prélèvement récurrent, API et webhooks, documents demandés
+- [ ] Au plus tard le 30/11/2026, un prestataire de carte est choisi et la décision est notée dans un ADR, ainsi que la story de l'adaptateur s'il en faut un
+- [ ] Aucun frais d'accès n'est payé avant une confirmation écrite que les cartes étrangères (USD, EUR) sont acceptées en ligne
 

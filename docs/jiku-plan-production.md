@@ -194,6 +194,7 @@ marquées « à discuter ».
 | Octobre | S41 → S42 | JIKU-189 carte de service, redirection ; JIKU-190 rendez-vous direct | — (sans message WhatsApp, ne dépend pas du pilote) | Prêt |
 | Fin octobre | S44 | Bilan du pilote, feu vert de l'étape 1 : taux de réponse ≥ 35 %, ≥ 60 % via WhatsApp, coût par réponse sous le plafond | Pilote terminé | À discuter |
 | Novembre | S45 → S47 | JIKU-191 questions guidées ; JIKU-192 conversation sur le numéro de l'organisation | Feu vert étape 1, décisions §JIKU-191 et §JIKU-192 | À discuter |
+| Novembre | S47 → S48 | JIKU-322 : lancement en Mobile Money (DEXPAY) et choix du prestataire de carte **avant le 30 nov.** | Réponses écrites de DEXPAY, Lengo Pay, UBA Guinée et Paddle | En cours |
 | Novembre | S48 | JIKU-193 mesure, quotas et relances | Grille de prix fixée à partir du pilote | À discuter |
 | Décembre | S49 → S52 | Pilote des cartes de service avec 5 à 10 entreprises vérifiées ; feu vert de l'étape 2 | JIKU-189 à JIKU-193 en production | À discuter |
 | 2027, T1 | — | Paliers après le lancement : relances d'invitation ouverte (payant), avis après service, écran d'appel, agences multiples | Ordre à fixer selon les retours du pilote | À discuter |
