@@ -18,13 +18,16 @@ import java.time.Instant
 class SlotHoldSweepJob(
     private val reservations: ServiceReservationRepository,
     private val engine: SlotEngine,
+    private val guidedQuestions: ServiceQuestionService,
 ) {
     @Scheduled(cron = "\${appointment.hold.sweep-cron:0 * * * * *}")
     @SchedulerLock(name = "SlotHoldSweepJob.sweep")
     fun sweep() {
         val now = Instant.now()
-        for (tenantId in reservations.expiredHoldTenantIds(now)) {
+        val tenants = reservations.expiredHoldTenantIds(now)
+        for (tenantId in tenants) {
             TenantContext.withTenant(tenantId) { engine.releaseExpiredHolds(now) }
         }
+        if (tenants.isNotEmpty()) guidedQuestions.forgetOrphans()
     }
 }

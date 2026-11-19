@@ -16,6 +16,7 @@ class OrganizationClientErasure(
 ) {
     @EventListener
     fun on(event: OrganizationClosed) {
+        jdbc.update("DELETE FROM service_booking_answer WHERE tenant_id = ?", event.tenantId)
         jdbc.update(
             "UPDATE service_reservation SET client_name = NULL, client_phone = NULL " +
                 "WHERE tenant_id = ? AND (client_name IS NOT NULL OR client_phone IS NOT NULL)",

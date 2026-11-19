@@ -689,6 +689,14 @@
       },
       "AppointmentBookingRequest" : {
         "properties" : {
+          "answers" : {
+            "items" : {
+              "$ref" : "#/components/schemas/BookingAnswerInput"
+            },
+            "maxItems" : 3,
+            "minItems" : 0,
+            "type" : "array"
+          },
           "clientName" : {
             "maxLength" : 120,
             "minLength" : 0,
@@ -807,6 +815,12 @@
           "professionals" : {
             "items" : {
               "type" : "string"
+            },
+            "type" : "array"
+          },
+          "questions" : {
+            "items" : {
+              "$ref" : "#/components/schemas/PublicQuestion"
             },
             "type" : "array"
           },
@@ -1064,6 +1078,30 @@
           },
           "whatsAppReminders" : {
             "$ref" : "#/components/schemas/ReminderAllowance"
+          }
+        },
+        "type" : "object"
+      },
+      "BookingAnswerInput" : {
+        "properties" : {
+          "choiceId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "questionId" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "BookingAnswerView" : {
+        "properties" : {
+          "answer" : {
+            "type" : "string"
+          },
+          "question" : {
+            "type" : "string"
           }
         },
         "type" : "object"
@@ -1759,6 +1797,15 @@
       },
       "DayLineView" : {
         "properties" : {
+          "answers" : {
+            "additionalProperties" : {
+              "items" : {
+                "$ref" : "#/components/schemas/BookingAnswerView"
+              },
+              "type" : "array"
+            },
+            "type" : "object"
+          },
           "date" : {
             "format" : "date",
             "type" : "string"
@@ -5177,6 +5224,12 @@
       },
       "PendingAppointmentRequest" : {
         "properties" : {
+          "answers" : {
+            "items" : {
+              "$ref" : "#/components/schemas/BookingAnswerView"
+            },
+            "type" : "array"
+          },
           "clientName" : {
             "type" : [
               "string",
@@ -5808,6 +5861,42 @@
           },
           "shortCode" : {
             "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "PublicQuestion" : {
+        "properties" : {
+          "choices" : {
+            "items" : {
+              "$ref" : "#/components/schemas/PublicQuestionChoice"
+            },
+            "type" : "array"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "prompt" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "PublicQuestionChoice" : {
+        "properties" : {
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "routeCode" : {
+            "type" : [
+              "string",
+              "null"
+            ]
           }
         },
         "type" : "object"
@@ -6838,6 +6927,97 @@
           "name",
           "timezone"
         ],
+        "type" : "object"
+      },
+      "ServiceQuestionChoiceInput" : {
+        "properties" : {
+          "label" : {
+            "maxLength" : 20,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "routeServiceId" : {
+            "format" : "uuid",
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required" : [
+          "label"
+        ],
+        "type" : "object"
+      },
+      "ServiceQuestionChoiceView" : {
+        "properties" : {
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "routeServiceId" : {
+            "format" : "uuid",
+            "type" : [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type" : "object"
+      },
+      "ServiceQuestionInput" : {
+        "properties" : {
+          "choices" : {
+            "items" : {
+              "$ref" : "#/components/schemas/ServiceQuestionChoiceInput"
+            },
+            "maxItems" : 10,
+            "minItems" : 2,
+            "type" : "array"
+          },
+          "prompt" : {
+            "maxLength" : 140,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "prompt"
+        ],
+        "type" : "object"
+      },
+      "ServiceQuestionView" : {
+        "properties" : {
+          "choices" : {
+            "items" : {
+              "$ref" : "#/components/schemas/ServiceQuestionChoiceView"
+            },
+            "type" : "array"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "prompt" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "ServiceQuestionsUpdate" : {
+        "properties" : {
+          "questions" : {
+            "items" : {
+              "$ref" : "#/components/schemas/ServiceQuestionInput"
+            },
+            "maxItems" : 3,
+            "minItems" : 0,
+            "type" : "array"
+          }
+        },
         "type" : "object"
       },
       "ServiceQuickSetup" : {
@@ -19215,6 +19395,48 @@
         ]
       }
     },
+    "/api/v1/services/{id}/appointments/export" : {
+      "get" : {
+        "operationId" : "serviceExportAppointments",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "id",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          },
+          {
+            "in" : "query",
+            "name" : "from",
+            "required" : true,
+            "schema" : {
+              "format" : "date",
+              "type" : "string"
+            }
+          },
+          {
+            "in" : "query",
+            "name" : "to",
+            "required" : true,
+            "schema" : {
+              "format" : "date",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "service-controller"
+        ]
+      }
+    },
     "/api/v1/services/{id}/booking-link" : {
       "get" : {
         "operationId" : "serviceBookingLink",
@@ -19305,6 +19527,82 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/EffectiveServiceConfig"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "service-controller"
+        ]
+      }
+    },
+    "/api/v1/services/{id}/questions" : {
+      "get" : {
+        "operationId" : "serviceQuestions",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "id",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ServiceQuestionView"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [
+          "service-controller"
+        ]
+      },
+      "put" : {
+        "operationId" : "serviceReplaceQuestions",
+        "parameters" : [
+          {
+            "in" : "path",
+            "name" : "id",
+            "required" : true,
+            "schema" : {
+              "format" : "uuid",
+              "type" : "string"
+            }
+          }
+        ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ServiceQuestionsUpdate"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/ServiceQuestionView"
+                  },
+                  "type" : "array"
                 }
               }
             },
